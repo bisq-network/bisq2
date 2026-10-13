@@ -49,6 +49,7 @@ import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -684,6 +685,152 @@ class AuthenticatedDataStorageServiceTest {
 
         assertTrue(result.isSequenceNrInvalid(), result.toString());
         assertSame(original, peerStore.getPersistableStore().getMap().get(original.getStorageKey()));
+    }
+
+    // A relay of an earlier version removes signature V2, and the store holds that copy. The complete request of the
+    // owner has the same sequence number and replaces the copy, so the store keeps it from the cutoff date on (see
+    // docs/specifications/network/storage-request-ordering.md).
+    @Test
+    void completeRequestReplacesItsCopyWithoutSignatureV2() throws GeneralSecurityException {
+        AtomicReference<Runnable> pruneExpiredTask = new AtomicReference<>();
+        AuthenticatedDataStorageService store = new AuthenticatedDataStorageService(new PersistenceService(tempDir),
+                new PruneExpiredEntriesService() {
+                    @Override
+                    public void addTask(Runnable task) {
+                        pruneExpiredTask.set(task);
+                    }
+                },
+                "completeRequest",
+                STORE_KEY,
+                () -> time);
+        List<AuthenticatedData> addedData = new ArrayList<>();
+        List<AuthenticatedData> removedData = new ArrayList<>();
+        store.addListener(new AuthenticatedDataStorageService.Listener() {
+            @Override
+            public void onAdded(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                addedData.add(authenticatedData);
+            }
+
+            @Override
+            public void onRemoved(AuthenticatedData authenticatedData, byte[] publisherPubKeyHash) {
+                removedData.add(authenticatedData);
+            }
+        });
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(store.add(withoutSignatureV2(complete)).isSuccess());
+
+        DataStorageResult result = store.add(complete);
+
+        assertTrue(result.isSuccess(), result.toString());
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+        assertEquals(List.of(authenticatedData, authenticatedData), addedData);
+        // A later copy does not replace the complete request
+        assertTrue(store.add(withoutSignatureV2(complete)).isSequenceNrInvalid());
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+
+        time = AT_CUTOFF;
+        pruneExpiredTask.get().run();
+
+        assertSame(complete, store.getPersistableStore().getMap().get(complete.getStorageKey()));
+        assertTrue(removedData.isEmpty());
+        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+    }
+
+    // Signature V1 of the copy covers its creation date. A request of the owner with the same sequence number and
+    // another creation date is another request, so it does not replace the copy.
+    @Test
+    void requestWithAnotherCreationDateDoesNotReplaceTheCopy() throws Exception {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest first = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        AddAuthenticatedDataRequest copy = withoutSignatureV2(first);
+        assertTrue(peerStore.add(copy).isSuccess());
+        AddAuthenticatedDataRequest other = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        while (other.getCreated() == first.getCreated()) {
+            Thread.sleep(1);
+            other = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData, ownerKeyPair);
+        }
+        assertEquals(first.getSequenceNumber(), other.getSequenceNumber());
+
+        DataStorageResult result = peerStore.add(other);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(copy, peerStore.getPersistableStore().getMap().get(copy.getStorageKey()));
+    }
+
+    // Only the owner can create signature V2, so a request with an invalid signature V2 does not replace the copy
+    @Test
+    void requestWithInvalidSignatureV2DoesNotReplaceTheCopy() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        AddAuthenticatedDataRequest copy = withoutSignatureV2(complete);
+        assertTrue(peerStore.add(copy).isSuccess());
+        AddAuthenticatedDataRequest forged = new AddAuthenticatedDataRequest(complete.getAuthenticatedSequentialData(),
+                complete.getSignatureV1(),
+                complete.getSignaturePubKeyEncoded(),
+                complete.getSignaturePublicKey(),
+                SignatureUtil.sign(new byte[]{1}, KeyGeneration.generateDefaultEcKeyPair().getPrivate()),
+                complete.getVersion());
+
+        DataStorageResult result = peerStore.add(forged);
+
+        assertTrue(result.isSignatureInvalid(), result.toString());
+        assertSame(copy, peerStore.getPersistableStore().getMap().get(copy.getStorageKey()));
+    }
+
+    // Only a stored copy without signature V2 is replaced, so each node stores and relays the complete request at most
+    // once (see docs/specifications/network/storage-request-ordering.md). The owner can create further complete
+    // versions of the request: ECDSA signing is randomized, so a new signature V2 over the same preimage differs.
+    @Test
+    void secondCompleteRequestDoesNotReplaceTheFirst() throws GeneralSecurityException {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(peerStore.add(withoutSignatureV2(complete)).isSuccess());
+        assertTrue(peerStore.add(complete).isSuccess());
+        AddAuthenticatedDataRequest resigned = new AddAuthenticatedDataRequest(
+                complete.getAuthenticatedSequentialData(),
+                complete.getSignatureV1(),
+                complete.getSignaturePubKeyEncoded(),
+                complete.getSignaturePublicKey(),
+                SignatureUtil.sign(complete.getPreImageV2(), ownerKeyPair.getPrivate()),
+                complete.getVersion());
+        assertFalse(Arrays.equals(complete.getSignatureV2(), resigned.getSignatureV2()));
+        assertFalse(resigned.isSignatureV2Invalid());
+
+        DataStorageResult result = peerStore.add(resigned);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(complete, peerStore.getPersistableStore().getMap().get(complete.getStorageKey()));
+    }
+
+    // The owner removed the data. The complete request of a copy which the store held before does not bring the data
+    // back. For a removal without signature V2, which a relay of an earlier version created, the store uses the
+    // sequence number of the add request which the removal replaced: the number of the copy.
+    @ParameterizedTest
+    @ValueSource(booleans = {true, false})
+    void removalStillRejectsTheCompleteRequestOfACopy(boolean removalWithSignatureV2) throws Exception {
+        time = BEFORE_CUTOFF;
+        AddAuthenticatedDataRequest complete = AddAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        assertTrue(ownerStore.add(complete).isSuccess());
+        assertTrue(peerStore.add(withoutSignatureV2(complete)).isSuccess());
+        RemoveAuthenticatedDataRequest verified = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
+                ownerKeyPair);
+        // A relay of an earlier version removes signature V2 and keeps the sequence number
+        RemoveAuthenticatedDataRequest removal = removalWithSignatureV2
+                ? verified
+                : withoutSignatureV2(verified, verified.getSequenceNumber());
+        assertTrue(peerStore.remove(removal).isSuccess());
+
+        DataStorageResult result = peerStore.add(complete);
+
+        assertTrue(result.isSequenceNrInvalid(), result.toString());
+        assertSame(removal, peerStore.getPersistableStore().getMap().get(complete.getStorageKey()));
     }
 
     @ParameterizedTest

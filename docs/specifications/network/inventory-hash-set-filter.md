@@ -40,11 +40,13 @@ Reason: a filter entry is only meaningful together with the key it contains. Nod
 under storage key V2, nodes of earlier versions under V1. If both used one filter type, no entry would match between
 the versions, and the responder would send all requests up to the size limit of the inventory.
 
-## Removals without signature V2
+## Requests without signature V2
 
 5. In a `HASH_SET_V2` filter, the entry of a removal without signature V2 has sequence number 0, as the entry of
-   append-only data. This applies to the removals of authenticated data and of mailbox data. In a `HASH_SET` filter, the
-   entry keeps the sequence number of the removal, as nodes of earlier versions compute it.
+   append-only data. The entry of an add request without signature V2 has its negated sequence number. A filter which
+   lists the entry of an add request with its positive sequence number also lists the add request without signature V2
+   with the same key and the negated number. This applies to authenticated data and to mailbox data. In a `HASH_SET`
+   filter, every entry keeps the sequence number of its request, as nodes of earlier versions compute it.
 
 Reasons:
 
@@ -58,12 +60,34 @@ Reasons:
   entries also if a relay changed the number of one of them. A copy never replaces a stored removal, so a responder
   does not need to send it to a requester which holds a copy.
 - The signed sequence numbers of stored requests are positive, so no other entry with the same key has sequence
-  number 0.
+  number 0, and no entry with a positive number has the number of a copy.
+- A relay of an earlier version also removes signature V2 from an add request. The complete request replaces such a
+  copy, although both have the same sequence number (see
+  [`storage-request-ordering.md`](storage-request-ordering.md#complete-request-of-a-copy-without-signature-v2)). With
+  the sequence number, both would have the same entry, and a responder with the complete request would not send it to
+  a requester with the copy. Before the cutoff date, the requester would then hold only the copy, and remove it at that
+  date. With the negated number, the entries differ, and the responder sends the complete request.
+- The add requests of a node of an earlier version have no signature V2 at all. Their versions keep different entries,
+  because the number is negated and not replaced by 0. So a requester still gets the newer version of such data.
+- A copy never replaces the complete request. A requester which lists the complete request does not need the copy, so
+  the responder does not send it to that requester, and a copy which a responder sends anyway counts as listed for
+  rule 6.
 
 Cost: a requester which holds the removal with signature V2 receives the copy from a responder which holds only the
 copy, and rejects it. This ends when the responder gets the removal with signature V2 from any peer, and at the latest
 when the copy expires or the store removes it at the cutoff date of signature V1 (see
 [`storage-request-signatures.md`](storage-request-signatures.md#cutoff-date-of-signature-v1)).
+
+Cost of the negated number: a requester holds the copy of an add request A, and a responder holds another complete
+add request B of the same owner, with the same storage key and sequence number, but another creation date. B is not
+the complete request of A (see
+[`storage-request-ordering.md`](storage-request-ordering.md#complete-request-of-a-copy-without-signature-v2)), so the
+requester rejects B as `sequenceNrInvalid`. The entries of A and B differ by the sign of the number, so the responder
+sends B again in each response. With the number, both entries were equal, and the responder did not send B. Two such
+requests exist only if the owner published the same data twice with the same sequence number, for example from a
+backup which the user restored on a second machine. This ends when either node stores a request with a higher sequence
+number, when the requests expire, or at the cutoff date of signature V1, when the requester removes the copy and then
+accepts B. Rule 6 stops it for a full response.
 
 ## Repeated requests
 
