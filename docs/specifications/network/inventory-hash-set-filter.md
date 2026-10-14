@@ -248,10 +248,8 @@ Reasons:
   would contain the request again.
 - The responder selects add requests before removals and mailbox data. If add requests which the requester rejects
   fill a response, the requester gets no removals and no mailbox data from that responder. A requester of an earlier
-  version does not follow rule 6, so it repeats the request without end. A user profile can carry up to 10 240 bytes
-  more than its decoded data (see
-  [`distributed-data-payload-bytes.md`](distributed-data-payload-bytes.md#retained-payload-size)), so fewer than 200
-  such profiles fill a response of the default size limit (2,000 KB).
+  version does not follow rule 6, so it repeats the request without end. A few large entries are enough to fill a
+  response, for example user profiles with a large proof of work payload.
 - A requester of an earlier version holds a request with a higher sequence number than all requests of the responder
   for the same storage key V1 in these cases:
   - A removal of a user profile with only signature V1. Nodes of earlier versions accept it. Nodes of this version
