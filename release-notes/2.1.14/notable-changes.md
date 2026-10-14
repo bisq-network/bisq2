@@ -25,7 +25,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 - P2P connections of different identities use different SOCKS credentials. Each Tor HTTP connection uses fresh credentials.
 - Bisq requires SOCKS5 username/password authentication and bounds handshake reads. External Tor must retain authentication-based circuit isolation.
-- Tor control logs redact private keys. The Tor bundle is updated to `15.0.25`, with binary version `0.4.9.14`. **Log files of versions 2.1.3 to 2.1.13 contain onion private keys; do not share them.**
+- Tor control logs redact private keys. The Tor bundle is updated to `15.0.25`, with binary version `0.4.9.14`. **Log files of versions 2.1.3 to 2.1.13 contain onion private keys, and on nodes with the API also the private keys of user profiles. This version hides them in the log files of its data directory at the first start; do not share other copies, such as `docker logs`.**
 
 ## Desktop and Chat
 
