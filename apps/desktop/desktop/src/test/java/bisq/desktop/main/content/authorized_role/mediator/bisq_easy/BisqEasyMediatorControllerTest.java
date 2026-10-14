@@ -148,7 +148,7 @@ class BisqEasyMediatorControllerTest {
     private static UserProfile userProfile(NetworkId networkId, String statement) {
         return new UserProfile(0,
                 networkId.getPubKey().getKeyId(),
-                new ProofOfWork(new byte[20], 0, null, 1, new byte[72], 0),
+                new ProofOfWork(networkId.getPubKeyHash(), 0, null, 1, new byte[72], 0),
                 0,
                 networkId,
                 "",

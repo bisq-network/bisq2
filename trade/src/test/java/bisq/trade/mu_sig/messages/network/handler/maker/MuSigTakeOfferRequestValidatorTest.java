@@ -790,6 +790,7 @@ class MuSigTakeOfferRequestValidatorTest {
         bisq.security.pow.ProofOfWork proofOfWork = org.mockito.Mockito.mock(bisq.security.pow.ProofOfWork.class);
         org.mockito.Mockito.when(proofOfWork.getSolution()).thenReturn(new byte[72]);
         NetworkId agentNetworkId = createNetworkId("dispute-agent", 9988, null);
+        org.mockito.Mockito.when(proofOfWork.getPayload()).thenReturn(agentNetworkId.getPubKeyHash());
         UserProfile genuine = new UserProfile(0, "agent", proofOfWork, 0, agentNetworkId, "", "", "");
         UserProfile forged = new UserProfile(0, "forged", proofOfWork, 0, agentNetworkId, "", "", "");
         org.mockito.Mockito.when(mediationService.selectMediator(
@@ -814,6 +815,7 @@ class MuSigTakeOfferRequestValidatorTest {
         bisq.security.pow.ProofOfWork proofOfWork = org.mockito.Mockito.mock(bisq.security.pow.ProofOfWork.class);
         org.mockito.Mockito.when(proofOfWork.getSolution()).thenReturn(new byte[72]);
         NetworkId agentNetworkId = createNetworkId("dispute-agent", 9988, null);
+        org.mockito.Mockito.when(proofOfWork.getPayload()).thenReturn(agentNetworkId.getPubKeyHash());
         UserProfile genuine = new UserProfile(0, "agent", proofOfWork, 0, agentNetworkId, "", "", "");
         UserProfile forged = new UserProfile(0, "agent", proofOfWork, Integer.MAX_VALUE, agentNetworkId, "", "", "");
         org.mockito.Mockito.when(mediationService.selectMediator(
@@ -836,6 +838,7 @@ class MuSigTakeOfferRequestValidatorTest {
         bisq.security.pow.ProofOfWork proofOfWork = org.mockito.Mockito.mock(bisq.security.pow.ProofOfWork.class);
         org.mockito.Mockito.when(proofOfWork.getSolution()).thenReturn(new byte[72]);
         NetworkId agentNetworkId = createNetworkId("dispute-agent", 9988, null);
+        org.mockito.Mockito.when(proofOfWork.getPayload()).thenReturn(agentNetworkId.getPubKeyHash());
         UserProfile genuine = new UserProfile(1, "agent", proofOfWork, 0, agentNetworkId, "", "", "2.1.4");
         UserProfile forged = new UserProfile(1, "agent", proofOfWork, 0, agentNetworkId, "", "", "9.9.9");
         org.mockito.Mockito.when(mediationService.selectMediator(
