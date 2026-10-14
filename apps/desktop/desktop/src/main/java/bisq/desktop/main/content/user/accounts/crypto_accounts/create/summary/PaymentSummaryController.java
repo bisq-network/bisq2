@@ -69,7 +69,7 @@ public class PaymentSummaryController implements Controller {
         model.setCurrencyString(accountPayload.getCodeAndDisplayName());
 
         if (accountPayload instanceof MoneroAccountPayload moneroAccountPayload && moneroAccountPayload.isUseSubAddresses()) {
-            model.setAddressDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses"));
+            model.setAddressDescription(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"));
         } else {
             model.setAddressDescription(Res.get("paymentAccounts.crypto.address.address"));
         }
