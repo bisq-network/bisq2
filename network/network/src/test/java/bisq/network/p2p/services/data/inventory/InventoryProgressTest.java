@@ -26,6 +26,7 @@ import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.StoreType;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.DefaultAuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
@@ -114,8 +115,7 @@ class InventoryProgressTest {
                     ownerKeyPair);
             assertTrue(requester.processRemoveDataRequest(removal, false).join().isSuccess());
         }
-        // Space for one add request
-        int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
+        int maxSize = spaceForOneAddRequest();
 
         Inventory inventory = createInventoryOfResponder(InventoryFilterType.HASH_SET_V2, maxSize);
 
@@ -134,8 +134,7 @@ class InventoryProgressTest {
     @ParameterizedTest
     @EnumSource(value = InventoryFilterType.class, names = {"HASH_SET", "HASH_SET_V2"})
     void filterListsTheEntriesOfAResponseWhichAnotherPeerDeliveredFirst(InventoryFilterType inventoryFilterType) {
-        // Space for one add request
-        int maxSize = storeOfResponder.getPersistableStore().getMap().values().iterator().next().getSerializedSize();
+        int maxSize = spaceForOneAddRequest();
         Inventory inventory = createInventoryOfResponder(inventoryFilterType, maxSize);
         HashSetFilterService filterServiceOfRequester = createFilterServiceOfRequester(inventoryFilterType);
         assertTrue(inventory.isMaxSizeReached());
@@ -155,6 +154,17 @@ class InventoryProgressTest {
     private Inventory createInventoryOfResponder(InventoryFilterType inventoryFilterType, int maxSize) {
         return new HashSetFilterService(responder.getStorageService(), maxSize, inventoryFilterType)
                 .createInventory(createFilterServiceOfRequester(inventoryFilterType).getFilter());
+    }
+
+    // Each add request of the responder fits alone, and no two fit together. The add requests differ in size by a few
+    // bytes, because the length of a signature varies. A request which is larger than the size limit is skipped, and
+    // does not end the response (rule 12 of docs/specifications/network/inventory-hash-set-filter.md), so the limit is
+    // the size of the largest one.
+    private int spaceForOneAddRequest() {
+        return storeOfResponder.getPersistableStore().getMap().values().stream()
+                .mapToInt(AuthenticatedDataRequest::getSerializedSize)
+                .max()
+                .orElseThrow();
     }
 
     private HashSetFilterService createFilterServiceOfRequester(InventoryFilterType inventoryFilterType) {
