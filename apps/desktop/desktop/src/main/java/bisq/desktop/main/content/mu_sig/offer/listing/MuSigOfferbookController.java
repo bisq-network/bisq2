@@ -49,6 +49,7 @@ import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.FavouriteMarketsService;
 import bisq.settings.SettingsService;
+import bisq.trade.mu_sig.MuSigTradeService;
 import bisq.user.banned.RateLimitExceededException;
 import bisq.user.banned.UserProfileBannedException;
 import bisq.user.identity.UserIdentityService;
@@ -83,6 +84,7 @@ public class MuSigOfferbookController implements Controller {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final AccountService accountService;
+    private final MuSigTradeService muSigTradeService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin, selectedMuSigOfferPin,
             userProfileIgnoredPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
@@ -99,6 +101,7 @@ public class MuSigOfferbookController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         accountService = serviceProvider.getAccountService();
+        muSigTradeService = serviceProvider.getTradeService().getMuSigTradeService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -143,7 +146,8 @@ public class MuSigOfferbookController implements Controller {
                                     userProfileService,
                                     identityService,
                                     reputationService,
-                                    accountService);
+                                    accountService,
+                                    muSigTradeService);
                         } catch (ArithmeticException e) {
                             // The item formats the offer amounts at construction; an offer whose
                             // amounts overflow at the current price is not listed instead of

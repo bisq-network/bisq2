@@ -34,12 +34,15 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -146,5 +149,16 @@ public class TradesUtils {
         } else {
             new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.noMediatorAvailable")).show();
         }
+    }
+
+    public static int getPreviousBisqEasyTradesWithPeer(
+                                                     String peerUserProfile,
+                                                     BisqEasyTradeService bisqEasyTradeService) {
+        Collection<BisqEasyTrade> easyTrades = bisqEasyTradeService.getTrades();
+        return (int) easyTrades.stream()
+                .filter(trade -> trade.getTradeCompletedDate().isPresent()
+                        && trade.getTradeCompletedDate().get() < System.currentTimeMillis()
+                        && Objects.equals(trade.getPeer().getNetworkId().getId(), peerUserProfile))
+                .count();
     }
 }

@@ -48,6 +48,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.components.controls.BisqMenuItem;
 import bisq.desktop.components.controls.BisqTooltip;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.main.content.components.BondedRoleBadge;
 import bisq.desktop.main.content.components.ReputationScoreDisplay;
 import bisq.i18n.Res;
@@ -129,6 +130,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BondedRoleBadge bondedRoleBadge = new BondedRoleBadge(false);
 
+    // Number of past bisq easy trades with peer
+    private int pastTradesCount;
+
     public ChatMessageListItem(M chatMessage,
                                C chatChannel,
                                MarketPriceService marketPriceService,
@@ -169,6 +173,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                 NetworkId takerNetworkId = userProfile.getNetworkId();
                 BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().get();
                 wasOfferAlreadyTaken = bisqEasyTradeService.wasOfferAlreadyTaken(bisqEasyOffer, takerNetworkId);
+                if (isBisqEasyPublicChatMessageWithPeerOffer()) {
+                    setPastTrades(bisqEasyTradeService, senderUserProfile);
+                }
             } else {
                 wasOfferAlreadyTaken = false;
             }
@@ -315,6 +322,13 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
             return PaymentMethodSpecUtil.getPaymentMethods(offer.getBaseSidePaymentMethodSpecs());
         }
         return Collections.emptyList();
+    }
+
+    private void setPastTrades(BisqEasyTradeService bisqEasyTradeService, Optional<UserProfile> senderUserProfile){
+        senderUserProfile.ifPresent(profile -> {
+            String peerUserProfile = profile.getId();
+            pastTradesCount = TradesUtils.getPreviousBisqEasyTradesWithPeer(peerUserProfile, bisqEasyTradeService);
+        });
     }
 
     private boolean hasBisqEasyOfferWithDirection(Direction displayDirection) {

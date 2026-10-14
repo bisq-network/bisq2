@@ -422,6 +422,15 @@
     -fx-background-color: -bisq-green-pressed;
 }
 
+.bisq-easy-past-trades-count {
+    -fx-min-width: 22;
+    -fx-min-height: 22;
+    -fx-alignment: center;
+    -fx-background-radius: 22;
+    -fx-background-color: -bisq2-green-dim-20;
+    -fx-text-fill: white !important;
+}
+
 /*******************************************************************************
  *                                                                             *
  * Open trades                                                                 *
