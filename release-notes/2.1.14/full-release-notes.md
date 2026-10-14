@@ -4,12 +4,12 @@ Proposed release notes for the Bisq 2.1.14 integration branch. This release stre
 
 ## Scope
 
-These notes describe the net changes from release tag `v2.1.13` (`539cc023496fe0c59c961e32b250442905999fa3`) to branch `v2.1.14-integration` at `26943944fee057e4f40a934f196097f3269558fc`.
+These notes describe the net changes from release tag `v2.1.13` (`539cc023496fe0c59c961e32b250442905999fa3`) to branch `v2.1.14-integration` at `d95fc2b5498369c86cdc554d9b3fc70596402905`.
 
-- Generated on: 2026-10-06. Updated on: 2026-10-13 for the pull requests merged after `ddebe75934e190609261126e4a0897652d11dfdf`. Corrected on: 2026-10-14 after a review of the statements against the code.
+- Generated on: 2026-10-06. Updated on: 2026-10-13 for the pull requests merged after `ddebe75934e190609261126e4a0897652d11dfdf`. Corrected on: 2026-10-14 after a review of the statements against the code, and updated on the same day for the pull requests merged after `e0208dbd8e`.
 - The checkout declares version `2.1.14` in `gradle.properties`.
-- Comparison: `git diff v2.1.13 26943944fee057e4f40a934f196097f3269558fc`.
-- The range contains 1,798 reachable commits, including 1,293 non-merge commits, and changes 3,030 files.
+- Comparison: `git diff v2.1.13 d95fc2b5498369c86cdc554d9b3fc70596402905`.
+- The range contains 1,835 reachable commits, including 1,321 non-merge commits, and changes 3,040 files.
 - Changes are grouped by resulting behavior. The range includes main-branch merges, repeated implementations, and reversions; commit titles alone do not identify the final changes.
 
 ## Compatibility and Operator Notes
@@ -96,11 +96,11 @@ Details: [signatures](../../docs/specifications/network/storage-request-signatur
 ### Network Limits and Recovery
 
 - Network envelopes are limited to 4 MiB, with a 64 KiB limit during the handshake. Inventory hash-set filters are limited to 100,000 entries.
-- Inventory synchronization prefers `HASH_SET_V2`, which uses the new storage keys, and falls back to the legacy filter for older peers. Responses to older peers leave out removals of the publisher migration that a newer owner publication replaces.
+- Inventory synchronization prefers `HASH_SET_V2`, which uses the new storage keys, and falls back to the legacy filter for older peers. Responses to 2.1.13 peers leave out requests which these peers cannot store: removals of the publisher migration that a newer owner publication replaces, removals by a key other than the owner of an entry that the responder holds, and requests whose sequence number is not higher than the one the peer already holds. This keeps room in the response for the data that the peer still needs.
 - Established connections accept supported `HASH_CASH_V2` or `EQUI_HASH` authorization. Legacy `HASH_CASH` is retained only for validated initial handshake requests from compatible older clients. Message cost factors are fixed protocol constants, and proof-of-work checks enforce minimum difficulty.
 - Parsing rejects malformed fields and unsupported storage request versions before the requests enter services. An unparseable message within a valid frame is dropped rather than closing the connection; invalid framing and size violations still close it.
 - A node runs at most as many inbound handshakes at the same time as its maximum number of peers, and it closes additional sockets immediately. Slow inbound handshakes no longer block outbound connections.
-- Inventory messages check their size and number of entries before their entries are parsed, and sorting serializes each entry once. Unknown capability values from peers are skipped and reported in one log line.
+- Inventory messages check their size and number of entries before their entries are parsed, and sorting serializes each entry once. A responder skips a single entry that is larger than the size limit of a response and continues with the next entries; before, such an entry ended the response. Unknown capability values from peers are skipped and reported in one log line.
 - An HTTP GET request that receives a 4xx response tries the next provider instead of failing.
 - Peer exchange, pending requests, processed confidential messages, and startup replay have bounded state and improved cleanup. Connection registration and store creation handle concurrent operations.
 - Inventory requests clean up when connections close, retain complete responses already received, and cancel requests without running cancellation inside a map update.
@@ -123,7 +123,7 @@ Details: [Tor isolation](../../docs/specifications/network/tor-stream-isolation.
 
 - Support chat renders Markdown with safe link handling and visible link destinations. URLs containing user information are rejected. Desktop browser actions accept only web URLs, and untrusted popup text cannot create links.
 - Mention selection follows the caret and survives supported edits. Chat input clears when switching channels, private-chat navigation selects the intended channel, and edit actions use the author's identity.
-- Private messages and reactions authenticate their sender; private channels validate membership. Public message types, channel IDs, and reaction IDs are validated, and queued reactions are bounded and cleaned up. User profiles must meet the original proof-of-work minting difficulty, preventing cheap searches for similar profile icons and names.
+- Private messages and reactions authenticate their sender; private channels validate membership. Public message types, channel IDs, and reaction IDs are validated, and queued reactions are bounded and cleaned up. User profiles must meet the original proof-of-work minting difficulty, preventing cheap searches for similar profile icons and names. The proof-of-work payload of a user profile must be the hash of the profile key; nodes reject other profiles when they parse them, and an API client that creates an identity with another payload gets an error.
 - Opening a private or trade chat selects that chat's profile, also after the profile's terms or statement were edited. A late removal of an older profile version no longer removes a newer version that the node already shows. Profiles with an unknown avatar version show the default icon style instead of breaking icon rendering.
 - Bisq Easy history adds CSV export and a contact-peer action. CSV includes price, payment method, payment address or invoice, and transaction ID or preimage. History displays the agreed trade price and its percentage relative to the market price at taking, and improves searching and amount formatting.
 - All CSV exports write a cell that a spreadsheet could run as a formula as text, also after a semicolon, tab, or line break. Hidden control characters are removed.
@@ -132,7 +132,7 @@ Details: [Tor isolation](../../docs/specifications/network/tor-stream-isolation.
 - Trade settings add a configurable price-deviation warning threshold. Terms acceptance separates legal terms from risk acknowledgement and records versioned acceptance.
 - Linux tray transparency, numeric input validation, profile-card offer totals, and unavailable-price display are improved. Montenegro is added to the SEPA country list, and translations are updated.
 
-Details: [safe links](../../docs/specifications/chat/safe-links.md), [CSV export](../../docs/specifications/desktop/csv-export.md), [unreadable store files](../../docs/specifications/persistence/unreadable-store-files.md), [history implementation](../../apps/desktop/desktop/src/main/java/bisq/desktop/main/content/bisq_easy/history/BisqEasyHistoryView.java), and [language settings](../../apps/desktop/desktop/src/main/java/bisq/desktop/main/content/settings/language/LanguageSettingsController.java).
+Details: [safe links](../../docs/specifications/chat/safe-links.md), [profile proof of work](../../docs/specifications/user/user-profile-proof-of-work.md), [CSV export](../../docs/specifications/desktop/csv-export.md), [unreadable store files](../../docs/specifications/persistence/unreadable-store-files.md), [history implementation](../../apps/desktop/desktop/src/main/java/bisq/desktop/main/content/bisq_easy/history/BisqEasyHistoryView.java), and [language settings](../../apps/desktop/desktop/src/main/java/bisq/desktop/main/content/settings/language/LanguageSettingsController.java).
 
 ### API, Bisq Connect, and Mobile Notifications
 
@@ -193,4 +193,4 @@ Details: [dependency verification](../../docs/specifications/development/depende
 
 ## Verification of These Notes
 
-The notes were checked against the tag-to-branch file diff, affected implementations, configurations, and specifications. The update of 2026-10-13 checked each pull request merged after `ddebe75934` against its diff and the code at `26943944fe`, and against the code at `v2.1.13` to decide whether a change is new for users. Fixes of work that `v2.1.13` did not contain are folded into the description of that work. Changes already present at `v2.1.13` are not presented as new solely because they occur in merged commit history. The corrections of 2026-10-14 were checked against the code at `e0208dbd8e` and `v2.1.13`. No application build, runtime scenario, or test suite was run while preparing these documentation files; this is not a release certification.
+The notes were checked against the tag-to-branch file diff, affected implementations, configurations, and specifications. The update of 2026-10-13 checked each pull request merged after `ddebe75934` against its diff and the code at `26943944fe`, and against the code at `v2.1.13` to decide whether a change is new for users. Fixes of work that `v2.1.13` did not contain are folded into the description of that work. Changes already present at `v2.1.13` are not presented as new solely because they occur in merged commit history. The corrections of 2026-10-14 were checked against the code at `e0208dbd8e` and `v2.1.13`. The update of the same day checked the pull requests #321 to #327 against their diffs and the code at `d95fc2b549`; the fixes of the publisher migration and of three resource keys of the version details and the MuSig and wallet screens concern work that `v2.1.13` did not contain and are not listed separately. No application build, runtime scenario, or test suite was run while preparing these documentation files; this is not a release certification.
