@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
+import bisq.common.data.ByteArray;
 import bisq.common.data.ByteUnit;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -30,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,6 +52,8 @@ public final class HashSetFilter extends InventoryFilter {
 
     // As creating the HashSet at each request costs resources we cache it.
     private transient Set<HashSetFilterEntry> filterEntriesAsSet;
+    // Cached for the same reason (see getLowestSequenceNumberByHash)
+    private transient Map<ByteArray, Integer> lowestSequenceNumberByHash;
 
     // The type defines which storage key the filter entries contain: HASH_SET storage key V1, HASH_SET_V2 storage
     // key V2.
@@ -110,5 +114,17 @@ public final class HashSetFilter extends InventoryFilter {
             filterEntriesAsSet = new HashSet<>(filterEntries);
         }
         return filterEntriesAsSet;
+    }
+
+    // The lowest sequence number which the filter lists with each hash. A node of an earlier version lists each
+    // storage key V1 once, because it holds one request per key.
+    public Map<ByteArray, Integer> getLowestSequenceNumberByHash() {
+        if (lowestSequenceNumberByHash == null) {
+            lowestSequenceNumberByHash = filterEntries.stream()
+                    .collect(Collectors.toMap(entry -> new ByteArray(entry.getHash()),
+                            HashSetFilterEntry::getSequenceNumber,
+                            Math::min));
+        }
+        return lowestSequenceNumberByHash;
     }
 }
