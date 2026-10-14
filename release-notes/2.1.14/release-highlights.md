@@ -3,7 +3,7 @@
 ## Safer Bisq Easy Trades
 
 - Take requests must match a current maker offer and its price before a trade is stored.
-- Buyers enforce seller reputation limits as maker and as taker, also for takes through the API and the mobile node.
+- Buyers enforce seller reputation limits as maker and as taker, also for takes through the API and a mobile node built on this version.
 - Bitcoin URI and Lightning invoice amounts are checked against the agreed trade amount.
 
 ## Stronger Network Integrity and Tor Privacy
@@ -16,7 +16,7 @@
 
 - Support chat adds Markdown and clearer link destinations; mentions and private-chat navigation are improved.
 - Bisq Easy history gains CSV export and a contact-peer action. Language settings add country and currency selection.
-- Bisq Connect adds device listing, revocation, and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and stop exposing private keys.
+- Bisq Connect adds device listing, revocation, and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and no longer return the private keys of existing identities.
 
 ## More Reliable Storage
 
