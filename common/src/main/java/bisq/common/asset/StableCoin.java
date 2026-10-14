@@ -85,7 +85,7 @@ public final class StableCoin extends DigitalAsset {
     @Override
     public String getDisplayName() {
         // E.g. Tether USD (USDT, Ethereum ERC-20)
-        return name + " (" + code + ", " + network + " " + tokenStandard + ")";
+        return name + " (" + code + ", " + network.getDisplayName() + " " + tokenStandard.getDisplayName() + ")";
     }
 
     @Override
@@ -95,7 +95,7 @@ public final class StableCoin extends DigitalAsset {
 
     public String getShortDisplayName() {
         // E.g. USDT (ERC-20)
-        return code + " (" + tokenStandard + ")";
+        return code + " (" + tokenStandard.getDisplayName() + ")";
     }
 
     public enum Network {
