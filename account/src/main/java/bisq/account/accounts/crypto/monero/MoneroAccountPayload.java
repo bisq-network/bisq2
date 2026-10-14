@@ -15,8 +15,9 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.account.accounts.crypto;
+package bisq.account.accounts.crypto.monero;
 
+import bisq.account.accounts.crypto.CryptoAssetAccountPayload;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.asset.CryptoAssetRepository;
