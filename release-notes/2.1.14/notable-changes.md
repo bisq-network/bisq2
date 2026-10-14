@@ -4,7 +4,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 ## Bisq Easy Trade and Payment Validation
 
-- Makers validate take requests before storing a trade and accept only their current, complete offers. Withdrawn or closed offers cannot be taken again through a previous trade.
+- Makers validate take requests before storing a trade and accept only their current, complete offers.
 - Contract prices must match the offer. Fixed-price trades allow rounding differences rather than the configurable market-price deviation.
 - Buyers enforce seller reputation limits as maker and as taker. As taker, the buyer's node checks every take, also through the API and the mobile node. Displayed seller maximums fit those limits.
 - Missing, old, or inconsistent market prices make the reputation check fail, so Bisq Easy takes wait for current prices.
@@ -15,7 +15,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 ## Storage Integrity and Network Limits
 
-- Storage requests gain signature V2, covering fields omitted by legacy signatures and preserving the exact signed payload bytes.
+- Storage requests gain signature V2, which covers the fields that affect storage decisions and preserves the exact signed payload bytes.
 - Until the deadline, updated nodes also verify the legacy signature, and they repair copies whose signature V2 a relay removed. User-profile removals require signature V2.
 - Owner-specific storage keys, ownership checks, local metadata, and corrected removal ordering prevent another publisher from interfering with owner data.
 - Network envelopes are limited to 4 MiB, handshakes to 64 KiB, and inventory hash-set filters to 100,000 entries. Concurrent inbound handshakes are limited. Pending state and replay queues have tighter bounds and cleanup.

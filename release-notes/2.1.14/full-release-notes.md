@@ -37,16 +37,16 @@ Details: [storage signatures](../../docs/specifications/network/storage-request-
 ### Bisq Easy Trade Acceptance and Pricing
 
 - The maker validates a take-offer request before creating and storing the trade or adding the taker to contacts. Rejected requests no longer leave newly created trades behind.
-- A take must match a complete, current offer authored by the maker. A trade containing an old offer no longer makes a withdrawn or already closed offer takeable again. Duplicate requests cannot create another trade.
-- The contract's price specification must match the maker's offer. The maker derives its expected amounts from that offer, preventing a taker from choosing another contract price.
-- Fixed-price trades allow only the rounding difference: the Bitcoin value of one fiat cent plus one satoshi. The configurable market-price deviation no longer permits a worse price for a fixed-price offer. Market-based trades retain their deviation setting.
+- A take must match a complete, current offer authored by the maker. Duplicate requests cannot create another trade.
+- The contract's price specification must match the maker's offer, and the maker derives its expected amounts from that offer.
+- Fixed-price trades allow only the rounding difference: the Bitcoin value of one fiat cent plus one satoshi. The configurable price deviation applies only to offers with a market-based price.
 - A buyer checks the seller's reputation in both roles. As maker, the buyer's node checks a seller taker before signing. As taker, the buyer's node checks the seller maker before it creates the trade, for every client: the desktop, the REST API, and the mobile node. Both checks use 200 reputation points per USD, with the larger of a 5% allowance or 200 extra points for positive scores. The displayed seller maximum is rounded and reduced until the seller's score covers it.
 - Reputation validation rejects missing market prices, prices at least 12 hours old, or currency and USD prices more than 12 minutes apart. Without current market prices, Bisq Easy takes in both directions fail until current prices arrive; the desktop then asks the user to try again later.
 - While an alert requires a minimum version, a taker refuses offers of makers below that version. Before, such a take waited without an answer, because the restricted maker drops the request. Open trades with a node below that version stop while the alert applies, because that node drops their messages.
 - A node that starts during an emergency halt or a minimum-version alert ignores replayed trade messages, as it ignores new ones.
 - Ignored takers receive the same rejection as takers of an unknown offer. Take retries and timeouts recover their UI state, and trading restrictions produce controlled failures.
 
-The underlying gaps were acceptance of taker-controlled contract data and trade creation before validation. The maker now validates against its current offer and local reputation data before committing the trade. The buyer's protection against a seller with too little reputation existed only in the desktop take views; the buyer's node now enforces it for every take.
+The maker validates a take against its current offer and its local reputation data before it commits the trade. The buyer's node enforces the seller reputation limit for every take.
 
 Details: [take-offer validation](../../docs/specifications/trade/take-offer-request-validation.md), [contract prices](../../docs/specifications/trade/bisq-easy-contract-price.md), [seller limits](../../docs/specifications/trade/bisq-easy-seller-reputation-limit.md), and [trade restrictions](../../docs/specifications/trade/trade-restrictions.md).
 
@@ -57,7 +57,7 @@ Details: [take-offer validation](../../docs/specifications/trade/take-offer-requ
 - Invalid requested amounts fail the receiving trade; invalid buyer API input returns HTTP 400. Desktop validation explains which payment data to provide.
 - Scanning a QR code keeps the case of legacy Bitcoin addresses, which start with 1 or 3. Before, Bisq changed them to lowercase, and the seller received an invalid address. The `bitcoin:` scheme is accepted in any case.
 
-Previously, the trade view showed the agreed amount while a wallet could read a different amount from the buyer's invoice or URI. Validation now binds supported requested amounts to the contract at both sending and receiving boundaries. Dynamically obtained LNURL invoices remain subject to the seller's wallet confirmation.
+Validation binds the supported requested amounts to the contract amount when the buyer sends the payment data and when the seller receives it. Dynamically obtained LNURL invoices remain subject to the seller's wallet confirmation.
 
 Details: [Bitcoin payment data](../../docs/specifications/trade/bisq-easy-bitcoin-payment-data.md).
 
@@ -86,7 +86,7 @@ Details: [trade senders](../../docs/specifications/trade/trade-message-sender.md
 - Canonical public-key encoding prevents multiple byte representations from creating different owner keys. New ECDSA signatures use low-S encoding; V2 requires it while legacy signatures retain compatibility.
 - Canonical encoding supports signed ZigZag integers, nested canonical values, and exact encoded payloads, with explicit signature, storage-key, proof-of-work, and trade-contract purposes. Existing trade contract hashes remain on their current serialization path.
 
-Legacy signatures omitted fields that affect storage decisions. V2 covers those fields; owner-specific keys and ownership checks also prevent another publisher from sharing or replacing the owner's entry. The dated transition preserves communication with 2.1.13 while imposing a deadline for legacy-only storage requests.
+Signature V2 covers the fields that affect storage decisions, and owner-specific keys and ownership checks keep the entries of different owners apart. The dated transition preserves communication with 2.1.13 while imposing a deadline for legacy-only storage requests.
 
 Details: [signatures](../../docs/specifications/network/storage-request-signatures.md), [storage keys](../../docs/specifications/network/storage-keys.md), [metadata](../../docs/specifications/network/storage-metadata.md), and [canonical encoding](../../docs/specifications/encoding/canonical-encoding.md).
 
@@ -155,7 +155,7 @@ Details: [API endpoints](../../api/src/main/java/bisq/api/rest_api/endpoints), [
 - Instance protection uses a file lock and fails closed when the lock cannot be established. The lock remains held during backup, preventing another process from opening the same data directory mid-backup.
 - Unparseable persisted entries are skipped individually and logged without their private contents. When it skips entries of a private or settings store at startup, Bisq keeps a copy of the original file before the next write removes these entries. Startup replay likewise isolates failed entries and cleans up derived state when publications disappear.
 - Version-2 witness requests require ownership preimages and reject supplied dates. Persisted requests with unused legacy dates normalize those dates without losing ownership bindings. Signed-witness handling aligns with historical arbitrator-signed Bisq 1 records.
-- Oracle nodes read their stored bridge requests at startup. Before, a restart lost the stored witness bindings, and a witness could be bound to a second profile. Bridge recovery retains catch-up requests arriving during active recovery. Unsupported subscription RPCs report the required bridge upgrade instead of retrying indefinitely.
+- Oracle nodes read their stored bridge requests at startup, so stored witness bindings stay in effect after a restart. Bridge recovery retains catch-up requests arriving during active recovery. Unsupported subscription RPCs report the required bridge upgrade instead of retrying indefinitely.
 - Bonded-role revalidation continues past entries that cannot be replayed, retaining unverifiable registrations for later handling. Data that waits for its bonded role is kept once per publication and dropped when the stores remove it. Multiple valid oracle publications keep a role or account timestamp available until the last valid publication disappears.
 - Market-price ingestion rejects non-positive values. Nodes keep oracle market-price data for markets they do not know and apply only known markets; before, such data caused repeated disconnects, for example on Android. Oracle requests bind the authenticated sender to the requested profile, and reputation state clears correctly when source data is removed.
 - Webcam QR capture uses bounded frames over the helper process's standard input/output instead of a local TCP listener. Helper failures and shutdown release resources, and stderr goes to a separate rolling log.
