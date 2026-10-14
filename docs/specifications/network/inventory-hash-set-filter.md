@@ -297,20 +297,20 @@ require.
 
 ## Requests larger than the size limit of a response
 
-12. The responder adds requests in the order of their priority until the next request does not fit into the size limit
+13. The responder adds requests in the order of their priority until the next request does not fit into the size limit
     of the response. It then sets `maxSizeReached` and adds no further request. A request which alone is larger than
     the size limit does not end the response: the responder skips it and continues with the next request. This applies
     to all filter types and to all kinds of requests.
 
 Reasons:
 
-- A request which is larger than the size limit fits into no response. Without rule 12, it ends every response of its
+- A request which is larger than the size limit fits into no response. Without rule 13, it ends every response of its
   holder at its position. The requester then receives no later add requests, no removals and no mailbox data from that
   holder, and [rule 6](#repeated-requests) stops its requests to that peer. One stored request is enough, and the effect
   lasts as long as the store keeps the request.
-- A node receives such a request only by broadcast, also without rule 12. Skipping it changes nothing for the request
+- A node receives such a request only by broadcast, also without rule 13. Skipping it changes nothing for the request
   itself.
-- Rule 12 needs no protocol change. Requesters of earlier versions also receive the requests after the skipped one.
+- Rule 13 needs no protocol change. Requesters of earlier versions also receive the requests after the skipped one.
 
 Limitation: stores accept a request which is larger than the size limit of a response, up to the size limit of a
 message (see [`message-framing.md`](message-framing.md)). Responders of earlier versions still end their responses at

@@ -158,7 +158,7 @@ class InventoryProgressTest {
 
     // Each add request of the responder fits alone, and no two fit together. The add requests differ in size by a few
     // bytes, because the length of a signature varies. A request which is larger than the size limit is skipped, and
-    // does not end the response (rule 12 of docs/specifications/network/inventory-hash-set-filter.md), so the limit is
+    // does not end the response (rule 13 of docs/specifications/network/inventory-hash-set-filter.md), so the limit is
     // the size of the largest one.
     private int spaceForOneAddRequest() {
         return storeOfResponder.getPersistableStore().getMap().values().stream()

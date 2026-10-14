@@ -46,7 +46,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-// See rule 12 of docs/specifications/network/inventory-hash-set-filter.md
+// See rule 13 of docs/specifications/network/inventory-hash-set-filter.md
 class FilterServiceMaxSizeTest {
     private static final int MAX_SIZE = 1000;
     private static final int HIGH_PRIORITY = 10;
