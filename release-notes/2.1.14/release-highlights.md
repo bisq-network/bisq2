@@ -16,7 +16,7 @@
 
 - Support chat adds Markdown and clearer link destinations; mentions and private-chat navigation are improved.
 - Bisq Easy history gains CSV export and a contact-peer action. Language settings add country and currency selection.
-- Bisq Connect adds device listing, revocation, and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and stop exposing private keys.
+- Bisq Connect adds device listing, revocation, and session expiry. APIs expand chat, contacts, alerts, and payment-account support, and no longer return the private keys of existing identities.
 
 ## More Reliable Storage
 
