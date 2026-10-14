@@ -167,7 +167,7 @@ public abstract class FilterService<T extends InventoryFilter> {
     // Selects the requests with the highest priority first, as long as the response stays within maxSize. At the first
     // request which does not fit, maxSizeReached is set, and no later request of any selection is added. A request which
     // is larger than maxSize fits into no response. It is skipped, so that it does not end every response of this node
-    // before the requests after it (rule 12 of docs/specifications/network/inventory-hash-set-filter.md).
+    // before the requests after it (rule 13 of docs/specifications/network/inventory-hash-set-filter.md).
     private List<DataRequest> selectWithinMaxSize(Collection<? extends DataRequest> requests,
                                                   AtomicInteger accumulatedSize,
                                                   AtomicBoolean maxSizeReached) {
