@@ -41,6 +41,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -78,8 +79,14 @@ public class WalletService implements Service {
 
     public WalletService(Config config,
                          PersistenceService persistenceService) {
+        this(config, persistenceService, new WalletGrpcClient(config.host, config.port));
+    }
+
+    WalletService(Config config,
+                  PersistenceService persistenceService,
+                  WalletGrpcClient client) {
         this.config = config;
-        this.client = new WalletGrpcClient(config.host, config.port);
+        this.client = client;
         this.receiveAddressService = new ReceiveAddressService(persistenceService);
     }
 
@@ -139,9 +146,13 @@ public class WalletService implements Service {
 
     public CompletableFuture<List<Transaction>> listTransactions() {
         return client.listTransactions()
-                .thenApply(response -> response.getTransactionsList().stream()
-                        .map(Transaction::fromProto)
-                        .toList());
+                .thenCompose(response -> client.requestWalletAddresses()
+                        .thenApply(addressesResponse -> {
+                            Set<String> ownAddresses = Set.copyOf(addressesResponse.getAddressesList());
+                            return response.getTransactionsList().stream()
+                                    .map(tx -> Transaction.fromProto(tx, ownAddresses))
+                                    .toList();
+                        }));
     }
 
     public CompletableFuture<List<Utxo>> listUtxos() {
@@ -213,11 +224,9 @@ public class WalletService implements Service {
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
-        return client.listTransactions()
-                .thenApply(response -> {
-                    transactions.setAll(response.getTransactionsList().stream()
-                            .map(Transaction::fromProto)
-                            .toList());
+        return listTransactions()
+                .thenApply(list -> {
+                    transactions.setAll(list);
                     return transactions;
                 });
     }
