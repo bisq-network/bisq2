@@ -200,8 +200,15 @@ a node with more than 100 000 stored requests.
 
 ## Removals which a requester of an earlier version cannot store
 
-11. For a `HASH_SET` filter, the responder does not send a removal of authenticated data if it holds an add request
-    with the same storage key V1 and a higher sequence number. For a `HASH_SET_V2` filter, it sends such a removal.
+11. For a `HASH_SET` filter, the responder does not send a removal if it holds an add request with the same storage key
+    V1, and one of these conditions holds:
+    - the removal is a removal of authenticated data, and the add request has a higher sequence number;
+    - the key which signed the removal does not own the data of the add request. The owner of authenticated data is
+      the owner which the data names (see [`storage-ownership.md`](storage-ownership.md)). The owner of mailbox data is
+      its receiver; the responder compares with the receivers of all add requests which it holds with that storage key
+      V1.
+
+    For a `HASH_SET_V2` filter, it sends such removals.
 
 Reasons:
 
@@ -226,6 +233,19 @@ Reasons:
   the removals alone would fill every response. A requester of an earlier version then repeats its request without
   end and receives no mailbox data from responders of this version, because it does not follow rule 6. With rule 12
   alone, the removals would still use the space which the new entries leave in the response which brings them.
+- A requester of an earlier version accepts the removal of an add request only from the owner of that add request: for
+  authenticated data the key which signed the add request, for mailbox data its receiver. Storage key V2 contains the
+  owner, so a responder of this version keeps a removal of another key under another storage key V2 than the add
+  request, and holds both (rule 12 of [`storage-metadata.md`](storage-metadata.md#size-limit) limits such removals).
+  The requester holds the add request, or receives it in the same response, and rejects the removal of another key.
+  Its filter therefore never lists the removal. Rule 12 leaves out the removal only if the filter lists its storage key
+  V1 with a sequence number at least as high. Without the second condition, every response would contain a removal
+  with a higher sequence number again. Any key can create such removals for data which the responder holds, and about
+  6,000 of them fill a response.
+- The second condition uses the owner which the data names, not the key which signed the add request. During the
+  migration of the publisher of authorized data, a responder can hold the add request of the network identity and the
+  removal of the authorized key, which owns the data. A requester which holds the entry of the authorized key needs
+  that removal.
 - A requester of this version stores requests under storage key V2. It needs the removal, because the removal and the
   add request have different storage keys V2.
 
@@ -326,15 +346,25 @@ such a request.
   - The removals of the migration of the publisher of authorized data are the main case. Rule 11 removes it
     ([removals which a requester of an earlier version cannot store](#removals-which-a-requester-of-an-earlier-version-cannot-store)).
     The review 2026-09-29_16-18-18-fable-5.1 found it by reading the code (finding F8, case A).
-  - Remaining case: the responder holds a removal of another owner with a higher sequence number than the entry of
-    the requester, and no add request with a higher sequence number for the same storage key V1. The requester holds
-    the add request of the owner of the data, and rejects the removal because another key signed it.
+  - Removals of a key which does not own the data, while the responder holds an add request with the same storage key
+    V1, are the second main case. Rule 11 removes it as well. The review of 2026-10-14 showed that the
+    responder can decide this case, because it holds the add request and its data (hashset-non-owner-removal-resend).
+  - Remaining cases: the responder holds a removal for which it holds no add request with the same storage key V1. The
+    requester holds an add request with that storage key V1 and a lower sequence number, which another key signed, so
+    it cannot store the removal. For authorized data of the migration, the responder holds the add request of the
+    network identity and the removal of the authorized key, while the requester holds the add request of the network
+    identity. For mailbox data, the responder holds a copy of the data which names another receiver, and the removal
+    of the receiver replaced the add request of the receiver: the responder then does not send that removal, and a
+    requester which holds the add request of the receiver keeps it until it expires.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
-    changed. In the remaining case the responder cannot know which owner's request the requester holds.
-  - A peer can create the remaining case on purpose. Every key pair can create removals without entry (rule 12 of
-    [`storage-metadata.md`](storage-metadata.md)), also for the storage keys V1 of the data of other owners. Whether a
-    responder should leave out such removals for a `HASH_SET` filter, based on an assumption about the request which
-    the requester holds, is open. The developers decide.
+    changed. In the remaining cases the responder cannot know which owner's request the requester holds.
+  - A peer can create the first remaining case on purpose. It publishes data which nodes of earlier versions accept and
+    nodes of this version refuse, for example a user profile whose proof of work payload is not the hash of its key
+    (rule 4 of [`user-profile-proof-of-work.md`](../user/user-profile-proof-of-work.md)). Then it publishes removals
+    of that data, signed by other keys, with higher sequence numbers. Every key pair can create such removals without
+    entry (rule 12 of [`storage-metadata.md`](storage-metadata.md#size-limit)). Whether a responder should leave out
+    such removals for a `HASH_SET` filter, based on an assumption about the request which the requester holds, is
+    open. The developers decide.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.
   - Who decides: the developers. Until then, nodes of earlier versions get the inventory with the ownership semantics
     of storage key V1, not those of V2.
