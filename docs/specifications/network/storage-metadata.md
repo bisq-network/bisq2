@@ -207,7 +207,7 @@ requests as well, so these removals give it no further way to fill the store.
 
 - Whether stores need per-type size limits, and which values. This needs the sizes of real stores.
 - Whether stores need a byte limit per request. Only the size limit of a message bounds a stored request, so a store
-  can hold a request which is larger than the size limit of an inventory response. Rule 12 of
+  can hold a request which is larger than the size limit of an inventory response. Rule 13 of
   [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#requests-larger-than-the-size-limit-of-a-response)
   keeps such a request out of responses. A limit at admission needs the size of the largest legitimate request of each
   type.
