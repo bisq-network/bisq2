@@ -8,7 +8,8 @@ inventory, and which storage key the filter uses. The storage keys are defined i
 An inventory request contains a filter. The hash set filter is a list of entries `(key, sequenceNumber)`, one per
 request which the requester holds. The sequence number is 0 for append-only data, which has none. The responder sends
 every request whose entry `(key, sequenceNumber)`, computed with the same key, is not in the filter. Both the key and
-the sequence number must match.
+the sequence number must match. For a `HASH_SET` filter, rules 11 and 12 leave out requests which a requester of an
+earlier version cannot store.
 
 The filter type defines which key the entries contain:
 
@@ -207,10 +208,10 @@ Reasons:
 - A requester of an earlier version holds one request per storage key V1 and accepts for it only a higher sequence
   number. If the responder holds an add request `(K1, m)` and a removal `(K1, n)` with `n < m`, the requester either
   holds `(K1, m)`, or it receives it in the same response, because the responder selects add requests before
-  removals. In both cases it ends with `(K1, m)` and cannot keep the removal. Its filter therefore never lists the
-  removal, and without rule 11 the responder would send it in every response. This assumes that the requester accepts
-  the add request. If it rejects it, the removal could replace an older entry `(K1, k)` with `k < n` which the
-  requester holds; with rule 11 that entry stays until it expires. For the migration of rule 14 of
+  removals. In both cases it ends with `(K1, m)` and cannot keep the removal. If it holds `(K1, m)`, rule 12 already
+  leaves out the removal. Rule 11 also leaves it out of the response which brings `(K1, m)`. This assumes that the
+  requester accepts the add request. If it rejects it, the removal could replace an older entry `(K1, k)` with
+  `k < n` which the requester holds; with rule 11 that entry stays until it expires. For the migration of rule 14 of
   [`storage-ownership.md`](storage-ownership.md), nodes of earlier versions accept the add request of the authorized
   key.
 - This is the normal case after the migration of the publisher of authorized data (rule 14 of
@@ -220,15 +221,59 @@ Reasons:
   the removal either.
 - On 2026-10-06, the oracle nodes held 4,760 entries which the migration would replace, 4,732 of them profile age
   timestamps. Their removals have about 1.58 MB, 79 % of the default size limit of a response (2,000 KB). With both
-  oracle nodes publishing, they reach about 98 %. Without rule 11, every response to a requester of an earlier
-  version would carry them for the time to live of the data (30 days for timestamps). With a few more entries, the
-  removals alone would fill every response. A requester of an earlier version then repeats its request without end
-  and receives no mailbox data from responders of this version, because it does not follow rule 6.
+  oracle nodes publishing, they reach about 98 %. Without rules 11 and 12, every response to a requester of an
+  earlier version would carry them for the time to live of the data (30 days for timestamps). With a few more entries,
+  the removals alone would fill every response. A requester of an earlier version then repeats its request without
+  end and receives no mailbox data from responders of this version, because it does not follow rule 6. With rule 12
+  alone, the removals would still use the space which the new entries leave in the response which brings them.
 - A requester of this version stores requests under storage key V2. It needs the removal, because the removal and the
   add request have different storage keys V2.
 
 Rule 11 compares only with add requests. A removal is not suppressed because of another removal with a higher
-sequence number: the responder cannot know which one the requester holds.
+sequence number: the responder cannot know which one the requester holds. Rule 12 compares with the entry of the
+requester instead.
+
+## Requests without a higher sequence number
+
+12. For a `HASH_SET` filter, the responder does not send an add request or a removal if the filter lists its storage
+    key V1 and every sequence number listed with that key is at least as high as the sequence number of the request.
+    This applies to authenticated data and to mailbox data. For a `HASH_SET_V2` filter, rule 12 does not apply.
+
+Reasons:
+
+- A requester of an earlier version holds one request per storage key V1. Its filter lists each key once, with the
+  sequence number of the request which it holds. Its stores accept a request for that key only if the sequence number
+  is higher. This holds for add requests and for removals, also for the requests of another owner. So the requester
+  rejects every request which rule 12 leaves out. Without rule 12, its filter would not change, and every response
+  would contain the request again.
+- The responder selects add requests before removals and mailbox data. If add requests which the requester rejects
+  fill a response, the requester gets no removals and no mailbox data from that responder. A requester of an earlier
+  version does not follow rule 6, so it repeats the request without end. A few large entries are enough to fill a
+  response, for example user profiles with a large proof of work payload.
+- A requester of an earlier version holds a request with a higher sequence number than all requests of the responder
+  for the same storage key V1 in these cases:
+  - A removal of a user profile with only signature V1. Nodes of earlier versions accept it. Nodes of this version
+    refuse it and keep the add request (see
+    [`storage-request-signatures.md`](storage-request-signatures.md#removals-of-user-profiles)). A user of version
+    2.1.13 who edits or deletes a profile creates such a removal. Every key pair can create one for its own profiles.
+  - A removal with only signature V1 which arrived before its add request. Nodes of earlier versions order it by its
+    own sequence number and reject the add request. Nodes of this version order it by the trusted sequence number 0
+    and accept the add request (see
+    [`storage-request-ordering.md`](storage-request-ordering.md#authenticated-removals-during-signature-migration)).
+  - A removal with only signature V1 whose sequence number a relay raised. Nodes of this version accept the next add
+    request of the owner. Nodes of earlier versions reject it until the removal expires (see
+    [`storage-request-ordering.md`](storage-request-ordering.md#sequence-number-of-a-new-authenticated-request)).
+  - The responder missed a removal and still holds the earlier add request.
+- A filter of a node of this version can list a storage key V1 several times, once per owner. Rule 12 then compares
+  with every listed number, so it does not leave out a request which is newer than the request of one of these owners.
+  Such a filter reaches a responder of this version only if the requester prefers `HASH_SET` by its configuration
+  (rule 4).
+- For a `HASH_SET_V2` filter, the entry of a request does not always show the sequence number by which the requester
+  orders it (rule 5). A requester of this version follows rule 6, so a response which it cannot store does not repeat
+  without end.
+
+Rule 12 removes the repetition, not the difference between the stores. Each node keeps what the rules of its version
+require.
 
 ## Requests larger than the size limit of a response
 
@@ -272,25 +317,31 @@ such a request.
 
 - **Several owners with one storage key V1.** Requests of different owners for the same data have the same storage
   key V1 and different storage keys V2. A `HASH_SET` filter cannot tell them apart: an entry `(K1, n)` hides the
-  requests of all owners with sequence number `n`. A request of another owner with another sequence number is sent to
-  the requester of the earlier version, which may not be able to store it, for example a remove request of another
-  owner for data which the requester holds. The requester's filter then does not change, and it can receive the same
-  request again with the next response. If such requests fill a response up to the size limit, repeated requests do
-  not make progress. A requester of this version stops such requests ([rule 6](#repeated-requests)); a requester of an
-  earlier version does not.
+  requests of all owners with sequence number `n` or lower (rule 12). A request of another owner with a higher
+  sequence number is sent to the requester of the earlier version, which may not be able to store it, for example a
+  remove request of another owner for data which the requester holds. The requester's filter then does not change,
+  and it can receive the same request again with the next response. If such requests fill a response up to the size
+  limit, repeated requests do not make progress. A requester of this version stops such requests
+  ([rule 6](#repeated-requests)); a requester of an earlier version does not.
   - The removals of the migration of the publisher of authorized data are the main case. Rule 11 removes it
     ([removals which a requester of an earlier version cannot store](#removals-which-a-requester-of-an-earlier-version-cannot-store)).
     The review 2026-09-29_16-18-18-fable-5.1 found it by reading the code (finding F8, case A).
-  - Remaining case: the responder holds a removal of another owner and no add request with a higher sequence number
-    for the same storage key V1, while the requester holds an add request which that removal cannot replace.
+  - Remaining case: the responder holds a removal of another owner with a higher sequence number than the entry of
+    the requester, and no add request with a higher sequence number for the same storage key V1. The requester holds
+    the add request of the owner of the data, and rejects the removal because another key signed it.
   - Why it cannot be removed now: the filter of a node of an earlier version contains no owner, and its code cannot be
     changed. In the remaining case the responder cannot know which owner's request the requester holds.
+  - A peer can create the remaining case on purpose. Every key pair can create removals without entry (rule 12 of
+    [`storage-metadata.md`](storage-metadata.md)), also for the storage keys V1 of the data of other owners. Whether a
+    responder should leave out such removals for a `HASH_SET` filter, based on an assumption about the request which
+    the requester holds, is open. The developers decide.
   - What removes it: ending the support of `HASH_SET` when nodes of earlier versions are no longer supported.
   - Who decides: the developers. Until then, nodes of earlier versions get the inventory with the ownership semantics
     of storage key V1, not those of V2.
 - **Cost of `HASH_SET` responses.** The stores hold the requests under storage key V2. For a `HASH_SET` filter the
   responder computes storage key V1 of every request for every such response. If the response contains removals, rule
-  11 computes storage key V1 of every add request once more. A cache is possible if measurements show a need.
+  11 computes storage key V1 of every add request once more. Rule 12 builds, once per response, a map from each listed
+  key to its lowest listed sequence number. A cache is possible if measurements show a need.
 - **Requesters with more requests than the filter limit.** The filter of such a requester does not list all of its
   requests ([rule 10](#size-of-the-filter)). The responder therefore also sends requests which the requester already
   holds, and the requester receives them again. Each filter is a new random sample of the requests which the requester

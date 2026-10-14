@@ -131,6 +131,11 @@ Reasons:
 Consequence: a user of version 2.1.13 who deletes or edits a profile removes the old profile only on nodes of earlier
 versions. Nodes of this version keep it until it expires after 15 days.
 
+Nodes of earlier versions which accepted such a removal reject the add request of the profile, because its sequence
+number is lower. A node of this version therefore does not send them this add request in inventory responses (rule 12
+of [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#requests-without-a-higher-sequence-number)).
+Otherwise every response would contain it again, and enough such profiles would fill every response.
+
 ## Verification
 
 1. If `signatureV2` is not empty, the receiver verifies signature V2. Before the cutoff date of signature V1 (rule 5),

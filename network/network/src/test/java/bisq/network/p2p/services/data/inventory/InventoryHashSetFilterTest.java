@@ -474,6 +474,77 @@ class InventoryHashSetFilterTest {
                 service(InventoryFilterType.HASH_SET_V2).getFilter().getFilterEntries());
     }
 
+    // Rule 12: a requester of an earlier version holds one request per storage key V1 and accepts for it only a higher
+    // sequence number. Here it holds the removals, which this node did not store, for example because it refuses the
+    // removals of user profiles without signature V2. It would reject the add requests, so every response would contain
+    // them again.
+    @Test
+    void responderDoesNotSendRequestsToRequesterOfEarlierVersionWithNewerRequests() throws Exception {
+        InventoryTestData data = new InventoryTestData("removed by the requester only", ownerA);
+        AddAuthenticatedDataRequest add = add(data, ownerA);
+        RemoveAuthenticatedDataRequest removal = RemoveAuthenticatedDataRequest.from(authenticatedDataStore,
+                new DefaultAuthenticatedData(data),
+                ownerA);
+        assertTrue(removal.getSequenceNumber() > add.getSequenceNumber());
+        MailboxData mailboxData = new MailboxData(AckMessage.META_DATA, createConfidentialMessage(ownerA));
+        assertTrue(storageService.onAddDataRequest(AddMailboxRequest.from(mailboxData, ownerA, ownerB.getPublic()))
+                .join().isSuccess());
+        RemoveMailboxRequest mailboxRemoval = RemoveMailboxRequest.from(mailboxData, ownerB);
+        HashSetFilter filterOfEarlierVersion = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>(List.of(
+                toEntry(removal, removal.getStorageKeyV1()),
+                toEntry(mailboxRemoval, mailboxRemoval.getStorageKeyV1()))));
+
+        Inventory inventory = createInventory(InventoryFilterType.HASH_SET, filterOfEarlierVersion);
+
+        assertTrue(inventory.getEntries().isEmpty());
+        assertFalse(inventory.isMaxSizeReached());
+    }
+
+    // Rule 12 keeps the requests which a requester of an earlier version can store: those with a higher sequence number
+    @Test
+    void responderSendsNewerRequestToRequesterOfEarlierVersion() throws Exception {
+        InventoryTestData data = new InventoryTestData("a", ownerA);
+        AddAuthenticatedDataRequest olderAdd = add(data, ownerA);
+        AddAuthenticatedDataRequest newerAdd = add(data, ownerA);
+        assertTrue(newerAdd.getSequenceNumber() > olderAdd.getSequenceNumber());
+        HashSetFilter filterOfEarlierVersion = new HashSetFilter(InventoryFilterType.HASH_SET,
+                new ArrayList<>(List.of(toEntry(olderAdd, olderAdd.getStorageKeyV1()))));
+
+        assertEquals(List.of(newerAdd),
+                createInventory(InventoryFilterType.HASH_SET, filterOfEarlierVersion).getEntries());
+    }
+
+    // Rule 12 applies only to HASH_SET. A requester of this version follows rule 6, and the entries of HASH_SET_V2 do
+    // not always show the sequence number by which it orders an entry (rule 5).
+    @Test
+    void filterV2WithNewerEntryDoesNotHideTheRequest() throws Exception {
+        AddAuthenticatedDataRequest add = add(new InventoryTestData("a", ownerA), ownerA);
+        HashSetFilter filterV2 = new HashSetFilter(InventoryFilterType.HASH_SET_V2, new ArrayList<>(List.of(
+                new HashSetFilterEntry(add.getStorageKeyV2().getBytes(), add.getSequenceNumber() + 1))));
+
+        assertEquals(List.of(add), createInventory(InventoryFilterType.HASH_SET_V2, filterV2).getEntries());
+    }
+
+    // Only nodes of this version list a storage key V1 several times, for the requests of several owners. Rule 12 then
+    // does not send a request only if its sequence number is not higher than any of the listed numbers.
+    @Test
+    void responderComparesWithLowestSequenceNumberOfStorageKeyListedSeveralTimes() throws Exception {
+        InventoryTestData data = new InventoryTestData("shared", ownerA);
+        AddAuthenticatedDataRequest first = add(data, ownerA);
+        AddAuthenticatedDataRequest second = add(data, ownerA);
+        byte[] storageKeyV1 = second.getStorageKeyV1().getBytes();
+        HashSetFilter filterWithLowerNumber = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>(List.of(
+                new HashSetFilterEntry(storageKeyV1, first.getSequenceNumber()),
+                new HashSetFilterEntry(storageKeyV1, second.getSequenceNumber() + 1))));
+        HashSetFilter filterWithHigherNumbers = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>(List.of(
+                new HashSetFilterEntry(storageKeyV1, second.getSequenceNumber() + 1),
+                new HashSetFilterEntry(storageKeyV1, second.getSequenceNumber() + 2))));
+
+        assertEquals(List.of(second),
+                createInventory(InventoryFilterType.HASH_SET, filterWithLowerNumber).getEntries());
+        assertTrue(createInventory(InventoryFilterType.HASH_SET, filterWithHigherNumbers).getEntries().isEmpty());
+    }
+
     // An authenticated data entry of owner A, a remove request of owner B without entry, and append-only data
     private void addStoreContent() throws Exception {
         add(new InventoryTestData("a", ownerA), ownerA);
