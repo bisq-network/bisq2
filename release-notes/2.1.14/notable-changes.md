@@ -6,7 +6,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 - Makers validate take requests before storing a trade and accept only their current, complete offers.
 - Contract prices must match the offer. Fixed-price trades allow rounding differences rather than the configurable market-price deviation.
-- Buyers enforce seller reputation limits as maker and as taker. As taker, the buyer's node checks every take, also through the API and the mobile node. Displayed seller maximums fit those limits.
+- Buyers enforce seller reputation limits as maker and as taker. As taker, the buyer's node checks every take, also through the API and a mobile node built on this version. Displayed seller maximums fit those limits.
 - Missing, old, or inconsistent market prices make the reputation check fail, so Bisq Easy takes wait for current prices.
 - While an alert requires a minimum version, takers refuse offers of makers below that version instead of waiting without an answer.
 - Bitcoin URI and BOLT 11 invoice amounts must be absent or equal the contract amount. Unsupported BOLT 12 payment data is rejected. Sellers must still check dynamically obtained LNURL or Lightning-address invoices in their wallets. QR scanning keeps the case of legacy Bitcoin addresses.
