@@ -52,6 +52,10 @@ public final class AuthorizedDataPublisherMigration {
                                                          KeyPair authorizedKeyPair) {
         byte[] earlierPublicKeyBytes = earlierPublisherKeyPair.getPublic().getEncoded();
         byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
+        if (isSameKey(earlierPublicKeyBytes, authorizedPublicKeyBytes)) {
+            log.info("The authorized key pair is the key pair of the network identity, so no data needs a new publisher");
+            return List.of();
+        }
         // Only the transition types. AuthorizedOracleNode names the key of the network identity as its owner, and
         // nodes of earlier versions accept it only from that key, so its entry must stay.
         List<AddAuthenticatedDataRequest> entriesOfEarlierPublisher = store.getPersistableStore().getMap().values()
@@ -121,6 +125,9 @@ public final class AuthorizedDataPublisherMigration {
                                                                        PublicKey authorizedKey) {
         byte[] earlierPublicKeyBytes = earlierPublisherKey.getEncoded();
         byte[] authorizedPublicKeyBytes = authorizedKey.getEncoded();
+        if (isSameKey(earlierPublicKeyBytes, authorizedPublicKeyBytes)) {
+            return List.of();
+        }
         Map<ByteArray, AuthenticatedDataRequest> map = store.getPersistableStore().getMap();
         List<RemoveAuthenticatedDataRequest> removals = map.values().stream()
                 .filter(RemoveAuthenticatedDataRequest.class::isInstance)
@@ -142,6 +149,13 @@ public final class AuthorizedDataPublisherMigration {
         });
         requests.addAll(removals);
         return requests;
+    }
+
+    // With the same key pair, the data already has its owner as publisher. The new entry would get the storage key of
+    // the entry and replace it, and the remove request would then remove the new entry: the node would remove its own
+    // data from the network (rule 14 of docs/specifications/network/storage-ownership.md).
+    private static boolean isSameKey(byte[] earlierPublicKeyBytes, byte[] authorizedPublicKeyBytes) {
+        return Arrays.equals(earlierPublicKeyBytes, authorizedPublicKeyBytes);
     }
 
     // Data which the owner removed is not published again, also if the entry of the earlier key pair is still stored.
