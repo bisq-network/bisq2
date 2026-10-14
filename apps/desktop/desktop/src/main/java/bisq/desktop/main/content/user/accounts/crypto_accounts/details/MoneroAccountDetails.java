@@ -51,7 +51,7 @@ public class MoneroAccountDetails extends CryptoAccountDetails<MoneroAccount> {
         String isUseSubAddressesString = BooleanFormatter.toEnabledDisabled(isUseSubAddresses);
         addDescriptionAndValue(Res.get("state.enabled"), isUseSubAddressesString);
         if (isUseSubAddresses) {
-            addressDescriptionLabel.setText(Res.get("paymentAccounts.crypto.address.xmr.mainAddresses"));
+            addressDescriptionLabel.setText(Res.get("paymentAccounts.crypto.address.xmr.mainAddress"));
             String privateViewKey = accountPayload.getPrivateViewKey().orElseThrow();
             Label privateViewKeyLabel = addDescriptionAndValue(Res.get("paymentAccounts.crypto.address.xmr.privateViewKey"), privateViewKey);
             if (privateViewKey.length() > 70) {
