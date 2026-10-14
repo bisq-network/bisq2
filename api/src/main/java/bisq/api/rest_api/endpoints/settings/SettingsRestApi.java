@@ -23,6 +23,7 @@ import bisq.api.dto.DtoMappings;
 import bisq.api.dto.settings.SettingsApiVersionDto;
 import bisq.api.dto.settings.SettingsDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
+import bisq.api.rest_api.endpoints.info.ImageVersion;
 import bisq.settings.SettingsService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -36,6 +37,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.function.UnaryOperator;
+
 @Slf4j
 @Path("/settings")
 @Produces(MediaType.APPLICATION_JSON)
@@ -43,9 +46,16 @@ import lombok.extern.slf4j.Slf4j;
 @Tag(name = "Settings API", description = "API for managing user settings")
 public class SettingsRestApi extends RestApiBase {
     private final SettingsService settingsService;
+    private final UnaryOperator<String> env;
 
     public SettingsRestApi(SettingsService settingsService) {
+        this(settingsService, System::getenv);
+    }
+
+    // Lets tests supply the environment instead of reading the process's.
+    SettingsRestApi(SettingsService settingsService, UnaryOperator<String> env) {
         this.settingsService = settingsService;
+        this.env = env;
     }
 
     @GET
@@ -68,6 +78,10 @@ public class SettingsRestApi extends RestApiBase {
         }
     }
 
+    /**
+     * Kept for already deployed clients; new clients read the version from {@code GET /info}
+     * ({@link bisq.api.rest_api.endpoints.info.InfoRestApi}) together with the supported features.
+     */
     @GET
     @Path("/version")
     @Operation(description = "Get the current Bisq2 version. Containerised distributions additionally report " +
@@ -75,20 +89,12 @@ public class SettingsRestApi extends RestApiBase {
     public Response getVersion() {
         try {
             String version = ApplicationVersion.getVersion().toString();
-            String imageVersion = resolveImageVersion(System.getenv("BISQ_IMAGE_VERSION"));
+            String imageVersion = ImageVersion.resolve(env).orElse(null);
             return Response.ok(new SettingsApiVersionDto(version, imageVersion)).build();
         } catch (Exception e) {
             log.error("Error getting version", e);
             return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
         }
-    }
-
-    // Clients key caches of static node config on the reported version, so a distribution that can be
-    // updated in place under the same core version (docker image rebuilds) reports the per-image release
-    // in a separate field. version itself must stay the plain core version: deployed clients parse it
-    // strictly as MAJOR.MINOR.PATCH and refuse the connection otherwise.
-    static String resolveImageVersion(String imageVersion) {
-        return imageVersion == null || imageVersion.isBlank() ? null : imageVersion.trim();
     }
 
     @PATCH

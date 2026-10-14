@@ -29,8 +29,8 @@ import java.util.Optional;
  * For devs adding new endpoints or permissions:
  * <ul>
  * <li>Prefer mapping a new endpoint to an existing permission when one fits semantically —
- *     established precedent: {@code /trade-restricting-alert} and {@code /alert-notifications}
- *     map to {@link Permission#SETTINGS}.</li>
+ *     established precedent: {@code /trade-restricting-alert}, {@code /alert-notifications} and
+ *     {@code /info} map to {@link Permission#SETTINGS}.</li>
  * <li>When adding a new {@link Permission} value, ids are append-only and must never be reused.
  *     Already-paired clients holding a grantAll grant gain new non-sensitive permissions
  *     automatically at read time (see {@link PermissionSet}) — no re-pairing needed. Explicit
@@ -68,6 +68,8 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/trade-restricting-alert(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/alert-notifications(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
+                // Replaces /settings/version for new clients, so it keeps that endpoint's guard.
+                new PermissionRule("^/info(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identities(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),
                 new PermissionRule("^/user-profiles(/.*)?$", Optional.empty(), Permission.USER_PROFILES),
