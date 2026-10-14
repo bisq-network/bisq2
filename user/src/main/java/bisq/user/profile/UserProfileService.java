@@ -39,7 +39,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -225,7 +224,7 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
                     persist();
                 }
             } else {
-                log.warn("Invalid user profile {}", userProfile);
+                log.warn("Invalid user profile {}", userProfileId);
             }
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
@@ -256,12 +255,8 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         persist();
     }
 
+    // UserProfile.verify() already requires that the payload of the proof of work is the hash of the profile key
     private boolean verifyUserProfile(UserProfile userProfile) {
-        if (!Arrays.equals(userProfile.getProofOfWork().getPayload(), userProfile.getPubKeyHash())) {
-            log.warn("Payload of proof of work not matching pubKeyHash of user profile {}", userProfile);
-            return false;
-        }
-
         // The verifier checks the work against the difficulty which the profile claims. The nym and the cat hash icon
         // are derived from the solution, so the claimed difficulty must not be below the difficulty at minting.
         // Otherwise searching for a nym and icon which look like those of another user costs almost nothing.
@@ -274,7 +269,7 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         }
 
         if (!hashCashProofOfWorkService.verify(userProfile.getProofOfWork())) {
-            log.warn("Proof of work verification of user profile {} failed", userProfile);
+            log.warn("Proof of work verification of user profile {} failed", userProfile.getId());
             return false;
         }
 
