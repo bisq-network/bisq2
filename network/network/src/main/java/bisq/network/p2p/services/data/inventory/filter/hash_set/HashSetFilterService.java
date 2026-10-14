@@ -30,14 +30,19 @@ import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
+import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
+import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -111,27 +116,66 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
     // and a higher sequence number. If it holds that add request, isSequentialRequestMissing already excludes the
     // removal. Otherwise it receives the add request in the same response, because add requests are selected before
     // removals, and then rejects the removal. After the migration of the publisher of authorized data, this applies to
-    // every removal of the migration (rule 11 of docs/specifications/network/inventory-hash-set-filter.md).
+    // every removal of the migration. The requester also accepts a removal of an add request only from its owner, so
+    // it cannot store a removal of another key than the owner of the data of such an add request either (rule 11 of
+    // docs/specifications/network/inventory-hash-set-filter.md).
     @Override
     protected List<RemoveAuthenticatedDataRequest> getStorableRemovals(
             List<RemoveAuthenticatedDataRequest> missingRemovals) {
         if (inventoryFilterType != InventoryFilterType.HASH_SET || missingRemovals.isEmpty()) {
             return missingRemovals;
         }
-        Map<ByteArray, Integer> highestAddSequenceNumberByStorageKeyV1 = storageService.getAuthenticatedDataStoreMaps()
-                .flatMap(map -> map.values().stream())
-                .filter(AddAuthenticatedDataRequest.class::isInstance)
-                .map(AddAuthenticatedDataRequest.class::cast)
-                .collect(Collectors.toMap(AddAuthenticatedDataRequest::getStorageKeyV1,
-                        AddAuthenticatedDataRequest::getSequenceNumber,
-                        Math::max));
+        // The add requests with the same storage key V1 hold the same data, so they have the same owner
+        Map<ByteArray, AddAuthenticatedDataRequest> addWithHighestSequenceNumberByStorageKeyV1 =
+                storageService.getAuthenticatedDataStoreMaps()
+                        .flatMap(map -> map.values().stream())
+                        .filter(AddAuthenticatedDataRequest.class::isInstance)
+                        .map(AddAuthenticatedDataRequest.class::cast)
+                        .collect(Collectors.toMap(AddAuthenticatedDataRequest::getStorageKeyV1,
+                                Function.identity(),
+                                (first, second) ->
+                                        first.getSequenceNumber() >= second.getSequenceNumber() ? first : second));
         return missingRemovals.stream()
                 .filter(removal -> {
-                    Integer highestAddSequenceNumber =
-                            highestAddSequenceNumberByStorageKeyV1.get(removal.getStorageKeyV1());
-                    return highestAddSequenceNumber == null || highestAddSequenceNumber <= removal.getSequenceNumber();
+                    AddAuthenticatedDataRequest add =
+                            addWithHighestSequenceNumberByStorageKeyV1.get(removal.getStorageKeyV1());
+                    return add == null ||
+                            (add.getSequenceNumber() <= removal.getSequenceNumber() && isSignedByOwner(removal, add));
                 })
                 .toList();
+    }
+
+    private static boolean isSignedByOwner(RemoveAuthenticatedDataRequest removal, AddAuthenticatedDataRequest add) {
+        byte[] signerPubKeyHash = DigestUtil.hash(removal.getSignaturePubKeyEncoded());
+        return add.getAuthenticatedSequentialData().getAuthenticatedData().isOwner(signerPubKeyHash);
+    }
+
+    // A requester of an earlier version (HASH_SET) holds one request per storage key V1 and accepts a removal of mailbox
+    // data only from the receiver of the add request which it holds. It cannot store a removal of another key than the
+    // receiver of an add request which this node holds with the same storage key V1: it holds that add request, or
+    // receives it in the same response (rule 11 of docs/specifications/network/inventory-hash-set-filter.md).
+    @Override
+    protected List<RemoveMailboxRequest> getStorableMailboxRemovals(List<RemoveMailboxRequest> missingRemovals) {
+        if (inventoryFilterType != InventoryFilterType.HASH_SET || missingRemovals.isEmpty()) {
+            return missingRemovals;
+        }
+        // Add requests of the same mailbox data can name different receivers, so all of them count
+        Map<ByteArray, List<AddMailboxRequest>> addsByStorageKeyV1 = storageService.getMailboxStoreMaps()
+                .flatMap(map -> map.values().stream())
+                .filter(AddMailboxRequest.class::isInstance)
+                .map(AddMailboxRequest.class::cast)
+                .collect(Collectors.groupingBy(AddMailboxRequest::getStorageKeyV1));
+        return missingRemovals.stream()
+                .filter(removal -> {
+                    List<AddMailboxRequest> adds = addsByStorageKeyV1.get(removal.getStorageKeyV1());
+                    return adds == null || adds.stream().anyMatch(add -> isSignedByReceiver(removal, add));
+                })
+                .toList();
+    }
+
+    private static boolean isSignedByReceiver(RemoveMailboxRequest removal, AddMailboxRequest add) {
+        return Arrays.equals(add.getMailboxSequentialData().getReceiversPubKeyBytes(),
+                removal.getSignaturePubKeyEncoded());
     }
 
     @Override
