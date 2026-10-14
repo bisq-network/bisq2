@@ -294,6 +294,21 @@ class AuthorizedDataPublisherMigrationTest {
         assertTrue(AuthorizedDataPublisherMigration.migrate(store, identityKeyPair, authorizedKeyPair).isEmpty());
     }
 
+    // With the same key pair, the new entry would replace the entry, and the remove request would then remove the data
+    // from the network
+    @Test
+    void nothingIsMigratedIfTheKeyPairOfTheNetworkIdentityIsTheAuthorizedKeyPair() throws GeneralSecurityException {
+        AddAuthenticatedDataRequest entry = createRequest(authorizedData, authorizedKeyPair, 1,
+                getCreationDateBeforeCutoff());
+        assertTrue(store.add(entry).isSuccess());
+
+        assertTrue(AuthorizedDataPublisherMigration.migrate(store, authorizedKeyPair, authorizedKeyPair).isEmpty());
+        assertTrue(AuthorizedDataPublisherMigration.findMigrationRequests(store,
+                authorizedKeyPair.getPublic(),
+                authorizedKeyPair.getPublic()).isEmpty());
+        assertEquals(entry, store.getPersistableStore().getMap().get(entry.getStorageKey()));
+    }
+
     private AuthorizedData authorize(String content, KeyPair keyPair) throws GeneralSecurityException {
         TestAuthorizedDistributedData data = TestAuthorizedDistributedData.withLegacyOwners(content);
         byte[] signature = SignatureUtil.sign(data.serializeForHash(), keyPair.getPrivate());

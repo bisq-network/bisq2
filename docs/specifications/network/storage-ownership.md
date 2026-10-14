@@ -210,6 +210,9 @@ identity, not with their authorized key pair:
     owner has a remove request in the store, and they ignore expired entries. They remove an entry of their network
     identity only if their store accepted the new entry, or if the owner removed the data. If the store rejects the
     new entry, for example because it is full, the entry stays for a later run of the migration.
+    - If the key pair of the network identity is the authorized key pair, the node migrates nothing: its data already
+      has its owner as publisher. The new entry would get the storage key of the entry and replace it, and the remove
+      request would then remove the new entry, so the node would remove its own data from the network.
     - The node broadcasts the requests of the migration one at a time, with a pause of 500 ms, and only while it has a
       connection. For each store, it sends the new entries before the remove requests.
     - At the first run after a start, the node broadcasts the requests of the runs before the restart again. It finds
