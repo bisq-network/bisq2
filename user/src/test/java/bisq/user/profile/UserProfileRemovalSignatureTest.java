@@ -21,10 +21,16 @@ import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.inventory.Inventory;
+import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
+import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilter;
+import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterEntry;
+import bisq.network.p2p.services.data.inventory.filter.hash_set.HashSetFilterService;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
@@ -46,11 +52,17 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Nodes up to version 2.1.13 refresh their user profile with signature V1 over the hash of the data, the bytes which
@@ -104,6 +116,30 @@ class UserProfileRemovalSignatureTest {
         assertSame(removal, store.getPersistableStore().getMap().get(add.getStorageKey()));
     }
 
+    // Nodes of earlier versions accept the removal and then reject the add request of the profile, whose sequence
+    // number is lower. This node does not send them the add request, which they would reject in every inventory
+    // response (rule 12 of docs/specifications/network/inventory-hash-set-filter.md).
+    @ParameterizedTest
+    @ValueSource(ints = {2, Integer.MAX_VALUE})
+    void inventoryResponseToRequesterWithTheRefusedRemovalDoesNotContainTheProfile(int sequenceNumber)
+            throws GeneralSecurityException, UnresolvableProtobufException {
+        AddAuthenticatedDataRequest add = AddAuthenticatedDataRequest.from(store, userProfile, ownerKeyPair);
+        assertTrue(store.add(add).isSuccess());
+        RemoveAuthenticatedDataRequest removal = withoutSignatureV2(
+                RemoveAuthenticatedDataRequest.from(store, userProfile, ownerKeyPair), sequenceNumber);
+        assertTrue(store.remove(removal).isSignatureV2Missing());
+        HashSetFilter filterOfNodeWithTheRemoval = new HashSetFilter(InventoryFilterType.HASH_SET, new ArrayList<>(
+                List.of(new HashSetFilterEntry(removal.getStorageKeyV1().getBytes(), sequenceNumber))));
+        HashSetFilter filterOfNodeWithoutTheProfile = new HashSetFilter(InventoryFilterType.HASH_SET,
+                new ArrayList<>());
+
+        Inventory inventory = filterServiceForEarlierVersions().createInventory(filterOfNodeWithTheRemoval);
+
+        assertTrue(inventory.getEntries().isEmpty());
+        assertEquals(List.of(add),
+                filterServiceForEarlierVersions().createInventory(filterOfNodeWithoutTheProfile).getEntries());
+    }
+
     // A store of version 2.1.13 can hold such a removal when the node upgrades
     @Test
     void persistedRemovalWithoutSignatureV2IsPruned() throws GeneralSecurityException, UnresolvableProtobufException {
@@ -115,6 +151,16 @@ class UserProfileRemovalSignatureTest {
         store.prunePersisted(store.getPersistableStore());
 
         assertTrue(map.isEmpty());
+    }
+
+    // The service which answers the inventory requests of nodes of earlier versions, for the store of user profiles
+    private HashSetFilterService filterServiceForEarlierVersions() {
+        StorageService storageService = mock(StorageService.class);
+        when(storageService.getAuthenticatedDataStoreMaps())
+                .thenAnswer(invocation -> Stream.of(store.getPersistableStore().getMap()));
+        when(storageService.getMailboxStoreMaps()).thenAnswer(invocation -> Stream.empty());
+        when(storageService.getAddAppendOnlyDataStoreMaps()).thenAnswer(invocation -> Stream.empty());
+        return new HashSetFilterService(storageService, 2_000_000, InventoryFilterType.HASH_SET);
     }
 
     // As a peer creates it from a refresh of version 2.1.13: signature V1 only, and a sequence number which signature V1
