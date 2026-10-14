@@ -147,7 +147,9 @@ public class AuthenticatedDataStorageService extends DataStorageService<Authenti
             }
         }
         if (request.isSignatureInvalid(now)) {
-            log.warn("Signature is invalid at add. request={}", request);
+            // The request can carry large data of the peer, so only its key and type are logged
+            log.warn("Signature is invalid at add. storageKey={}, className={}", storageKey,
+                    authenticatedData.getClassName());
             return DataStorageResult.failed().signatureInvalid();
         }
 

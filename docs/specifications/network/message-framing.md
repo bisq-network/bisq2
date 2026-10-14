@@ -184,8 +184,11 @@ of a message. The framing is the format which marks where a message starts and w
   closes its connection to each of these relays. Whether nodes of earlier versions accept such a message depends on
   the field limits of each type of stored data.
   - Why it is accepted now: it needs a modified client, and a type of stored data whose fields nodes of earlier
-    versions accept with more than 4 MiB in total. It is not known whether such a type exists. The field limits of
-    the types of earlier versions were not checked for this.
+    versions accept with more than 4 MiB in total. The user profile is such a type: nodes of earlier versions accept
+    a proof of work payload of up to 10 000 000 bytes. Nodes of this version reject such a profile at parsing (rule 4
+    of [`../user/user-profile-proof-of-work.md`](../user/user-profile-proof-of-work.md)), but a message above the size
+    limit closes the connection before it is parsed. The field limits of the other types of earlier versions were not
+    checked for this.
   - What would remove it: a node which reads and discards a message above the size limit, instead of closing the
     connection. It would read the bytes of the message, but it would not hold them.
   - Who decides: the developers.
