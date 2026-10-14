@@ -3,7 +3,7 @@
 ## Safer Bisq Easy Trades
 
 - Take requests must match a current maker offer and its price before a trade is stored.
-- Buyers enforce seller reputation limits as maker and as taker, also for takes through the API and the mobile node.
+- Buyers enforce seller reputation limits as maker and as taker, also for takes through the API and a mobile node built on this version.
 - Bitcoin URI and Lightning invoice amounts are checked against the agreed trade amount.
 
 ## Stronger Network Integrity and Tor Privacy
