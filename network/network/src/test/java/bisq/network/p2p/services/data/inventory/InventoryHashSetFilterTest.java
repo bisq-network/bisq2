@@ -514,6 +514,17 @@ class InventoryHashSetFilterTest {
                 createInventory(InventoryFilterType.HASH_SET, filterOfEarlierVersion).getEntries());
     }
 
+    // Rule 12 applies only to HASH_SET. A requester of this version follows rule 6, and the entries of HASH_SET_V2 do
+    // not always show the sequence number by which it orders an entry (rule 5).
+    @Test
+    void filterV2WithNewerEntryDoesNotHideTheRequest() throws Exception {
+        AddAuthenticatedDataRequest add = add(new InventoryTestData("a", ownerA), ownerA);
+        HashSetFilter filterV2 = new HashSetFilter(InventoryFilterType.HASH_SET_V2, new ArrayList<>(List.of(
+                new HashSetFilterEntry(add.getStorageKeyV2().getBytes(), add.getSequenceNumber() + 1))));
+
+        assertEquals(List.of(add), createInventory(InventoryFilterType.HASH_SET_V2, filterV2).getEntries());
+    }
+
     // Only nodes of this version list a storage key V1 several times, for the requests of several owners. Rule 12 then
     // does not send a request only if its sequence number is not higher than any of the listed numbers.
     @Test
