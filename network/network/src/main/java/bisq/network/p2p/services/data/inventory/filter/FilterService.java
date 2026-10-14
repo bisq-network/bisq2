@@ -113,28 +113,11 @@ public abstract class FilterService<T extends InventoryFilter> {
                     }
                 });
 
-        List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
-                        o1.getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toList());
-
-
+        List<DataRequest> sortedAndFilteredRequests = selectWithinMaxSize(addRequests, accumulatedSize, maxSizeReached);
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(getStorableRemovals(removeRequests).stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
-                    .filter(request -> {
-                        if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                        }
-                        return !maxSizeReached.get();
-                    })
-                    .toList());
+            sortedAndFilteredRequests.addAll(selectWithinMaxSize(getStorableRemovals(removeRequests),
+                    accumulatedSize,
+                    maxSizeReached));
         }
         return sortedAndFilteredRequests;
     }
@@ -156,27 +139,9 @@ public abstract class FilterService<T extends InventoryFilter> {
                         }
                     }
                 });
-        List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
-                        o1.getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toList());
-
+        List<DataRequest> sortedAndFilteredRequests = selectWithinMaxSize(addRequests, accumulatedSize, maxSizeReached);
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(removeRequests.stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
-                    .filter(request -> {
-                        if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                        }
-                        return !maxSizeReached.get();
-                    })
-                    .toList());
+            sortedAndFilteredRequests.addAll(selectWithinMaxSize(removeRequests, accumulatedSize, maxSizeReached));
         }
         return sortedAndFilteredRequests;
     }
@@ -184,18 +149,27 @@ public abstract class FilterService<T extends InventoryFilter> {
     private List<DataRequest> getAppendOnlyDataRequests(T filter,
                                                         AtomicInteger accumulatedSize,
                                                         AtomicBoolean maxSizeReached) {
-        return storageService.getAddAppendOnlyDataStoreMaps().flatMap(map -> map.entrySet().stream())
+        List<AddAppendOnlyDataRequest> missingRequests = storageService.getAddAppendOnlyDataStoreMaps()
+                .flatMap(map -> map.entrySet().stream())
                 .filter(entry -> isAddAppendOnlyDataRequestMissing(filter, entry))
-                //hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
-                .sorted((o1, o2) -> Integer.compare(o2.getPriority(),
-                        o1.getPriority()))
+                .toList();
+        return selectWithinMaxSize(missingRequests, accumulatedSize, maxSizeReached);
+    }
+
+    // Selects the requests with the highest priority first, as long as the response stays within maxSize. At the first
+    // request which does not fit, maxSizeReached is set, and no later request of any selection is added.
+    private List<DataRequest> selectWithinMaxSize(Collection<? extends DataRequest> requests,
+                                                  AtomicInteger accumulatedSize,
+                                                  AtomicBoolean maxSizeReached) {
+        return requests.stream()
+                .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
                 .filter(request -> {
                     if (!maxSizeReached.get()) {
                         maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
                     }
                     return !maxSizeReached.get();
                 })
-                .collect(Collectors.toList());
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 }
