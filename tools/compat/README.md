@@ -167,9 +167,12 @@ which uses the code of Bisq. The tests cover:
   and characters outside ASCII. All of it stays, and the open trades continue to the end. The API of the baseline
   creates only user-defined accounts.
 - `FixedPriceAcrossUpgradeTest`: the API of the baseline creates offers with a canonical fixed price and with the
-  fixed price which Bisq Connect sends (base side id `BTC`, value rounded to 8 significant digits). Nodes of this
-  checkout show and take both. After the upgrade in place, the node loads its stores without skipping an entry, keeps
-  its open offers and open trades with both prices, and all trades complete.
+  fixed price which Bisq Connect sends (base side id `BTC`, value rounded to 8 significant digits). Nodes of the
+  baseline show both. Nodes of this checkout drop the offers with the price of Bisq Connect and show only the canonical
+  ones (rule 5 of `docs/specifications/offer/fixed-price.md`). A peer of the baseline takes an offer with the price of
+  Bisq Connect, and a peer of this checkout takes a canonical one. After the upgrade in place, the node keeps both open
+  trades and its canonical offer, and all trades complete. It skips only its own offer with the price of Bisq Connect,
+  and no trade, trade channel or mediation case.
 - `ConnectPairingAcrossUpgradeTest`: a client pairs with a node of the baseline, which runs with the API security of
   its version, as the mobile app of Bisq Connect does with the QR code. The user of the client has an open trade and
   chats in it. The node is upgraded in place. The old session of the client gets HTTP 401. The client gets a new
