@@ -55,7 +55,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 - **Upgrade before 2026-11-25 00:00 UTC.** Updated nodes require V2 storage signatures from that date, also for mailbox messages. Oracle and seed operators must migrate publications; security managers, moderators, and release managers must republish their long-lived data with the updated version.
 - `application.bondedRoles.onlyStaticOracleNodes=true` is the default. Networks must use a consistent setting, and non-static oracle operators cannot start with that default. Oracle operators should test the first start on regtest with a copy of their data directory.
-- External SOCKS proxies must support username/password authentication. API consumers must account for default session handling and changed account/identity models. Paired devices must pair again after a downgrade to 2.1.13.
+- External SOCKS proxies must support username/password authentication. API consumers must account for default session handling and changed account/identity models. A downgrade to 2.1.13 is not supported.
 - Fixed-price offers that Bisq Connect published through 2.1.13 nodes are not shown on updated nodes; makers must create them again.
 - Security managers should publish a minimum trading version as one alert for `DESKTOP` and one for `MOBILE_NODE`, not as `UNSPECIFIED`, while 2.1.13 nodes trade.
 - Check old log files before sharing them, and check `db/unreadable` on headless nodes after the upgrade.
