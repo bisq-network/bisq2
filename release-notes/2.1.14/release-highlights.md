@@ -26,7 +26,7 @@
 
 ## Do Not Share Old Log Files
 
-Log files written by versions 2.1.3 to 2.1.13 contain the onion private keys of all identities of the node. The desktop error report now hides these keys, but the log files on disk still contain them.
+Log files written by versions 2.1.3 to 2.1.13 contain the onion private keys of all identities of the node, and on nodes with the API also the private keys of user profiles. At its first start, this version hides these keys in the log files of its data directory. Other copies, for example shared logs, backups and `docker logs`, still contain them.
 
 ## Update Before November 25, 2026
 
