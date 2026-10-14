@@ -97,6 +97,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -106,6 +107,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Supplier;
 
 import static bisq.offer.options.OfferOptionUtil.createSaltedAccountPayloadHash;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -169,14 +171,33 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Coordinates early-message buffering with protocol registration. Never acquire a protocol
     // monitor or process messages while holding this lock; those operations can call blocking RPCs.
     private final Object pendingMessagesLock = new Object();
-    // Serializes maker-side trade creation so two concurrent take requests for the same trade id
-    // cannot race a second trade or protocol into the registries.
-    private final Object tradeCreationLock = new Object();
-
+    // Serializes trade creation on both sides and the maker's rejection decisions, so concurrent
+    // take requests cannot race a second trade or protocol into the registries and the
+    // one-pending-setup-per-offer-and-taker bound sees every trade created before it.
+    final Object tradeCreationLock = new Object();
+    private final Supplier<ExecutorService> executorFactory;
+    // Closed before the executor goes away so no request is admitted that can no longer be
+    // handled. Guarded by tradeCreationLock.
+    private boolean admissionOpen;
+    // At most one rollback write in flight; a rollback during that write requests one more.
+    // Guarded by tradeCreationLock.
+    private boolean rollbackWriteInFlight, rollbackWriteRequested;
     private ExecutorService executor;
 
     public MuSigTradeService(Config config, ServiceProvider serviceProvider, AppType appType) {
+        this(serviceProvider,
+                appType,
+                () -> ExecutorFactory.boundedCachedPool("MuSigTradeService"),
+                new MusigGrpcClient(config.getHost(), config.getPort()));
+    }
+
+    MuSigTradeService(ServiceProvider serviceProvider,
+                      AppType appType,
+                      Supplier<ExecutorService> executorFactory,
+                      MusigGrpcClient musigGrpcClient) {
         this.serviceProvider = serviceProvider;
+        this.executorFactory = executorFactory;
+        this.musigGrpcClient = musigGrpcClient;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
@@ -189,7 +210,6 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
         UserService userService = serviceProvider.getUserService();
         BondedRolesService bondedRolesService = serviceProvider.getBondedRolesService();
-        musigGrpcClient = new MusigGrpcClient(config.getHost(), config.getPort());
 
         muSigTraderMediationService = new MuSigTraderMediationService(
                 networkService,
@@ -225,11 +245,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        executor = ExecutorFactory.boundedCachedPool("MuSigTradeService");
+        executor = executorFactory.get();
 
         return musigGrpcClient.initialize()
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+                    synchronized (tradeCreationLock) {
+                        admissionOpen = true;
+                    }
 
                     networkService.getConfidentialMessageServices().stream()
                             .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
@@ -275,6 +298,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
+        synchronized (tradeCreationLock) {
+            admissionOpen = false;
+        }
         if (authorizedAlertDataSetPin != null) {
             authorizedAlertDataSetPin.unbind();
             authorizedAlertDataSetPin = null;
@@ -363,6 +389,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     StringUtils.sanitizeForLog(message.getTradeId()));
             return;
         }
+        if (isKnownTrade(message.getTradeId())) {
+            // A request for a trade we already hold is a resend, a startup replay or a tampered
+            // copy of an accepted request. None of them may produce a rejection report: the
+            // taker's own attempt would fail on receiving it. The creation lock repeats the
+            // check for requests that race with the first one.
+            log.info("Dropping a take offer request for a trade that already exists. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()));
+            return;
+        }
         try {
             MuSigOffer claimedOffer;
             try {
@@ -389,18 +424,75 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                         e);
             }
             MuSigContract muSigContract = message.getContract();
-            makerCreatesProtocol(muSigContract,
-                    claimedOffer,
-                    message.getTradeId(),
-                    message.getSender(),
-                    message.getReceiver())
-                    .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
+            // Creation, protocol registration and dispatch stay in one critical section: shutdown
+            // closes admission under the same lock before it shuts the executor down, so an
+            // admitted request always reaches an executor that accepts it or is rolled back
+            // right here. Registration itself queues a task (the drain of buffered dispute and
+            // settlement messages), so a rejection can come from either step.
+            synchronized (tradeCreationLock) {
+                try {
+                    makerCreatesProtocol(muSigContract,
+                            claimedOffer,
+                            message.getTradeId(),
+                            message.getSender(),
+                            message.getReceiver())
+                            .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
+                } catch (RejectedExecutionException e) {
+                    rollBackAdmittedRequest(message.getTradeId());
+                }
+            }
         } catch (TradeProtocolException e) {
-            log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
-                    StringUtils.sanitizeForLog(message.getTradeId()));
-            reportTakeOfferRejection(networkService, identityService, message, e);
+            rejectTakeOfferRequest(message, e);
+        }
+    }
+
+    // The admitted request must reach its handler: a trade left in INIT would count as a pending
+    // setup for its offer and taker without ever being processed. Called under tradeCreationLock.
+    private void rollBackAdmittedRequest(String tradeId) {
+        log.warn("Rolling back an admitted take offer request because its handling could not be scheduled. tradeId={}",
+                StringUtils.sanitizeForLog(tradeId));
+        persistableStore.removeTrade(tradeId);
+        tradeProtocolById.remove(tradeId);
+        requestRollbackWrite();
+    }
+
+    // The rate-limited persist could drop the rollback write right after the creation write, and
+    // a restart would then resurrect the rolled back trade. Rollbacks under a saturated executor
+    // can repeat quickly, so their writes are coalesced. Called under tradeCreationLock.
+    private void requestRollbackWrite() {
+        if (rollbackWriteInFlight) {
+            rollbackWriteRequested = true;
             return;
         }
+        rollbackWriteInFlight = true;
+        getPersistence().persistAsync(persistableStore.getClone())
+                .whenComplete((result, throwable) -> onRollbackWriteCompleted());
+    }
+
+    private void onRollbackWriteCompleted() {
+        synchronized (tradeCreationLock) {
+            rollbackWriteInFlight = false;
+            if (rollbackWriteRequested) {
+                rollbackWriteRequested = false;
+                requestRollbackWrite();
+            }
+        }
+    }
+
+    // A copy of an accepted request can fail validation while another copy is being admitted,
+    // so the report is decided under the creation lock: once the id is known no report is sent,
+    // else the taker's accepted attempt would fail on receiving it.
+    private void rejectTakeOfferRequest(SetupTradeMessage_A message, TradeProtocolException exception) {
+        String tradeId = message.getTradeId();
+        synchronized (tradeCreationLock) {
+            if (isKnownTrade(tradeId)) {
+                log.info("Dropping a failed copy of an accepted take offer request. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return;
+            }
+        }
+        log.warn("Dropping an invalid MuSig take offer request. tradeId={}", StringUtils.sanitizeForLog(tradeId));
+        reportTakeOfferRejection(networkService, identityService, message, exception);
     }
 
     static void reportTakeOfferRejection(NetworkService networkService,
@@ -644,13 +736,17 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
         muSigTrade.getMyself().setAccountPayload(takersAccountPayload);
 
-        checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
-        persistableStore.addTrade(muSigTrade);
-        persist();
+        MuSigProtocol protocol;
+        synchronized (tradeCreationLock) {
+            checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
+            persistableStore.addTrade(muSigTrade);
+            persist();
+            protocol = createAndAddTradeProtocol(muSigTrade);
+        }
 
         maybeAddPeerToContactList(makerNetworkId.getId(), takerNetworkId.getId());
 
-        return createAndAddTradeProtocol(muSigTrade);
+        return protocol;
     }
 
     public void observeDepositTxConfirmationStatus(MuSigTrade trade) {
@@ -735,6 +831,20 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         );
     }
 
+    private boolean isKnownTrade(String tradeId) {
+        return findProtocol(tradeId).isPresent() || tradeExists(tradeId);
+    }
+
+    // Taker trades share the store but never count: the bound is a maker-side admission rule.
+    private Optional<MuSigTrade> findPendingSetup(String offerId, String takerId) {
+        return List.copyOf(getTrades()).stream()
+                .filter(trade -> !trade.isTaker())
+                .filter(trade -> trade.getOffer().getId().equals(offerId))
+                .filter(trade -> trade.getTaker().getNetworkId().getId().equals(takerId))
+                .filter(trade -> trade.getTradeState().isMakerSetupPhase())
+                .findAny();
+    }
+
     public Collection<MuSigTrade> getTrades() {
         return persistableStore.getTrades();
     }
@@ -783,13 +893,28 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         // The handler performs its FSM-level verification after protocol creation. tradeId is the
         // validated message trade id.
         synchronized (tradeCreationLock) {
+            if (!admissionOpen) {
+                log.warn("Dropping a take offer request because the service is not accepting trades. tradeId={}",
+                        StringUtils.sanitizeForLog(tradeId));
+                return Optional.empty();
+            }
             // Serialize creation and drop a duplicate cleanly instead of racing or throwing. The
             // check runs before the identity/account lookups so a late removal also drops cleanly.
             // Resuming a persisted INIT trade on a resend is a follow-up.
-            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+            if (isKnownTrade(tradeId)) {
                 log.warn("Dropping a duplicate MuSig take offer request for an existing trade. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
                 return Optional.empty();
+            }
+            Optional<MuSigTrade> pendingSetup = findPendingSetup(claimedOffer.getId(), sender.getId());
+            if (pendingSetup.isPresent()) {
+                // The trade id hashes the taker-chosen take offer date, so the duplicate check
+                // above cannot bound how many setups one taker opens for one offer.
+                log.warn("Rejecting a take offer request: a setup for the same offer and taker is still pending. tradeId={}, pendingTradeId={}",
+                        StringUtils.sanitizeForLog(tradeId), StringUtils.sanitizeForLog(pendingSetup.get().getId()));
+                throw new TradeProtocolException(
+                        "The maker has rejected the take offer request because your previous take of this offer is still being set up.",
+                        TradeProtocolFailure.SETUP_ALREADY_PENDING);
             }
             boolean isBuyer = claimedOffer.getDirection().isBuy();
             // The maker's own identity/account can be gone while the offer is still active; reject
