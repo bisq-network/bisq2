@@ -38,7 +38,7 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 ## API and Bisq Connect
 
 - New APIs cover chat, contacts, alerts, capability discovery, trade limits, and closed-trade queries. Payment-account APIs add typed fiat and crypto models.
-- Identity responses no longer expose private keys. Session authentication is enabled by default; API clients must support the revised sessions, routes, and DTOs.
+- Identity responses no longer contain the key bundle with its private keys. Session authentication is enabled by default; API clients must support the revised sessions, routes, and DTOs.
 - Paired devices can be listed and revoked through the API, revoked in the desktop app, or disconnected by expiring their session. Revocation closes the device's connections and removes its push registrations. The node stores only hashes of client secrets.
 - Every WebSocket upgrade request is authenticated. WebSocket subscriptions and mobile trade notifications have improved delivery and filtering, and makers receive a notification when their offer is taken.
 - A Docker image of the API app is available for linux/amd64 and linux/arm64.
