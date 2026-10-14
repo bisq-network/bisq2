@@ -51,6 +51,7 @@ import java.util.stream.Collectors;
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -150,6 +151,10 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
 
     @Override
     public void verify() {
+        // All released versions create the payload as the hash of the profile key, and ignore profiles with another
+        // payload. ProofOfWork accepts a payload of up to 10 000 000 bytes, so without this rule a profile could make
+        // nodes store, relay, persist and log large data (see docs/specifications/user/user-profile-proof-of-work.md).
+        checkArgument(!isProofOfWorkInvalid(), "The payload of the proof of work must be the hash of the profile key");
         NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
         NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
         NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
