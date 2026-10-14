@@ -183,6 +183,21 @@ final class ApiClient {
         return get("/user-profiles?ids=" + userProfileId).size() > 0;
     }
 
+    /** The user profile as the node shows it. Only nodes of this checkout have this route. */
+    JsonNode userProfile(String userProfileId) {
+        return get("/user-profiles?ids=" + userProfileId).path(0);
+    }
+
+    // Publishes the profile of the own identity with new terms and statement. The node removes the profile with the
+    // old values and publishes the edited one.
+    void editUserProfile(String userProfileId, String terms, String statement) {
+        awaitPublicationSlot();
+        patch("/user-identities/profile", JSON.createObjectNode()
+                .put("profileId", userProfileId)
+                .put("terms", terms)
+                .put("statement", statement));
+    }
+
     void ignoreUserProfile(String userProfileId) {
         post("/user-profiles/ignore/" + userProfileId, JSON.createObjectNode());
     }
