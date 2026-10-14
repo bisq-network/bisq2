@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class FilterService<T extends InventoryFilter> {
@@ -158,18 +157,35 @@ public abstract class FilterService<T extends InventoryFilter> {
     }
 
     // Selects the requests with the highest priority first, as long as the response stays within maxSize. At the first
-    // request which does not fit, maxSizeReached is set, and no later request of any selection is added.
+    // request which does not fit, maxSizeReached is set, and no later request of any selection is added. A request which
+    // is larger than maxSize fits into no response. It is skipped, so that it does not end every response of this node
+    // before the requests after it (rule 12 of docs/specifications/network/inventory-hash-set-filter.md).
     private List<DataRequest> selectWithinMaxSize(Collection<? extends DataRequest> requests,
                                                   AtomicInteger accumulatedSize,
                                                   AtomicBoolean maxSizeReached) {
-        return requests.stream()
+        List<? extends DataRequest> sortedRequests = requests.stream()
                 .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toCollection(ArrayList::new));
+                .toList();
+        List<DataRequest> selectedRequests = new ArrayList<>();
+        int numRequestsLargerThanMaxSize = 0;
+        for (DataRequest request : sortedRequests) {
+            if (maxSizeReached.get()) {
+                break;
+            }
+            int serializedSize = request.getSerializedSize();
+            if (serializedSize > maxSize) {
+                numRequestsLargerThanMaxSize++;
+                continue;
+            }
+            maxSizeReached.set(accumulatedSize.addAndGet(serializedSize) > maxSize);
+            if (!maxSizeReached.get()) {
+                selectedRequests.add(request);
+            }
+        }
+        if (numRequestsLargerThanMaxSize > 0) {
+            log.warn("We skipped {} requests which are larger than the size limit of an inventory response ({} bytes)",
+                    numRequestsLargerThanMaxSize, maxSize);
+        }
+        return selectedRequests;
     }
 }

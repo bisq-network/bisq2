@@ -230,6 +230,32 @@ Reasons:
 Rule 11 compares only with add requests. A removal is not suppressed because of another removal with a higher
 sequence number: the responder cannot know which one the requester holds.
 
+## Requests larger than the size limit of a response
+
+12. The responder adds requests in the order of their priority until the next request does not fit into the size limit
+    of the response. It then sets `maxSizeReached` and adds no further request. A request which alone is larger than
+    the size limit does not end the response: the responder skips it and continues with the next request. This applies
+    to all filter types and to all kinds of requests.
+
+Reasons:
+
+- A request which is larger than the size limit fits into no response. Without rule 12, it ends every response of its
+  holder at its position. The requester then receives no later add requests, no removals and no mailbox data from that
+  holder, and [rule 6](#repeated-requests) stops its requests to that peer. One stored request is enough, and the effect
+  lasts as long as the store keeps the request.
+- A node receives such a request only by broadcast, also without rule 12. Skipping it changes nothing for the request
+  itself.
+- Rule 12 needs no protocol change. Requesters of earlier versions also receive the requests after the skipped one.
+
+Limitation: stores accept a request which is larger than the size limit of a response, up to the size limit of a
+message (see [`message-framing.md`](message-framing.md)). Responders of earlier versions still end their responses at
+such a request.
+
+- Why it is not removed now: a size limit per stored request needs the size of the largest legitimate request of each
+  type (see the open points of [`storage-metadata.md`](storage-metadata.md#open-points)).
+- What removes it: a size limit per request at admission, below the size limit of a response.
+- Who decides: the developers.
+
 ## Limitations
 
 - **Requests of this version with `HASH_SET`.** Against a responder of an earlier version, a node of this version
