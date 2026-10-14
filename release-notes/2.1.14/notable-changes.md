@@ -1,6 +1,6 @@
 # Bisq 2.1.14 Notable Changes
 
-Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057e4f40a934f196097f3269558fc`. See the [full release notes](full-release-notes.md) for scope, compatibility, and source references.
+Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `d95fc2b5498369c86cdc554d9b3fc70596402905`. See the [full release notes](full-release-notes.md) for scope, compatibility, and source references.
 
 ## Bisq Easy Trade and Payment Validation
 
@@ -17,9 +17,9 @@ Based on the net diff from `v2.1.13` to `v2.1.14-integration` at `26943944fee057
 
 - Storage requests gain signature V2, which covers the fields that affect storage decisions and preserves the exact signed payload bytes.
 - Until the deadline, updated nodes also verify the legacy signature, and they repair copies whose signature V2 a relay removed. User-profile removals require signature V2.
-- Owner-specific storage keys, ownership checks, local metadata, and corrected removal ordering prevent another publisher from interfering with owner data.
+- Owner-specific storage keys, ownership checks, local metadata, and corrected removal ordering prevent another publisher from interfering with owner data. The proof of work of a user profile must be bound to the profile key.
 - Network envelopes are limited to 4 MiB, handshakes to 64 KiB, and inventory hash-set filters to 100,000 entries. Concurrent inbound handshakes are limited. Pending state and replay queues have tighter bounds and cleanup.
-- Inventory uses the new storage-key filter with fallback for older peers. Legacy hash-cash authorization is accepted only for compatible initial handshake requests.
+- Inventory uses the new storage-key filter with fallback for older peers. Responses to 2.1.13 peers leave out requests these peers cannot store, and a single oversized entry no longer ends a response. Legacy hash-cash authorization is accepted only for compatible initial handshake requests.
 
 ## Tor Privacy
 
