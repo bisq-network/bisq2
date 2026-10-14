@@ -159,7 +159,10 @@ Reasons:
 Limitation: a node can get a V1 removal before the add request, for example when the owner removes data shortly after
 it published the data. The node stores the removal with the trusted sequence number 0 and accepts the add request when
 it arrives. It holds the data until it gets the removal again, for example with an inventory response. Then the removal
-replaces the add request, and the node does not accept that add request again.
+replaces the add request, and the node does not accept that add request again. A node of an earlier version orders the
+removal by its own sequence number and rejects the add request. A node of this version does not send it this add
+request in inventory responses (rule 12 of
+[`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#requests-without-a-higher-sequence-number)).
 
 - Why it cannot be removed before the cutoff date: the node verified no sequence number for this storage key. If it
   used the sequence number of the V1 removal, a relay could reject the add requests of the owner.
@@ -185,7 +188,9 @@ add request.
 Consequences, until the cutoff date of signature V1:
 
 - A node of an earlier version compares with the sequence number of the V1 removal which it holds. It rejects the new
-  add of the owner until that removal expires.
+  add of the owner until that removal expires. A node of this version does not send it the new add in inventory
+  responses (rule 12 of
+  [`inventory-hash-set-filter.md`](inventory-hash-set-filter.md#requests-without-a-higher-sequence-number)).
 - If the owner's store holds a V1 removal with the trusted sequence number 0, the owner continues with 1. This is the
   case for a removal which the owner created with an earlier version, and for a removal which arrived when the store
   held no add request. A node which holds an add request of the owner, or a V1 removal with a trusted sequence number

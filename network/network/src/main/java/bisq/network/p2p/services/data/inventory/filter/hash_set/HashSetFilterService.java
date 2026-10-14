@@ -103,15 +103,15 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
 
     @Override
     protected boolean isAuthenticatedDataRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry) {
-        return !isListed(filter.getFilterEntriesAsSet(), toFilterEntry(mapEntry));
+        return isSequentialRequestMissing(filter, toFilterEntry(mapEntry));
     }
 
     // A requester of an earlier version (HASH_SET) holds one request per storage key V1 and accepts for it only a higher
     // sequence number. It cannot store a removal for which this node holds an add request with the same storage key V1
-    // and a higher sequence number: it holds that add request, or receives it in the same response, because add
-    // requests are selected before removals. In both cases the add request replaces the removal. After the migration
-    // of the publisher of authorized data, this applies to every removal of the migration (rule 11 of
-    // docs/specifications/network/inventory-hash-set-filter.md).
+    // and a higher sequence number. If it holds that add request, isSequentialRequestMissing already excludes the
+    // removal. Otherwise it receives the add request in the same response, because add requests are selected before
+    // removals, and then rejects the removal. After the migration of the publisher of authorized data, this applies to
+    // every removal of the migration (rule 11 of docs/specifications/network/inventory-hash-set-filter.md).
     @Override
     protected List<RemoveAuthenticatedDataRequest> getStorableRemovals(
             List<RemoveAuthenticatedDataRequest> missingRemovals) {
@@ -136,7 +136,25 @@ public class HashSetFilterService extends FilterService<HashSetFilter> {
 
     @Override
     protected boolean isMailboxRequestMissing(HashSetFilter filter, Map.Entry<ByteArray, MailboxRequest> mapEntry) {
-        return !isListed(filter.getFilterEntriesAsSet(), toFilterEntry(mapEntry));
+        return isSequentialRequestMissing(filter, toFilterEntry(mapEntry));
+    }
+
+    // A requester of an earlier version (HASH_SET) holds one request per storage key V1, and its stores accept for that
+    // key only a request with a higher sequence number, of any owner. It rejects a request whose number is not higher
+    // than the one which it lists for the key, so its filter does not change, and every response would contain the
+    // request again. Such a request is therefore not missing. A requester of this version stops after a full response
+    // which it cannot store (rule 6), and the entries of HASH_SET_V2 do not always show the number by which it orders
+    // an entry, so the rule applies only to HASH_SET (rule 12 of
+    // docs/specifications/network/inventory-hash-set-filter.md).
+    private boolean isSequentialRequestMissing(HashSetFilter filter, HashSetFilterEntry entry) {
+        if (isListed(filter.getFilterEntriesAsSet(), entry)) {
+            return false;
+        }
+        if (inventoryFilterType != InventoryFilterType.HASH_SET) {
+            return true;
+        }
+        Integer listedSequenceNumber = filter.getLowestSequenceNumberByHash().get(new ByteArray(entry.getHash()));
+        return listedSequenceNumber == null || listedSequenceNumber < entry.getSequenceNumber();
     }
 
     @Override
