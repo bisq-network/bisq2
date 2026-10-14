@@ -71,6 +71,12 @@ public abstract class FilterService<T extends InventoryFilter> {
         return missingRemovals;
     }
 
+    // The removals of mailbox data which the requester misses and which it can store, as getStorableRemovals for
+    // authenticated data.
+    protected List<RemoveMailboxRequest> getStorableMailboxRemovals(List<RemoveMailboxRequest> missingRemovals) {
+        return missingRemovals;
+    }
+
     public Inventory createInventory(InventoryFilter inventoryFilter) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
         final AtomicBoolean maxSizeReached = new AtomicBoolean();
@@ -140,7 +146,9 @@ public abstract class FilterService<T extends InventoryFilter> {
                 });
         List<DataRequest> sortedAndFilteredRequests = selectWithinMaxSize(addRequests, accumulatedSize, maxSizeReached);
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(selectWithinMaxSize(removeRequests, accumulatedSize, maxSizeReached));
+            sortedAndFilteredRequests.addAll(selectWithinMaxSize(getStorableMailboxRemovals(removeRequests),
+                    accumulatedSize,
+                    maxSizeReached));
         }
         return sortedAndFilteredRequests;
     }
