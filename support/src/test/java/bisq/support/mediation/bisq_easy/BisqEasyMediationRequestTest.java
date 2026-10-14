@@ -347,11 +347,12 @@ class BisqEasyMediationRequestTest {
     }
 
     private UserProfile createUserProfile(String nickName) {
+        NetworkId networkId = createNetworkId(nickName);
         return new UserProfile(0,
                 nickName,
-                new ProofOfWork(new byte[20], 0, null, 1, new byte[72], 0),
+                new ProofOfWork(networkId.getPubKeyHash(), 0, null, 1, new byte[72], 0),
                 0,
-                createNetworkId(nickName),
+                networkId,
                 "",
                 "",
                 "");
