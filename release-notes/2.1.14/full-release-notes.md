@@ -6,7 +6,7 @@ Proposed release notes for the Bisq 2.1.14 integration branch. This release stre
 
 These notes describe the net changes from release tag `v2.1.13` (`539cc023496fe0c59c961e32b250442905999fa3`) to branch `v2.1.14-integration` at `26943944fee057e4f40a934f196097f3269558fc`.
 
-- Generated on: 2026-10-06. Updated on: 2026-10-13 for the pull requests merged after `ddebe75934e190609261126e4a0897652d11dfdf`.
+- Generated on: 2026-10-06. Updated on: 2026-10-13 for the pull requests merged after `ddebe75934e190609261126e4a0897652d11dfdf`. Corrected on: 2026-10-14 after a review of the statements against the code.
 - The checkout declares version `2.1.14` in `gradle.properties`.
 - Comparison: `git diff v2.1.13 26943944fee057e4f40a934f196097f3269558fc`.
 - The range contains 1,798 reachable commits, including 1,293 non-merge commits, and changes 3,030 files.
@@ -193,4 +193,4 @@ Details: [dependency verification](../../docs/specifications/development/depende
 
 ## Verification of These Notes
 
-The notes were checked against the tag-to-branch file diff, affected implementations, configurations, and specifications. The update of 2026-10-13 checked each pull request merged after `ddebe75934` against its diff and the code at `26943944fe`, and against the code at `v2.1.13` to decide whether a change is new for users. Fixes of work that `v2.1.13` did not contain are folded into the description of that work. Changes already present at `v2.1.13` are not presented as new solely because they occur in merged commit history. No application build, runtime scenario, or test suite was run while preparing these documentation files; this is not a release certification.
+The notes were checked against the tag-to-branch file diff, affected implementations, configurations, and specifications. The update of 2026-10-13 checked each pull request merged after `ddebe75934` against its diff and the code at `26943944fe`, and against the code at `v2.1.13` to decide whether a change is new for users. Fixes of work that `v2.1.13` did not contain are folded into the description of that work. Changes already present at `v2.1.13` are not presented as new solely because they occur in merged commit history. The corrections of 2026-10-14 were checked against the code at `e0208dbd8e` and `v2.1.13`. No application build, runtime scenario, or test suite was run while preparing these documentation files; this is not a release certification.
