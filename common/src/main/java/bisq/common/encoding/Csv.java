@@ -20,9 +20,18 @@ package bisq.common.encoding;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 public class Csv {
+    private static final Pattern SIGNED_NUMBER = Pattern.compile("[-+][0-9][0-9.,]*%?");
+    // A formula character after a character at which a spreadsheet application can start a new cell or row
+    private static final Pattern FORMULA_AFTER_SEPARATOR = Pattern.compile("(?<=[;\\t\\r\\n])(?=[=+\\-@\\t\\r])");
+    // A control character other than tab, line feed and carriage return. LibreOffice drops NUL characters before it
+    // splits a line into cells, so a NUL character before a formula character would hide the formula from the checks.
+    // The other control characters have no visible meaning in the exported text either.
+    private static final Pattern CONTROL_CHARACTER = Pattern.compile("[\\p{Cc}&&[^\\t\\n\\r]]");
+
     public static String toCsv(List<String> headers, List<List<String>> data) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < headers.size(); i++) {
@@ -48,10 +57,30 @@ public class Csv {
     }
 
     public static String escapeSpecialCharacters(String value) {
-        if (value.contains(",") || value.contains("\"") || value.contains("'")) {
+        value = CONTROL_CHARACTER.matcher(value).replaceAll("");
+        value = neutralizeFormula(value);
+        if (value.contains(",") || value.contains("\"") || value.contains("'") || value.contains(";") ||
+                value.contains("\t") || value.contains("\n") || value.contains("\r")) {
             value = value.replace("\"", "\"\"");
             value = "\"" + value + "\"";
         }
         return value;
+    }
+
+    // Spreadsheet applications run a cell which starts with =, +, -, @, tab or carriage return as a formula. Cells can
+    // contain text of trade peers, for example a payment account name or a chat text, so such a cell gets a leading
+    // apostrophe, which makes it text. Numbers with a sign, for example "-1.00%", stay readable as numbers.
+    // An application which splits the lines at semicolons or tabs, for example Excel with the semicolon as list
+    // separator, starts a new cell after such a character, and a quote does not stop it there. So a formula character
+    // after a semicolon, a tab or a line break gets an apostrophe as well (see docs/specifications/desktop/csv-export.md).
+    private static String neutralizeFormula(String value) {
+        if (value.isEmpty()) {
+            return value;
+        }
+        char first = value.charAt(0);
+        boolean isFormulaStart = first == '=' || first == '@' || first == '\t' || first == '\r' ||
+                ((first == '-' || first == '+') && !SIGNED_NUMBER.matcher(value).matches());
+        String neutralized = isFormulaStart ? "'" + value : value;
+        return FORMULA_AFTER_SEPARATOR.matcher(neutralized).replaceAll("'");
     }
 }

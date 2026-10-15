@@ -17,17 +17,16 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -38,7 +37,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
@@ -46,11 +44,10 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
-public final class AuthorizedProofOfBurnData implements AuthorizedDistributedData, PublishDateAware {
+public final class AuthorizedProofOfBurnData implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedProofOfBurnData.class.getSimpleName());
     @ExcludeForHash
     private final int version;
     private final long blockTime;
@@ -127,15 +124,20 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto) {
-        return new AuthorizedProofOfBurnData(
-                proto.getVersion(),
-                proto.getBlockTime(),
-                proto.getAmount(),
-                proto.getHash().toByteArray(),
-                proto.getBlockHeight(),
-                proto.getTxId(),
-                proto.getStaticPublicKeysProvided());
+    public static AuthorizedProofOfBurnData fromProto(bisq.user.protobuf.AuthorizedProofOfBurnData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedProofOfBurnData(
+                    proto.getVersion(),
+                    proto.getBlockTime(),
+                    proto.getAmount(),
+                    proto.getHash().toByteArray(),
+                    proto.getBlockHeight(),
+                    proto.getTxId(),
+                    proto.getStaticPublicKeysProvided());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -149,22 +151,14 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // Oracle nodes of earlier versions published it with the key of their network ID
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override
@@ -193,15 +187,13 @@ public final class AuthorizedProofOfBurnData implements AuthorizedDistributedDat
         return blockTime == that.blockTime &&
                 amount == that.amount &&
                 blockHeight == that.blockHeight &&
-                Objects.equals(metaData, that.metaData) &&
                 Arrays.equals(hash, that.hash) &&
                 Objects.equals(txId, that.txId);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(metaData);
-        result = 31 * result + Long.hashCode(blockTime);
+        int result = Long.hashCode(blockTime);
         result = 31 * result + Long.hashCode(amount);
         result = 31 * result + Arrays.hashCode(hash);
         result = 31 * result + blockHeight;

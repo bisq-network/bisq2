@@ -19,6 +19,7 @@ package bisq.desktop.main.content.bisq_easy.open_trades.message_box;
 
 import bisq.chat.ChatChannel;
 import bisq.chat.ChatMessage;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.SelectableLabel;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
 import bisq.desktop.main.content.chat.message_container.list.message_box.MessageBox;
@@ -51,6 +52,12 @@ public class PeerProtocolLogMessageBox extends MessageBox {
         dateTime.getStyleClass().addAll("text-fill-grey-dimmed", "system-message-labels");
         dateTimeHBox = new HBox(10, dateTime);
         dateTimeHBox.setAlignment(Pos.CENTER);
+        if (item.isUnverifiedForwardedMessage()) {
+            Label unverifiedLabel = new Label(Res.get("authorizedRole.mediator.unverifiedMessage"));
+            unverifiedLabel.getStyleClass().addAll("bisq-text-yellow-dim", "system-message-labels");
+            unverifiedLabel.setTooltip(new BisqTooltip(Res.get("authorizedRole.mediator.unverifiedMessage.tooltip")));
+            dateTimeHBox.getChildren().add(unverifiedLabel);
+        }
 
         tradeLogMessageBg.setSpacing(5);
         tradeLogMessageBg.getChildren().addAll(message, dateTimeHBox);

@@ -18,6 +18,8 @@
 package bisq.network.p2p.services.peer_group.exchange;
 
 import bisq.common.annotation.ExcludeForHash;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Request;
 import bisq.network.p2p.services.peer_group.Peer;
@@ -78,14 +80,22 @@ public final class PeerExchangeRequest implements EnvelopePayloadMessage, Reques
                         .collect(Collectors.toList()));
     }
 
-    public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto) {
-        return new PeerExchangeRequest(proto.getNonce(),
-                proto.getPeersList().stream().map(Peer::fromProto).collect(Collectors.toList()));
-    }
-
-    @Override
-    public double getCostFactor() {
-        return 0.1;
+    public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            // Before any peer is converted (rule 8 of docs/specifications/network/validation-at-parsing.md)
+            checkArgument(proto.getPeersCount() <= maxNumPeers,
+                    "Size of peers exceeds the limit. size=" + proto.getPeersCount());
+            // The peers are reports of other nodes, which the sender only relays. A node of an earlier version can relay
+            // a peer which this version rejects, so such a peer is skipped and the others are kept (see
+            // docs/specifications/network/peer-exchange.md). The peers are not part of the hash, so skipping one does
+            // not change the proof of work payload.
+            return new PeerExchangeRequest(proto.getNonce(),
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getPeersList(), Peer::fromProto)
+                            .collect(Collectors.toList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

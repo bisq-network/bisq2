@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -44,8 +45,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedDifficultyAdjustmentData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -107,14 +107,19 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto) {
-        return new AuthorizedDifficultyAdjustmentData(
-                proto.getVersion(),
-                proto.getDate(),
-                proto.getDifficultyAdjustmentFactor(),
-                proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static AuthorizedDifficultyAdjustmentData fromProto(bisq.bonded_roles.protobuf.AuthorizedDifficultyAdjustmentData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedDifficultyAdjustmentData(
+                    proto.getVersion(),
+                    proto.getDate(),
+                    proto.getDifficultyAdjustmentFactor(),
+                    proto.getSecurityManagerProfileId(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -128,8 +133,8 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
@@ -144,10 +149,5 @@ public final class AuthorizedDifficultyAdjustmentData implements AuthorizedDistr
     @Override
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
     }
 }

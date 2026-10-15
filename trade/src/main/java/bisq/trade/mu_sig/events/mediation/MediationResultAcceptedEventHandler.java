@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.events.mediation;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
@@ -32,6 +33,7 @@ import bisq.trade.mu_sig.handler.MuSigTradeEventHandlerAsMessageSender;
 import bisq.trade.mu_sig.messages.grpc.CustomPayoutPsbt;
 import bisq.trade.mu_sig.messages.grpc.CustomPayoutPsbtRequest;
 import bisq.trade.mu_sig.messages.network.MuSigCustomPayoutPsbtMessage;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import lombok.extern.slf4j.Slf4j;
 
 import static com.google.common.base.Preconditions.checkState;
@@ -55,17 +57,21 @@ public final class MediationResultAcceptedEventHandler
 
     @Override
     protected void process(MediationResultAcceptedEvent event) {
-        MuSigMediationResult mediationResult = trade.getTradeDispute()
-                .getMuSigMediationResult()
-                .orElseThrow();
-        long sellersPayoutAmountExcludingFee = mediationResult.getProposedSellerPayoutAmount().orElseThrow();
-        CustomPayoutPsbtRequest request = new CustomPayoutPsbtRequest(
-                trade.getId(),
-                sellersPayoutAmountExcludingFee,
-                MuSigFeeRateProvider.getPreparedTxFeeRate());
-        customPayoutPsbt = CustomPayoutPsbt.fromProto(
-                blockingStub.signCustomPayoutTx(request.toProto(false)));
-        verifySigningResponse(customPayoutPsbt, mediationResult);
+        try {
+            MuSigMediationResult mediationResult = trade.getTradeDispute()
+                    .getMuSigMediationResult()
+                    .orElseThrow();
+            long sellersPayoutAmountExcludingFee = mediationResult.getProposedSellerPayoutAmount().orElseThrow();
+            CustomPayoutPsbtRequest request = new CustomPayoutPsbtRequest(
+                    trade.getId(),
+                    sellersPayoutAmountExcludingFee,
+                    MuSigFeeRateProvider.getPreparedTxFeeRate());
+            customPayoutPsbt = CustomPayoutPsbt.fromProto(
+                    blockingStub.signCustomPayoutTx(request.toProto(false)));
+            verifySigningResponse(customPayoutPsbt, mediationResult);
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

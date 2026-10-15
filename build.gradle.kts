@@ -84,22 +84,14 @@ data class GpgKeyInfo(
 )
 
 val bisq2ReleaseKeyIds = listOf("E222AA02", "387C8307")
+// The names the in-app updaters download (UpdaterUtils). Updaters up to 2.1.13 download the plain dmg.
 val bisq2InstallerReleaseAssets = listOf(
-    "Bisq-%s-linux_x86_64.deb",
-    "Bisq-%s-linux_arm64.deb",
-    "Bisq-%s-linux_x86_64.rpm",
-    "Bisq-%s-linux_arm64.rpm",
+    "Bisq-%s.deb",
+    "Bisq-%s.rpm",
+    "Bisq-%s.exe",
+    "Bisq-%s.dmg",
     "Bisq-x86_64-%s.dmg",
     "Bisq-aarch64-%s.dmg",
-    "Bisq-%s-win_x86_64.exe",
-    "Bisq-%s-win_x86_64.msi",
-)
-val bisq2DesktopUpdateJarReleaseAssets = listOf(
-    "desktop-app-%s-linux_x86_64-all.jar",
-    "desktop-app-%s-linux_arm64-all.jar",
-    "desktop-app-%s-macos_x86_64-all.jar",
-    "desktop-app-%s-macos_arm64-all.jar",
-    "desktop-app-%s-win_x86_64-all.jar",
 )
 val bisq2ReleaseArtifactExtensions = listOf("deb", "dmg", "exe", "jar", "msi", "rpm", "sha256")
 
@@ -299,10 +291,7 @@ fun expectedBisq2ReleaseAssets(releaseVersion: String): List<String> {
 }
 
 fun expectedBisq2SignableReleaseAssets(releaseVersion: String): List<String> {
-    val installers = bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
-    val updateJars = bisq2DesktopUpdateJarReleaseAssets.map { it.format(releaseVersion) }
-    val jarHash = "Bisq-$releaseVersion-all-jars.sha256"
-    return installers + updateJars + jarHash
+    return bisq2InstallerReleaseAssets.map { it.format(releaseVersion) }
 }
 
 fun isExpectedBisq2ReleaseArtifact(candidate: File): Boolean {
@@ -376,17 +365,19 @@ tasks.register("buildAll") {
     group = "build"
     description = "Build the entire project leaving it ready to work with."
 
+    // Builds all builds of the composite build in one Gradle run. A run configures the whole composite build, so a
+    // run per build repeats this work, and one run can execute the tasks of different builds in parallel. The run is
+    // a new process, so that after cleanAll it starts with a new configuration.
     doLast {
-        (listOf(
+        val buildTasks = listOf(
             ":build-logic:build",
             "build",
         ) + compositeBuilds
             .filter { it.taskPath != ":build-logic" }
-            .map { "${it.taskPath}:build" }).forEach {
-            exec {
-                println("Executing Build: $it")
-                commandLine(getGradleCommand(), it)
-            }
+            .map { "${it.taskPath}:build" }
+        exec {
+            println("Executing Build: ${buildTasks.joinToString(" ")}")
+            commandLine(listOf(getGradleCommand()) + buildTasks)
         }
     }
 }
@@ -770,18 +761,20 @@ tasks.register("verifyReleaseReadiness") {
             }
         }
 
-        fun readLauncherKeyIds(): List<String> {
-            val launcherFile = file("apps/desktop/desktop-app-launcher/src/main/java/bisq/desktop_app_launcher/DesktopAppLauncher.java")
-            if (!launcherFile.isFile) {
+        // The in-app updater accepts a release signed with one of these keys (UpdaterService, DownloadedFilesVerification)
+        fun readUpdaterKeyIds(desktopConfigFile: File): List<String> {
+            if (!desktopConfigFile.isFile) {
                 return emptyList()
             }
 
-            val keyIdRegex = Regex("private\\s+static\\s+final\\s+String\\s+FINGER_PRINT_[A-Z_]+\\s*=\\s*\"([0-9A-Fa-f]{8})\"")
-            return keyIdRegex.findAll(launcherFile.readText(StandardCharsets.UTF_8))
-                .map { it.groupValues[1].uppercase(Locale.ROOT) }
+            val keyIdsRegex = Regex("""(?m)^\s*keyIds\s*=\s*"([^"]*)"""")
+            val keyIds = keyIdsRegex.find(desktopConfigFile.readText(StandardCharsets.UTF_8))?.groupValues?.get(1)
+                ?: return emptyList()
+            return keyIds.split(",")
+                .map { it.trim().uppercase(Locale.ROOT) }
+                .filter { it.isNotEmpty() }
                 .distinct()
                 .sorted()
-                .toList()
         }
 
         fun checkVersionValue(results: MutableList<ReadinessResult>,
@@ -916,17 +909,18 @@ tasks.register("verifyReleaseReadiness") {
             }
         }
 
-        val launcherKeyIds = readLauncherKeyIds()
-        if (launcherKeyIds.isEmpty()) {
-            addResult(results, "FAIL", "Launcher signer key ids", "Could not parse signer key ids from DesktopAppLauncher")
-        } else if (launcherKeyIds == bisq2ReleaseKeyIds.sorted()) {
-            addResult(results, "PASS", "Launcher signer key ids", "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}")
+        val desktopConfigFile = file("apps/desktop/desktop-app/src/main/resources/desktop.conf")
+        val updaterKeyIds = readUpdaterKeyIds(desktopConfigFile)
+        if (updaterKeyIds.isEmpty()) {
+            addResult(results, "FAIL", "Updater signer key ids", "Could not parse keyIds from ${rootProject.relativePath(desktopConfigFile)}")
+        } else if (updaterKeyIds == bisq2ReleaseKeyIds.sorted()) {
+            addResult(results, "PASS", "Updater signer key ids", "desktop.conf keyIds are ${updaterKeyIds.joinToString(", ")}")
         } else {
             addResult(
                 results,
                 "FAIL",
-                "Launcher signer key ids",
-                "DesktopAppLauncher signer ids are ${launcherKeyIds.joinToString(", ")}, expected ${bisq2ReleaseKeyIds.sorted().joinToString(", ")}"
+                "Updater signer key ids",
+                "desktop.conf keyIds are ${updaterKeyIds.joinToString(", ")}, expected ${bisq2ReleaseKeyIds.sorted().joinToString(", ")}"
             )
         }
 
@@ -956,9 +950,26 @@ tasks.register("verifyReleaseReadiness") {
                 addResult(results, "FAIL", "signingkey.asc GitHub asset", "Missing signingkey.asc from GitHub release")
             } else {
                 try {
-                    val githubSigningKeyId = String(httpGetBytes(browserDownloadUrl), StandardCharsets.UTF_8)
-                        .trim()
-                        .uppercase(Locale.ROOT)
+                    val githubSigningKeyBytes = httpGetBytes(browserDownloadUrl)
+                    val githubSigningKeyContent = String(githubSigningKeyBytes, StandardCharsets.UTF_8)
+                    val githubSigningKeyId = githubSigningKeyContent.trim().uppercase(Locale.ROOT)
+                    // The updater compares the whole content with its key ids (UpdaterUtils.getSigningKeyId and
+                    // DownloadedFilesVerification.verify, also in v2.1.13). A line break makes every download fail.
+                    if (githubSigningKeyContent == githubSigningKeyId) {
+                        addResult(results, "PASS", "signingkey.asc exact content", "GitHub asset contains exactly $githubSigningKeyId")
+                    } else {
+                        val visibleContent = githubSigningKeyContent
+                            .replace("\r", "\\r")
+                            .replace("\n", "\\n")
+                            .replace("\t", "\\t")
+                        addResult(
+                            results,
+                            "FAIL",
+                            "signingkey.asc exact content",
+                            "GitHub asset has ${githubSigningKeyBytes.size} byte(s): '$visibleContent'. The updater compares " +
+                                "the whole content with its key ids, so the asset must contain exactly '$githubSigningKeyId'"
+                        )
+                    }
                     if (githubSigningKeyId == activeSigningKeyId && bisq2ReleaseKeyIds.contains(githubSigningKeyId)) {
                         addResult(results, "PASS", "signingkey.asc marker", "GitHub release points to active key $githubSigningKeyId")
                     } else {
@@ -1465,6 +1476,10 @@ tasks.register("verifyGithubActionsSecurity") {
         val violations = mutableListOf<String>()
         val usesRegex = Regex("""^\s*-?\s*uses:\s*([^#\s]+)(?:\s+#\s*(.+))?\s*$""")
         val floatingRunnerRegex = Regex("""\b(ubuntu|macos|windows)-latest\b""", RegexOption.IGNORE_CASE)
+        val fromJsonVariableRegex = Regex("""fromJson\(\s*vars\.""", RegexOption.IGNORE_CASE)
+        val runnerSelectionRegex = Regex("""^\s*-?\s*(runs-on|os):""")
+        val variableReferenceRegex = Regex("""\bvars\.""")
+        val variableComparisonRegex = Regex("""\bvars\.[A-Za-z0-9_]+\s*==\s*'[^']*'""")
         val javaVersionRegex = Regex("""^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$""")
         val javaMatrixRegex = Regex("""^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$""")
         val exactJavaVersionRegex = Regex("""\d+\.\d+\.\d+""")
@@ -1535,6 +1550,17 @@ tasks.register("verifyGithubActionsSecurity") {
 
                 if (floatingRunnerRegex.containsMatchIn(line)) {
                     violations += "$workflowPath:$lineNumber uses a floating GitHub runner label: ${line.trim()}"
+                }
+
+                // Repository variables are not reviewed and not visible to this check. They may select between
+                // checked-in runner labels, but must never provide a label themselves.
+                val lineWithoutVariableComparisons = line.replace(variableComparisonRegex, "")
+                if (fromJsonVariableRegex.containsMatchIn(lineWithoutVariableComparisons)) {
+                    violations += "$workflowPath:$lineNumber parses a repository variable as JSON: ${line.trim()}"
+                }
+                if (runnerSelectionRegex.containsMatchIn(line) &&
+                    variableReferenceRegex.containsMatchIn(lineWithoutVariableComparisons)) {
+                    violations += "$workflowPath:$lineNumber takes a runner label from a repository variable: ${line.trim()}"
                 }
 
                 val javaVersionMatch = javaVersionRegex.find(line)

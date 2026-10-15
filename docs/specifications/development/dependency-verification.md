@@ -1,0 +1,37 @@
+# Dependency verification
+
+## Scope and policy
+
+The root build's `check` must audit all resolvable project and buildscript configurations across the repository's
+composite builds, including build logic, applications, desktop, network, and Tor. Gradle must verify the resolved
+dependencies against the committed verification metadata and keyring.
+
+Checksum fallbacks must have exact, reviewed allowlist entries with a rationale. Missing, duplicate, unsorted, or
+stale entries must fail the policy check. Resolved executable artifacts must have explicit verification metadata;
+metadata for older, unresolved versions of those tools must fail the policy check.
+
+## Reusing dependency inventories
+
+An inventory may be reused only after resolving and verifying the current dependencies. A previous successful audit
+must not hide a changed dependency graph or a verification failure. Dependency selection through build properties,
+resolution rules, and repository metadata must be reflected in the inventory used by the policy check.
+
+Unchanged inventories may be reused across builds. Changes to resolved modules, direct dependency scopes, artifact
+names or contents, verification metadata, or keyring must invalidate the corresponding inventory. Missing or modified
+inventory outputs must be regenerated. Application source changes alone do not require inventory regeneration.
+
+Explicit dependency refresh, metadata generation, and task rerun requests must regenerate inventories. Metadata
+generation must cover every composite build. Inventory reuse must not suppress checksum or signature verification,
+and a failed resolution or verification must fail the audit before a policy result is accepted.
+
+The audit must run with strict dependency verification. Modes that skip or downgrade artifact verification (`off`,
+`lenient`) must fail the audit, because a successful audit would otherwise not prove that artifacts were verified.
+
+Each participating build owns its inventory. The policy check must read every expected inventory and fail if one is
+missing; unrelated files from previous audits must not affect the result.
+
+Dependency inventories are reusable build state, independent of compiled outputs. `clean` and `cleanAll` must preserve
+them so cleanup cannot delete an inventory between its producer and the policy check. Retained inventories remain
+subject to the resolution and verification requirements above.
+
+See [the Gradle notes](../../../gradle/README.md) for audit and metadata maintenance commands.

@@ -26,10 +26,12 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannel;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -38,6 +40,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Slf4j
 @ToString
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -72,7 +75,8 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
         return unsafeToProto(serializeForHash);
     }
 
-    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto) {
+    public static ChatChannel<? extends ChatMessage> fromProto(bisq.chat.protobuf.ChatChannel proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TWOPARTYPRIVATECHATCHANNEL ->
                     TwoPartyPrivateChatChannel.fromProto(proto, proto.getTwoPartyPrivateChatChannel());
@@ -93,6 +97,12 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
     /* --------------------------------------------------------------------- */
 
     public boolean addChatMessage(M chatMessage) {
+        // Private channels call this from their constructor, before subclass fields are set
+        if (!holdsChatMessageType(chatMessage)) {
+            log.warn("Message not added to channel {} as type {} is not supported for {}. MessageId={}",
+                    id, chatMessage.getChatMessageType(), chatMessage.getClass().getSimpleName(), chatMessage.getId());
+            return false;
+        }
         boolean changed = getChatMessages().add(chatMessage);
         if (changed) {
             String authorUserProfileId = chatMessage.getAuthorUserProfileId();
@@ -119,6 +129,10 @@ public abstract class ChatChannel<M extends ChatMessage> implements PersistableP
 
     public void removeChatMessages(Collection<M> messages) {
         messages.forEach(this::removeChatMessage);
+    }
+
+    protected boolean holdsChatMessageType(M chatMessage) {
+        return chatMessage.hasSupportedChatMessageType();
     }
 
     public abstract String getDisplayString();

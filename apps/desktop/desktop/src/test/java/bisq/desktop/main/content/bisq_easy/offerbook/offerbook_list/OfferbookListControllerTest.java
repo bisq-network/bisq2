@@ -32,7 +32,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -40,6 +40,7 @@ import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
+import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
@@ -48,8 +49,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.testfx.api.FxRobot;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.ArrayList;
@@ -64,8 +63,8 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
-class OfferbookListControllerTest extends TestFxHeadlessSupport {
+@ExtendWith(JavaFxToolkitExtension.class)
+class OfferbookListControllerTest {
     private static final Market MARKET = MarketRepository.getUSDBitcoinMarket();
     // A base-side amount which converts to the quote side at one BTC price but overflows a
     // long at a higher one: 5e18 sat * 1 USD fits, 5e18 sat * 50,000 USD does not.
@@ -77,6 +76,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     private final ObservableSet<String> ignoredUserProfileIds = new ObservableSet<>();
     private BisqEasyOfferbookMessageService messageService;
     private UserProfileService userProfileService;
+    private UserIdentityService userIdentityService;
     private ReputationService reputationService;
     private OfferbookListController controller;
     private BisqEasyOfferbookChannel channel;
@@ -91,8 +91,10 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
 
         UserProfile authorUserProfile = mock(UserProfile.class);
         when(authorUserProfile.getNickName()).thenReturn("alice");
+        when(authorUserProfile.getId()).thenReturn("author-id");
         UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
         userProfileService = userService.getUserProfileService();
+        userIdentityService = userService.getUserIdentityService();
         when(userProfileService.findUserProfile("author-id")).thenReturn(Optional.of(authorUserProfile));
         when(userProfileService.getIgnoredUserProfileIds()).thenReturn(ignoredUserProfileIds);
         when(userProfileService.isChatUserIgnored(any(String.class)))
@@ -137,6 +139,8 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
         when(message.getId()).thenReturn("offer-message-id");
         when(message.getAuthorUserProfileId()).thenReturn("author-id");
         when(message.hasBisqEasyOffer()).thenReturn(true);
+        // A channel holds only messages of supported types
+        when(message.hasSupportedChatMessageType()).thenReturn(true);
         when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
 
         channel = new BisqEasyOfferbookChannel(MARKET);
@@ -156,7 +160,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void offerReceivedBeforeItsMarketPriceIsListedOnceThePriceArrives(FxRobot robot) {
+    void offerReceivedBeforeItsMarketPriceIsListedOnceThePriceArrives() {
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).isEmpty();
@@ -170,7 +174,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void listedOfferWhoseAmountsOverflowAtANewMarketPriceIsRemoved(FxRobot robot) {
+    void listedOfferWhoseAmountsOverflowAtANewMarketPriceIsRemoved() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
@@ -190,7 +194,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void listedOfferIsRemovedWhenItsMarketPriceDisappears(FxRobot robot) {
+    void listedOfferIsRemovedWhenItsMarketPriceDisappears() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
@@ -204,7 +208,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void priceChangeAfterDeactivationDoesNotRepopulateTheList(FxRobot robot) {
+    void priceChangeAfterDeactivationDoesNotRepopulateTheList() {
         channel.addChatMessage(message);
         WaitForAsyncUtils.asyncFx(() -> controller.onDeactivate());
         WaitForAsyncUtils.waitForFxEvents();
@@ -219,7 +223,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void offerWhoseListItemCannotBeCreatedDoesNotBlockTheOthers(FxRobot robot) {
+    void offerWhoseListItemCannotBeCreatedDoesNotBlockTheOthers() {
         // Two mocks in the order the channel's set iterates them: the first one's list item
         // construction fails (its author's reputation lookup throws), the second is fine.
         List<BisqEasyOfferbookMessage> messages = new ArrayList<>(ConcurrentHashMap.<BisqEasyOfferbookMessage>newKeySet());
@@ -236,10 +240,12 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
         when(failingMessage.getId()).thenReturn("failing-message-id");
         when(failingMessage.getAuthorUserProfileId()).thenReturn("failing-author-id");
         when(failingMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(failingMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(failingMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         when(secondMessage.getId()).thenReturn("second-message-id");
         when(secondMessage.getAuthorUserProfileId()).thenReturn("author-id");
         when(secondMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(secondMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(secondMessage.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         UserProfile failingAuthor = mock(UserProfile.class);
         when(userProfileService.findUserProfile("failing-author-id")).thenReturn(Optional.of(failingAuthor));
@@ -257,7 +263,7 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
     }
 
     @Test
-    void ignoringAndUnignoringTheMakerRemovesAndRestoresTheListedOffer(FxRobot robot) {
+    void ignoringAndUnignoringTheMakerRemovesAndRestoresTheListedOffer() {
         putMarketPrice(FITTING_PRICE);
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
@@ -271,6 +277,48 @@ class OfferbookListControllerTest extends TestFxHeadlessSupport {
         ignoredUserProfileIds.remove("author-id");
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).containsExactly("offer-message-id");
+    }
+
+    // The selected user identity holds the profile after its last edit. The offer list item holds the version of the
+    // profile which the user profile service had. Both have the ID of the same key.
+    @Test
+    void ownOfferIsShownInMyOffersWhenTheSelectedProfileIsAnotherVersionOfTheAuthorsProfile() {
+        selectUserProfileWithId("author-id");
+        putMarketPrice(FITTING_PRICE);
+        channel.addChatMessage(message);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        WaitForAsyncUtils.asyncFx(() -> controller.getModel().getShowMyOffersOnly().set(true));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(shownMessageIds()).containsExactly("offer-message-id");
+    }
+
+    @Test
+    void offerOfAnotherProfileIsNotShownInMyOffers() {
+        selectUserProfileWithId("other-id");
+        putMarketPrice(FITTING_PRICE);
+        channel.addChatMessage(message);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        WaitForAsyncUtils.asyncFx(() -> controller.getModel().getShowMyOffersOnly().set(true));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(shownMessageIds()).isEmpty();
+    }
+
+    private void selectUserProfileWithId(String userProfileId) {
+        UserProfile selectedUserProfile = mock(UserProfile.class);
+        when(selectedUserProfile.getId()).thenReturn(userProfileId);
+        UserIdentity selectedUserIdentity = mock(UserIdentity.class);
+        when(selectedUserIdentity.getUserProfile()).thenReturn(selectedUserProfile);
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(selectedUserIdentity);
+    }
+
+    private List<String> shownMessageIds() {
+        return controller.getModel().getFilteredOfferbookListItems().stream()
+                .map(item -> item.getBisqEasyOfferbookMessage().getId())
+                .toList();
     }
 
     private void putMarketPrice(double price) {

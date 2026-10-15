@@ -21,6 +21,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.security.AesGcm;
@@ -122,21 +123,27 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto) {
-        if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
-            checkArgument(!proto.hasSelectedUserIdentityId());
-            checkArgument(proto.getUserIdentitiesList().isEmpty());
-            EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
-            ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
-            return new UserIdentityStore(encryptedData, scryptParameters);
-        } else {
-            checkArgument(!proto.hasEncryptedData());
-            checkArgument(!proto.hasScryptParameters());
-            String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
-            Set<UserIdentity> userIdentitySet = proto.getUserIdentitiesList().stream()
-                    .map(UserIdentity::fromProto)
-                    .collect(Collectors.toSet());
-            return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+    public static UserIdentityStore fromProto(bisq.user.protobuf.UserIdentityStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            if (proto.hasEncryptedData() && proto.hasScryptParameters()) {
+                checkArgument(!proto.hasSelectedUserIdentityId());
+                checkArgument(proto.getUserIdentitiesList().isEmpty());
+                EncryptedData encryptedData = EncryptedData.fromProto(proto.getEncryptedData());
+                ScryptParameters scryptParameters = ScryptParameters.fromProto(proto.getScryptParameters());
+                return new UserIdentityStore(encryptedData, scryptParameters);
+            } else {
+                checkArgument(!proto.hasEncryptedData());
+                checkArgument(!proto.hasScryptParameters());
+                String selectedUserIdentityId = proto.hasSelectedUserIdentityId() ? proto.getSelectedUserIdentityId() : null;
+                Set<UserIdentity> userIdentitySet = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                                proto.getUserIdentitiesList(),
+                                UserIdentity::fromProto)
+                        .collect(Collectors.toSet());
+                return new UserIdentityStore(selectedUserIdentityId, userIdentitySet);
+            }
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 
@@ -249,7 +256,7 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
                 setSelectedUserIdentityId(decrypted.getSelectedUserIdentityId());
                 log.info("decrypt took {} ms", System.currentTimeMillis() - ts);
                 return null;
-            } catch (GeneralSecurityException | IOException e) {
+            } catch (GeneralSecurityException | IOException | UnresolvableProtobufException e) {
                 throw new RuntimeException(e);
             }
         }, commonForkJoinPool());
@@ -299,21 +306,23 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
 
     // We want to ensure that the selected object is the same as the one in the userIdentities set.
     void setSelectedUserIdentity(UserIdentity userIdentity) {
+        // UserIdentity.toString() contains the nickname, the terms, the statement and the network ID of the profile.
+        // Users share their log files, so we log neither user identities nor their IDs.
         if (userIdentities.isEmpty()) {
-            log.error("userIdentities must not be empty. userIdentity={}", userIdentity);
+            log.error("userIdentities must not be empty.");
             return;
         }
 
+        // The caller can hold an older copy of the user identity, for example a chat channel which keeps the copy from
+        // before an edit of the profile. So we select our user identity with the same ID (rule 2 of
+        // docs/specifications/user/identity-by-key.md).
         Optional<UserIdentity> optionalUserIdentity = userIdentities.stream()
-                .filter(e -> e.equals(userIdentity))
+                .filter(e -> e.getId().equals(userIdentity.getId()))
                 .findAny();
         if (optionalUserIdentity.isPresent()) {
             selectedUserIdentityObservable.set(optionalUserIdentity.get());
         } else {
-            log.warn("Could not find user identity in userIdentities.\n" +
-                            "userIdentity={}\n" +
-                            "userIdentities={}",
-                    userIdentity, userIdentities);
+            log.warn("Could not find the given user identity among the {} user identities.", userIdentities.size());
             if (selectedUserIdentityObservable.get() == null) {
                 log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
                 selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());
@@ -351,10 +360,9 @@ final class UserIdentityStore implements PersistableStore<UserIdentityStore> {
         if (optionalUserIdentity.isPresent()) {
             selectedUserIdentityObservable.set(optionalUserIdentity.get());
         } else {
-            log.warn("Could not find user identity in userIdentities.\n" +
-                            "selectedUserIdentityId={}\n" +
-                            "userIdentities={}",
-                    selectedUserIdentityId, userIdentities);
+            // UserIdentity.toString() contains the nickname, the terms, the statement and the network ID of each
+            // profile. Users share their log files, so we log only the number of user identities.
+            log.warn("Could not find the selected user identity among the {} user identities.", userIdentities.size());
             if (selectedUserIdentityObservable.get() == null) {
                 log.warn("As selectedUserIdentity is null we select the fist found userIdentity from userIdentities.");
                 selectedUserIdentityObservable.set(userIdentities.stream().findFirst().orElseThrow());

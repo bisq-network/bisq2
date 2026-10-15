@@ -1,130 +1,109 @@
 package bisq.network.p2p.node.authorization;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.Feature;
-import org.junit.jupiter.api.Assertions;
+import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2Token;
+import bisq.network.p2p.node.network_load.NetworkLoad;
+import bisq.network.p2p.services.peer_group.exchange.PeerExchangeRequest;
+import bisq.security.pow.equihash.EquihashProofOfWorkService;
+import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("deprecation")
-public class AuthorizationServiceTest {
+class AuthorizationServiceTest {
+    @Test
+    void selectsByLocalPreferenceAndFallsBackToSupportedPeerType() {
+        assertEquals(AuthorizationTokenType.HASH_CASH_V2, AuthorizationService.selectAuthorizationTokenType(
+                List.of(AuthorizationTokenType.HASH_CASH_V2, AuthorizationTokenType.EQUI_HASH),
+                List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH_V2)));
+        assertEquals(AuthorizationTokenType.EQUI_HASH, AuthorizationService.selectAuthorizationTokenType(
+                List.of(AuthorizationTokenType.EQUI_HASH, AuthorizationTokenType.HASH_CASH_V2),
+                List.of(Feature.AUTHORIZATION_HASH_CASH_V2, Feature.AUTHORIZATION_EQUI_HASH)));
+        assertEquals(AuthorizationTokenType.EQUI_HASH, AuthorizationService.selectAuthorizationTokenType(
+                List.of(AuthorizationTokenType.HASH_CASH_V2), List.of(Feature.AUTHORIZATION_EQUI_HASH)));
+        assertEquals(AuthorizationTokenType.HASH_CASH_V2, AuthorizationService.selectAuthorizationTokenType(
+                List.of(AuthorizationTokenType.HASH_CASH_V2), List.of()));
+        assertThrows(IllegalArgumentException.class, () ->
+                AuthorizationService.selectAuthorizationTokenType(List.of(), List.of()));
+    }
 
     @Test
-    void testSelectAuthorizationTokenType() {
-        List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes;
-        List<Feature> peersFeatures;
-        AuthorizationTokenType result;
+    void neverSelectsLegacyAuthorization() {
+        assertTrue(AuthorizationTokenType.fromFeature(Feature.AUTHORIZATION_HASH_CASH).isEmpty());
+        for (List<Feature> features : List.of(List.of(Feature.AUTHORIZATION_HASH_CASH),
+                List.of(Feature.INVENTORY_HASH_SET))) {
+            assertThrows(IllegalArgumentException.class, () -> AuthorizationService.selectAuthorizationTokenType(
+                    List.of(AuthorizationTokenType.HASH_CASH_V2), features));
+        }
+        assertEquals(AuthorizationTokenType.HASH_CASH_V2, AuthorizationService.selectAuthorizationTokenType(
+                List.of(AuthorizationTokenType.HASH_CASH_V2),
+                List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_HASH_CASH_V2)));
+    }
 
-        // Empty myPreferredAuthorizationTokenTypes not allowed
-        Assertions.assertThrows(IllegalArgumentException.class, () ->
-                AuthorizationService.selectAuthorizationTokenType(new ArrayList<>(), new ArrayList<>()));
+    @Test
+    void rejectsLegacyConfiguration() {
+        assertThrows(IllegalArgumentException.class, () -> AuthorizationTokenType.valueOf("HASH_CASH"));
+        assertThrows(com.typesafe.config.ConfigException.BadValue.class, () -> AuthorizationService.Config.from(
+                ConfigFactory.parseString("myPreferredAuthorizationTokenTypes=[HASH_CASH]")));
+    }
 
-        // Empty peersFeatures, we use first myPreferredAuthorizationTokenTypes item as default
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, new ArrayList<>());
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
+    @ParameterizedTest
+    @EnumSource(bisq.network.protobuf.AuthorizationTokenType.class)
+    void rejectsLegacyTokenBodyRegardlessOfDeclaredType(bisq.network.protobuf.AuthorizationTokenType type) {
+        var builder = bisq.network.protobuf.AuthorizationToken.newBuilder()
+                .setHashCashToken(bisq.network.protobuf.HashCashToken.getDefaultInstance());
+        if (type == bisq.network.protobuf.AuthorizationTokenType.UNRECOGNIZED) {
+            builder.setAuthorizationTokenTypeValue(999);
+        } else {
+            builder.setAuthorizationTokenType(type);
+        }
+        assertThrows(UnresolvableProtobufException.class, () -> AuthorizationToken.fromProto(builder.build()));
+    }
 
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, new ArrayList<>());
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
+    @ParameterizedTest
+    @EnumSource(value = bisq.network.protobuf.AuthorizationTokenType.class,
+            names = {"AUTHORIZATIONTOKENTYPE_HASH_CASH", "AUTHORIZATIONTOKENTYPE_UNSPECIFIED", "UNRECOGNIZED"})
+    void rejectsInvalidTypeEvenWithV2Body(bisq.network.protobuf.AuthorizationTokenType type) {
+        assertThrows(UnresolvableProtobufException.class, () -> AuthorizationTokenType.fromProto(type));
+        var builder = bisq.network.protobuf.AuthorizationToken.newBuilder()
+                .setHashCashV2Token(bisq.network.protobuf.HashCashV2Token.getDefaultInstance());
+        if (type == bisq.network.protobuf.AuthorizationTokenType.UNRECOGNIZED) {
+            builder.setAuthorizationTokenTypeValue(999);
+        } else {
+            builder.setAuthorizationTokenType(type);
+        }
+        assertThrows(UnresolvableProtobufException.class, () -> AuthorizationToken.fromProto(builder.build()));
+    }
 
-        // Match
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        // If not match we use first peersFeatures item as default
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        // Multiple myPreferredAuthorizationTokenTypes
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH, AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH, AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH, AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH, AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-
-        // Multiple peersFeatures
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH_V2);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_HASH_CASH_V2);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH_V2);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH_V2, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH_V2);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH_V2, result);
-
-        // Multiple myPreferredAuthorizationTokenTypes and peersFeatures
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH, AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.HASH_CASH, AuthorizationTokenType.EQUI_HASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.HASH_CASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_EQUI_HASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH, AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
-
-        peersFeatures = List.of(Feature.AUTHORIZATION_EQUI_HASH, Feature.AUTHORIZATION_HASH_CASH);
-        myPreferredAuthorizationTokenTypes = List.of(AuthorizationTokenType.EQUI_HASH, AuthorizationTokenType.HASH_CASH);
-        result = AuthorizationService.selectAuthorizationTokenType(myPreferredAuthorizationTokenTypes, peersFeatures);
-        assertEquals(AuthorizationTokenType.EQUI_HASH, result);
+    @Test
+    void defaultFeaturesCreateAndAuthorizeV2() throws Exception {
+        var service = new AuthorizationService(new AuthorizationService.Config(List.of(AuthorizationTokenType.HASH_CASH_V2)),
+                new HashCashProofOfWorkService(), new EquihashProofOfWorkService(),
+                Set.of(Feature.AUTHORIZATION_HASH_CASH, Feature.AUTHORIZATION_HASH_CASH_V2));
+        assertEquals(Set.of(AuthorizationTokenType.HASH_CASH_V2), service.getSupportedServices().keySet());
+        assertFalse(Feature.DEFAULT_FEATURES.contains(Feature.AUTHORIZATION_HASH_CASH));
+        var message = new PeerExchangeRequest(1, new ArrayList<>());
+        var token = service.createToken(message, NetworkLoad.INITIAL_NETWORK_LOAD, "peer", 0, Feature.DEFAULT_FEATURES);
+        assertInstanceOf(HashCashV2Token.class, token);
+        var decoded = AuthorizationToken.fromProto(token.toProto(false));
+        Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
+        assertTrue(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, receivedMessageCounters, "peer"));
+        assertFalse(service.isAuthorized(message, decoded, NetworkLoad.INITIAL_NETWORK_LOAD, receivedMessageCounters, "peer"));
+        assertThrows(IllegalArgumentException.class, () -> service.createToken(message,
+                NetworkLoad.INITIAL_NETWORK_LOAD, "peer", 1, List.of(Feature.AUTHORIZATION_HASH_CASH)));
     }
 }

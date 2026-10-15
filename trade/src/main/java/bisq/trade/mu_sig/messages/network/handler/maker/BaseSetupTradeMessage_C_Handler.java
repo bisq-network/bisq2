@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -30,6 +31,7 @@ import bisq.trade.mu_sig.messages.network.SetupTradeMessage_D;
 import bisq.trade.mu_sig.messages.network.handler.PartialSignaturesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.DepositTxSignatureRequest;
 import bisq.trade.protobuf.PartialSignaturesRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -51,27 +53,31 @@ public abstract class BaseSetupTradeMessage_C_Handler extends MuSigTradeMessageH
 
     @Override
     protected void process(SetupTradeMessage_C message) {
-        peersNonceShares = message.getNonceShares();
-        peersPartialSignatures = message.getPartialSignatures();
-        long redirectionAmountMsat = trade.getMyself().getMyNonceSharesMessage()
-                .orElseThrow().getRedirectionAmountMsat();
+        try {
+            peersNonceShares = message.getNonceShares();
+            peersPartialSignatures = message.getPartialSignatures();
+            long redirectionAmountMsat = trade.getMyself().getMyNonceSharesMessage()
+                    .orElseThrow().getRedirectionAmountMsat();
 
-        NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
+            NonceSharesMessage peersNonceSharesMessage = NonceSharesMessage.from(peersNonceShares);
 
-        PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
-                .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
-                .build();
-        myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
+            PartialSignaturesRequest partialSignaturesRequest = PartialSignaturesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setPeersNonceShares(peersNonceSharesMessage.toProto(true))
+                    .addAllRedirectionReceivers(PartialSignaturesRequestUtil.getBurningMenDPTReceivers(redirectionAmountMsat))
+                    .build();
+            myPartialSignaturesMessage = PartialSignaturesMessage.fromProto(blockingStub.getPartialSignatures(partialSignaturesRequest));
 
-        PartialSignaturesMessage peersPartialSignaturesMessage = PartialSignaturesMessage.from(peersPartialSignatures);
-        DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
-                .build();
+            PartialSignaturesMessage peersPartialSignaturesMessage = PartialSignaturesMessage.from(peersPartialSignatures);
+            DepositTxSignatureRequest depositTxSignatureRequest = DepositTxSignatureRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setPeersPartialSignatures(peersPartialSignaturesMessage.toProto(true))
+                    .build();
 
-        myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
+            myDepositPsbt = DepositPsbt.fromProto(blockingStub.signDepositTx(depositTxSignatureRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

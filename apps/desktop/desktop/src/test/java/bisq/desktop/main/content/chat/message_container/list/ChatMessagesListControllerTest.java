@@ -33,11 +33,15 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
+import bisq.common.validation.NetworkDataValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.settings.ChatMessageType;
@@ -45,6 +49,7 @@ import bisq.settings.SettingsService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,12 +57,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,14 +70,16 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
+@ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
-class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
+class ChatMessagesListControllerTest {
     private static final Market MARKET = MarketRepository.getUSDBitcoinMarket();
     // 5e18 sat converts to the quote side at 1 USD per BTC but overflows a long at 50,000 USD.
     private static final long BASE_SIDE_AMOUNT = 5_000_000_000_000_000_000L;
     private static final double FITTING_PRICE = 1;
     private static final double OVERFLOWING_PRICE = 50_000;
+    // The controller creates a real expired messages indicator message with this ID, which requires a valid profile ID.
+    private static final String SELECTED_USER_PROFILE_ID = "a".repeat(NetworkDataValidation.PROFILE_ID_LENGTH);
 
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
     private final Observable<ChatChannel<? extends ChatMessage>> selectedChannel = new Observable<>();
@@ -81,22 +87,30 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
     private ChatMessagesListController controller;
     private BisqEasyOfferbookChannel channel;
     private BisqEasyOfferbookMessage message;
+    private MarketPriceService marketPriceService;
+    private ReputationService reputationService;
+    private UserProfile authorUserProfile;
 
     @BeforeEach
     void setUp() {
-        MarketPriceService marketPriceService = mock(MarketPriceService.class);
+        marketPriceService = mock(MarketPriceService.class);
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByCurrencyMap);
         when(marketPriceService.findMarketPrice(MARKET))
                 .thenAnswer(invocation -> Optional.ofNullable(marketPriceByCurrencyMap.get(MARKET)));
 
-        UserProfile authorUserProfile = mock(UserProfile.class);
+        authorUserProfile = mock(UserProfile.class);
         when(authorUserProfile.getId()).thenReturn("author-id");
         when(authorUserProfile.getNickName()).thenReturn("alice");
         UserService userService = mock(UserService.class, RETURNS_DEEP_STUBS);
         when(userService.getUserProfileService().findUserProfile("author-id")).thenReturn(Optional.of(authorUserProfile));
         when(userService.getUserProfileService().getIgnoredUserProfileIds()).thenReturn(new ObservableSet<>());
-        when(userService.getUserIdentityService().getSelectedUserIdentityObservable()).thenReturn(new Observable<>(mock(UserIdentity.class)));
-        ReputationService reputationService = mock(ReputationService.class);
+        UserProfile selectedUserProfile = mock(UserProfile.class);
+        when(selectedUserProfile.getId()).thenReturn(SELECTED_USER_PROFILE_ID);
+        UserIdentity selectedUserIdentity = mock(UserIdentity.class);
+        when(selectedUserIdentity.getUserProfile()).thenReturn(selectedUserProfile);
+        when(userService.getUserIdentityService().getSelectedUserIdentity()).thenReturn(selectedUserIdentity);
+        when(userService.getUserIdentityService().getSelectedUserIdentityObservable()).thenReturn(new Observable<>(selectedUserIdentity));
+        reputationService = mock(ReputationService.class);
         when(reputationService.findReputationScore(any(UserProfile.class))).thenReturn(Optional.empty());
         when(reputationService.getUserProfileIdWithScoreChange()).thenReturn(new Observable<>());
         when(reputationService.getScoreByUserProfileId()).thenReturn(new ObservableHashMap<>());
@@ -139,6 +153,8 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         when(message.getId()).thenReturn("offer-message-id");
         when(message.getAuthorUserProfileId()).thenReturn("author-id");
         when(message.hasBisqEasyOffer()).thenReturn(true);
+        // A channel holds only messages of supported types
+        when(message.hasSupportedChatMessageType()).thenReturn(true);
         when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
         when(message.getCitation()).thenReturn(Optional.empty());
 
@@ -174,13 +190,13 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         channel.addChatMessage(message);
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
 
         putMarketPrice(FITTING_PRICE);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).contains("offer-message-id");
-        assertThat(processedMessageIds()).contains("offer-message-id");
+        assertThat(isIndexed(message)).isTrue();
     }
 
     @Test
@@ -194,7 +210,7 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
         assertThat(messageService.isValid(message)).isFalse();
 
         putMarketPrice(FITTING_PRICE);
@@ -213,7 +229,7 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(displayedMessageIds()).doesNotContain("offer-message-id");
-        assertThat(processedMessageIds()).doesNotContain("offer-message-id");
+        assertThat(isIndexed(message)).isFalse();
         WaitForAsyncUtils.asyncFx(() -> controller.onActivate());
         WaitForAsyncUtils.waitForFxEvents();
     }
@@ -226,12 +242,14 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         when(failingMessage.getId()).thenReturn("failing-message-id");
         when(failingMessage.getAuthorUserProfileId()).thenReturn("failing-author-id");
         when(failingMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(failingMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(failingMessage.getBisqEasyOffer()).thenReturn(offer);
         when(failingMessage.getCitation()).thenThrow(new IllegalStateException("test"));
         BisqEasyOfferbookMessage laterMessage = mock(BisqEasyOfferbookMessage.class);
         when(laterMessage.getId()).thenReturn("later-message-id");
         when(laterMessage.getAuthorUserProfileId()).thenReturn("author-id");
         when(laterMessage.hasBisqEasyOffer()).thenReturn(true);
+        when(laterMessage.hasSupportedChatMessageType()).thenReturn(true);
         when(laterMessage.getBisqEasyOffer()).thenReturn(offer);
         when(laterMessage.getCitation()).thenReturn(Optional.empty());
         BisqEasyOfferbookChannel otherChannel = new BisqEasyOfferbookChannel(new Market("BTC", "EUR", "Bitcoin", "Euro"));
@@ -247,6 +265,31 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
         assertThat(displayedMessageIds()).doesNotContain("failing-message-id");
     }
 
+    // A maker of v2.1.13 rounds its maximum half up to whole USD: a score of 79902 gives 400 USD, which require 80000.
+    // Like the offerbook filter, which lists the offer, the buyer's take check applies the tolerance of the rule.
+    @Test
+    @ResourceLock(value = "Navigation", mode = ResourceAccessMode.READ_WRITE)
+    void buyerCanTakeFixedSellOfferWhoseAmountTheToleranceCovers() throws Exception {
+        when(marketPriceService.findMarketPriceQuote(MARKET)).thenReturn(Optional.of(PriceQuote.fromFiatPrice(60_000, "USD")));
+        when(reputationService.getReputationScore(authorUserProfile)).thenReturn(new ReputationScore(79_902, 0, 1));
+        BisqEasyOffer sellOffer = mock(BisqEasyOffer.class);
+        when(sellOffer.getId()).thenReturn("sell-offer-id");
+        when(sellOffer.getMarket()).thenReturn(MARKET);
+        when(sellOffer.getDirection()).thenReturn(Direction.SELL);
+        when(sellOffer.getTakersDisplayDirection()).thenReturn(Direction.BUY);
+        when(sellOffer.getMakersUserProfileId()).thenReturn("author-id");
+        when(sellOffer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(4_000_000));
+        when(sellOffer.getPriceSpec()).thenReturn(new MarketPriceSpec());
+        BisqEasyOfferbookMessage sellOfferMessage = mock(BisqEasyOfferbookMessage.class);
+        when(sellOfferMessage.getAuthorUserProfileId()).thenReturn("author-id");
+        when(sellOfferMessage.getBisqEasyOffer()).thenReturn(Optional.of(sellOffer));
+        Navigation.getCurrentNavigationTarget().set(null);
+
+        WaitForAsyncUtils.asyncFx(() -> controller.onTakeOffer(sellOfferMessage)).get(10, TimeUnit.SECONDS);
+
+        assertThat(Navigation.getCurrentNavigationTarget().get()).isEqualTo(NavigationTarget.BISQ_EASY_TAKE_OFFER);
+    }
+
     private void putMarketPrice(double price) {
         MarketPrice marketPrice = mock(MarketPrice.class);
         when(marketPrice.getPriceQuote()).thenReturn(PriceQuote.fromFiatPrice(price, "USD"));
@@ -259,7 +302,7 @@ class ChatMessagesListControllerTest extends TestFxHeadlessSupport {
                 .toList();
     }
 
-    private Set<String> processedMessageIds() {
-        return controller.getModel().getChatMessageIds();
+    private boolean isIndexed(ChatMessage chatMessage) {
+        return controller.getModel().getChatMessageListItemsById().contains(chatMessage);
     }
 }

@@ -19,6 +19,8 @@ package bisq.chat.bisq_easy.offerbook;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -51,10 +53,16 @@ public final class BisqEasyOfferbookChannelStore implements PersistableStore<Bis
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto) {
-        return new BisqEasyOfferbookChannelStore(proto.getChannelsList().stream()
-                .map(e -> (BisqEasyOfferbookChannel) BisqEasyOfferbookChannel.fromProto(e))
-                .collect(Collectors.toList()));
+    public static BisqEasyOfferbookChannelStore fromProto(bisq.chat.protobuf.BisqEasyOfferbookChannelStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOfferbookChannelStore(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(),
+                            e -> (BisqEasyOfferbookChannel) BisqEasyOfferbookChannel.fromProto(e))
+                    .collect(Collectors.toList()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

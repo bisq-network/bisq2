@@ -133,7 +133,9 @@ The pairing process establishes a trusted client profile and initial session:
     * The LAN address is detected and can be applied
     * TLS is required
 3. Permissions are defined and associated with a **pairing code**
-4. The pairing code expires after **5 minutes**
+4. The pairing code expires after the time which `application.api.pairing.ttlInSeconds` sets: **5 minutes** in the
+   desktop, seed node, oracle node and node monitor apps, **1 hour** in the api-app, and **24 hours** in the Docker
+   image (`PAIRING_TTL_SECONDS`)
 5. A QR code is generated containing:
 
     * WebSocket server URL
@@ -162,6 +164,10 @@ The pairing process establishes a trusted client profile and initial session:
     * `clientId`
     * `sessionId`
       in the request headers
+
+The pairing code, the QR code which contains it, the client secret and the session ID are credentials. The node shows
+the pairing code only in its user interface and in `pairing_qr_code.txt` in the data directory. It never writes these
+credentials to the log (see `docs/specifications/security/secrets-in-logs.md`).
 
 #### Subsequent Client Starts
 

@@ -19,6 +19,7 @@ package bisq.support.dispute.mu_sig;
 
 import bisq.account.accounts.AccountPayload;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -42,7 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCasePaymentDetailsResponse implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCasePaymentDetailsResponse.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
     private final AccountPayload<?> takerAccountPayload;
@@ -74,13 +75,18 @@ public final class MuSigDisputeCasePaymentDetailsResponse implements MailboxMess
                 .setMakerAccountPayload(makerAccountPayload.toProto(serializeForHash));
     }
 
-    public static MuSigDisputeCasePaymentDetailsResponse fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsResponse proto) {
-        return new MuSigDisputeCasePaymentDetailsResponse(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                AccountPayload.fromProto(proto.getTakerAccountPayload()),
-                AccountPayload.fromProto(proto.getMakerAccountPayload())
-        );
+    public static MuSigDisputeCasePaymentDetailsResponse fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigDisputeCasePaymentDetailsResponse(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    AccountPayload.fromProto(proto.getTakerAccountPayload()),
+                    AccountPayload.fromProto(proto.getMakerAccountPayload())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -95,8 +101,8 @@ public final class MuSigDisputeCasePaymentDetailsResponse implements MailboxMess
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.4);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

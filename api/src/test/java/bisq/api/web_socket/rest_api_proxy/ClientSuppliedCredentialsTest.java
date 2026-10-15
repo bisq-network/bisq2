@@ -17,7 +17,6 @@
 
 package bisq.api.web_socket.rest_api_proxy;
 
-import bisq.api.web_socket.util.JsonUtil;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -66,27 +65,6 @@ class ClientSuppliedCredentialsTest {
         request.clearHeaders();
 
         assertThat(request.toString()).doesNotContain(SESSION_ID);
-    }
-
-    @Test
-    void rawMessagesAreRedactedBeforeLogging() {
-        String json = requestJson("{\"Bisq-Session-Id\":\"" + SESSION_ID + "\",\"Bisq-Client-Id\":\"client-id\"}");
-
-        String redacted = JsonUtil.redactCredentials(json);
-
-        assertThat(redacted).doesNotContain(SESSION_ID);
-        assertThat(redacted).contains("\"Bisq-Session-Id\":\"***\"");
-        // The client id is an identifier the node logs elsewhere; keeping it is what makes the line useful
-        assertThat(redacted).contains("client-id");
-        assertThat(redacted).contains("/api/v1/settings/version");
-    }
-
-    @Test
-    void redactionCopesWithFormattingAndCasing() {
-        assertThat(JsonUtil.redactCredentials("{\"bisq-session-id\" : \"" + SESSION_ID + "\"}"))
-                .doesNotContain(SESSION_ID);
-        assertThat(JsonUtil.redactCredentials("{\"Bisq-Session-Id\":\"\"}")).isEqualTo("{\"Bisq-Session-Id\":\"***\"}");
-        assertThat(JsonUtil.redactCredentials("no json at all")).isEqualTo("no json at all");
     }
 
     /**

@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -81,14 +82,19 @@ public final class ZelleAccountPayload extends CountryBasedAccountPayload implem
                 .setEmailOrMobileNr(emailOrMobileNr);
     }
 
-    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var zelleProto = proto.getCountryBasedAccountPayload().getZelleAccountPayload();
-        return new ZelleAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                zelleProto.getHolderName(),
-                zelleProto.getEmailOrMobileNr()
-        );
+    public static ZelleAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var zelleProto = proto.getCountryBasedAccountPayload().getZelleAccountPayload();
+            return new ZelleAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    zelleProto.getHolderName(),
+                    zelleProto.getEmailOrMobileNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

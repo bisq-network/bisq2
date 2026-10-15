@@ -40,10 +40,13 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -57,7 +60,10 @@ public abstract class PrivateChatChannelService<
         C extends PrivateChatChannel<M>,
         S extends PersistableStore<S>
         > extends ChatChannelService<M, C, S> implements ConfidentialMessageService.Listener {
-    private final Set<R> unprocessedReactions = new HashSet<>();
+    // In arrival order, bounded (see docs/specifications/chat/pending-reactions.md). Access is synchronized on the set.
+    @VisibleForTesting
+    public static final int MAX_PENDING_REACTIONS = 100;
+    private final Set<R> unprocessedReactions = new LinkedHashSet<>();
 
     public PrivateChatChannelService(NetworkService networkService,
                                      UserService userService,
@@ -72,17 +78,16 @@ public abstract class PrivateChatChannelService<
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+        networkService.subscribeToConfidentialMessages(this);
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         networkService.removeConfidentialMessageListener(this);
-        unprocessedReactions.clear();
+        synchronized (unprocessedReactions) {
+            unprocessedReactions.clear();
+        }
         return CompletableFuture.completedFuture(true);
     }
 
@@ -277,23 +282,58 @@ public abstract class PrivateChatChannelService<
     /* --------------------------------------------------------------------- */
 
     protected void processMessage(M message) {
-        if (canProcessMessage(message)) {
-            findChannel(message)
-                    .or(() -> {
-                        // We prevent to send leave messages after a peer has left, but there might be still
-                        // race conditions where that might happen, so we check at receiving the message as well, so that
-                        // in cases we would get a leave message as first message (e.g. after having closed the channel)
-                        // we do not create a channel.
-                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
-                                    "sent a leave message around the same time as we have closed the channel.");
-                            return Optional.empty();
-                        } else {
-                            return createNewChannelFromReceivedMessage(message);
-                        }
-                    })
-                    .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+        if (!canProcessMessage(message)) {
+            return;
         }
+        Optional<C> existingChannel = findChannel(message);
+        if (existingChannel.isPresent()) {
+            // A message for an existing channel never creates another channel, also when it is rejected
+            C channel = existingChannel.get();
+            if (isReceivedMessageOfChannel(channel, message)) {
+                addMessageAndProcessQueuedReactions(message, channel);
+            }
+            return;
+        }
+        // We prevent to send leave messages after a peer has left, but there might be still
+        // race conditions where that might happen, so we check at receiving the message as well, so that
+        // in cases we would get a leave message as first message (e.g. after having closed the channel)
+        // we do not create a channel.
+        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                    "sent a leave message around the same time as we have closed the channel.");
+            return;
+        }
+        // The open trade services may return an existing channel of the trade ID in the message, so the check applies
+        // here as well. A new channel has the sender as peer and the receiver as our identity.
+        createNewChannelFromReceivedMessage(message)
+                .filter(channel -> isReceivedMessageOfChannel(channel, message))
+                .ifPresent(channel -> addMessageAndProcessQueuedReactions(message, channel));
+    }
+
+    // A received message is added to a channel only if it was sent to the channel by a peer and belongs to the channel
+    // (docs/specifications/chat/private-channel-membership.md)
+    protected boolean isReceivedMessageOfChannel(C channel, M message) {
+        return isSentToChannel(channel, message.getSenderUserProfile().getId(), message.getReceiverUserProfileId()) &&
+                isMessageOfChannel(channel, message);
+    }
+
+    // Whether a received message belongs to the channel apart from its peers, for example to the trade of a trade
+    // channel. The sender chooses the IDs in the message.
+    protected boolean isMessageOfChannel(C channel, M message) {
+        return true;
+    }
+
+    // The sender chooses the channel ID. A received message or reaction belongs to an existing channel only if its
+    // sender is a peer of the channel and its receiver is our identity in the channel. Otherwise anybody who learned the
+    // ID of a channel, for example the trade ID, could add messages to a conversation of other users.
+    private boolean isSentToChannel(C channel, String senderUserProfileId, String receiverUserProfileId) {
+        boolean isSentToChannel = channel.isPeer(senderUserProfileId) &&
+                channel.getMyUserIdentity().getId().equals(receiverUserProfileId);
+        if (!isSentToChannel) {
+            log.warn("Ignoring a message or reaction for channel {} from a sender which is not a peer of the channel, " +
+                    "or to another receiver", channel.getId());
+        }
+        return isSentToChannel;
     }
 
     protected boolean canProcessMessage(M message) {
@@ -309,22 +349,67 @@ public abstract class PrivateChatChannelService<
     }
 
     protected void processMessageReaction(R messageReaction) {
-        findChannel(messageReaction.getChatChannelId())
-                .flatMap(channel -> channel.getChatMessages().stream()
-                        .filter(message -> message.getId().equals(messageReaction.getChatMessageId()))
-                        .findFirst())
-                .ifPresentOrElse(
-                        message -> addMessageReaction(messageReaction, message),
-                        () -> unprocessedReactions.add(messageReaction));
+        // Checked first, so that such a reaction is neither applied nor kept as a pending reaction
+        if (!isProfileIdOfNetworkId(messageReaction.getReceiverUserProfileId(), messageReaction.getReceiverNetworkId())) {
+            log.warn("Ignoring a reaction whose receiver profile ID is not the ID of its receiver network ID");
+            return;
+        }
+        if (applyMessageReaction(messageReaction)) {
+            return;
+        }
+        addPendingReaction(messageReaction);
+        // Another thread can have added the message after the first attempt, without seeing the pending reaction
+        if (applyMessageReaction(messageReaction)) {
+            removePendingReaction(messageReaction);
+        }
+    }
+
+    // Returns false only if the channel or the message is missing; a reaction of a non-peer is ignored (true)
+    private boolean applyMessageReaction(R messageReaction) {
+        Optional<C> channel = findChannel(messageReaction.getChatChannelId());
+        if (channel.isPresent() && !isSentToChannel(channel.get(), messageReaction.getSenderUserProfile().getId(),
+                messageReaction.getReceiverUserProfileId())) {
+            return true;
+        }
+        Optional<M> message = channel.flatMap(foundChannel -> foundChannel.getChatMessages().stream()
+                .filter(chatMessage -> chatMessage.getId().equals(messageReaction.getChatMessageId()))
+                .findFirst());
+        message.ifPresent(chatMessage -> addMessageReaction(messageReaction, chatMessage));
+        return message.isPresent();
+    }
+
+    private void addPendingReaction(R messageReaction) {
+        synchronized (unprocessedReactions) {
+            if (unprocessedReactions.contains(messageReaction)) {
+                return;
+            }
+            if (unprocessedReactions.size() >= MAX_PENDING_REACTIONS) {
+                Iterator<R> iterator = unprocessedReactions.iterator();
+                iterator.next();
+                iterator.remove();
+                log.warn("We drop the oldest pending reaction because the limit of {} pending reactions is reached",
+                        MAX_PENDING_REACTIONS);
+            }
+            unprocessedReactions.add(messageReaction);
+        }
+    }
+
+    private void removePendingReaction(R messageReaction) {
+        synchronized (unprocessedReactions) {
+            unprocessedReactions.remove(messageReaction);
+        }
     }
 
     protected void processQueuedReactions() {
+        List<R> pendingReactions;
+        synchronized (unprocessedReactions) {
+            pendingReactions = new ArrayList<>(unprocessedReactions);
+        }
         long now = System.currentTimeMillis();
-        unprocessedReactions.forEach(reaction -> {
-            unprocessedReactions.remove(reaction);
-            long age = now - reaction.getDate();
-            if (age < reaction.getMetaData().getTtl()) {
-                processMessageReaction(reaction);
+        pendingReactions.forEach(reaction -> {
+            boolean isExpired = now - reaction.getDate() >= reaction.getMetaData().getTtl();
+            if (isExpired || applyMessageReaction(reaction)) {
+                removePendingReaction(reaction);
             }
         });
     }
@@ -339,7 +424,23 @@ public abstract class PrivateChatChannelService<
             log.warn("Message invalid as sender is banned");
             return false;
         }
+        if (!isProfileIdOfNetworkId(message.getReceiverUserProfileId(), message.getReceiverNetworkId())) {
+            log.warn("Message ignored as its receiver profile ID is not the ID of its receiver network ID. MessageId={}",
+                    StringUtils.sanitizeForLog(message.getId()));
+            return false;
+        }
         return super.isValid(message);
+    }
+
+    // A private message or reaction names its receiver twice. The network layer decrypts it only with the key of the
+    // receiver network ID, and the chat selects our identity by the receiver profile ID. Both IDs are the hash of the
+    // public key, so they must be equal. Otherwise a sender could encrypt a message to one of our identities and have
+    // it added to a conversation of another of our identities. The rule concerns the message alone, so it is checked
+    // at admission, before a channel is found or created and before anything is kept as pending.
+    // isReceivedMessageOfChannel runs only after a channel was found or created (rule 7 of
+    // docs/specifications/chat/private-channel-membership.md).
+    private static boolean isProfileIdOfNetworkId(String userProfileId, NetworkId networkId) {
+        return userProfileId.equals(networkId.getId());
     }
 
     protected abstract C createAndGetNewPrivateChatChannel(UserProfile peer, UserIdentity myUserIdentity);

@@ -20,6 +20,7 @@ package bisq.chat.common;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -77,14 +78,19 @@ public final class CommonPublicChatChannel extends PublicChatChannel<CommonPubli
     }
 
     public static CommonPublicChatChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                    bisq.chat.protobuf.CommonPublicChatChannel proto) {
-        return new CommonPublicChatChannel(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                proto.getChannelTitle(),
-                proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
-                new ArrayList<>(proto.getChannelModeratorIdsList()),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+                                                    bisq.chat.protobuf.CommonPublicChatChannel proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new CommonPublicChatChannel(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    proto.getChannelTitle(),
+                    proto.hasChannelAdminId() ? Optional.of(proto.getChannelAdminId()) : Optional.empty(),
+                    new ArrayList<>(proto.getChannelModeratorIdsList()),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -19,6 +19,7 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.arbitration.ArbitrationPayoutDistributionType;
 import bisq.support.arbitration.ArbitrationResultReason;
@@ -33,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.currentTimeMillis;
 
 @Getter
-public class MuSigArbitrationResult implements NetworkProto, PersistableProto {
+public final class MuSigArbitrationResult implements NetworkProto, PersistableProto {
     public static final int MAX_SUMMARY_NOTES_LENGTH = 1_000;
 
     private final long date;
@@ -106,15 +107,20 @@ public class MuSigArbitrationResult implements NetworkProto, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigArbitrationResult fromProto(bisq.support.protobuf.MuSigArbitrationResult proto) {
-        return new MuSigArbitrationResult(
-                proto.getDate(),
-                proto.getContractHash().toByteArray(),
-                ArbitrationResultReason.fromProto(proto.getArbitrationResultReason()),
-                ArbitrationPayoutDistributionType.fromProto(proto.getArbitrationPayoutDistributionType()),
-                proto.getBuyerPayoutAmount(),
-                proto.getSellerPayoutAmount(),
-                proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+    public static MuSigArbitrationResult fromProto(bisq.support.protobuf.MuSigArbitrationResult proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationResult(
+                    proto.getDate(),
+                    proto.getContractHash().toByteArray(),
+                    ArbitrationResultReason.fromProto(proto.getArbitrationResultReason()),
+                    ArbitrationPayoutDistributionType.fromProto(proto.getArbitrationPayoutDistributionType()),
+                    proto.getBuyerPayoutAmount(),
+                    proto.getSellerPayoutAmount(),
+                    proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getContractHash() {

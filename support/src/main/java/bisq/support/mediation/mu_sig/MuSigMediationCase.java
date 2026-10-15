@@ -21,6 +21,8 @@ import bisq.account.accounts.AccountPayload;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationCaseState;
 import com.google.protobuf.ByteString;
@@ -115,29 +117,33 @@ public class MuSigMediationCase implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediationCase fromProto(bisq.support.protobuf.MuSigMediationCase proto) {
-        return new MuSigMediationCase(MuSigMediationRequest.fromProto(proto.getMuSigMediationRequest()),
-                proto.getRequestDate(),
-                MediationCaseState.fromProto(proto.getMediationCaseState()),
-                proto.hasMuSigMediationResult() ?
-                        Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult())) :
-                        Optional.empty(),
-                proto.hasMediationResultSignature() ?
-                        Optional.of(proto.getMediationResultSignature().toByteArray()) :
-                        Optional.empty(),
-                proto.hasPeerReportedContractHash() ?
-                        Optional.of(proto.getPeerReportedContractHash().toByteArray()) :
-                        Optional.empty(),
-                proto.hasTakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
-                        Optional.empty(),
-                proto.hasMakerAccountPayload() ?
-                        Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
-                        Optional.empty(),
-                proto.getMediatorHasLeftChat(),
-                proto.getIssuesList().stream()
-                        .map(MuSigMediationIssue::fromProto)
-                        .toList());
+    public static MuSigMediationCase fromProto(bisq.support.protobuf.MuSigMediationCase proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationCase(MuSigMediationRequest.fromProto(proto.getMuSigMediationRequest()),
+                    proto.getRequestDate(),
+                    MediationCaseState.fromProto(proto.getMediationCaseState()),
+                    proto.hasMuSigMediationResult() ?
+                            Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult())) :
+                            Optional.empty(),
+                    proto.hasMediationResultSignature() ?
+                            Optional.of(proto.getMediationResultSignature().toByteArray()) :
+                            Optional.empty(),
+                    proto.hasPeerReportedContractHash() ?
+                            Optional.of(proto.getPeerReportedContractHash().toByteArray()) :
+                            Optional.empty(),
+                    proto.hasTakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getTakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.hasMakerAccountPayload() ?
+                            Optional.of(AccountPayload.fromProto(proto.getMakerAccountPayload())) :
+                            Optional.empty(),
+                    proto.getMediatorHasLeftChat(),
+                    ProtobufUtils.fromProtoStream(proto.getIssuesList(), MuSigMediationIssue::fromProto)
+                            .toList());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean setMediationCaseState(MediationCaseState state) {

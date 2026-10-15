@@ -19,6 +19,7 @@ package bisq.persistence;
 
 import bisq.common.proto.PersistableProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 public class PersistableStoreResolver {
@@ -28,7 +29,7 @@ public class PersistableStoreResolver {
         protoResolverMap.addProtoResolver(ProtoResolver.getProtoType(store.getClass()), store.getResolver());
     }
 
-    static PersistableStore<?> fromAny(Any anyProto) {
+    static PersistableStore<?> fromAny(Any anyProto) throws UnresolvableProtobufException {
         return protoResolverMap.fromAny(anyProto);
     }
 }

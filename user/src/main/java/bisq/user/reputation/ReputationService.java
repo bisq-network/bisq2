@@ -35,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 @Getter
 @Slf4j
@@ -46,7 +47,6 @@ public class ReputationService implements Service {
     private final Observable<String> userProfileIdWithScoreChange = new Observable<>();
     private final ObservableHashMap<String, Long> scoreByUserProfileId = new ObservableHashMap<>();
     private final ProfileAgeService profileAgeService;
-    private final NetworkService networkService;
 
     public ReputationService(PersistenceService persistenceService,
                              NetworkService networkService,
@@ -54,7 +54,6 @@ public class ReputationService implements Service {
                              UserProfileService userProfileService,
                              BannedUserService bannedUserService,
                              AuthorizedBondedRolesService authorizedBondedRolesService) {
-        this.networkService = networkService;
         proofOfBurnService = new ProofOfBurnService(networkService,
                 userIdentityService,
                 userProfileService,
@@ -102,8 +101,6 @@ public class ReputationService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
-        ReputationDataUtil.cleanupMap(networkService);
-
         return proofOfBurnService.initialize()
                 .thenCompose(r -> bondedReputationService.initialize())
                 .thenCompose(r -> accountAgeService.initialize())
@@ -141,10 +138,13 @@ public class ReputationService implements Service {
         if (DevMode.isDevMode() && DevMode.devModeReputationScore() > 0) {
             score = DevMode.devModeReputationScore();
         } else {
-            if (!scoreByUserProfileId.containsKey(userProfileId)) {
+            // One read: the map loses the score of a removed profile while other threads read it (see
+            // docs/specifications/security/derived-state.md). Between a check and a second read, get returned null.
+            Long totalScore = scoreByUserProfileId.get(userProfileId);
+            if (totalScore == null) {
                 return Optional.empty();
             }
-            score = scoreByUserProfileId.get(userProfileId);
+            score = totalScore;
         }
 
         double fiveSystemScore = getFiveSystemScore(score);
@@ -153,18 +153,28 @@ public class ReputationService implements Service {
         return Optional.of(new ReputationScore(score, fiveSystemScore, rank));
     }
 
-    private void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
+    // Synchronized, so that the last computation of a profile reads the scores after the last change of a source
+    private synchronized void onUserProfileScoreChanged(Pair<String, Long> userProfileIdScorePair) {
         if (userProfileIdScorePair == null) {
             return;
         }
         String userProfileId = userProfileIdScorePair.getFirst();
-        long score = proofOfBurnService.getScore(userProfileId) +
-                bondedReputationService.getScore(userProfileId) +
-                accountAgeService.getScore(userProfileId) +
-                signedWitnessService.getScore(userProfileId) +
-                profileAgeService.getScore(userProfileId);
-        scoreByUserProfileId.put(userProfileId, score);
+        // A profile has a total score while a source has data for it, as after a restart. The total can be 0.
+        if (getSourceServices().anyMatch(service -> service.hasScore(userProfileId))) {
+            long score = getSourceServices().mapToLong(service -> service.getScore(userProfileId)).sum();
+            scoreByUserProfileId.put(userProfileId, score);
+        } else {
+            scoreByUserProfileId.remove(userProfileId);
+        }
         userProfileIdWithScoreChange.set(userProfileId);
+    }
+
+    private Stream<SourceReputationService<?>> getSourceServices() {
+        return Stream.of(proofOfBurnService,
+                bondedReputationService,
+                accountAgeService,
+                signedWitnessService,
+                profileAgeService);
     }
 
     @VisibleForTesting

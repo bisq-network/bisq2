@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.message;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 // Wrapper for NetworkMessages which are not part of the network module (e.g. PrivateChatMessage).
@@ -36,7 +37,12 @@ public interface ExternalNetworkMessage extends EnvelopePayloadMessage {
                 .setPayload(Any.pack(toValueProto(serializeForHash)));
     }
 
-    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage) {
-        return NetworkMessageResolver.fromAny(externalNetworkMessage.getPayload());
+    static EnvelopePayloadMessage fromProto(bisq.network.protobuf.ExternalNetworkMessage externalNetworkMessage)
+            throws UnresolvableProtobufException {
+        try {
+            return NetworkMessageResolver.fromAny(externalNetworkMessage.getPayload());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

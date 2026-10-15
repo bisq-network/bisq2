@@ -18,6 +18,8 @@
 package bisq.network;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.persistence.PersistableStore;
@@ -55,11 +57,17 @@ final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
                                 e -> e.getValue().toProto(serializeForHash))));
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto) {
-        var networkIdByTag = proto.getNetworkIdByTagMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> NetworkId.fromProto(e.getValue())));
-        return new NetworkIdStore(networkIdByTag);
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkIdStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            var networkIdByTag = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getNetworkIdByTagMap(),
+                            NetworkId::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue));
+            return new NetworkIdStore(networkIdByTag);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -86,5 +94,11 @@ final class NetworkIdStore implements PersistableStore<NetworkIdStore> {
 
     Optional<NetworkId> findNetworkId(String tag) {
         return Optional.ofNullable(networkIdByTag.get(tag));
+    }
+
+    Optional<NetworkId> findNetworkIdByKeyId(String keyId) {
+        return networkIdByTag.values().stream()
+                .filter(networkId -> networkId.getKeyId().equals(keyId))
+                .findAny();
     }
 }

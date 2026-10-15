@@ -17,11 +17,15 @@
 
 package bisq.network.p2p.services.confidential;
 
-import bisq.common.util.MathUtils;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
-import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.security.ConfidentialData;
 import bisq.security.DigestUtil;
 import lombok.EqualsAndHashCode;
@@ -29,13 +33,13 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Arrays;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @ToString
 @EqualsAndHashCode
 @Getter
-public final class ConfidentialMessage implements EnvelopePayloadMessage, DistributedData {
+public final class ConfidentialMessage implements EnvelopePayloadMessage, OwnershipVerifiableData, Canonical {
     private final ConfidentialData confidentialData;
     private final String receiverKeyId;
 
@@ -48,6 +52,8 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
 
     @Override
     public void verify() {
+        checkNotNull(confidentialData, "ConfidentialData must not be null");
+        checkNotNull(receiverKeyId, "ReceiverKeyId must not be null");
         NetworkDataValidation.validateId(receiverKeyId);
     }
 
@@ -68,16 +74,46 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
                 .setReceiverKeyId(receiverKeyId);
     }
 
-    public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto) {
-        return new ConfidentialMessage(
-                ConfidentialData.fromProto(proto.getConfidentialData()),
-                proto.getReceiverKeyId()
-        );
+    public static ConfidentialMessage fromProto(bisq.network.protobuf.ConfidentialMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ConfidentialMessage(
+                    ConfidentialData.fromProto(proto.getConfidentialData()),
+                    proto.getReceiverKeyId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // The complete encoding, with the EnvelopePayloadMessage envelope that serialize() writes
+    public static final CanonicalSchema<ConfidentialMessage> DEFAULT_SCHEMA =
+            CanonicalSchema.oneof("EnvelopePayloadMessage", 8, getValueSchemaBuilder());
+    // The ConfidentialMessage message without envelope, as MailboxData contains it
+    public static final CanonicalSchema<ConfidentialMessage> DEFAULT_VALUE_SCHEMA = getValueSchemaBuilder().build();
+    public static final CanonicalSchema<ConfidentialMessage> SIGNATURE_VALUE_SCHEMA = DEFAULT_VALUE_SCHEMA;
+
+    private static CanonicalSchema.Builder<ConfidentialMessage> getValueSchemaBuilder() {
+        return CanonicalSchema.<ConfidentialMessage>newBuilder()
+                .canonical(1, confidentialMessage -> confidentialMessage.confidentialData)
+                .string(2, confidentialMessage -> confidentialMessage.receiverKeyId);
     }
 
     @Override
-    public double getCostFactor() {
-        return MathUtils.bounded(0.1, 1, confidentialData.getCostFactor());
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<ConfidentialMessage> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override
@@ -87,10 +123,9 @@ public final class ConfidentialMessage implements EnvelopePayloadMessage, Distri
                 "The MailBoxData class must provide instead the meta data");
     }
 
+    // The sender owns the message. In the mailbox store, the sender signs the add request.
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return confidentialData == null ||
-                receiverKeyId == null ||
-                !Arrays.equals(DigestUtil.hash(confidentialData.getSenderPublicKey()), pubKeyHash);
+    public byte[] getOwnerPubKeyHash() {
+        return DigestUtil.hash(confidentialData.getSenderPublicKey());
     }
 }

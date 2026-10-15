@@ -80,14 +80,22 @@ message SettingsStore {
   sint32 numDaysAfterRedactingTradeData = 27;
   bool muSigActivated = 28;
   bool autoAddToContactsList = 29;
-  common.Market muSigLastSelectedFiatMarket = 30;
-  common.Market muSigLastSelectedOtherMarket = 31;
+
+  // A stored settings file can contain these field numbers, so they must not get another type or meaning:
+  // 30 was "map<string, common.Market> muSigLastSelectedMarketByBaseCurrencyMap" up to version 2.1.13.
+  reserved 30;
+  reserved "muSigLastSelectedMarketByBaseCurrencyMap";
+
+  //TODO what is selectedWalletMarket for?
+  common.Market selectedWalletMarket = 31;
   bool muSigTradeRulesConfirmed = 32;
+
+  // Added in v2.1.14
   string countryCode = 33;
   string currencyCode = 34;
-  //TODO what is selectedWalletMarket for?
-  common.Market selectedWalletMarket = 35;
-  repeated TacAcceptance tacAcceptances = 36;
-  bool showLatestTxs = 37;
-  double priceDeviationWarningThreshold = 38;
+  repeated TacAcceptance tacAcceptances = 35;
+  bool showLatestTxs = 36;
+  double priceDeviationWarningThreshold = 37;
+  common.Market muSigLastSelectedFiatMarket = 38;
+  common.Market muSigLastSelectedOtherMarket = 39;
 }

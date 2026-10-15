@@ -17,25 +17,19 @@
 
 package bisq.bonded_roles.oracle;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
-import bisq.common.network.TransportType;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Arrays;
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
@@ -44,11 +38,10 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedOracleNode implements AuthorizedDistributedData {
+public final class AuthorizedOracleNode implements OracleNodeAuthorizedData, OwnershipVerifiableData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -124,16 +117,21 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto) {
-        return new AuthorizedOracleNode(
-                proto.getVersion(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static AuthorizedOracleNode fromProto(bisq.bonded_roles.protobuf.AuthorizedOracleNode proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedOracleNode(
+                    proto.getVersion(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -147,28 +145,16 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // Nodes of v2.1.13 and earlier accept the oracle node only from the key of its network ID. Its authorized key owns
+    // it as well if it is one of the static keys (see AuthorizedData.isOwner and
+    // docs/specifications/network/storage-ownership.md).
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED && networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
-            log.warn("AuthorizedOracleNode considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
-                    "networkId={}", networkId);
-            return true;
-        }
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
+    public byte[] getOwnerPubKeyHash() {
+        return networkId.getPubKeyHash();
     }
 
     @Override
@@ -179,8 +165,7 @@ public final class AuthorizedOracleNode implements AuthorizedDistributedData {
     @Override
     public String toString() {
         return "AuthorizedOracleNode{" +
-                "metaData=" + metaData +
-                ", networkId=" + networkId +
+                "networkId=" + networkId +
                 ", profileId='" + profileId + '\'' +
                 ", authorizedPublicKey='" + authorizedPublicKey + '\'' +
                 ", bondUserName='" + bondUserName + '\'' +

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.mu_sig_data;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.trade.mu_sig.messages.grpc.PartialSignaturesMessage;
 import com.google.protobuf.ByteString;
@@ -104,17 +105,22 @@ public final class PartialSignatures implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto) {
-        return new PartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
-                proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
-                proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getPeersClaimTxInputPartialSignature().toByteArray(),
-                proto.hasSwapTxInputPartialSignature()
-                        ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
-                        : Optional.empty(),
-                proto.hasSwapTxInputSighash()
-                        ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
-                        : Optional.empty());
+    public static PartialSignatures fromProto(bisq.trade.protobuf.PartialSignatures proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PartialSignatures(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
+                    proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
+                    proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
+                    proto.getPeersClaimTxInputPartialSignature().toByteArray(),
+                    proto.hasSwapTxInputPartialSignature()
+                            ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                            : Optional.empty(),
+                    proto.hasSwapTxInputSighash()
+                            ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

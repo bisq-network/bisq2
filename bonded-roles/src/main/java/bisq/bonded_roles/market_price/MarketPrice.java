@@ -20,6 +20,7 @@ package bisq.bonded_roles.market_price;
 import bisq.common.market.Market;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -74,12 +75,17 @@ public final class MarketPrice implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto) {
-        MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
-        MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
-        return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
-                proto.getTimestamp(),
-                marketPriceProviderInfo);
+    public static MarketPrice fromProto(bisq.bonded_roles.protobuf.MarketPrice proto)
+            throws UnresolvableProtobufException {
+        try {
+            MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromProto(proto.getMarketPriceProvider());
+            MarketPriceProviderInfo marketPriceProviderInfo= new MarketPriceProviderInfo(marketPriceProvider);
+            return new MarketPrice(PriceQuote.fromProto(proto.getPriceQuote()),
+                    proto.getTimestamp(),
+                    marketPriceProviderInfo);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public Market getMarket() {
@@ -100,6 +106,15 @@ public final class MarketPrice implements NetworkProto {
 
     public boolean isValidDate() {
         return System.currentTimeMillis() - timestamp < INVALID_AGE;
+    }
+
+    /**
+     * A node uses only market prices with a positive price. It skips other prices where they enter the node, one by
+     * one. This is not checked in verify(): the oracle signs its market price data as a whole, so parsing has to keep
+     * every entry. See docs/specifications/bonded-roles/market-prices.md.
+     */
+    public boolean hasPositivePrice() {
+        return priceQuote.getValue() > 0;
     }
 
     @Override

@@ -50,6 +50,7 @@ public final class TradePeerLeftMessageBox extends PeerProtocolLogMessageBox {
         subHeadline.setAlignment(Pos.CENTER);
         subHeadline.setWrapText(true);
 
-        tradeLogMessageBg.getChildren().setAll(hBox, subHeadline, dateTime);
+        // dateTimeHBox carries the unverified mark of a forwarded message.
+        tradeLogMessageBg.getChildren().setAll(hBox, subHeadline, dateTimeHBox);
     }
 }

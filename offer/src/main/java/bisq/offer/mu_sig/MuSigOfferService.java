@@ -18,6 +18,7 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.timer.Scheduler;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
@@ -118,7 +119,11 @@ public class MuSigOfferService implements Service {
     }
 
     public MuSigOffer cloneOffer(MuSigOffer offer) {
-        return MuSigOffer.fromProto(offer.toProto(true));
+        try {
+            return MuSigOffer.fromProto(offer.toProto(true));
+        } catch (UnresolvableProtobufException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 

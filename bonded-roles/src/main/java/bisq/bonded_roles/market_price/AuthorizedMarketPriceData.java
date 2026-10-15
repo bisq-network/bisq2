@@ -17,23 +17,21 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -44,12 +42,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedMarketPriceData implements AuthorizedDistributedData {
+public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData {
     private static final int VERSION = 1;
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
+    private static final int MAX_NUM_ENTRIES = 200;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, AuthorizedMarketPriceData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -81,8 +79,8 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
 
     @Override
     public void verify() {
-        checkArgument(marketPriceByCurrencyMap.size() < 200,
-                "marketPriceByCurrencyMap size must be < 200" + marketPriceByCurrencyMap.size());
+        checkArgument(marketPriceByCurrencyMap.size() < MAX_NUM_ENTRIES,
+                "marketPriceByCurrencyMap size must be < " + MAX_NUM_ENTRIES);
     }
 
     @Override
@@ -100,16 +98,40 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto) {
-        Map<Market, MarketPrice> map = proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                        e -> MarketPrice.fromProto(e.getValue())));
-        return new AuthorizedMarketPriceData(
-                proto.getVersion(),
-                new TreeMap<>(map),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static AuthorizedMarketPriceData fromProto(bisq.bonded_roles.protobuf.AuthorizedMarketPriceData proto)
+            throws UnresolvableProtobufException {
+        try {
+            // We keep every entry, also of a market which this node does not know. The oracle node signs the data as
+            // a whole and the proof of work of the message commits to its hash, so dropping an entry would make this
+            // node reject the data and close the connection to the peer which sent it. The set of known markets
+            // depends on the currency data of the runtime, which differs between JDK versions and Android.
+            // See docs/specifications/bonded-roles/market-prices.md.
+            // Checked before parsing the entries, so that an oversized map costs no parsing
+            checkArgument(proto.getMarketPriceByCurrencyMapCount() < MAX_NUM_ENTRIES,
+                    "marketPriceByCurrencyMap size must be < " + MAX_NUM_ENTRIES);
+            TreeMap<Market, MarketPrice> map = new TreeMap<>();
+            for (Map.Entry<String, bisq.bonded_roles.protobuf.MarketPrice> entry : proto.getMarketPriceByCurrencyMapMap().entrySet()) {
+                map.put(toMarket(entry.getKey()), MarketPrice.fromProto(entry.getValue()));
+            }
+            return new AuthorizedMarketPriceData(
+                    proto.getVersion(),
+                    map,
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
+    }
+
+    private static Market toMarket(String marketCodes) {
+        return MarketRepository.findAnyMarketByMarketCodes(marketCodes)
+                .orElseGet(() -> {
+                    // The key must be exactly the market codes. With the default limit, split would drop trailing
+                    // empty parts, and "BTC/XYZ/" would replace the entry of "BTC/XYZ".
+                    String[] codes = marketCodes.split("/", -1);
+                    checkArgument(codes.length == 2, "marketCodes must have a base and a quote currency code");
+                    return new Market(codes[0], codes[1], codes[0], codes[1]);
+                });
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -123,22 +145,14 @@ public final class AuthorizedMarketPriceData implements AuthorizedDistributedDat
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // Oracle nodes of earlier versions published it with the key of their network ID
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override

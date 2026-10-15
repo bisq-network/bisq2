@@ -17,7 +17,7 @@
 
 package bisq.api.web_socket.subscription;
 
-import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.Attributes;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.PermissionSet;
@@ -370,16 +370,16 @@ class SubscriptionServiceTest {
      * nothing to check.
      * <p>
      * Both ways of carrying none are covered. A socket that exposes no upgrade request at all never
-     * reaches the header, and a socket that exposes one without a usable {@code Bisq-Client-Id} is
-     * what the emptiness filter in {@code WebSocketIdentity} is for — an absent header and a present
-     * blank one have to land in the same place.
+     * reaches the identity, and a socket that exposes one without a usable recorded client is what
+     * the emptiness filter in {@code WebSocketIdentity} is for: an absent identity and a blank one
+     * have to land in the same place.
      */
     @Test
     void subscriptionIsRefusedWhenTheConnectionCarriesNoClientId() throws Exception {
         List<WebSocketFactory> connectionsWithoutAnIdentity = List.of(
                 new WebSocketFactory("no upgrade request", SubscriptionServiceTest::socketWithoutUpgradeRequest),
-                new WebSocketFactory("absent header", sent -> authenticatedWebSocket(sent, null)),
-                new WebSocketFactory("blank header", sent -> authenticatedWebSocket(sent, "")));
+                new WebSocketFactory("absent identity", sent -> authenticatedWebSocket(sent, null)),
+                new WebSocketFactory("blank identity", sent -> authenticatedWebSocket(sent, "")));
 
         for (WebSocketFactory factory : connectionsWithoutAnIdentity) {
             SubscriptionService service = authorizingService(EnumSet.allOf(Permission.class));
@@ -484,7 +484,7 @@ class SubscriptionServiceTest {
 
     private static WebSocket authenticatedWebSocket(List<String> sentMessages, @Nullable String clientId) {
         HttpServletRequest upgradeRequest = mock(HttpServletRequest.class);
-        when(upgradeRequest.getHeader(Headers.CLIENT_ID)).thenReturn(clientId);
+        when(upgradeRequest.getAttribute(Attributes.CLIENT_ID)).thenReturn(clientId);
         DefaultWebSocket webSocket = mock(DefaultWebSocket.class);
         when(webSocket.getUpgradeRequest()).thenReturn(upgradeRequest);
         recordSends(webSocket, sentMessages);

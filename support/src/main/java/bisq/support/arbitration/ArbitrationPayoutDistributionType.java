@@ -19,6 +19,7 @@ package bisq.support.arbitration;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum ArbitrationPayoutDistributionType implements ProtoEnum {
     CUSTOM_PAYOUT,
@@ -30,7 +31,8 @@ public enum ArbitrationPayoutDistributionType implements ProtoEnum {
         return bisq.support.protobuf.ArbitrationPayoutDistributionType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ArbitrationPayoutDistributionType fromProto(bisq.support.protobuf.ArbitrationPayoutDistributionType proto) {
+    public static ArbitrationPayoutDistributionType fromProto(bisq.support.protobuf.ArbitrationPayoutDistributionType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ArbitrationPayoutDistributionType.class, proto.name(), CUSTOM_PAYOUT);
     }
 }

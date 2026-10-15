@@ -24,6 +24,12 @@ import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.protocol.handler.TradeEventHandlerAsMessageSender;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Our trade messages carry {@code trade.getMyself().getNetworkId()} as sender: the network ID which the trade peer
+ * stored for us. The identity of the trade, from which we send, can have a newer address map, for example if the maker
+ * added a transport after it published the offer. Nodes of version 2.1.13 compare the sender with the stored network ID
+ * including the addresses, and fail the trade if they differ. See docs/specifications/user/identity-by-key.md.
+ */
 @Slf4j
 public abstract class BisqEasyTradeEventHandlerAsMessageSender<T extends BisqEasyTrade, E extends Event> extends TradeEventHandlerAsMessageSender<T, E> {
     protected final BisqEasyTradeService tradeService;

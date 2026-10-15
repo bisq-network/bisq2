@@ -21,6 +21,8 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.priv.PrivateGroupChatChannel;
 import bisq.common.observable.Observable;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentity;
@@ -131,21 +133,26 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
     }
 
     public static BisqEasyOpenTradeChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                     bisq.chat.protobuf.BisqEasyOpenTradeChannel proto) {
-        return new BisqEasyOpenTradeChannel(
-                baseProto.getId(),
-                proto.getTradeId(),
-                BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
-                UserIdentity.fromProto(proto.getMyUserIdentity()),
-                proto.getTradersList().stream()
-                        .map(UserProfile::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.getIsInMediation(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+                                                     bisq.chat.protobuf.BisqEasyOpenTradeChannel proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOpenTradeChannel(
+                    baseProto.getId(),
+                    proto.getTradeId(),
+                    BisqEasyOffer.fromProto(proto.getBisqEasyOffer()),
+                    UserIdentity.fromProto(proto.getMyUserIdentity()),
+                    ProtobufUtils.fromProtoStream(proto.getTradersList(), UserProfile::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    // A persisted message which this version cannot parse must not remove the other messages
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    BisqEasyOpenTradeMessage::fromProto)
+                            .collect(Collectors.toSet()),
+                    proto.getIsInMediation(),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 
@@ -169,6 +176,14 @@ public final class BisqEasyOpenTradeChannel extends PrivateGroupChatChannel<Bisq
                     .orElse("");
             return shortOfferId + ": " + peer + optionalMediatorPostfix;
         }
+    }
+
+    // The traders other than us, and the mediator if it is not us
+    @Override
+    public boolean isPeer(String userProfileId) {
+        return !myUserIdentity.getId().equals(userProfileId) &&
+                (traders.stream().anyMatch(trader -> trader.getId().equals(userProfileId)) ||
+                        mediator.filter(mediator -> mediator.getId().equals(userProfileId)).isPresent());
     }
 
     public boolean isMediator() {

@@ -25,11 +25,19 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 
 import java.util.Optional;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator.validateChatChannel;
+
 public class BisqEasySendBtcAddressEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasySendBtcAddressEvent> {
     private String bitcoinPaymentData;
 
     public BisqEasySendBtcAddressEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verifyIntegrity(BisqEasySendBtcAddressEvent event) {
+        validateChatChannel(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()
+                .findChannelByTradeId(trade.getId()), trade);
     }
 
     @Override
@@ -47,7 +55,7 @@ public class BisqEasySendBtcAddressEventHandler extends BisqEasyTradeEventHandle
         send(new BisqEasyBtcAddressMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 bitcoinPaymentData,
                 trade.getOffer()));

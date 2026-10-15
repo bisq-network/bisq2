@@ -53,6 +53,21 @@ class SupportMarkdownParserTest {
                 new SupportMarkdownDocument.Segment(SupportMarkdownDocument.SegmentType.LINK, "docs", "https://bisq.network"));
     }
 
+    // The parser keeps the label and the target of a link apart. The renderer decides what the reader sees: the
+    // target is always visible, see SupportMarkdownRendererTest.
+    @Test
+    void keepsLabelAndTargetOfALinkWhoseLabelLooksLikeAnotherUrl() {
+        SupportMarkdownDocument document = SupportMarkdownParser.parse(
+                "[https://bisq.network/downloads](https://evil.example/Bisq.exe)");
+
+        assertThat(document.hasMarkdownFormatting()).isTrue();
+        assertThat(document.lines().get(0).segments()).containsExactly(
+                new SupportMarkdownDocument.Segment(
+                        SupportMarkdownDocument.SegmentType.LINK,
+                        "https://bisq.network/downloads",
+                        "https://evil.example/Bisq.exe"));
+    }
+
     @Test
     void rejectsUnsupportedLinkSchemes() {
         SupportMarkdownDocument document = SupportMarkdownParser.parse("[pwn](javascript:alert(1))");

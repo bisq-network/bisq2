@@ -35,14 +35,46 @@ must be harmless.
   contains no exported transactions.
 
 Failed snapshots do not advance the cursor. Concurrent recovery triggers are coalesced so they cannot
-create unbounded overlapping bulk requests.
+create unbounded overlapping bulk requests. Coalescing must not drop demand: the trigger-preservation
+rule in [../bonded-roles/registration.md](../bonded-roles/registration.md) applies to every catch-up
+trigger, not only to the bonded-role revalidation which depends on it.
+
+## Items which the oracle cannot process
+
+The oracle creates authorized data from the items of the bridge: proof-of-burn and bonded-reputation
+data from each transaction of a BSQ block, and burningman data from each burningman block. An item can
+break a rule of this data, for example a proof of burn with the amount 0.
+
+- The oracle skips such an item and logs it. It processes the other transactions of the block and the
+  other blocks of the response.
+- A skipped item is not a failed snapshot. The completed snapshot advances the cursor, and a live block
+  advances it as a block without the item would.
+
+Reason: the bridge returns the same items for the same heights, so a retry fails at the same item.
+Without the rule, one invalid item stops the catch-up and keeps the cursor at its height, and the
+oracle publishes no data of later blocks. The data of the skipped item is not published, which is the
+same result as with the retries.
 
 ## Stream termination
 
-Both abnormal stream errors and normal stream completion are treated as loss of continuity. The
-oracle resubscribes with bounded backoff and requests catch-up from the last contiguous height. A
+Abnormal stream errors and normal stream completion are treated as loss of continuity. The oracle
+resubscribes with bounded backoff and requests catch-up from the last contiguous height. A
 subscription retry without catch-up is insufficient because the bridge streams only newly processed
 blocks.
+
+One termination cause is excluded from that recovery. If the stream ends because the bridge does not
+implement the subscription RPC, the oracle must not resubscribe. That condition is a deployment error
+which cannot resolve itself while the process runs, and retrying it would repeatedly re-request the
+complete history from a bridge which cannot serve the live stream at all. The oracle must instead:
+
+- record that the bridge version does not match, so the condition is observable rather than implied by
+  the absence of blocks;
+- report it at error level, naming the missing RPC, because the affected service stays without live
+  data for the remaining process lifetime; and
+- keep the rest of the node running, because the other bridge RPCs may still be usable and abrupt
+  termination would remove the diagnostic.
+
+Recovery from this state requires upgrading the Bisq 1 bridge and restarting the oracle.
 
 ## Compatibility
 

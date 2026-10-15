@@ -20,19 +20,20 @@ package bisq.offer.options;
 import bisq.account.accounts.fiat.BankAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.account.payment_method.PaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
-import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @ToString
-@EqualsAndHashCode
 public final class AccountOption implements OfferOption {
     private final PaymentMethod<? extends PaymentRail> paymentMethod;
     private final String saltedAccountId;
@@ -40,6 +41,14 @@ public final class AccountOption implements OfferOption {
     private final List<String> acceptedCountryCodes;
     private final Optional<String> bankId;
     private final List<String> acceptedBanks;
+    // Nodes of v2.1.13 do not know this field. They drop it, and they compute the hash serialization of an offer
+    // without it. So the field is not part of the hash serialization (see "Adding a field to a DistributedData type"
+    // in docs/specifications/network/distributed-data-payload-bytes.md), and not part of hashCode, by which Offer
+    // sorts its options. Otherwise a node of v2.1.13 computes another signatureV1 preimage and proof of work payload
+    // for an offer with this option. It rejects the offer, which a node of this version stores and serves in every
+    // inventory response, and it closes the connection to a node of this version which relays the offer.
+    // Signature V2 signs the kept payload bytes, so it covers the field, and equals compares it, so that a maker
+    // detects a changed hash in the offer of a take offer request.
     private final byte[] saltedAccountPayloadHash;
 
     public AccountOption(PaymentMethod<? extends PaymentRail> paymentMethod,
@@ -77,8 +86,10 @@ public final class AccountOption implements OfferOption {
                 .setPaymentMethod(paymentMethod.toProto(serializeForHash))
                 .setSaltedAccountId(saltedAccountId)
                 .addAllAcceptedCountryCodes(acceptedCountryCodes)
-                .addAllAcceptedBanks(acceptedBanks)
-                .setSaltedAccountPayloadHash(com.google.protobuf.ByteString.copyFrom(saltedAccountPayloadHash));
+                .addAllAcceptedBanks(acceptedBanks);
+        if (!serializeForHash) {
+            builder.setSaltedAccountPayloadHash(com.google.protobuf.ByteString.copyFrom(saltedAccountPayloadHash));
+        }
         countryCode.ifPresent(builder::setCountryCode);
         bankId.ifPresent(builder::setBankId);
         return getOfferOptionBuilder(serializeForHash).setAccountOption(builder);
@@ -89,15 +100,55 @@ public final class AccountOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto) {
-        return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.getSaltedAccountId(),
-                proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
-                proto.getAcceptedCountryCodesList(),
-                proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
-                proto.getAcceptedBanksList(),
-                proto.getSaltedAccountPayloadHash().toByteArray()
-        );
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof AccountOption other)) {
+            return false;
+        }
+        return Objects.equals(paymentMethod, other.paymentMethod) &&
+                Objects.equals(saltedAccountId, other.saltedAccountId) &&
+                Objects.equals(countryCode, other.countryCode) &&
+                Objects.equals(acceptedCountryCodes, other.acceptedCountryCodes) &&
+                Objects.equals(bankId, other.bankId) &&
+                Objects.equals(acceptedBanks, other.acceptedBanks) &&
+                Arrays.equals(saltedAccountPayloadHash, other.saltedAccountPayloadHash);
+    }
+
+    // The value which Lombok's @EqualsAndHashCode computes for the fields of v2.1.13, as nodes of v2.1.13 do. It
+    // leaves out saltedAccountPayloadHash (see the comment at the field). Equal options still have equal hash codes.
+    @Override
+    public int hashCode() {
+        int result = 1;
+        result = result * 59 + hashCodeOf(paymentMethod);
+        result = result * 59 + hashCodeOf(saltedAccountId);
+        result = result * 59 + hashCodeOf(countryCode);
+        result = result * 59 + hashCodeOf(acceptedCountryCodes);
+        result = result * 59 + hashCodeOf(bankId);
+        result = result * 59 + hashCodeOf(acceptedBanks);
+        return result;
+    }
+
+    private static int hashCodeOf(Object value) {
+        return value == null ? 43 : value.hashCode();
+    }
+
+    public static AccountOption fromProto(bisq.offer.protobuf.AccountOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AccountOption(PaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.getSaltedAccountId(),
+                    proto.hasCountryCode() ? Optional.of(proto.getCountryCode()) : Optional.empty(),
+                    proto.getAcceptedCountryCodesList(),
+                    proto.hasBankId() ? Optional.of(proto.getBankId()) : Optional.empty(),
+                    proto.getAcceptedBanksList(),
+                    proto.getSaltedAccountPayloadHash().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getSaltedAccountPayloadHash() {

@@ -39,4 +39,21 @@ public class BitcoinAddressValidationTest {
         assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
                 BitcoinAddressValidation.canonicalize("bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy?amount=1"));
     }
+
+    // Wallets encode QR codes in upper case, because QR codes are more compact then. A base58 address is case-sensitive.
+    @Test
+    public void testNormalizeScannedPaymentData() {
+        assertEquals("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
+                BitcoinAddressValidation.normalizeScannedPaymentData("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa"));
+        assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+                BitcoinAddressValidation.normalizeScannedPaymentData("bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy?amount=1"));
+        assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
+                BitcoinAddressValidation.normalizeScannedPaymentData("Bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.normalizeScannedPaymentData("BITCOIN:BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4?AMOUNT=0.1"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.normalizeScannedPaymentData("BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4"));
+        assertEquals("lnbc2500u1pvjluezpp5qqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqqqsyqcyq5rqwzqfqypq",
+                BitcoinAddressValidation.normalizeScannedPaymentData("LNBC2500U1PVJLUEZPP5QQQSYQCYQ5RQWZQFQQQSYQCYQ5RQWZQFQQQSYQCYQ5RQWZQFQYPQ"));
+    }
 }

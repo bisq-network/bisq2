@@ -19,6 +19,7 @@ package bisq.offer.options;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -37,7 +38,8 @@ public final class FeeOption implements OfferOption {
             return bisq.offer.protobuf.FeeOption.FeeType.valueOf(getProtobufEnumPrefix() + name());
         }
 
-        public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto) {
+        public static FeeType fromProto(bisq.offer.protobuf.FeeOption.FeeType proto)
+                throws UnresolvableProtobufException {
             return ProtobufUtils.enumFromProto(FeeType.class, proto.name(), BSQ);
         }
     }
@@ -45,6 +47,14 @@ public final class FeeOption implements OfferOption {
     private final FeeType feeType;
     private final int blockHeightAtFeePayment;
     private final String feeTxId;
+
+    // Offer sorts its options by hashCode, and the order is part of the proof of work payload and of the offer hash.
+    // Enum.hashCode depends on the object identity and differs between JVMs, so equals and hashCode use the name of the
+    // fee type instead. Then every node computes the same order.
+    @EqualsAndHashCode.Include(replaces = "feeType")
+    private String feeTypeName() {
+        return feeType.name();
+    }
 
     public FeeOption(FeeType feeType, int blockHeightAtFeePayment, String feeTxId) {
         this.feeType = feeType;
@@ -73,9 +83,13 @@ public final class FeeOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) {
-        return new FeeOption(FeeType.fromProto(proto.getFeeType()),
-                proto.getBlockHeightAtFeePayment(),
-                proto.getFeeTxId());
+    public static FeeOption fromProto(bisq.offer.protobuf.FeeOption proto) throws UnresolvableProtobufException {
+        try {
+            return new FeeOption(FeeType.fromProto(proto.getFeeType()),
+                    proto.getBlockHeightAtFeePayment(),
+                    proto.getFeeTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

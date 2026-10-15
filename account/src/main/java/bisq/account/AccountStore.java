@@ -22,6 +22,8 @@ import bisq.account.payment_method.PaymentMethod;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -65,14 +67,24 @@ public final class AccountStore implements PersistableStore<AccountStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto) {
-        return new AccountStore(
-                proto.getAccountByNameMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> Account.fromProto(e.getValue()))),
-                proto.hasSelectedAccount() ?
-                        Optional.of(Account.fromProto(proto.getSelectedAccount())) :
-                        Optional.empty());
+    public static AccountStore fromProto(bisq.account.protobuf.AccountStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<String, Account<? extends PaymentMethod<?>, ?>> accountByName =
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getAccountByNameMap(), Account::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    Map.Entry::getValue));
+            // The selected account is one of the stored accounts. We take it from the map by its name instead of parsing
+            // its second copy: an unreadable copy would make the whole store unreadable, and the node would then fall
+            // back to a backup with the same copy, or start without accounts. A selection without readable account is
+            // dropped.
+            Optional<Account<? extends PaymentMethod<?>, ?>> selectedAccount = proto.hasSelectedAccount() ?
+                    Optional.ofNullable(accountByName.get(proto.getSelectedAccount().getAccountName())) :
+                    Optional.empty();
+            return new AccountStore(accountByName, selectedAccount);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

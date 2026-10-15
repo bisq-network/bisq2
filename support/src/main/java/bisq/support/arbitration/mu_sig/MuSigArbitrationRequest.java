@@ -19,6 +19,8 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.mu_sig.MuSigContract;
@@ -60,7 +62,7 @@ public final class MuSigArbitrationRequest implements
         return MuSigArbitrationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigArbitrationRequest.class.getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
     private final MuSigMediationResult muSigMediationResult;
@@ -125,17 +127,25 @@ public final class MuSigArbitrationRequest implements
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static MuSigArbitrationRequest fromProto(bisq.support.protobuf.MuSigArbitrationRequest proto) {
-        return new MuSigArbitrationRequest(proto.getTradeId(),
-                MuSigContract.fromProto(proto.getContract()),
-                MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
-                proto.getMediationResultSignature().toByteArray(),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getArbitratorNetworkId()));
+    public static MuSigArbitrationRequest fromProto(bisq.support.protobuf.MuSigArbitrationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationRequest(proto.getTradeId(),
+                    MuSigContract.fromProto(proto.getContract()),
+                    MuSigMediationResult.fromProto(proto.getMuSigMediationResult()),
+                    proto.getMediationResultSignature().toByteArray(),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // request unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getArbitratorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -169,11 +179,6 @@ public final class MuSigArbitrationRequest implements
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
-    }
-
-    @Override
     public PublicKey getSenderPublicKey() {
         return requester.getPublicKey();
     }
@@ -183,4 +188,8 @@ public final class MuSigArbitrationRequest implements
         return arbitratorNetworkId.getPubKey().getPublicKey();
     }
 
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
 }

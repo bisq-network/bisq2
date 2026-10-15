@@ -20,6 +20,7 @@ dependencies {
     implementation(libs.failsafe)
     implementation(libs.typesafe.config)
 
+    implementation(libs.apache.httpcomponents.core)
     implementation(libs.apache.httpcomponents.httpclient)
     api("tor:jsocks:$version")
     implementation(libs.bundles.i2p)

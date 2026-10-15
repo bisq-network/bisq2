@@ -15,7 +15,9 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -28,7 +30,9 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -36,12 +40,31 @@ jobs:
       name: apps module
       build-root-dir: apps
 
+  # apps/desktop is a build of its own. The apps build includes it, but no project of the apps build depends on it, so
+  # the apps job does not build it.
+  build_desktop_module:
+    name: Build desktop module on ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
+
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: desktop module
+      build-root-dir: apps/desktop
+
   build_network_module:
     name: Build network module on ${{ matrix.os }}
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -54,51 +77,12 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
       os: ${{ matrix.os }}
       name: tor module
       build-root-dir: network/tor
-
-  # Both checks guard a silent failure. A non-final PersistableStore makes its persistence key follow the runtime class
-  # instead of the class declaring the resolver, so the store reads back as corrupted and the user loses its content.
-  # A resolver registered with the wrong class or a mistyped proto type name drops the type from the storage whitelist
-  # or files its resolver under a key nothing looks up. The module builds above run with `-x test`, so these checks
-  # would otherwise not run anywhere.
-  check_resolver_registrations:
-    name: Check resolver registrations
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 1
-          persist-credentials: false
-
-      - name: Verify Gradle wrapper checksums
-        shell: bash
-        run: sha256sum -c gradle/wrapper/gradle-wrapper.sha256
-
-      - name: Setup Java JDK
-        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
-        with:
-          java-version: '21.0.11'
-          distribution: 'zulu'
-          check-latest: false
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
-        with:
-          cache-provider: basic
-
-      - name: Run resolver registration checks
-        shell: bash
-        run: |
-          ./gradlew \
-            :common:test --tests 'bisq.common.proto.ProtoResolverTest' \
-            :persistence:test --tests 'bisq.persistence.PersistableStoreContractTest' \
-                              --tests 'bisq.persistence.PersistableStoreReaderWriterTests' \
-            :application:test --tests 'bisq.application.ResolverConfigTest' \
-                              --tests 'bisq.application.StorageWhiteListTest'

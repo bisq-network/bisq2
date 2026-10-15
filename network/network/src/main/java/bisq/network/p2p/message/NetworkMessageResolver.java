@@ -19,19 +19,19 @@ package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
-import bisq.common.proto.NetworkStorageWhiteList;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 public class NetworkMessageResolver {
     private static final NetworkProtoResolverMap<ExternalNetworkMessage> protoResolverMap = new NetworkProtoResolverMap<>();
 
+    // clazz is not used at runtime. ResolverConfigTest checks that protoTypeName, clazz and resolver name the same type.
     public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<ExternalNetworkMessage> resolver) {
-        NetworkStorageWhiteList.add(clazz);
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    static ExternalNetworkMessage fromAny(Any any) {
+    static ExternalNetworkMessage fromAny(Any any) throws UnresolvableProtobufException {
         return protoResolverMap.fromAny(any);
     }
 }

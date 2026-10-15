@@ -18,8 +18,8 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,16 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
 public final class AuthorizeAccountTimestampV1Payload implements NetworkProto {
     public final static int MAX_FINGERPRINT_LENGTH = 1000;
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
 
     private final long date;
     private final byte[] hash;
@@ -83,14 +78,19 @@ public final class AuthorizeAccountTimestampV1Payload implements NetworkProto {
                 .setPublicKey(ByteString.copyFrom(publicKey));
     }
 
-    public static AuthorizeAccountTimestampV1Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Payload proto) {
-        return new AuthorizeAccountTimestampV1Payload(
-                proto.getDate(),
-                proto.getHash().toByteArray(),
-                proto.getFingerprint().toByteArray(),
-                proto.getSaltedFingerprint().toByteArray(),
-                proto.getPublicKey().toByteArray()
-        );
+    public static AuthorizeAccountTimestampV1Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Payload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeAccountTimestampV1Payload(
+                    proto.getDate(),
+                    proto.getHash().toByteArray(),
+                    proto.getFingerprint().toByteArray(),
+                    proto.getSaltedFingerprint().toByteArray(),
+                    proto.getPublicKey().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

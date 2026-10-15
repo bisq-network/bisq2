@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.asset.Asset;
 import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import com.google.common.math.LongMath;
 import lombok.EqualsAndHashCode;
@@ -100,12 +101,16 @@ public final class Fiat extends Monetary {
         return getMonetaryBuilder().setFiat(bisq.common.protobuf.Fiat.newBuilder());
     }
 
-    public static Fiat fromProto(bisq.common.protobuf.Monetary baseProto) {
-        return new Fiat(baseProto.getId(),
-                baseProto.getValue(),
-                baseProto.getCode(),
-                baseProto.getPrecision(),
-                baseProto.getLowPrecision());
+    public static Fiat fromProto(bisq.common.protobuf.Monetary baseProto) throws UnresolvableProtobufException {
+        try {
+            return new Fiat(baseProto.getId(),
+                    baseProto.getValue(),
+                    baseProto.getCode(),
+                    baseProto.getPrecision(),
+                    baseProto.getLowPrecision());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

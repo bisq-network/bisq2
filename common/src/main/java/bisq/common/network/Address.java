@@ -18,6 +18,7 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkPortValidation;
 import com.google.common.annotations.VisibleForTesting;
@@ -83,18 +84,15 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
     @Getter
     protected final int port;
 
+    // The caller reports an invalid address. Address.fromProto runs for received data, where only the caller can
+    // limit the diagnostics and keep received values out of the log (see docs/dev/protobuf-notes.md).
     protected Address(String host, int port) {
-        try {
-            checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
-            host = host.trim();
-            checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
-            this.host = host;
-            this.port = port;
-            verify();
-        } catch (Exception e) {
-            log.error("Could not resolve address from {}:{}", host, port, e);
-            throw e;
-        }
+        checkArgument(StringUtils.isNotEmpty(host), "Host must not be null/blank");
+        host = host.trim();
+        checkArgument(NetworkPortValidation.isValid(port), "Invalid port: " + port);
+        this.host = host;
+        this.port = port;
+        // The final subclasses call verify() after they set their fields
     }
 
 
@@ -116,8 +114,12 @@ public abstract class Address implements NetworkProto, Comparable<Address> {
 
     abstract public TransportType getTransportType();
 
-    public static Address fromProto(bisq.common.protobuf.Address proto) {
-        return Address.from(proto.getHost(), proto.getPort());
+    public static Address fromProto(bisq.common.protobuf.Address proto) throws UnresolvableProtobufException {
+        try {
+            return Address.from(proto.getHost(), proto.getPort());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public boolean isClearNetAddress() {

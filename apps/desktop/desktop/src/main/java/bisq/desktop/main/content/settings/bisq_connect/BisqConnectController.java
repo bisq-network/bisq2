@@ -18,11 +18,15 @@
 package bisq.desktop.main.content.settings.bisq_connect;
 
 import bisq.api.ApiService;
+import bisq.api.access.ApiAccessService;
+import bisq.api.access.ClientRevocationResult;
 import bisq.api.access.pairing.PairingCode;
 import bisq.api.access.pairing.PairingService;
 import bisq.api.access.session.SessionService;
 import bisq.api.web_socket.WebSocketService;
 import bisq.common.observable.Pin;
+import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.StringUtils;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.qr.QrCodeDisplay;
@@ -44,6 +48,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class BisqConnectController implements Controller {
@@ -53,6 +58,7 @@ public class BisqConnectController implements Controller {
     private final Optional<WebSocketService> optionalWebSocketService;
     private final PairingService pairingService;
     private final SessionService sessionService;
+    private final ApiAccessService apiAccessService;
     private final Set<Pin> pins = new HashSet<>();
     private final DontShowAgainService dontShowAgainService;
     private final ApiService apiService;
@@ -64,6 +70,7 @@ public class BisqConnectController implements Controller {
         optionalWebSocketService = apiService.getWebSocketService();
         pairingService = apiService.getPairingService();
         sessionService = apiService.getSessionService();
+        apiAccessService = apiService.getApiAccessService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
 
         ApiConfigController apiConfigController = new ApiConfigController(serviceProvider);
@@ -123,20 +130,31 @@ public class BisqConnectController implements Controller {
     }
 
     void onRevokeClient(BisqConnectView.ClientListItem item) {
-        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.confirm", item.getClientName()))
+        // The paired client sends its name, so the name must not create a link in the popup.
+        String clientName = StringUtils.neutralizeHyperlinkMarkers(item.getClientName());
+        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.confirm", clientName))
                 .actionButtonText(Res.get("settings.bisqConnect.clients.revoke"))
                 .onAction(() -> {
                     item.getClientId().ifPresent(clientId -> {
-                        boolean profileRemoved = pairingService.revokeClientProfile(clientId);
-                        // Always clean up session and WebSocket regardless of profile removal result.
-                        // The profile may have been already removed but the session/connection is still active.
-                        sessionService.removeSessionByClientId(clientId);
-                        optionalWebSocketService.ifPresent(ws -> ws.disconnectClient(clientId));
-                        if (profileRemoved) {
-                            log.info("Revoked client {} ({})", item.getClientName(), clientId);
-                        } else {
-                            log.warn("Client profile not found for {}, but session/connection cleaned up", clientId);
-                        }
+                        // Session and connection cleanup is part of revokeClient, so the same
+                        // revocation semantics apply here and on the REST endpoint. Off the UI
+                        // thread, because revokeClient waits for its store writes, which queue
+                        // behind every other store's writes on the shared persistence thread.
+                        CompletableFuture.supplyAsync(() -> apiAccessService.revokeClient(clientId),
+                                        ExecutorFactory.commonForkJoinPool())
+                                .whenComplete((result, throwable) -> UIThread.run(() -> {
+                                    if (throwable != null) {
+                                        log.error("Revoking client {} failed", clientId, throwable);
+                                    }
+                                    if (throwable != null || result == ClientRevocationResult.CLEANUP_FAILED) {
+                                        new Popup().warning(Res.get("settings.bisqConnect.clients.revoke.incomplete",
+                                                item.getClientName())).show();
+                                    } else if (result == ClientRevocationResult.REVOKED) {
+                                        log.info("Revoked client {} ({})", item.getClientName(), clientId);
+                                    }
+                                    // NOT_FOUND is a no-op here (stale list entry or double click); the
+                                    // service already warns and cleans up session and connection.
+                                }));
                     });
                 })
                 .secondaryActionButtonText(Res.get("settings.bisqConnect.clients.expireSession"))

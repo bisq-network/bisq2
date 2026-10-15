@@ -19,12 +19,21 @@ package bisq.network.http.utils;
 
 import lombok.Getter;
 
+/**
+ * A non-2xx HTTP response. The raw body is kept for callers that classify the response
+ * ({@link #getBody()}), while the exception message carries only the sanitized, bounded form:
+ * the message ends up in every log line and wrapping exception that prints the cause chain,
+ * where a remote body must not inject terminal escapes or line breaks, nor be unbounded.
+ */
 public class HttpException extends Exception {
     @Getter
     private final int responseCode;
+    @Getter
+    private final String body;
 
-    public HttpException(String message, int responseCode) {
-        super(message);
+    public HttpException(String body, int responseCode) {
+        super(HttpLogSanitizer.loggableBody(body));
+        this.body = body == null ? "" : body;
         this.responseCode = responseCode;
     }
 }

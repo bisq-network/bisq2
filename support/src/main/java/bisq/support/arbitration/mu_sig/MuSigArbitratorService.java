@@ -26,6 +26,7 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.priv.LeavePrivateChatManager;
+import bisq.common.application.DevMode;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.util.StringUtils;
@@ -34,6 +35,7 @@ import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -109,9 +111,15 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
+        // MuSig and its dispute views run only in developer mode (MuSigService). A node which holds the identity of a
+        // arbitrator would otherwise accept and persist cases which any peer can create, as the checks of a request are
+        // not complete yet (see docs/specifications/support/mu-sig-dispute-agents.md).
+        if (!DevMode.isDevMode()) {
+            return CompletableFuture.completedFuture(true);
+        }
+        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                this::onMessage);
         networkService.addConfidentialMessageListener(this);
         return CompletableFuture.completedFuture(true);
     }

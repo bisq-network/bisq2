@@ -33,6 +33,7 @@ import bisq.common.monetary.Monetary;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.platform.Version;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
 import bisq.common.timer.Scheduler;
@@ -40,6 +41,7 @@ import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -82,10 +84,13 @@ import bisq.trade.mu_sig.messages.network.handler.maker.MuSigTakeOfferRequestVal
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigBuyerAsTakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigProtocol;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsMakerProtocol;
 import bisq.trade.mu_sig.protocol.MuSigSellerAsTakerProtocol;
 import bisq.trade.protobuf.MusigGrpc;
 import bisq.trade.protobuf.SubscribeTxConfirmationStatusRequest;
+import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
@@ -102,7 +107,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -163,7 +167,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Pin tradeByIdPin, muSigOpenTradeChannelPin;
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final Set<MuSigTradeMessage> pendingTradeMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeMessages<MuSigTradeMessage> pendingTradeMessages = new PendingTradeMessages<>();
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
     // Coordinates early-message buffering with protocol registration. Never acquire a protocol
@@ -231,9 +235,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
-                    networkService.getConfidentialMessageServices().stream()
-                            .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                            .forEach(this::onMessage);
+                    // The trade restrictions of the stored alerts must be known before the replay of the processed
+                    // messages of earlier sessions (see docs/specifications/network/startup-replay.md).
+                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
+
+                    StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
+                                    .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
+                            this::onMessage);
 
                     tradeByIdPin = getTradeById().addObserver(new HashMapObserver<>() {
                         @Override
@@ -262,8 +270,6 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     getTrades().stream()
                             .filter(MuSigTrade::isDepositTxCreatedButNotConfirmed)
                             .forEach(this::observeDepositTxConfirmationStatus);
-
-                    authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
                     numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                             .host(this)
@@ -452,12 +458,34 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             handleMuSigTradeMessage(message, protocol.orElseThrow());
             return;
         }
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleMuSigTradeMessage(message, protocol),
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    if (isMessageOfTradePeer(message, protocol)) {
+                        handleMuSigTradeMessage(message, protocol);
+                    } else {
+                        pendingTradeMessages.remove(message);
+                    }
+                },
                 () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    // Trade messages carry private data of the traders, so the log names only the message type.
+                    log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
+                                    "for re-processing when the next message arrives.",
+                            StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
                     pendingTradeMessages.add(message);
                 });
+    }
+
+    // The state machine turns an exception of a message handler into a failure of the trade (Fsm.handle), and the
+    // handlers throw for a message which is not from the trade peer. So such a message must not reach the protocol:
+    // anybody who knows a trade ID could end the trade otherwise. The check runs when a message is processed, also for
+    // a message which was queued before the protocol existed. The take offer request creates the trade and keeps its
+    // own checks.
+    private static boolean isMessageOfTradePeer(MuSigTradeMessage message, MuSigProtocol protocol) {
+        boolean isMessageOfTradePeer = TradeMessageHandler.isMessageOfTradePeer(message, protocol.getTrade());
+        if (!isMessageOfTradePeer) {
+            log.warn("We drop a trade message of type {} which the trade peer did not send.",
+                    message.getClass().getSimpleName());
+        }
+        return isMessageOfTradePeer;
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
@@ -471,14 +499,14 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 protocol.handle(message);
             }
 
-            if (pendingTradeMessages.contains(message)) {
-                log.info("We remove message {} from pendingMessages.", message);
-                pendingTradeMessages.remove(message);
+            if (pendingTradeMessages.remove(message)) {
+                log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
+                        message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
             }
 
             if (!pendingTradeMessages.isEmpty()) {
                 log.info("We have pendingMessages. We try to re-process them now.");
-                pendingTradeMessages.forEach(this::handleMuSigTradeMessage);
+                pendingTradeMessages.getMessagesInArrivalOrder().forEach(this::handleMuSigTradeMessage);
             }
         });
     }
@@ -673,11 +701,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 getMusigAsyncStub().subscribeTxConfirmationStatus(request, new StreamObserver<>() {
                     @Override
                     public void onNext(bisq.trade.protobuf.TxConfirmationStatus proto) {
-                        TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
-                        if (status.getNumConfirmations() > 0) {
-                            if (trade.isDepositTxCreatedButNotConfirmed()) {
-                                handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+                        try {
+                            TxConfirmationStatus status = TxConfirmationStatus.fromProto(proto);
+                            if (status.getNumConfirmations() > 0) {
+                                if (trade.isDepositTxCreatedButNotConfirmed()) {
+                                    handleMuSigTradeEvent(trade, new DepositTxConfirmedEvent());
+                                }
                             }
+                        } catch (UnresolvableProtobufException e) {
+                            throw new MuSigProtocolException(e);
                         }
                     }
 
@@ -903,6 +935,11 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private void handleMediationSettlementMessage(MuSigProtocol protocol,
                                                    MuSigTradeMessage message) {
         synchronized (protocol) {
+            if (!isMessageOfTradePeer(message, protocol)) {
+                muSigMediationCustomPayoutService.removePendingMessage(message);
+                return;
+            }
+
             if (!muSigMediationCustomPayoutService.hasRequiredMessageContext(protocol.getTrade())) {
                 muSigMediationCustomPayoutService.addPendingMessage(message);
                 return;

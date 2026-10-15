@@ -8,3 +8,14 @@ org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0-sources.jar	Publisher does n
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.jar	Publisher does not provide a detached PGP signature for this Gradle plugin artifact; artifact is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0.module	Publisher does not provide a detached PGP signature for this Gradle module metadata; module metadata is pinned by SHA-256.
 org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0	org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
+org.sonatype.oss:oss-parent:7	oss-parent-7.pom	Parent POM has no detached signature on Maven Central; POM is pinned by SHA-256.
+org.testfx:openjfx-monocle:21.0.2	openjfx-monocle-21.0.2-javadoc.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:openjfx-monocle:21.0.2	openjfx-monocle-21.0.2-sources.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:openjfx-monocle:21.0.2	openjfx-monocle-21.0.2.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:openjfx-monocle:21.0.2	openjfx-monocle-21.0.2.pom	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-core:4.0.18	testfx-core-4.0.18-sources.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-core:4.0.18	testfx-core-4.0.18.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-core:4.0.18	testfx-core-4.0.18.pom	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18-sources.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18.jar	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.
+org.testfx:testfx-junit5:4.0.18	testfx-junit5-4.0.18.pom	Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.

@@ -34,6 +34,7 @@ import bisq.network.p2p.message.CloseConnectionMessage;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import bisq.network.p2p.node.transport.ServerSocketResult;
@@ -41,6 +42,7 @@ import bisq.network.p2p.node.transport.TransportService;
 import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
+import com.google.common.annotations.VisibleForTesting;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -63,6 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -85,7 +88,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
  * - Performs initial connection handshake for exchanging capability and performing authorization
  * - Performs authorization protocol at sending and receiving messages
  * - Notifies ConnectionListeners when a new connection has been created or closed.
- * - Notifies ConfidentialMessageListeners when a new proto has been received.
+ * - Notifies its listeners when a new message has been received.
  */
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -148,6 +151,15 @@ public class Node implements Connection.Handler {
     private final BanList banList;
     private final TransportService transportService;
     private final AuthorizationService authorizationService;
+    // Separate budgets keep large established-connection messages from delaying handshakes. Both are shared by all
+    // inbound and outbound connections of this node (see rule 11 of docs/specifications/network/message-framing.md).
+    private final ParseMemoryBudget parseMemoryBudget = new ParseMemoryBudget();
+    private final ParseMemoryBudget handshakeParseMemoryBudget = ParseMemoryBudget.forHandshakes();
+    // Unauthenticated peers start inbound handshakes, and each one holds a thread of the executor until it ends. The
+    // executor also creates our outbound connections, so the number of inbound handshakes in progress is bounded (see
+    // docs/specifications/network/inbound-handshakes.md).
+    private final int maxNumInboundHandshakes;
+    private final Semaphore inboundHandshakePermits;
     private final int socketTimeout; // in ms
     private final Set<TransportType> supportedTransportTypes;
     private final Set<Feature> features;
@@ -201,6 +213,8 @@ public class Node implements Connection.Handler {
         this.authorizationService = authorizationService;
         this.networkLoadSnapshot = networkLoadSnapshot;
         nodeId = networkId.getId();
+        maxNumInboundHandshakes = Math.max(1, config.getMaxNumConnectedPeers());
+        inboundHandshakePermits = new Semaphore(maxNumInboundHandshakes);
     }
 
 
@@ -277,7 +291,13 @@ public class Node implements Connection.Handler {
                 }));
     }
 
-    private CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
+    @VisibleForTesting
+    CompletableFuture<Void> handleNewClientSocketAsync(Socket socket, Capability myCapability) {
+        if (!inboundHandshakePermits.tryAcquire()) {
+            closeQuietly(socket);
+            log.debug("We close an inbound socket because {} inbound handshakes are in progress", maxNumInboundHandshakes);
+            return CompletableFuture.failedFuture(new ConnectionException("Too many inbound handshakes in progress"));
+        }
         try {
             return CompletableFuture.runAsync(() -> {
                 ConnectionHandshake connectionHandshake = null;
@@ -286,7 +306,8 @@ public class Node implements Connection.Handler {
                             banList,
                             myCapability,
                             authorizationService,
-                            keyBundle);
+                            keyBundle,
+                            handshakeParseMemoryBudget);
                     connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
                     log.debug("Inbound handshake request at: {}", myCapability.getAddress());
                     ConnectionHandshake.Result result = connectionHandshake.onSocket(networkLoadSnapshot.getCurrentNetworkLoad()); // Blocking call
@@ -294,17 +315,7 @@ public class Node implements Connection.Handler {
                     Address address = result.getPeersCapability().getAddress();
                     log.debug("Inbound handshake completed: Initiated by {} to {}", address, myCapability.getAddress());
 
-                    // As time passed we check again if connection is still not available
-                    if (inboundConnectionsByAddress.containsKey(address)) {
-                        log.warn("Have already an InboundConnection from {}. This can happen when a " +
-                                "handshake was in progress while we received a new connection from that address. " +
-                                "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
-                        inboundConnectionsByAddress.get(address).shutdown(CloseReason.MAYBE_STALE_CONNECTION);
-                    }
-
-                    InboundConnection connection = createInboundConnection(socket, result);
-                    inboundConnectionsByAddress.put(connection.getPeerAddress(), connection);
-                    listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+                    registerInboundConnection(createInboundConnection(socket, result));
                 } catch (Throwable throwable) {
                     try {
                         socket.close();
@@ -317,12 +328,41 @@ public class Node implements Connection.Handler {
                         connectionHandshake.shutdown();
                         connectionHandshakes.remove(connectionHandshake.getId());
                     }
+                    inboundHandshakePermits.release();
                 }
             }, getExecutor());
         } catch (RejectedExecutionException e) {
-            log.error("Node executor rejected task at handleNewClientSocketAsync", e);
+            inboundHandshakePermits.release();
+            // Nothing else holds the socket. Without the close it stays open until garbage collection.
+            closeQuietly(socket);
+            log.warn("Node executor rejected the inbound handshake. We close the socket.");
             return CompletableFuture.failedFuture(new ConnectionException("Node executor rejected task at handleNewClientSocketAsync"));
         }
+    }
+
+    private static void closeQuietly(Socket socket) {
+        try {
+            socket.close();
+        } catch (IOException ignore) {
+        }
+    }
+
+    // One put per address: the new connection replaces the previous one atomically. A check before the put would let
+    // two handshakes from the same address both register, and the replaced connection would keep running outside of
+    // the map. The previous connection might be stale, so we close it and keep the new one. Its entry is already
+    // replaced, so handleConnectionClosed does not report it; the thread which replaced it reports it instead.
+    @VisibleForTesting
+    void registerInboundConnection(InboundConnection connection) {
+        Address address = connection.getPeerAddress();
+        InboundConnection previous = inboundConnectionsByAddress.put(address, connection);
+        if (previous != null && previous != connection) {
+            log.warn("Have already an InboundConnection from {}. This can happen when a " +
+                    "handshake was in progress while we received a new connection from that address. " +
+                    "We close the existing connection (instead of closing the new socket) as the existing connection might be a stale connection.", address);
+            previous.shutdown(CloseReason.MAYBE_STALE_CONNECTION);
+            notifyDisconnect(previous, CloseReason.MAYBE_STALE_CONNECTION);
+        }
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
     }
 
     private InboundConnection createInboundConnection(Socket socket, ConnectionHandshake.Result result) {
@@ -330,11 +370,13 @@ public class Node implements Connection.Handler {
         ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
         return new InboundConnection(authorizationService,
                 result.getConnectionId(),
+                result.getReceivedMessageCounters(),
                 socket,
                 result.getPeersCapability(),
                 peersNetworkLoadSnapshot,
                 result.getConnectionMetrics(),
                 connectionThrottle,
+                parseMemoryBudget,
                 this,
                 this::handleException);
     }
@@ -505,19 +547,17 @@ public class Node implements Connection.Handler {
             ConnectionThrottle connectionThrottle = new ConnectionThrottle(peersNetworkLoadSnapshot, networkLoadSnapshot, config);
             connection = new OutboundConnection(authorizationService,
                     result.getConnectionId(),
+                    result.getReceivedMessageCounters(),
                     socket,
                     address,
                     result.getPeersCapability(),
                     peersNetworkLoadSnapshot,
                     result.getConnectionMetrics(),
                     connectionThrottle,
+                    parseMemoryBudget,
                     this,
                     this::handleException);
-            outboundConnectionsByAddress.put(address, connection);
-
-            OutboundConnection finalConnection = connection;
-            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(finalConnection)));
-            return connection;
+            return registerOutboundConnection(address, connection);
         } catch (Exception exception) {
             log.error("Creating outbound connection failed", exception);
             try {
@@ -526,7 +566,7 @@ public class Node implements Connection.Handler {
             }
             if (connection != null) {
                 connection.shutdown(CloseReason.EXCEPTION);
-                outboundConnectionsByAddress.remove(address);
+                outboundConnectionsByAddress.remove(address, connection);
             }
             handleException(exception);
             throw new ConnectionException(exception);
@@ -542,7 +582,8 @@ public class Node implements Connection.Handler {
                     banList,
                     myCapability,
                     authorizationService,
-                    keyBundle);
+                    keyBundle,
+                    handshakeParseMemoryBudget);
 
             connectionHandshakes.put(connectionHandshake.getId(), connectionHandshake);
             log.debug("Outbound handshake started: Initiated by {} to {}", myCapability.getAddress(), address);
@@ -571,6 +612,22 @@ public class Node implements Connection.Handler {
                 connectionHandshakes.remove(connectionHandshake.getId());
             }
         }
+    }
+
+    // Registers the connection only if no connection to that address exists. Two concurrent outbound connection
+    // attempts to the same address can both pass the earlier checks. The first registered connection is kept, as
+    // callers may already use it, and the new one is closed. The new one was never registered or announced, so its
+    // close is not reported to listeners.
+    @VisibleForTesting
+    OutboundConnection registerOutboundConnection(Address address, OutboundConnection connection) {
+        OutboundConnection existing = outboundConnectionsByAddress.putIfAbsent(address, connection);
+        if (existing != null && existing != connection) {
+            log.warn("Have already an OutboundConnection to {}. We close the new connection and use the existing one.", address);
+            connection.shutdown(CloseReason.DUPLICATE_CONNECTION);
+            return existing;
+        }
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onConnection(connection)));
+        return connection;
     }
 
     private Optional<OutboundConnection> findOutboundConnectionAndCloseSocketIfPresent(Address address, Socket socket) {
@@ -633,7 +690,7 @@ public class Node implements Connection.Handler {
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
                 networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
+                connection.getReceivedMessageCounters(),
                 myAddress);
         if (!isAuthorized) {
             log.warn("Message authorization failed. Peer={}; Message={}", connection.getPeerAddress(), StringUtils.truncate(envelopePayloadMessage.toString()));
@@ -668,16 +725,18 @@ public class Node implements Connection.Handler {
     public void handleConnectionClosed(Connection connection, CloseReason closeReason) {
         Address peerAddress = connection.getPeerAddress();
         log.debug("Got called onConnectionClosed. connection={}, peerAddress={}", connection, peerAddress);
+        // Remove only the entry of this connection. The address may already map to a connection which replaced this
+        // one; removing that entry would leave the newer connection running outside of the map and unreported.
         boolean wasRemoved = false;
         if (connection instanceof InboundConnection) {
-            wasRemoved = inboundConnectionsByAddress.remove(peerAddress) != null;
+            wasRemoved = inboundConnectionsByAddress.remove(peerAddress, connection);
             if (!wasRemoved) {
                 log.debug("Did not had entry in inboundConnections at onConnectionClosed. " +
                                 "This can happen if different threads triggered a close. connection={}, peerAddress={}",
                         connection, peerAddress);
             }
         } else if (connection instanceof OutboundConnection) {
-            wasRemoved = outboundConnectionsByAddress.remove(peerAddress) != null;
+            wasRemoved = outboundConnectionsByAddress.remove(peerAddress, connection);
             if (!wasRemoved) {
                 log.debug("Did not had entry in outboundConnections at onConnectionClosed. " +
                                 "This can happen if different threads triggered a close. connection={}, peerAddress={}",
@@ -685,8 +744,12 @@ public class Node implements Connection.Handler {
             }
         }
         if (wasRemoved) {
-            listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onDisconnect(connection, closeReason)));
+            notifyDisconnect(connection, closeReason);
         }
+    }
+
+    private void notifyDisconnect(Connection connection, CloseReason closeReason) {
+        listeners.forEach(listener -> NetworkExecutors.getNotifyExecutor().submit(() -> listener.onDisconnect(connection, closeReason)));
     }
 
     /* --------------------------------------------------------------------- */
@@ -905,7 +968,7 @@ public class Node implements Connection.Handler {
                 authorizationToken,
                 networkLoadSnapshot.getCurrentNetworkLoad(),
                 networkLoadSnapshot.getPreviousNetworkLoad(),
-                connection.getId(),
+                connection.getReceivedMessageCounters(),
                 myAddress);
         if (isAuthorized) {
             if (envelopePayloadMessage instanceof CloseConnectionMessage closeConnectionMessage) {

@@ -18,6 +18,7 @@
 package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
+import bisq.common.validation.NetworkDataValidation;
 import org.bouncycastle.jcajce.provider.asymmetric.util.EC5Util;
 import org.bouncycastle.jce.ECNamedCurveTable;
 import org.bouncycastle.jce.ECPointUtil;
@@ -37,6 +38,7 @@ import java.security.SecureRandom;
 import java.security.Security;
 import java.security.spec.ECGenParameterSpec;
 import java.security.spec.EncodedKeySpec;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -45,7 +47,7 @@ public class KeyGeneration {
     public static final String EC = "EC";
     public static final String DSA = "DSA";
 
-    private static final String CURVE = "secp256k1";
+    static final String CURVE = "secp256k1";
     private static final String ECDSA = "ECDSA";
 
     static {
@@ -59,6 +61,10 @@ public class KeyGeneration {
         return generateKeyPair(CURVE, ECDH);
     }
 
+    /**
+     * The public key of the returned key pair is in canonical encoding (see {@link EcPublicKeyValidation}) if the
+     * curve is secp256k1.
+     */
     public static KeyPair generateKeyPair(String curve, String algorithm) {
         try {
             ECGenParameterSpec ecSpec = new ECGenParameterSpec(curve);
@@ -75,9 +81,23 @@ public class KeyGeneration {
         return generatePublic(encodedKey, ECDH);
     }
 
+    /**
+     * Parses the X.509 encoding of a public key. Received key bytes can reach this method before any other check of
+     * the message which contains them. For EC keys the size is therefore checked before the parser runs: the work of
+     * the parser grows with the size of its input, and a key with explicit curve parameters and a large order takes
+     * seconds to reject (see docs/specifications/security/ec-public-key-encoding.md). Keys of other algorithms, for
+     * example DSA keys of Bisq 1 accounts, have other sizes; their callers check the size.
+     */
     public static PublicKey generatePublic(byte[] encodedKey, String algorithm) throws GeneralSecurityException {
+        if (isEcAlgorithm(algorithm) && !NetworkDataValidation.isECPubKeySizeValid(encodedKey)) {
+            throw new InvalidKeySpecException("EC public key not of the expected size. size=" + encodedKey.length);
+        }
         EncodedKeySpec keySpec = new X509EncodedKeySpec(encodedKey);
         return KeyFactory.getInstance(algorithm).generatePublic(keySpec);
+    }
+
+    private static boolean isEcAlgorithm(String algorithm) {
+        return algorithm.equals(EC) || algorithm.equals(ECDH) || algorithm.equals(ECDSA);
     }
 
     public static PublicKey generatePublicFromCompressed(byte[] compressedKey) throws GeneralSecurityException {
@@ -120,6 +140,9 @@ public class KeyGeneration {
         }
     }
 
+    /**
+     * The returned public key is in canonical encoding (see {@link EcPublicKeyValidation}).
+     */
     public static PublicKey deriveEcPublicKey(PrivateKey privateKey) throws GeneralSecurityException {
         var ecPrivateKey = (ECPrivateKey) privateKey;
         ECNamedCurveParameterSpec params = ECNamedCurveTable.getParameterSpec(CURVE);
