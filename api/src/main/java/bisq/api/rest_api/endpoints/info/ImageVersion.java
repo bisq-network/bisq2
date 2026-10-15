@@ -33,6 +33,6 @@ public final class ImageVersion {
     public static Optional<String> resolve(UnaryOperator<String> env) {
         return Optional.ofNullable(env.apply(ENV_VARIABLE))
                 .filter(imageVersion -> !imageVersion.isBlank())
-                .map(String::trim);
+                .map(String::strip);
     }
 }

@@ -35,5 +35,6 @@ class ImageVersionTest {
     void reportsGranularImageVersionWhenSet() {
         assertThat(ImageVersion.resolve(Map.of("BISQ_IMAGE_VERSION", "2.1.11.2")::get)).hasValue("2.1.11.2");
         assertThat(ImageVersion.resolve(Map.of("BISQ_IMAGE_VERSION", " 2.1.11.3-rc1 ")::get)).hasValue("2.1.11.3-rc1");
+        assertThat(ImageVersion.resolve(Map.of("BISQ_IMAGE_VERSION", "\u2003 2.1.11.4\u2003")::get)).hasValue("2.1.11.4");
     }
 }

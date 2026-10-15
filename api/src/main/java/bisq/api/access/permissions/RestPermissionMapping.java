@@ -68,7 +68,7 @@ public final class RestPermissionMapping implements PermissionMapping {
                 new PermissionRule("^/trade-restricting-alert(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/alert-notifications(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/settings(/.*)?$", Optional.empty(), Permission.SETTINGS),
-                // Replaces /settings/version for new clients, so it keeps that endpoint's guard.
+                // Same guard as /settings/version: imageVersion names the docker build.
                 new PermissionRule("^/info(/.*)?$", Optional.empty(), Permission.SETTINGS),
                 new PermissionRule("^/trades(/.*)?$", Optional.empty(), Permission.TRADES),
                 new PermissionRule("^/user-identities(/.*)?$", Optional.empty(), Permission.USER_IDENTITIES),

@@ -31,19 +31,13 @@ import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.UnaryOperator;
 
 /**
- * What a client needs to know about the node before doing anything else: its version, the image
- * version of containerised distributions, and the supported {@link ApiFeature} keys. Static per
- * deployment, global and small, so it is the first request a client makes after pairing.
- * <p>
- * Not public: imageVersion names the exact docker build, so it keeps the SETTINGS guard of
- * {@code /settings/version}, which it replaces.
+ * Node version, image version and supported {@link ApiFeature} keys for the client handshake; behind SETTINGS
+ * because imageVersion names the docker build, so narrower pairings only get {@code /config/capabilities}.
  */
-@Slf4j
 @Path("/info")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -67,18 +61,12 @@ public class InfoRestApi extends RestApiBase {
                     + "recent API features it supports as stable kebab-case keys.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Node info retrieved successfully",
-                            content = @Content(schema = @Schema(implementation = ApiInfoDto.class))),
-                    @ApiResponse(responseCode = "500", description = "Internal server error")
+                            content = @Content(schema = @Schema(implementation = ApiInfoDto.class)))
             }
     )
     public Response getInfo() {
-        try {
-            String version = ApplicationVersion.getVersion().toString();
-            String imageVersion = ImageVersion.resolve(env).orElse(null);
-            return buildOkResponse(new ApiInfoDto(version, imageVersion, ApiFeature.allKeys()));
-        } catch (Exception e) {
-            log.error("Failed to retrieve node info", e);
-            return buildErrorResponse("An unexpected error occurred: " + e.getMessage());
-        }
+        String version = ApplicationVersion.getVersion().toString();
+        String imageVersion = ImageVersion.resolve(env).orElse(null);
+        return buildOkResponse(new ApiInfoDto(version, imageVersion, ApiFeature.allKeys()));
     }
 }
