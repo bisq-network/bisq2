@@ -294,11 +294,12 @@ public class FsmTest {
         assertEquals(MockState.INIT, fsm.getModel().getState());
         assertEquals(1, model.getEventQueue().size());
 
-        // "Restart": rebuild the model purely from the persisted snapshot (state + queue + processedEvents),
-        // exactly as BisqEasyTrade#fromProto now does via Trade#pendingEventsFromProto/processedEventsFromProto.
+        // "Restart": rebuild the model purely from the persisted snapshot (state + queue), exactly as
+        // BisqEasyTrade#fromProto now does via Trade#pendingEventsFromProto. processedEvents deliberately starts
+        // empty, mirroring production (see the Trade restore constructor) - it is never restored across a restart.
         // The restored state (S1) represents the enabling transition having already been persisted; only the
         // event queue itself was previously at risk of being silently dropped across a restart.
-        MockModel restoredModel = new MockModel(MockState.S1, model.getEventQueue(), model.getProcessedEvents());
+        MockModel restoredModel = new MockModel(MockState.S1, model.getEventQueue(), Set.of());
         SimpleFsm<MockModel> restoredFsm = new SimpleFsm<>(restoredModel);
         restoredFsm.addTransition()
                 .from(MockState.S1)
@@ -673,10 +674,56 @@ public class FsmTest {
      * so its parked out-of-order events - which can hold sensitive account-data network messages persisted with the
      * trade - would otherwise linger on disk indefinitely. {@link FsmModel#clearEventQueue()} is the seam the
      * data-retention/redaction pass uses to scrub them once a trade passes the redaction threshold. This pins that
-     * it empties eventQueue but keeps processedEvents, so a re-delivered, already processed message is not re-queued.
+     * it empties eventQueue but KEEPS processedEvents: the trade may still be live and receiving duplicate resends
+     * of already-applied messages, and processedEvents is the dedup guard that stops such a resend from being
+     * re-queued (and re-persisted) with sensitive content.
      */
     @Test
-    void testClearEventQueueScrubsParkedEvents() {
+    void testClearEventQueueScrubsParkedEventsButKeepsProcessedEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+        // MockEvent2's only transition starts from S2, which is never reached - so it stays parked (the
+        // stuck-trade shape) even after the MockEvent1 transition below succeeds.
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S3);
+
+        fsm.handle(new MockEvent2(model, "queued"));
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals(1, model.getEventQueue().size());
+
+        // A successful transition records its event class in processedEvents (the duplicate-resend dedup guard).
+        fsm.handle(new MockEvent1(model, "applied"));
+        assertEquals(MockState.S1, model.getState());
+        assertEquals(1, model.getEventQueue().size());
+        assertTrue(model.getProcessedEvents().contains(MockEvent1.class));
+
+        model.clearEventQueue();
+
+        assertTrue(model.getEventQueue().isEmpty(), "clearEventQueue() must empty the parked event queue");
+        assertTrue(model.getProcessedEvents().contains(MockEvent1.class),
+                "clearEventQueue() must keep processedEvents - the dedup guard against duplicate resends " +
+                        "re-queueing sensitive content on a still-live trade");
+
+        // A re-delivered message of an already processed class must not be parked again.
+        fsm.handle(new MockEvent1(model, "redelivered"));
+        assertEquals(MockState.S1, model.getState());
+        assertTrue(model.getEventQueue().isEmpty(), "an already processed event class must not be re-queued");
+    }
+
+    /**
+     * At most one out-of-order event per type is queued, the first one is kept: a second event of a queued type
+     * could never be applied, and an unbounded queue would let a peer grow the (persisted) trade data at will.
+     */
+    @Test
+    void testOnlyFirstOutOfOrderEventPerTypeIsQueued() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
         fsm.addTransition()
@@ -690,29 +737,38 @@ public class FsmTest {
                 .run(MockEventHandler.class)
                 .to(MockState.S2);
 
-        fsm.addTransition()
-                .from(MockState.S2)
-                .on(MockEvent3.class)
-                .run(MockEventHandler.class)
-                .to(MockState.S3);
+        MockEvent2 first = new MockEvent2(model, "first");
+        fsm.handle(first);
+        for (int i = 0; i < 100; i++) {
+            fsm.handle(new MockEvent2(model, "later" + i));
+        }
+        assertEquals(Set.of(first), model.getEventQueue());
 
         fsm.handle(new MockEvent1(model, "test1"));
-        assertEquals(MockState.S1, model.getState());
+        assertEquals(MockState.S2, model.getState());
+        assertEquals("first", model.data);
+        assertTrue(model.getEventQueue().isEmpty());
+    }
 
-        // MockEvent3 arrives before its enabling transition, so the Fsm parks it in the queue (the stuck-trade shape).
-        fsm.handle(new MockEvent3(model, "queued"));
-        assertEquals(MockState.S1, model.getState());
+    /**
+     * Queued peer messages can carry private data (e.g. payment account data), so the model's toString(), which
+     * ends up in logs of the objects holding it, must not render them.
+     */
+    @Test
+    void testModelToStringDoesNotRenderQueuedEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        fsm.handle(new MockEvent2(model, "queued"));
         assertEquals(1, model.getEventQueue().size());
 
-        model.clearEventQueue();
-
-        assertTrue(model.getEventQueue().isEmpty(), "clearEventQueue() must empty the parked event queue");
-        assertEquals(Set.of(MockEvent1.class), model.getProcessedEvents(), "clearEventQueue() must keep processedEvents");
-
-        // A re-delivered message of an already processed class must not be parked again.
-        fsm.handle(new MockEvent1(model, "redelivered"));
-        assertEquals(MockState.S1, model.getState());
-        assertTrue(model.getEventQueue().isEmpty(), "an already processed event class must not be re-queued");
+        assertFalse(model.toString().contains(MockEvent2.class.getSimpleName()),
+                "toString() must not render queued events");
     }
 
     @Test

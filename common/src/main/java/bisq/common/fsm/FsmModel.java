@@ -41,8 +41,10 @@ public class FsmModel {
      * be stuck for long on one trade's live transition - which would otherwise queue up every other store's
      * writes behind it - yet long enough to comfortably clear the lock's normal, fast holders (a transition's
      * state mutation plus a non-blocking persist() submission). A timed-out snapshot fails this write cycle
-     * rather than risk a torn read; the write is retried only by the next persist() call or the shutdown write -
-     * by which time a merely-slow (not stuck) handler has typically released the lock.
+     * rather than risk a torn read; the thrown {@link SnapshotLockTimeoutException} escapes the write path
+     * (see {@code PersistableStoreReaderWriter#write}) so {@code RateLimitedPersistenceClient} keeps a retry
+     * pending - the next persist() call or the shutdown fallback rewrites the then-current store, by which time
+     * a merely-slow (not stuck) handler has typically released the lock.
      */
     static final long SNAPSHOT_LOCK_TIMEOUT_MS = 500;
 
@@ -68,6 +70,8 @@ public class FsmModel {
     // under concurrent mutation) consistent snapshot-iterator semantics for free, without requiring any
     // external synchronization. The primary, recommended mechanism for a cross-thread, all-fields-consistent read
     // (e.g. Trade#getTradeBuilder during persistence) is getStateAndEventQueueSnapshot(), not these getters.
+    // Excluded from toString(): queued peer messages can carry private data (e.g. payment account data).
+    @ToString.Exclude
     final Set<Event> eventQueue = new CopyOnWriteArraySet<>();
     final Set<Class<? extends Event>> processedEvents = new CopyOnWriteArraySet<>();
 
@@ -131,8 +135,9 @@ public class FsmModel {
      * I/O - e.g. MuSig's gRPC calls), and that thread must never block on it indefinitely: doing so would queue up
      * every other store's disk writes in the JVM behind this one trade. On timeout this throws
      * {@link SnapshotLockTimeoutException} instead of falling back to an unsynchronized read - a torn read is
-     * exactly the bug this method exists to prevent - so the write fails for this cycle and is retried by the next
-     * persist() call or the shutdown write (see {@code RateLimitedPersistenceClient}).
+     * exactly the bug this method exists to prevent - so the write fails for this cycle; the exception escapes
+     * the write path (see {@code PersistableStoreReaderWriter#write}) and {@code RateLimitedPersistenceClient}
+     * keeps a retry pending (next persist() call or the shutdown fallback).
      * <br/>
      * The returned {@code eventQueue} is an unmodifiable defensive copy which keeps the arrival order: it is independent of the live,
      * mutable {@code eventQueue} field, so a later transition can never retroactively change a snapshot that was
@@ -163,15 +168,19 @@ public class FsmModel {
     /**
      * Clears the pending out-of-order event queue under the same lock used by
      * {@link #getStateAndEventQueueSnapshot()}. Unlike the final-state cleanup in {@link Fsm#handle(Event)}, this
-     * keeps {@code processedEvents}: it only holds event classes (no message content), and the trade is still live,
-     * so a re-delivered message of an already processed class must still not be re-queued.
+     * deliberately KEEPS {@code processedEvents}: the cleared trade may still be live (stuck, not final) and
+     * receiving duplicate resends of already-applied messages - {@code processedEvents} is the dedup guard that
+     * stops such a resend from being re-queued (and re-persisted) with sensitive content. It holds only event
+     * classes, in memory, and is never persisted, so keeping it costs nothing privacy-wise.
      * Takes the lock unbounded, like {@link Fsm#handle(Event)}: this is called from the trade services, not from
      * the persistence-serialization path, so there is no shared-executor-stall concern to bound against here.
      * <br/>
-     * Used by the trade data-retention/redaction pass: the queue can hold sensitive account-data network messages
-     * (e.g. {@code BisqEasyAccountDataMessage} / MuSig {@code SendAccountPayloadMessage}) which are persisted with
-     * the trade. A stuck trade may never reach a final state to clear them, so they must be scrubbed once the trade
-     * passes the redaction threshold, otherwise the persisted copy would linger on disk indefinitely.
+     * Used by the trade data-retention/redaction pass (see
+     * {@code BisqEasyTradeService#maybeRedactDataOfCompletedTrades} and the MuSig equivalent): the queue can hold
+     * sensitive account-data network messages (e.g. {@code BisqEasyAccountDataMessage} / MuSig
+     * {@code SendAccountPayloadMessage}) which are persisted with the trade. A stuck trade may never reach a
+     * final state to clear them, so they must be scrubbed once the trade passes the redaction threshold,
+     * otherwise the persisted copy would linger on disk indefinitely.
      */
     public void clearEventQueue() {
         lock.lock();
@@ -205,5 +214,10 @@ public class FsmModel {
      * Immutable {state, eventQueue} pair captured atomically by {@link #getStateAndEventQueueSnapshot()}.
      */
     public record StateAndEventQueue(State state, Set<Event> eventQueue) {
+        public StateAndEventQueue {
+            // Enforce the documented immutability in the type itself rather than relying on caller discipline;
+            // no-op when the caller already passes an immutable set (Set.copyOf returns it unchanged).
+            eventQueue = Set.copyOf(eventQueue);
+        }
     }
 }

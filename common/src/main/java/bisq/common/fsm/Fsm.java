@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
  * <br/>
- * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
- * pending states after the next state transition.
+ * In case of out-of-order events we store the un-handled events (at most one per event type; subclasses may persist
+ * them) and retry to apply those pending states after the next state transition.
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
@@ -138,14 +138,18 @@ public abstract class Fsm<M extends FsmModel> {
                     }
                 } else {
                     log.info("We did not find a transition with state {} and event {}. " +
-                                    "We add the event to the eventQueue for potential later processing.",
+                                    "We add the event to the eventQueue for potential later processing unless it " +
+                                    "was processed already or an event of that type is queued already.",
                             currentState, eventClass.getSimpleName());
                     // In case we get an event which does not match our current state we add the event to our
-                    // event queue if the event was not already processed.
-                    transitionMap.keySet().stream()
-                            .filter(key -> key.getSecond().equals(eventClass) &&
-                                    !model.processedEvents.contains(eventClass))
-                            .forEach(e -> model.eventQueue.add(event));
+                    // event queue if the event was not already processed. At most one event per type is queued:
+                    // out-of-order handling only supports unique event/state pairs, so a second event of a queued
+                    // type could never be applied, and an unbounded queue would let a peer grow the trade data
+                    // (which subclasses may persist) at will. The first one is kept.
+                    if (!model.processedEvents.contains(eventClass) &&
+                            model.eventQueue.stream().noneMatch(queued -> queued.getClass().equals(eventClass))) {
+                        model.eventQueue.add(event);
+                    }
                 }
             } catch (Exception exception) {
                 log.error("Error at handling {}.", describe(event), exception);
