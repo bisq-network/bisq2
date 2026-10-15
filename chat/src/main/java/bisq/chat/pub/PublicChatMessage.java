@@ -22,15 +22,17 @@ import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.reactions.ChatMessageReaction;
-import bisq.common.encoding.Hex;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * PublicChatMessage is added as public data to the distributed network storage.
@@ -39,7 +41,7 @@ import java.util.Optional;
 @Slf4j
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public abstract class PublicChatMessage extends ChatMessage implements DistributedData {
+public abstract class PublicChatMessage extends ChatMessage implements OwnershipVerifiableData {
     protected transient final ObservableSet<ChatMessageReaction> chatMessageReactions = new ObservableSet<>();
 
     protected PublicChatMessage(String messageId,
@@ -63,11 +65,25 @@ public abstract class PublicChatMessage extends ChatMessage implements Distribut
     abstract public bisq.chat.protobuf.ChatMessage.Builder getBuilder(boolean serializeForHash);
 
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is 
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against 
-        // impersonation attack.
-        return !authorUserProfileId.equals(Hex.encode(pubKeyHash));
+    public void verify() {
+        super.verify();
+        // The profile ID must be the ID of a public key, so that it names the author (see getOwnerPubKeyHash())
+        checkArgument(PubKey.isId(authorUserProfileId), "authorUserProfileId is not the ID of a public key");
+        // Clients publish public messages only as text, so a node does not store or relay another type. The desktop
+        // creates the expired messages indicator for display only. That type has no protobuf value and is never sent.
+        checkArgument(hasSupportedChatMessageType() || chatMessageType == ChatMessageType.EXPIRED_MESSAGES_INDICATOR,
+                "chatMessageType is not supported in public chats");
+    }
+
+    // The author owns the message. The profile ID is the ID of the public key of the author (PubKey.getId()).
+    @Override
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(authorUserProfileId);
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return chatMessageType == ChatMessageType.TEXT;
     }
 
     @Override

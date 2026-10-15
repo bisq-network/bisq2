@@ -41,6 +41,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.desktop.overlay.unlock.UnlockController;
+import bisq.desktop.overlay.unreadable_store_files.UnreadableStoreFilesController;
 import bisq.desktop.splash.SplashController;
 import bisq.i18n.Res;
 import bisq.identity.IdentityService;
@@ -68,6 +69,7 @@ import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static bisq.settings.DontShowAgainKey.WELCOME;
 
@@ -99,8 +101,9 @@ public class DesktopController extends NavigationController {
 
     private final Observable<State> applicationServiceState;
     private final JavaFxApplicationData applicationJavaFxApplicationData;
-    private Pin referenceTimePin, httpServerErrorMessagePin;
+    private Pin referenceTimePin, httpServerErrorMessagePin, languageTagPin;
     private boolean systemClockDriftWarningDisplayed;
+    private final AtomicBoolean skipInitialLanguageTagUpdate = new AtomicBoolean();
 
     public DesktopController(Observable<State> applicationServiceState,
                              ServiceProvider serviceProvider,
@@ -184,10 +187,22 @@ public class DesktopController extends NavigationController {
     @Override
     public void onActivate() {
         preventStandbyModeService.initialize();
+        skipInitialLanguageTagUpdate.set(true);
+
+        languageTagPin = settingsService.getLanguageTag().addObserver(languageTag -> {
+            if (skipInitialLanguageTagUpdate.getAndSet(false)) {
+                return;
+            }
+
+            if (languageTag != null) {
+                UIThread.runOnNextRenderFrame(this::reloadUI);
+            }
+        });
+
         // We show the splash screen as background also if we show the 'unlock' or 'tac' overlay screens
         Navigation.navigateTo(NavigationTarget.SPLASH);
 
-        if (!settingsService.getIsTacAccepted().get()) {
+        if (!settingsService.isCurrentTacAccepted()) {
             UIThread.runOnNextRenderFrame(() -> Navigation.navigateTo(NavigationTarget.TAC,
                     new TacController.InitData(this::maybeShowLockScreen)));
         } else {
@@ -252,6 +267,7 @@ public class DesktopController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        languageTagPin.unbind();
         referenceTimePin.unbind();
         httpServerErrorMessagePin.unbind();
         UIClock.shutdown();
@@ -317,10 +333,14 @@ public class DesktopController extends NavigationController {
         boolean hasUserIdentities = serviceProvider.getUserService().getUserIdentityService().hasUserIdentities();
 
         if (!hasUserIdentities) {
-            if (dontShowAgainService.showAgain(WELCOME)) {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
+            // Before onboarding, because the unreadable data can be the user identity itself. The main controller shows
+            // it otherwise.
+            if (UnreadableStoreFilesController.isToBeShown(
+                    serviceProvider.getPersistenceService().getUnreadableStoreArchive())) {
+                Navigation.navigateTo(NavigationTarget.UNREADABLE_STORE_FILES,
+                        new UnreadableStoreFilesController.InitData(this::navigateToOnboarding));
             } else {
-                Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
+                navigateToOnboarding();
             }
         } else {
             // After the domain is initialized we show the application content
@@ -336,6 +356,14 @@ public class DesktopController extends NavigationController {
                                 }
                             },
                             () -> Navigation.navigateTo(NavigationTarget.DASHBOARD));
+        }
+    }
+
+    private void navigateToOnboarding() {
+        if (dontShowAgainService.showAgain(WELCOME)) {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_WELCOME);
+        } else {
+            Navigation.navigateTo(NavigationTarget.ONBOARDING_GENERATE_NYM);
         }
     }
 
@@ -357,6 +385,15 @@ public class DesktopController extends NavigationController {
 
     void onStageHeightChanged(double value) {
         settingsService.setCookie(CookieKey.STAGE_H, value);
+    }
+
+    private void reloadUI() {
+        // Clear all cached sub-controllers so their views are rebuilt with the new language strings.
+        // resetResolvedTarget() ensures processNavigationTarget does not short-circuit when it sees
+        // the same resolved child target still set.
+        clearControllerCache();
+        resetResolvedTarget();
+        applyNavigationTarget();
     }
 
     private void onShutdown() {

@@ -20,7 +20,7 @@ package bisq.desktop.webcam;
 import bisq.application.ApplicationService;
 import bisq.common.webcam.WebcamControlSignals;
 import bisq.common.webcam.WebcamIpcAuthenticator;
-import bisq.common.webcam.WebcamIpcMessageSerializer;
+import bisq.common.webcam.WebcamIpcFrameCodec;
 import bisq.common.webcam.WebcamIpcWireMessage;
 import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
@@ -30,7 +30,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.Socket;
 import java.net.SocketTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -55,7 +54,7 @@ public class InputHandlerTest {
         String payload = "bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy";
 
         inputHandler.setSessionSecret(sessionSecret);
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.QR_CODE_PREFIX, payload)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.QR_CODE_PREFIX, payload)));
 
         assertEquals(payload, model.getQrCode().get());
     }
@@ -68,7 +67,7 @@ public class InputHandlerTest {
         String payload = "a".repeat(WebcamIpcWireMessage.MAX_PAYLOAD_LENGTH);
 
         inputHandler.setSessionSecret(sessionSecret);
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.QR_CODE_PREFIX, payload)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.QR_CODE_PREFIX, payload)));
 
         assertEquals(payload, model.getQrCode().get());
     }
@@ -80,7 +79,7 @@ public class InputHandlerTest {
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
         inputHandler.setSessionSecret(sessionSecret);
 
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.SHUTDOWN)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.SHUTDOWN)));
 
         assertEquals(Boolean.TRUE, model.getIsShutdownSignalReceived().get());
     }
@@ -92,7 +91,7 @@ public class InputHandlerTest {
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
         inputHandler.setSessionSecret(sessionSecret);
 
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.RESTART)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.RESTART)));
 
         assertEquals(Boolean.TRUE, model.getRestartSignalReceived().get());
     }
@@ -104,7 +103,7 @@ public class InputHandlerTest {
         String sessionSecret = WebcamIpcAuthenticator.generateSessionSecret();
         inputHandler.setSessionSecret(sessionSecret);
 
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.IMAGE_RECOGNIZED)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.IMAGE_RECOGNIZED)));
 
         assertEquals(Boolean.TRUE, model.getImageRecognized().get());
     }
@@ -117,7 +116,7 @@ public class InputHandlerTest {
         inputHandler.setSessionSecret(sessionSecret);
 
         long beforeHeartBeat = System.currentTimeMillis();
-        inputHandler.onSocket(socketWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.HEART_BEAT)));
+        inputHandler.onInputStream(inputStreamWith(WebcamIpcWireMessage.create(sessionSecret, WebcamControlSignals.HEART_BEAT)));
 
         assertTrue(model.getLastHeartBeatTimestamp().get() >= beforeHeartBeat);
     }
@@ -129,7 +128,7 @@ public class InputHandlerTest {
         inputHandler.setSessionSecret(WebcamIpcAuthenticator.generateSessionSecret());
 
         assertThrows(IllegalArgumentException.class,
-                () -> inputHandler.onSocket(legacySocketWith(LEGACY_SEPARATOR + "QR_CODE_PREFIX" + LEGACY_SEPARATOR + "attacker-address")));
+                () -> inputHandler.onInputStream(legacyInputStreamWith(LEGACY_SEPARATOR + "QR_CODE_PREFIX" + LEGACY_SEPARATOR + "attacker-address")));
         assertNull(model.getQrCode().get());
     }
 
@@ -141,25 +140,25 @@ public class InputHandlerTest {
 
         inputHandler.setSessionSecret("secret-2");
 
-        assertThrows(IllegalArgumentException.class, () -> inputHandler.onSocket(socketWith(message)));
+        assertThrows(IllegalArgumentException.class, () -> inputHandler.onInputStream(inputStreamWith(message)));
         assertNull(model.getQrCode().get());
     }
 
     @Test
-    void rejectsSocketReadTimeout() {
+    void rejectsStreamReadTimeout() {
         WebcamAppModel model = createModel();
         InputHandler inputHandler = new InputHandler(model);
 
-        assertThrows(IllegalArgumentException.class, () -> inputHandler.onSocket(timingOutSocket()));
+        assertThrows(IllegalArgumentException.class, () -> inputHandler.onInputStream(timingOutInputStream()));
         assertNull(model.getLocalException().get());
     }
 
     @Test
-    void rejectsSocketReadFailureWithoutSettingLocalException() {
+    void rejectsStreamReadFailureWithoutSettingLocalException() {
         WebcamAppModel model = createModel();
         InputHandler inputHandler = new InputHandler(model);
 
-        assertThrows(IllegalArgumentException.class, () -> inputHandler.onSocket(failingSocket()));
+        assertThrows(IllegalArgumentException.class, () -> inputHandler.onInputStream(failingInputStream()));
         assertNull(model.getLocalException().get());
     }
 
@@ -179,54 +178,38 @@ public class InputHandlerTest {
                 false));
     }
 
-    private static Socket socketWith(WebcamIpcWireMessage message) {
+    private static InputStream inputStreamWith(WebcamIpcWireMessage message) {
+        return new ByteArrayInputStream(frameWith(message));
+    }
+
+    private static byte[] frameWith(WebcamIpcWireMessage message) {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         try {
-            WebcamIpcMessageSerializer.writeFrame(outputStream, message);
+            WebcamIpcFrameCodec.writeFrame(outputStream, message);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        byte[] bytes = outputStream.toByteArray();
-        return socketWith(bytes);
+        return outputStream.toByteArray();
     }
 
-    private static Socket legacySocketWith(String message) {
-        return socketWith(message.getBytes(StandardCharsets.UTF_8));
+    private static InputStream legacyInputStreamWith(String message) {
+        return new ByteArrayInputStream(message.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static Socket timingOutSocket() {
-        return new Socket() {
+    private static InputStream timingOutInputStream() {
+        return new InputStream() {
             @Override
-            public InputStream getInputStream() {
-                return new InputStream() {
-                    @Override
-                    public int read() throws IOException {
-                        throw new SocketTimeoutException("timeout");
-                    }
-                };
+            public int read() throws IOException {
+                throw new SocketTimeoutException("timeout");
             }
         };
     }
 
-    private static Socket failingSocket() {
-        return new Socket() {
+    private static InputStream failingInputStream() {
+        return new InputStream() {
             @Override
-            public InputStream getInputStream() {
-                return new InputStream() {
-                    @Override
-                    public int read() throws IOException {
-                        throw new IOException("connection reset");
-                    }
-                };
-            }
-        };
-    }
-
-    private static Socket socketWith(byte[] bytes) {
-        return new Socket() {
-            @Override
-            public InputStream getInputStream() throws IOException {
-                return new ByteArrayInputStream(bytes);
+            public int read() throws IOException {
+                throw new IOException("connection reset");
             }
         };
     }

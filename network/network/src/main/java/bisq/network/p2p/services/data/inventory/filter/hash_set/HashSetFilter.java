@@ -18,7 +18,10 @@
 package bisq.network.p2p.services.data.inventory.filter.hash_set;
 
 
+import bisq.common.data.ByteArray;
 import bisq.common.data.ByteUnit;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
 import lombok.EqualsAndHashCode;
@@ -28,6 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,21 +41,23 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 public final class HashSetFilter extends InventoryFilter {
-    // FilterEntry has about 26 bytes (hash of 20 bytes + integer + some overhead). 200_000 items are about 4.8 MB)
-    // We should aim to be much below that limit.
-    public final static int MAX_ENTRIES = 200_000;
+    // The maximum number of entries which a receiver accepts and a requester sends. An entry needs 24 to 30 bytes, so
+    // the largest filter needs at most 3.0 MB and fits the size limit of a message (see
+    // docs/specifications/network/inventory-hash-set-filter.md and docs/specifications/network/message-framing.md).
+    // Nodes of earlier versions accept fewer than 200 000 entries.
+    public final static int MAX_ENTRIES = 100_000;
 
     @Getter
     private final List<HashSetFilterEntry> filterEntries;
 
     // As creating the HashSet at each request costs resources we cache it.
     private transient Set<HashSetFilterEntry> filterEntriesAsSet;
+    // Cached for the same reason (see getLowestSequenceNumberByHash)
+    private transient Map<ByteArray, Integer> lowestSequenceNumberByHash;
 
-    public HashSetFilter(List<HashSetFilterEntry> filterEntries) {
-        this(InventoryFilterType.HASH_SET, filterEntries);
-    }
-
-    private HashSetFilter(InventoryFilterType inventoryFilterType, List<HashSetFilterEntry> filterEntries) {
+    // The type defines which storage key the filter entries contain: HASH_SET storage key V1, HASH_SET_V2 storage
+    // key V2.
+    public HashSetFilter(InventoryFilterType inventoryFilterType, List<HashSetFilterEntry> filterEntries) {
         super(inventoryFilterType);
 
         this.filterEntries = filterEntries;
@@ -63,8 +69,8 @@ public final class HashSetFilter extends InventoryFilter {
 
     @Override
     public void verify() {
-        checkArgument(inventoryFilterType == InventoryFilterType.HASH_SET);
-        checkArgument(filterEntries.size() < MAX_ENTRIES);
+        checkArgument(inventoryFilterType.isHashSet(), "Invalid inventoryFilterType %s", inventoryFilterType);
+        checkArgument(filterEntries.size() <= MAX_ENTRIES, "Too many filter entries: %s", filterEntries.size());
     }
 
     @Override
@@ -81,11 +87,20 @@ public final class HashSetFilter extends InventoryFilter {
                                 .collect(Collectors.toList())));
     }
 
-    public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto) {
-        List<HashSetFilterEntry> entries = proto.getHashSetFilter().getFilterEntriesList().stream()
-                .map(HashSetFilterEntry::fromProto)
-                .collect(Collectors.toList());
-        return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+    public static HashSetFilter fromProto(bisq.network.protobuf.InventoryFilter proto)
+            throws UnresolvableProtobufException {
+        try {
+            // Checked before the entries are converted, which costs much more than this check
+            int numFilterEntries = proto.getHashSetFilter().getFilterEntriesCount();
+            checkArgument(numFilterEntries <= MAX_ENTRIES, "Too many filter entries: %s", numFilterEntries);
+            List<HashSetFilterEntry> entries = ProtobufUtils.fromProtoStream(
+                            proto.getHashSetFilter().getFilterEntriesList(), 
+                            HashSetFilterEntry::fromProto)
+                    .collect(Collectors.toList());
+            return new HashSetFilter(InventoryFilterType.fromProto(proto.getInventoryFilterType()), entries);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -99,5 +114,17 @@ public final class HashSetFilter extends InventoryFilter {
             filterEntriesAsSet = new HashSet<>(filterEntries);
         }
         return filterEntriesAsSet;
+    }
+
+    // The lowest sequence number which the filter lists with each hash. A node of an earlier version lists each
+    // storage key V1 once, because it holds one request per key.
+    public Map<ByteArray, Integer> getLowestSequenceNumberByHash() {
+        if (lowestSequenceNumberByHash == null) {
+            lowestSequenceNumberByHash = filterEntries.stream()
+                    .collect(Collectors.toMap(entry -> new ByteArray(entry.getHash()),
+                            HashSetFilterEntry::getSequenceNumber,
+                            Math::min));
+        }
+        return lowestSequenceNumberByHash;
     }
 }

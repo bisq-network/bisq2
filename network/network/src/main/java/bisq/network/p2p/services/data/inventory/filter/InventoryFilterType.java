@@ -19,18 +19,26 @@ package bisq.network.p2p.services.data.inventory.filter;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufEnumException;
+import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.node.Feature;
 
 import java.util.Optional;
 
 public enum InventoryFilterType implements ProtoEnum {
+    // Hash set filter with storage key V1. Only for responses to nodes of earlier versions. Replaced by HASH_SET_V2.
+    @Deprecated(since = "2.1.14")
     HASH_SET,
-    MINI_SKETCH;
+    MINI_SKETCH,
+    // Hash set filter with storage key V2
+    HASH_SET_V2;
 
     public static Optional<InventoryFilterType> fromFeature(Feature feature) {
         return switch (feature) {
             case INVENTORY_HASH_SET -> Optional.of(HASH_SET);
             case INVENTORY_MINI_SKETCH -> Optional.of(MINI_SKETCH);
+            case INVENTORY_HASH_SET_V2 -> Optional.of(HASH_SET_V2);
             default -> Optional.empty();
         };
     }
@@ -40,7 +48,18 @@ public enum InventoryFilterType implements ProtoEnum {
         return bisq.network.protobuf.InventoryFilterType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static InventoryFilterType fromProto(bisq.network.protobuf.InventoryFilterType proto) {
-        return ProtobufUtils.enumFromProto(InventoryFilterType.class, proto.name(), HASH_SET);
+    // The type defines which storage key the filter entries contain. An unknown type must not be read as another
+    // type, so we reject it instead of using a fallback.
+    public static InventoryFilterType fromProto(bisq.network.protobuf.InventoryFilterType proto)
+            throws UnresolvableProtobufException {
+        try {
+            return ProtobufUtils.enumFromProto(InventoryFilterType.class, proto.name());
+        } catch (UnresolvableProtobufEnumException e) {
+            throw new UnresolvableProtobufMessageException(e);
+        }
+    }
+
+    public boolean isHashSet() {
+        return this == HASH_SET || this == HASH_SET_V2;
     }
 }

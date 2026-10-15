@@ -15,7 +15,9 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -28,7 +30,9 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -36,12 +40,31 @@ jobs:
       name: apps module
       build-root-dir: apps
 
+  # apps/desktop is a build of its own. The apps build includes it, but no project of the apps build depends on it, so
+  # the apps job does not build it.
+  build_desktop_module:
+    name: Build desktop module on ${{ matrix.os }}
+    strategy:
+      matrix:
+        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
+
+    uses: ./.github/workflows/build_bisq_module.yml
+    with:
+      os: ${{ matrix.os }}
+      name: desktop module
+      build-root-dir: apps/desktop
+
   build_network_module:
     name: Build network module on ${{ matrix.os }}
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:
@@ -54,7 +77,9 @@ jobs:
     strategy:
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        os: [ ubuntu-24.04, macos-15-intel, macos-15, windows-2025 ]
+        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
+        # two checked-in runner lists, so every runner label stays reviewed and verified.
+        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
 
     uses: ./.github/workflows/build_bisq_module.yml
     with:

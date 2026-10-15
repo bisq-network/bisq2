@@ -1,0 +1,8 @@
+interface:
+  display_name: "Bisq PR Reviewer"
+  short_description: "Review Bisq PRs with security and domain context"
+  brand_color: "#2E8B57"
+  default_prompt: "Use $bisq-pr-reviewer to review this Bisq pull request for correctness, security, and standards."
+
+policy:
+  allow_implicit_invocation: true

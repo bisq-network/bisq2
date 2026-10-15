@@ -39,25 +39,36 @@ public abstract class TabController<T extends TabModel> extends NavigationContro
     public void onActivateInternal() {
         super.onActivateInternal();
 
-        onTabSelected(model.getNavigationTarget());
+        selectTabWithoutHistory(model.getNavigationTarget());
     }
 
     @Override
     protected void onNavigationTargetApplied(NavigationTarget navigationTarget, Optional<Object> data) {
         if (model.getSelectedTabButton().get() != null &&
                 navigationTarget != model.getSelectedTabButton().get().getNavigationTarget()) {
-            onTabSelected(navigationTarget);
+            selectTabWithoutHistory(navigationTarget);
         }
     }
 
     void onTabSelected(NavigationTarget navigationTarget) {
-        findTabButton(navigationTarget).ifPresent(tabButton -> {
-            if (Objects.equals(model.getSelectedTabButton().get(), tabButton)) {
-                return;
-            }
-            model.getSelectedTabButton().set(tabButton);
+        if (selectTabButton(navigationTarget)) {
             Navigation.navigateTo(navigationTarget);
-        });
+        }
+    }
+
+    private void selectTabWithoutHistory(NavigationTarget navigationTarget) {
+        if (selectTabButton(navigationTarget)) {
+            Navigation.navigateToWithoutAddingToHistory(navigationTarget);
+        }
+    }
+
+    private boolean selectTabButton(NavigationTarget navigationTarget) {
+        Optional<TabButton> tabButton = findTabButton(navigationTarget);
+        if (tabButton.isEmpty() || Objects.equals(model.getSelectedTabButton().get(), tabButton.get())) {
+            return false;
+        }
+        model.getSelectedTabButton().set(tabButton.get());
+        return true;
     }
 
     void onTabButtonCreated(TabButton tabButton) {

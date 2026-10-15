@@ -17,30 +17,26 @@
 
 package bisq.bonded_roles.bonded_role;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.bonded_roles.registration.BondedRoleRegistrationProtocol;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.network.AddressByTransportTypeMap;
-import bisq.common.network.TransportType;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.Set;
 
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.PROPOSAL_KEY_VERSION;
@@ -52,13 +48,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedBondedRole implements AuthorizedDistributedData {
+public final class AuthorizedBondedRole implements OracleNodeAuthorizedData {
     private static final int LEGACY_DATA_VERSION = 1;
     private static final int PROPOSAL_KEY_DATA_VERSION = 2;
     private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedBondedRole.class.getSimpleName(), MAX_MAP_SIZE_100);
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final int version;
@@ -185,6 +180,10 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 "Proposal tx ID must be empty or a valid Bitcoin transaction ID");
         checkArgument(lockupTxId.isEmpty() || BitcoinTransactionValidation.isValid(lockupTxId),
                 "Lockup tx ID must be empty or a valid Bitcoin transaction ID");
+        // Nodes reach a node at the addresses of its role, for example a seed node (see
+        // docs/specifications/bonded-roles/registration.md)
+        checkArgument(!bondedRoleType.isNode() || addressByTransportTypeMap.isPresent(),
+                "The bonded role of a node must contain the addresses of the node");
     }
 
     public boolean canReconstructForRemoval() {
@@ -237,27 +236,32 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto) {
-        return new AuthorizedBondedRole(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                BondedRoleType.fromProto(proto.getBondedRoleType()),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.hasAddressByTransportTypeMap() ?
-                        Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
-                        Optional.empty(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.hasAuthorizingOracleNode() ?
-                        Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
-                        Optional.empty(),
-                proto.getStaticPublicKeysProvided(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
-                        proto.getRegistrationProtocolVersion()),
-                proto.getProposalTxId(),
-                proto.getLockupTxId()
-        );
+    public static AuthorizedBondedRole fromProto(bisq.bonded_roles.protobuf.AuthorizedBondedRole proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedBondedRole(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    BondedRoleType.fromProto(proto.getBondedRoleType()),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.hasAddressByTransportTypeMap() ?
+                            Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
+                            Optional.empty(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.hasAuthorizingOracleNode() ?
+                            Optional.of(AuthorizedOracleNode.fromProto(proto.getAuthorizingOracleNode())) :
+                            Optional.empty(),
+                    proto.getStaticPublicKeysProvided(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                            proto.getRegistrationProtocolVersion()),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -271,37 +275,14 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // Oracle and seed nodes of earlier versions published it with the key of their network ID
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED ) {
-            if (networkId.getAddressByTransportTypeMap().containsKey(TransportType.I2P)) {
-                log.warn("AuthorizedBondedRole considered invalid as it contains an I2PAddress address and we have not yet activated I2P.\n" +
-                        "networkId={}", networkId);
-                return true;
-            }
-            Boolean hasAuthorizingOracleNodeI2pAddress = authorizingOracleNode.map(node -> node.getNetworkId().getAddressByTransportTypeMap().containsKey(TransportType.I2P))
-                    .orElse(false);
-            if(hasAuthorizingOracleNodeI2pAddress){
-                log.warn("AuthorizedBondedRole considered invalid as authorizingOracleNode contains an I2PAddress address and we have not yet activated I2P.\n" +
-                        "authorizingOracleNode={}", authorizingOracleNode);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override
@@ -324,7 +305,6 @@ public final class AuthorizedBondedRole implements AuthorizedDistributedData {
                 ",\r\n                    registrationProtocolVersion=" + registrationProtocolVersion +
                 ",\r\n                    proposalTxId='" + proposalTxId + '\'' +
                 ",\r\n                    lockupTxId='" + lockupTxId + '\'' +
-                ",\r\n                    metaData=" + metaData +
                 ",\r\n                    authorizedPublicKeys=" + getAuthorizedPublicKeys() +
                 "\r\n}";
     }

@@ -217,23 +217,23 @@ public class BisqEasyNotificationsService implements Service {
 
     private void updateBisqEasyOfferbookPredicate() {
         String cookie = settingsService.getCookie().asString(CookieKey.MARKETS_FILTER).orElse(null);
-        boolean isFavoritesOnlyFilterSet = BisqEasyMarketFilter.FAVOURITES.name().equals(cookie);
+        boolean isFavouritesOnlyFilterSet = BisqEasyMarketFilter.FAVOURITES.name().equals(cookie);
         boolean isMarketsWithOffersFilterSet = BisqEasyMarketFilter.WITH_OFFERS.name().equals(cookie);
 
-        if (!isFavoritesOnlyFilterSet && !isMarketsWithOffersFilterSet) {
+        if (!isFavouritesOnlyFilterSet && !isMarketsWithOffersFilterSet) {
             // No filter selected, we show all
             chatNotificationService.putPredicate(ChatChannelDomain.BISQ_EASY_OFFERBOOK, notification -> true);
         } else {
             Predicate<ChatNotification> favouriteMarketsPredicate = notification -> bisqEasyOfferbookChannelService.findChannel(notification.getChatChannelId())
                     .map(BisqEasyOfferbookChannel::getMarket)
-                    .map(market -> settingsService.getFavouriteMarkets().stream().anyMatch(m -> m.equals(market)))
+                    .map(market -> settingsService.getFavouriteMarkets().contains(market))
                     .orElse(false);
 
-            if (isFavoritesOnlyFilterSet) {
-                // We show only favorites
+            if (isFavouritesOnlyFilterSet) {
+                // We show only favourites
                 chatNotificationService.putPredicate(ChatChannelDomain.BISQ_EASY_OFFERBOOK, favouriteMarketsPredicate);
             } else {
-                // We show markets with offers + favorites
+                // We show markets with offers + favourites
                 Predicate<ChatNotification> predicate = notification -> favouriteMarketsPredicate.test(notification) ||
                         getMarketsWithOffersPredicate(bisqEasyOfferbookChannelService).test(notification);
                 chatNotificationService.putPredicate(ChatChannelDomain.BISQ_EASY_OFFERBOOK, predicate);

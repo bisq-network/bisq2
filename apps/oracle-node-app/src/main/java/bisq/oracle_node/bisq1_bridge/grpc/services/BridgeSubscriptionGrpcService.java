@@ -19,10 +19,12 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.common.application.DevMode;
 import bisq.common.application.Service;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.timer.Delay;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -30,6 +32,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
@@ -43,10 +46,16 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     protected final AtomicLong subscribeRetryInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestInterval = new AtomicLong(1);
     protected final AtomicLong retryRequestAttempts = new AtomicLong(0);
-    private final AtomicBoolean requestInProgress = new AtomicBoolean();
-    private final AtomicBoolean requestPending = new AtomicBoolean();
+    private final AtomicReference<RequestState> requestState = new AtomicReference<>(RequestState.initial());
     private final AtomicBoolean streamRecoveryScheduled = new AtomicBoolean();
     protected volatile boolean shutdownCalled;
+    /**
+     * Set when the bridge answered the subscription with UNIMPLEMENTED. That is a deployment error which cannot
+     * resolve itself while the process runs, so recovery is not retried and the service stays without live data
+     * until the bridge is upgraded and the oracle is restarted.
+     */
+    @Getter
+    private volatile boolean bridgeVersionMismatch;
 
     public BridgeSubscriptionGrpcService(boolean staticPublicKeysProvided, GrpcClient grpcClient) {
         this.staticPublicKeysProvided = staticPublicKeysProvided;
@@ -82,16 +91,28 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
-        if (!requestInProgress.compareAndSet(false, true)) {
-            requestPending.set(true);
+        requestState.updateAndGet(RequestState::queueRequest);
+        executePendingRequest();
+    }
+
+    private void executePendingRequest() {
+        if (shutdownCalled) {
             return;
         }
+        RequestState currentState;
+        do {
+            currentState = requestState.get();
+            if (currentState.requestInProgress() || !currentState.hasPendingRequest()) {
+                return;
+            }
+        } while (!requestState.compareAndSet(currentState, currentState.startRequest()));
+
         boolean historicalRequestPrepared = false;
         boolean historicalRequestSuccessful = false;
         try {
             int startBlockHeight = prepareHistoricalRequest();
             historicalRequestPrepared = true;
-            doRequest(startBlockHeight).forEach(this::handleResponse);
+            doRequest(startBlockHeight).forEach(this::handleResponseOrSkip);
             onHistoricalRequestComplete();
             historicalRequestSuccessful = true;
 
@@ -105,9 +126,9 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                     onHistoricalRequestFinished(historicalRequestSuccessful);
                 }
             } finally {
-                requestInProgress.set(false);
-                if (requestPending.getAndSet(false) && !shutdownCalled) {
-                    requestAsync();
+                RequestState completedState = requestState.updateAndGet(RequestState::completeRequest);
+                if (completedState.hasPendingRequest() && !shutdownCalled) {
+                    CompletableFuture.runAsync(this::executePendingRequest, commonForkJoinPool());
                 }
             }
         }
@@ -126,9 +147,21 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         return getStartBlockHeight();
     }
 
-    protected abstract List<T> doRequest(int startBlockHeight);
+    protected abstract List<T> doRequest(int startBlockHeight) throws UnresolvableProtobufException;
 
     protected abstract void handleResponse(T data);
+
+    // The node skips an item which it cannot process, for example one whose data breaks a rule of the data which the
+    // oracle node publishes. The bridge sends the same item again with every retry, so a failure would stop the catch-up
+    // and keep the cursor at the height of the item (see docs/specifications/network/bisq1-bridge-block-continuity.md).
+    protected void handleResponseOrSkip(T data) {
+        try {
+            handleResponse(data);
+        } catch (RuntimeException e) {
+            log.warn("Skipping a {} from the Bisq 1 bridge which this node cannot process",
+                    data.getClass().getSimpleName(), e);
+        }
+    }
 
     protected void onHistoricalRequestComplete() {
     }
@@ -137,6 +170,12 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
     }
 
     protected abstract void subscribe();
+
+    /**
+     * Names the bridge RPC used by {@link #subscribe()}. Only used in operator-facing log messages, so it must
+     * describe what has to be upgraded on the Bisq 1 side.
+     */
+    protected abstract String getSubscriptionDescription();
 
     protected void handleRequestException(Exception exception) {
         if (shutdownCalled) {
@@ -196,6 +235,18 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
         if (shutdownCalled) {
             return;
         }
+        Status status = Status.fromThrowable(throwable);
+        if (status.getCode() == Status.Code.UNIMPLEMENTED) {
+            bridgeVersionMismatch = true;
+            log.error("Bridge version mismatch: the configured Bisq 1 bridge does not implement {}. " +
+                            "This node keeps running but will not receive any further live data from that " +
+                            "subscription, and recovery is not retried because the RPC cannot appear without a " +
+                            "bridge upgrade. Upgrade the Bisq 1 bridge and restart the oracle. Status: {}{}",
+                    getSubscriptionDescription(),
+                    status.getCode(),
+                    status.getDescription() == null ? "" : " (" + status.getDescription() + ")");
+            return;
+        }
         if (!streamRecoveryScheduled.compareAndSet(false, true)) {
             return;
         }
@@ -212,5 +263,29 @@ public abstract class BridgeSubscriptionGrpcService<T> implements Service {
                 .withExecutor(commonForkJoinPool())
                 .after(subscribeRetryInterval.get(), TimeUnit.SECONDS);
         subscribeRetryInterval.set(Math.min(10, subscribeRetryInterval.incrementAndGet()));
+    }
+
+    private record RequestState(boolean requestInProgress,
+                                long requestedGeneration,
+                                long startedGeneration) {
+        private static RequestState initial() {
+            return new RequestState(false, 0, 0);
+        }
+
+        private RequestState queueRequest() {
+            return new RequestState(requestInProgress, requestedGeneration + 1, startedGeneration);
+        }
+
+        private boolean hasPendingRequest() {
+            return requestedGeneration != startedGeneration;
+        }
+
+        private RequestState startRequest() {
+            return new RequestState(true, requestedGeneration, requestedGeneration);
+        }
+
+        private RequestState completeRequest() {
+            return new RequestState(false, requestedGeneration, startedGeneration);
+        }
     }
 }

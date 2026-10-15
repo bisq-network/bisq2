@@ -2,6 +2,7 @@ package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum TradeLifecycleState implements ProtoEnum {
     ACTIVE,     // In progress, or completed but user hasn't moved it
@@ -14,7 +15,8 @@ public enum TradeLifecycleState implements ProtoEnum {
     }
 
 
-    public static TradeLifecycleState fromProto(bisq.trade.protobuf.TradeLifecycleState proto) {
+    public static TradeLifecycleState fromProto(bisq.trade.protobuf.TradeLifecycleState proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(TradeLifecycleState.class, proto.name(), ACTIVE);
     }
 }

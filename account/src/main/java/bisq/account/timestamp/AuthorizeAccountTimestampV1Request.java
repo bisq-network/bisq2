@@ -18,6 +18,7 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -39,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 public final class AuthorizeAccountTimestampV1Request implements MailboxMessage, ExternalNetworkMessage {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeAccountTimestampV1Request.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final AuthorizeAccountTimestampV1Payload payload;
     private final byte[] signature;
@@ -70,11 +71,16 @@ public final class AuthorizeAccountTimestampV1Request implements MailboxMessage,
         return resolveValueProto(serializeForHash);
     }
 
-    public static AuthorizeAccountTimestampV1Request fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Request proto) {
-        return new AuthorizeAccountTimestampV1Request(
-                AuthorizeAccountTimestampV1Payload.fromProto(proto.getPayload()),
-                proto.getSignature().toByteArray()
-        );
+    public static AuthorizeAccountTimestampV1Request fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV1Request proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeAccountTimestampV1Request(
+                    AuthorizeAccountTimestampV1Payload.fromProto(proto.getPayload()),
+                    proto.getSignature().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -89,8 +95,8 @@ public final class AuthorizeAccountTimestampV1Request implements MailboxMessage,
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

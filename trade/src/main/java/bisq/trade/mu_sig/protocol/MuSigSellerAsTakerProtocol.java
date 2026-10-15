@@ -24,6 +24,12 @@ import bisq.trade.mu_sig.events.MuSigFsmErrorEventHandler;
 import bisq.trade.mu_sig.events.MuSigReportErrorMessageHandler;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEvent;
 import bisq.trade.mu_sig.events.blockchain.DepositTxConfirmedEventHandler;
+import bisq.trade.mu_sig.events.mediation.CustomPayoutFinalizationEvent;
+import bisq.trade.mu_sig.events.mediation.CustomPayoutFinalizationEventHandler;
+import bisq.trade.mu_sig.events.mediation.MediationResultAcceptedEvent;
+import bisq.trade.mu_sig.events.mediation.MediationResultAcceptedEventHandler;
+import bisq.trade.mu_sig.events.mediation.MediationResultRejectedEvent;
+import bisq.trade.mu_sig.events.mediation.MediationResultRejectedEventHandler;
 import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEvent;
 import bisq.trade.mu_sig.events.seller.PaymentReceiptConfirmedEventHandler;
 import bisq.trade.mu_sig.events.seller.SellersCloseTradeTimeoutEvent;
@@ -31,11 +37,15 @@ import bisq.trade.mu_sig.events.seller.SellersCloseTradeTimeoutEventHandler;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEvent;
 import bisq.trade.mu_sig.events.taker.MuSigTakeOfferEventHandler;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
+import bisq.trade.mu_sig.messages.network.MuSigCustomPayoutPsbtMessage;
+import bisq.trade.mu_sig.messages.network.MuSigMediationResultRejectionMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.SendAccountPayloadMessage;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_B;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_D;
+import bisq.trade.mu_sig.messages.network.handler.MuSigCustomPayoutPsbtMessageHandler;
+import bisq.trade.mu_sig.messages.network.handler.MuSigMediationResultRejectionMessageHandler;
 import bisq.trade.mu_sig.messages.network.handler.seller.CooperativeClosureMessage_G_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller.PaymentInitiatedMessage_E_Handler;
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.SendAccountPayloadMessage_Handler;
@@ -43,6 +53,8 @@ import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.SetupTradeMess
 import bisq.trade.mu_sig.messages.network.handler.seller_as_taker.SetupTradeMessage_D_Handler;
 import lombok.extern.slf4j.Slf4j;
 
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.CUSTOM_PAYOUT_CLOSED_TRADE;
+import static bisq.trade.mu_sig.protocol.MuSigTradeState.CUSTOM_PAYOUT_SIGNED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.FAILED_AT_PEER;
@@ -138,5 +150,47 @@ public final class MuSigSellerAsTakerProtocol extends MuSigProtocol {
                                 .run(SellersCloseTradeTimeoutEventHandler.class)
                                 .to(SELLER_FORCE_CLOSED_TRADE)
                 );
+
+        fromStates(DEPOSIT_TX_CONFIRMED, SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE)
+                .on(MediationResultAcceptedEvent.class)
+                .run(MediationResultAcceptedEventHandler.class)
+                .to(CUSTOM_PAYOUT_SIGNED);
+
+        from(CUSTOM_PAYOUT_SIGNED)
+                .on(PaymentReceiptConfirmedEvent.class)
+                .stay();
+
+        fromStates(DEPOSIT_TX_CONFIRMED, SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE, CUSTOM_PAYOUT_SIGNED)
+                .on(MuSigCustomPayoutPsbtMessage.class)
+                .run(MuSigCustomPayoutPsbtMessageHandler.class)
+                .stay();
+
+        from(SELLER_CONFIRMED_PAYMENT_RECEIPT)
+                .on(MuSigCustomPayoutPsbtMessage.class)
+                .stay();
+
+        fromStates(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
+                TAKER_RECEIVED_ACCOUNT_PAYLOAD,
+                DEPOSIT_TX_CONFIRMED,
+                SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
+                SELLER_CONFIRMED_PAYMENT_RECEIPT)
+                .on(MediationResultRejectedEvent.class)
+                .run(MediationResultRejectedEventHandler.class)
+                .stay();
+
+        fromStates(TAKER_SIGNED_AND_PUBLISHED_DEPOSIT_TX,
+                TAKER_RECEIVED_ACCOUNT_PAYLOAD,
+                DEPOSIT_TX_CONFIRMED,
+                SELLER_RECEIVED_INITIATED_PAYMENT_MESSAGE,
+                SELLER_CONFIRMED_PAYMENT_RECEIPT,
+                CUSTOM_PAYOUT_SIGNED)
+                .on(MuSigMediationResultRejectionMessage.class)
+                .run(MuSigMediationResultRejectionMessageHandler.class)
+                .stay();
+
+        from(CUSTOM_PAYOUT_SIGNED)
+                .on(CustomPayoutFinalizationEvent.class)
+                .run(CustomPayoutFinalizationEventHandler.class)
+                .to(CUSTOM_PAYOUT_CLOSED_TRADE);
     }
 }

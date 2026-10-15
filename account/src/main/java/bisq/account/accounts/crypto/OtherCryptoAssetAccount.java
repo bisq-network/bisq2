@@ -19,6 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,20 +56,25 @@ public final class OtherCryptoAssetAccount extends CryptoAssetAccount<OtherCrypt
         return bisq.account.protobuf.OtherCryptoAssetAccount.newBuilder();
     }
 
-    public static OtherCryptoAssetAccount fromProto(bisq.account.protobuf.Account proto) {
-        var cryptoAssetAccount = proto.getCryptoAssetAccount();
-        var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
-        return new OtherCryptoAssetAccount(
-                proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload()),
-                keyPair,
-                keyType,
-                accountOrigin
-        );
+    public static OtherCryptoAssetAccount fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
+        try {
+            var cryptoAssetAccount = proto.getCryptoAssetAccount();
+            var monero = cryptoAssetAccount.getOtherCryptoAssetAccount();
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
+            return new OtherCryptoAssetAccount(
+                    proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    OtherCryptoAssetAccountPayload.fromProto(proto.getAccountPayload()),
+                    keyPair,
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

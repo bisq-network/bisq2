@@ -24,36 +24,37 @@ import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
-import bisq.security.DigestUtil;
+import bisq.support.dispute.ChatMessagePruning;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 
+import static bisq.support.dispute.DisputeAgentSelection.selectDeterministicProfileId;
+import static bisq.support.mediation.bisq_easy.BisqEasyMediationContractIdentityChecks.hasMatchingContractParties;
 import static com.google.common.base.Preconditions.checkArgument;
 
 /**
@@ -66,7 +67,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final BannedUserService bannedUserService;
-    private final Set<BisqEasyMediatorsResponse> pendingBisqEasyMediatorsResponseMessages = new CopyOnWriteArraySet<>();
+    private final PendingMediatorsResponses pendingMediatorsResponses = new PendingMediatorsResponses();
     @Nullable
     private Pin channeldPin;
     @Nullable
@@ -89,10 +90,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+        networkService.subscribeToConfidentialMessages(this);
         return CompletableFuture.completedFuture(true);
     }
 
@@ -107,7 +105,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
             throttleUpdatesScheduler.stop();
             throttleUpdatesScheduler = null;
         }
-        pendingBisqEasyMediatorsResponseMessages.clear();
+        pendingMediatorsResponses.clear();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -128,22 +126,61 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     public void requestMediation(BisqEasyOpenTradeChannel channel,
                                  BisqEasyContract contract) {
-        checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
+        // The channel's mediator is a copy. The request goes to the mediator of the signed contract.
+        UserProfile mediator = contract.getMediator().orElseThrow();
+        findChannelMismatch(channel, contract).ifPresent(mismatch -> {
+            throw new IllegalArgumentException(mismatch);
+        });
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
         UserProfile peer = channel.getPeer();
-        UserProfile mediator = channel.getMediator().orElseThrow();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
-        BisqEasyMediationRequest bisqEasyMediationRequest = new BisqEasyMediationRequest(channel.getTradeId(),
-                contract,
-                myUserIdentity.getUserProfile(),
-                peer,
-                new ArrayList<>(channel.getChatMessages()),
-                mediatorNetworkId);
+        // The mediator ignores a request which carries a message of another trade, channel or sender. The channel can
+        // hold such a message, from the peer or from the mediator, so the request carries only the messages of the two
+        // traders of this trade.
+        String channelIdOfTrade = BisqEasyOpenTradeChannel.createId(channel.getTradeId());
+        List<BisqEasyOpenTradeMessage> messagesOfTrade = channel.getChatMessages().stream()
+                .filter(message -> message.getTradeId().equals(channel.getTradeId()) &&
+                        message.getChannelId().equals(channelIdOfTrade) &&
+                        (message.getSenderUserProfile().getId().equals(myUserIdentity.getId()) ||
+                                message.getSenderUserProfile().getId().equals(peer.getId())))
+                .collect(Collectors.toCollection(ArrayList::new));
+        BisqEasyMediationRequest bisqEasyMediationRequest = ChatMessagePruning.createWithMaybePrunedMessages(
+                messagesOfTrade,
+                channel.getTradeId(),
+                chatMessages -> new BisqEasyMediationRequest(channel.getTradeId(),
+                        contract,
+                        myUserIdentity.getUserProfile(),
+                        peer,
+                        chatMessages,
+                        mediatorNetworkId));
+        // From its request on, the requester's messages go to the mediator as well, whether or not a response of the
+        // mediator arrives (mediation-request-validation.md). The channel is in mediation before the request leaves,
+        // because the response can arrive before confidentialSend returns.
+        bisqEasyOpenTradeChannelService.setIsInMediation(channel, true);
         networkService.confidentialSend(bisqEasyMediationRequest,
                 mediatorNetworkId,
                 myUserIdentity.getNetworkIdWithKeyPair());
+    }
+
+    // A request is refused while the channel does not match the contract: the chat routes messages to the channel's
+    // mediator and accepts responses only from it, and the mediator ignores a request whose requester and peer are
+    // not the parties of the contract. The check has no side effect, so a client can run it before it adds the trade
+    // log message which the request carries.
+    public Optional<String> findChannelMismatch(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
+        if (!channel.getBisqEasyOffer().equals(contract.getOffer())) {
+            return Optional.of("The channel's offer does not match the contract's offer");
+        }
+        Optional<NetworkId> channelMediator = channel.getMediator().map(UserProfile::getNetworkId);
+        Optional<NetworkId> contractMediator = contract.getMediator().map(UserProfile::getNetworkId);
+        if (!channelMediator.equals(contractMediator)) {
+            return Optional.of("The channel's mediator does not match the contract's mediator");
+        }
+        if (!hasMatchingContractParties(contract, channel.getMyUserIdentity().getUserProfile(), channel.getPeer())) {
+            return Optional.of("The channel's parties do not match the contract's parties");
+        }
+        return Optional.empty();
     }
 
     public Optional<UserProfile> selectMediator(String makersUserProfileId,
@@ -163,46 +200,21 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                                                 String makersProfileId,
                                                 String takersProfileId,
                                                 String offerId) {
-        if (mediators.isEmpty()) {
-            return Optional.empty();
-        }
-
-        if (mediators.size() == 1) {
-            return userProfileService.findUserProfile(mediators.iterator().next().getProfileId());
-        }
-
-        int index = getDeterministicIndex(mediators, makersProfileId, takersProfileId, offerId);
-
-        ArrayList<AuthorizedBondedRole> list = new ArrayList<>(mediators);
-        list.sort(Comparator.comparing(AuthorizedBondedRole::getProfileId));
-        return userProfileService.findUserProfile(list.get(index).getProfileId());
-    }
-
-    private int getDeterministicIndex(Set<AuthorizedBondedRole> mediators,
-                                      String makersProfileId,
-                                      String takersProfileId,
-                                      String offerId) {
-        String input = makersProfileId + takersProfileId + offerId;
-        byte[] hash = DigestUtil.hash(input.getBytes(StandardCharsets.UTF_8)); // returns 20 bytes
-        // XOR multiple 4-byte chunks to use more of the hash
-        ByteBuffer buffer = ByteBuffer.wrap(hash);
-        int space = buffer.getInt(); // First 4 bytes
-        space ^= buffer.getInt();    // XOR with next 4 bytes
-        space ^= buffer.getInt();    // XOR with next 4 bytes
-        space ^= buffer.getInt();    // XOR with next 4 bytes
-        space ^= buffer.getInt();    // XOR with last 4 bytes (20 bytes total)
-        return Math.floorMod(space, mediators.size());
+        return selectDeterministicProfileId(mediators, makersProfileId, takersProfileId, offerId)
+                .flatMap(userProfileService::findUserProfile);
     }
 
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
 
+    // A response is applied only if its sender is the mediator of the trade channel. Responses of other mediators for
+    // the same trade are processed and dropped one by one, so they cannot keep the mediator's response out.
     private void processMediationResponse(BisqEasyMediatorsResponse bisqEasyMediatorsResponse) {
         bisqEasyOpenTradeChannelService.findChannelByTradeId(bisqEasyMediatorsResponse.getTradeId())
                 .ifPresentOrElse(channel -> {
                             if (!isMediationResponseValid(bisqEasyMediatorsResponse, channel)) {
-                                pendingBisqEasyMediatorsResponseMessages.remove(bisqEasyMediatorsResponse);
+                                pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
                                 return;
                             }
 
@@ -216,15 +228,22 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
                                 //todo (Critical) - check if we do sent from both peers
                                 // Peer who has not requested sends their messages as well, so mediator can be sure to get all messages
                             }
-                            pendingBisqEasyMediatorsResponseMessages.remove(bisqEasyMediatorsResponse);
+                            pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
                         },
                         () -> {
                             // This handles an edge case that the BisqEasyMediatorsResponse arrives before the take offer request was
                             // processed (in case we are the maker and have been offline at take offer).
+                            if (!isMediator(bisqEasyMediatorsResponse.getSenderNetworkId())) {
+                                log.warn("We drop a BisqEasyMediatorsResponse for an unknown trade channel, as its " +
+                                                "sender is not a mediator. tradeId={}",
+                                        StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId()));
+                                pendingMediatorsResponses.remove(bisqEasyMediatorsResponse);
+                                return;
+                            }
                             log.warn("We received a BisqEasyMediatorsResponse but did not find a matching bisqEasyOpenTradeChannel for trade ID {}.\n" +
-                                            "We add it to the pendingBisqEasyMediatorsResponseMessages set and reprocess it once a new trade channel has been added.",
-                                    bisqEasyMediatorsResponse.getTradeId());
-                            pendingBisqEasyMediatorsResponseMessages.add(bisqEasyMediatorsResponse);
+                                            "We add it to the pending responses and reprocess it once a new trade channel has been added.",
+                                    StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId()));
+                            pendingMediatorsResponses.add(bisqEasyMediatorsResponse);
                             if (channeldPin == null) {
                                 channeldPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
                                     @Override
@@ -253,7 +272,8 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
 
     private boolean isMediationResponseValid(BisqEasyMediatorsResponse bisqEasyMediatorsResponse,
                                              BisqEasyOpenTradeChannel channel) {
-        String tradeId = bisqEasyMediatorsResponse.getTradeId();
+        // The sender of the response chooses the trade ID, so it is sanitized for the log
+        String tradeId = StringUtils.sanitizeForLog(bisqEasyMediatorsResponse.getTradeId());
         Optional<UserProfile> expectedMediator = channel.getMediator();
         if (expectedMediator.isEmpty()) {
             log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because the channel has no selected mediator.", tradeId);
@@ -261,22 +281,7 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         }
 
         UserProfile mediator = expectedMediator.orElseThrow();
-        Optional<NetworkId> senderNetworkId = bisqEasyMediatorsResponse.getSenderNetworkId();
-        if (senderNetworkId.isEmpty()) {
-            if (bisqEasyMediatorsResponse.isSenderPublicKeyRequired()) {
-                log.warn("Ignoring BisqEasyMediatorsResponse for trade {} because senderNetworkId is missing.", tradeId);
-                return false;
-            }
-
-            if (bannedUserService.isUserProfileBanned(mediator)) {
-                log.warn("Ignoring BisqEasyMediatorsResponse for trade {} from banned mediator {}.", tradeId, mediator.getId());
-                return false;
-            }
-
-            return true;
-        }
-
-        NetworkId sender = senderNetworkId.orElseThrow();
+        NetworkId sender = bisqEasyMediatorsResponse.getSenderNetworkId();
         if (!mediator.getId().equals(sender.getId())) {
             log.warn("Ignoring BisqEasyMediatorsResponse for trade {} from unexpected mediator {}. Expected mediator {}.",
                     tradeId, sender.getId(), mediator.getId());
@@ -291,7 +296,20 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         return true;
     }
 
+    // Only a mediator sends a response, and every node knows the mediators, so a response of another sender is not kept
+    // as pending and cannot push the response of the mediator out of the pending responses
+    private boolean isMediator(NetworkId networkId) {
+        return authorizedBondedRolesService.getAuthorizedBondedRoleStream()
+                .anyMatch(role -> role.getBondedRoleType() == BondedRoleType.MEDIATOR &&
+                        role.getProfileId().equals(networkId.getId()));
+    }
+
     private void maybeProcessPendingMediatorsResponseMessages() {
-        new HashSet<>(pendingBisqEasyMediatorsResponseMessages).forEach(this::processMediationResponse);
+        pendingMediatorsResponses.getResponsesInArrivalOrder().forEach(this::processMediationResponse);
+    }
+
+    @VisibleForTesting
+    int getNumPendingMediatorsResponses() {
+        return pendingMediatorsResponses.size();
     }
 }

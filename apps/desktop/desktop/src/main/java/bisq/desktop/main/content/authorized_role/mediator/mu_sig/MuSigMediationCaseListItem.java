@@ -33,18 +33,23 @@ import bisq.presentation.formatters.AmountFormatter;
 import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
+import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -55,8 +60,7 @@ import java.util.Optional;
 public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTableItem {
     @EqualsAndHashCode.Include
     private final MuSigMediationCase muSigMediationCase;
-    @EqualsAndHashCode.Include
-    private final MuSigOpenTradeChannel channel;
+    private final ObjectProperty<Optional<MuSigOpenTradeChannel>> channel = new SimpleObjectProperty<>(Optional.empty());
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
 
@@ -67,22 +71,26 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final boolean isMakerRequester;
     private final Badge makersBadge = new Badge();
     private final Badge takersBadge = new Badge();
-    private Pin changedChatNotificationPin;
     private Long closeCaseDate = 0L;
-    private String closeCaseDateString = "";
-    private String closeCaseTimeString = "";
+    private final StringProperty closeCaseDateString = new SimpleStringProperty("");
+    private final StringProperty closeCaseTimeString = new SimpleStringProperty("");
+
+    private Pin mediatorHasLeftChatPin;
+    private Pin changedChatNotificationPin;
+    private Pin muSigMediationResultPin;
 
     MuSigMediationCaseListItem(ServiceProvider serviceProvider,
                                MuSigMediationCase muSigMediationCase,
-                               MuSigOpenTradeChannel channel) {
+                               Optional<MuSigOpenTradeChannel> channel) {
         this.muSigMediationCase = muSigMediationCase;
-        this.channel = channel;
+        this.channel.set(channel);
 
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        MuSigContract contract = muSigMediationCase.getMuSigMediationRequest().getContract();
+        MuSigMediationRequest mediationRequest = muSigMediationCase.getMuSigMediationRequest();
+        MuSigContract contract = mediationRequest.getContract();
         MuSigOffer offer = contract.getOffer();
-        List<UserProfile> traders = new ArrayList<>(channel.getTraders());
+        List<UserProfile> traders = List.of(mediationRequest.getRequester(), mediationRequest.getPeer());
 
         Trader trader1 = new Trader(traders.get(0), reputationService);
         Trader trader2 = new Trader(traders.get(1), reputationService);
@@ -93,9 +101,9 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
             maker = trader2;
             taker = trader1;
         }
-        isMakerRequester = muSigMediationCase.getMuSigMediationRequest().getRequester().equals(maker.userProfile);
+        isMakerRequester = mediationRequest.getRequester().equals(maker.userProfile);
 
-        tradeId = channel.getTradeId();
+        tradeId = mediationRequest.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
         directionalTitle = offer.getDirectionalTitle();
         date = contract.getTakeOfferDate();
@@ -115,10 +123,10 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
     @Override
     public void onActivate() {
-        Optional<Long> optionalCloseCaseDate = muSigMediationCase.getMuSigMediationResult().get().map(MuSigMediationResult::getDate);
-        closeCaseDate = optionalCloseCaseDate.orElse(0L);
-        closeCaseDateString = optionalCloseCaseDate.map(DateFormatter::formatDate).orElse("");
-        closeCaseTimeString = optionalCloseCaseDate.map(DateFormatter::formatTime).orElse("");
+        mediatorHasLeftChatPin = muSigMediationCase.mediatorHasLeftChatObservable().addObserver(hasLeftChat ->
+                UIThread.run(() -> applyChannel(hasLeftChat)));
+        muSigMediationResultPin = muSigMediationCase.muSigMediationResultObservable().addObserver(optionalResult ->
+                UIThread.run(() -> applyCloseCaseDate(optionalResult.map(MuSigMediationResult::getDate))));
 
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
@@ -126,11 +134,60 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
     @Override
     public void onDeactivate() {
+        if (mediatorHasLeftChatPin != null) {
+            mediatorHasLeftChatPin.unbind();
+            mediatorHasLeftChatPin = null;
+        }
+        if (muSigMediationResultPin != null) {
+            muSigMediationResultPin.unbind();
+            muSigMediationResultPin = null;
+        }
         changedChatNotificationPin.unbind();
     }
 
+    public Optional<MuSigOpenTradeChannel> getChannel() {
+        return channel.get();
+    }
+
+    public ReadOnlyObjectProperty<Optional<MuSigOpenTradeChannel>> channelProperty() {
+        return channel;
+    }
+
+    private void applyChannel(boolean hasLeftChat) {
+        // Leaving chat is one-way for the mediator UI. Once the case is marked as left,
+        // we detach the channel and do not restore it from later state changes here.
+        if (hasLeftChat) {
+            this.channel.set(Optional.empty());
+            makersBadge.setText("");
+            takersBadge.setText("");
+        }
+    }
+
+    public String getCloseCaseDateString() {
+        return closeCaseDateString.get();
+    }
+
+    public StringProperty getCloseCaseDateStringProperty() {
+        return closeCaseDateString;
+    }
+
+    public String getCloseCaseTimeString() {
+        return closeCaseTimeString.get();
+    }
+
+    public StringProperty getCloseCaseTimeStringProperty() {
+        return closeCaseTimeString;
+    }
+
+    private void applyCloseCaseDate(Optional<Long> optionalCloseCaseDate) {
+        closeCaseDate = optionalCloseCaseDate.orElse(0L);
+        closeCaseDateString.set(optionalCloseCaseDate.map(DateFormatter::formatDate).orElse(""));
+        closeCaseTimeString.set(optionalCloseCaseDate.map(DateFormatter::formatTime).orElse(""));
+    }
+
     private void handleNotification(ChatNotification notification) {
-        if (notification == null || !notification.getChatChannelId().equals(channel.getId())) {
+        Optional<MuSigOpenTradeChannel> currentChannel = channel.get();
+        if (notification == null || currentChannel.isEmpty() || !notification.getChatChannelId().equals(currentChannel.orElseThrow().getId())) {
             return;
         }
         UIThread.run(() -> {
@@ -146,7 +203,8 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     }
 
     private long getNumNotifications(UserProfile userProfile) {
-        return chatNotificationService.getNotConsumedNotifications(channel)
+        return channel.get().map(chatNotificationService::getNotConsumedNotifications)
+                .orElseGet(java.util.stream.Stream::empty)
                 .filter(notification -> notification.getSenderUserProfile().isPresent())
                 .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
                 .count();

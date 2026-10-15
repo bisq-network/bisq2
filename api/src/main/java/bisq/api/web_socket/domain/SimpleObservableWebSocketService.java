@@ -68,21 +68,28 @@ public abstract class SimpleObservableWebSocketService<T, R> extends BaseWebSock
 
     protected void onChange() {
         subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers ->
-                        send(subscribers, getJsonPayload(), topic, ModificationType.REPLACE));
+                .forEach((specifier, subscribers) -> {
+                    Optional<String> jsonPayload;
+                    try {
+                        jsonPayload = getJsonPayload(specifier.parameter());
+                    } catch (Exception e) {
+                        log.error("Failed to build payload for parameter group: {}", specifier.parameter(), e);
+                        return;
+                    }
+
+                    jsonPayload.ifPresent(json ->
+                            subscribers.forEach(subscriber -> {
+                                try {
+                                    send(json, subscriber, ModificationType.REPLACE);
+                                } catch (Exception e) {
+                                    log.error("Failed to send update to subscriber {} for parameter group: {}",
+                                            subscriber, specifier.parameter(), e);
+                                }
+                            }));
+                });
     }
 
     public Optional<String> getJsonPayload() {
         return toJson(toPayload(getObservable()));
-    }
-
-    protected void send(R payload,
-                        Topic topic,
-                        ModificationType modificationType) {
-        subscriberRepository.findSubscribers(topic)
-                .ifPresent(subscribers -> {
-                    toJson(payload).ifPresent(json ->
-                            send(json, subscribers, topic, modificationType));
-                });
     }
 }

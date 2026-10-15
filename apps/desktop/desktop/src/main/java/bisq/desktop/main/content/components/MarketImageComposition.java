@@ -38,7 +38,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -58,43 +57,30 @@ public class MarketImageComposition {
                     "tmt", "tnd", "top", "try", "ttd", "twd", "tzs", "uah", "ugx", "usd", "uyu", "uzs", "ves", "vnd", "vuv",
                     "wst", "xaf", "yer", "zar", "zmw", "zwl")
             .collect(Collectors.toUnmodifiableSet());
-    private static final Map<String, StackPane> MARKET_IMAGE_CACHE = new HashMap<>();
+    private static final Map<String, StackPane> MARKET_ICONS_CACHE = new HashMap<>();
+    private static final Map<String, StackPane> MARKET_MENU_ICONS_CACHE = new HashMap<>();
 
     public static StackPane getMarketIcons(Market market) {
-        return getMarketIcons(market, Optional.empty(), false);
+        return getMarketIcons(market, MARKET_ICONS_CACHE, false);
     }
 
-    public static StackPane getMarketIcons(Market market, Map<String, StackPane> dedicatedCache) {
-        return getMarketIcons(market, Optional.of(dedicatedCache), false);
+    public static StackPane getMarketIcons(Market market, Map<String, StackPane> cache) {
+        return getMarketIcons(market, cache, false);
     }
 
-    public static StackPane getMarketMenuIcons(Market market, Map<String, StackPane> dedicatedCache) {
-        return getMarketIcons(market, Optional.of(dedicatedCache), true);
+    public static StackPane getMarketMenuIcons(Market market) {
+        return getMarketIcons(market, MARKET_MENU_ICONS_CACHE, true);
     }
 
-    private static StackPane getMarketIcons(Market market, Optional<Map<String, StackPane>> dedicatedCache, boolean useMenuLogo) {
+    public static StackPane getMarketMenuIcons(Market market, Map<String, StackPane> cache) {
+        return getMarketIcons(market, cache, true);
+    }
+
+    private static StackPane getMarketIcons(Market market, Map<String, StackPane> cache, boolean useMenuLogo) {
         String baseCurrencyCode = market.getBaseCurrencyCode().toLowerCase(Locale.ROOT);
         String quoteCurrencyCode = market.getQuoteCurrencyCode().toLowerCase(Locale.ROOT);
         String key = baseCurrencyCode + "." + quoteCurrencyCode;
-
-        if (dedicatedCache.isPresent()) {
-            if (dedicatedCache.get().containsKey(key)) {
-                return dedicatedCache.get().get(key);
-            }
-        } else {
-            if (MARKET_IMAGE_CACHE.containsKey(key)) {
-                return MARKET_IMAGE_CACHE.get(key);
-            }
-        }
-
-        StackPane pane = getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, useMenuLogo);
-
-        if (dedicatedCache.isPresent()) {
-            dedicatedCache.get().put(key, pane);
-        } else {
-            MARKET_IMAGE_CACHE.put(key, pane);
-        }
-        return pane;
+        return cache.computeIfAbsent(key, k -> getMarketPairIcons(baseCurrencyCode, quoteCurrencyCode, useMenuLogo));
     }
 
     public static StackPane getMarketPairIcons(String baseCurrencyCode, String quoteCurrencyCode) {

@@ -18,12 +18,22 @@
 package bisq.network.p2p.services.data.storage.auth.authorized;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.DateUtils;
+import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.DistributedDataAny;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
+import com.google.protobuf.Any;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -44,9 +54,13 @@ import java.util.Optional;
 @Slf4j
 @Getter
 public final class AuthorizedData extends AuthenticatedData {
-    // Can be removed after I2P is activated
-    public static final Date I2P_ACTIVATION_DATE = DateUtils.getUTCDate(2025, GregorianCalendar.DECEMBER, 1);
-    public static final boolean IS_I2P_ACTIVATED = new Date().after(I2P_ACTIVATION_DATE);
+    // Oracle and seed nodes of earlier versions published data of some types with the key pair of their network
+    // identity (see AuthorizedDistributedData.isLegacyOwnerAccepted). Their data created before this date is accepted
+    // with another owner than the authorized key, only without signature V2. The date must be after all oracle and
+    // seed nodes publish with their authorized key pair. While the cutoff date of signature V1 is earlier, this date
+    // decides nothing, because nodes reject requests without signature V2 from that date on. It is kept as a backstop
+    // in case that date moves past it (rule 13 of docs/specifications/network/storage-ownership.md).
+    public static final Date LEGACY_OWNER_CUTOFF_DATE = DateUtils.getUTCDate(2027, GregorianCalendar.JANUARY, 1);
 
 
     private final Optional<byte[]> signature;
@@ -56,20 +70,30 @@ public final class AuthorizedData extends AuthenticatedData {
     // At remove, we do not need to authorizedPublicKey as the normal keypair is used to verify right to remove.
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, Optional.empty(), authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                Optional.empty(),
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
     public AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
                           Optional<byte[]> signature,
                           PublicKey authorizedPublicKey) {
-        this(authorizedDistributedData, signature, authorizedPublicKey, authorizedPublicKey.getEncoded());
+        this(authorizedDistributedData,
+                authorizedDistributedData.toAny(false),
+                signature,
+                authorizedPublicKey,
+                authorizedPublicKey.getEncoded());
     }
 
+    // distributedDataAny: see AuthenticatedData
     private AuthorizedData(AuthorizedDistributedData authorizedDistributedData,
+                           Any distributedDataAny,
                            Optional<byte[]> signature,
                            PublicKey authorizedPublicKey,
                            byte[] authorizedPublicKeyBytes) {
-        super(authorizedDistributedData);
+        super(authorizedDistributedData, distributedDataAny);
         this.signature = signature;
         this.authorizedPublicKey = authorizedPublicKey;
         this.authorizedPublicKeyBytes = authorizedPublicKeyBytes;
@@ -80,7 +104,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public void verify() {
         signature.ifPresent(NetworkDataValidation::validateECSignature);
-        NetworkDataValidation.validateECPubKey(authorizedPublicKeyBytes);
+        EcPublicKeyValidation.validate(authorizedPublicKeyBytes);
     }
 
     @Override
@@ -113,55 +137,149 @@ public final class AuthorizedData extends AuthenticatedData {
         return builder;
     }
 
-    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto) {
-        bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
-        byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
+    public static AuthorizedData fromProto(bisq.network.protobuf.AuthenticatedData proto)
+            throws UnresolvableProtobufException {
         try {
+            bisq.network.protobuf.AuthorizedData authorizedDataProto = proto.getAuthorizedData();
+            byte[] authorizedPublicKeyBytes = authorizedDataProto.getAuthorizedPublicKeyBytes().toByteArray();
             PublicKey authorizedPublicKey = KeyGeneration.generatePublic(authorizedPublicKeyBytes);
+            Any distributedDataAny = DistributedDataAny.retain(proto.getDistributedData());
             DistributedData distributedData = DistributedData.fromAny(proto.getDistributedData());
             if (distributedData instanceof AuthorizedDistributedData) {
                 Optional<byte[]> signature = authorizedDataProto.hasSignature() ?
                         Optional.of(authorizedDataProto.getSignature().toByteArray()) :
                         Optional.empty();
                 return new AuthorizedData((AuthorizedDistributedData) distributedData,
+                        distributedDataAny,
                         signature,
                         authorizedPublicKey,
                         authorizedPublicKeyBytes
                 );
             } else {
-                throw new RuntimeException("DistributedData must be type of AuthorizedDistributedData");
+                throw new UnresolvableProtobufException("DistributedData must be type of AuthorizedDistributedData");
             }
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    // Unlike serializeForHash(), which omits the signature so that republishing keeps the storage key, the default
+    // encoding contains all non-transient fields, including the signature. The SIGNATURE purpose uses the default
+    // schema: it contains the DistributedData with its exact bytes. The STORAGE_KEY, PROOF_OF_WORK and TRADE_CONTRACT
+    // schemas contain the DistributedData in its hash serialization. serializeForHash() omits the signature only where
+    // AuthorizedData is the root of the preimage (see docs/specifications/encoding):
+    // - STORAGE_KEY is the preimage of the data hash of the storage key, where AuthorizedData is always the root. It
+    //   omits the signature, as serializeForHash() does.
+    // - PROOF_OF_WORK and TRADE_CONTRACT: AuthorizedData is always nested, in a request or in a contract, whose hash
+    //   serialization contains the signature.
+    public static final CanonicalSchema<AuthorizedData> DEFAULT_SCHEMA =
+            AuthorizedData.<AuthorizedData>getAuthenticatedDataSchemaBuilder()
+                    .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                    .build();
+
+    public static final CanonicalSchema<AuthorizedData> STORAGE_KEY_SCHEMA =
+            AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                    .extend(11, authorizedData -> authorizedData, CanonicalSchema.<AuthorizedData>newBuilder()
+                            .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes))
+                    .build();
+
+    public static final CanonicalSchema<AuthorizedData> PROOF_OF_WORK_SCHEMA = createNestedSchemaForHash();
+    public static final CanonicalSchema<AuthorizedData> TRADE_CONTRACT_SCHEMA = createNestedSchemaForHash();
+
+    private static CanonicalSchema<AuthorizedData> createNestedSchemaForHash() {
+        return AuthorizedData.<AuthorizedData>getSchemaBuilderForHash()
+                .extend(11, authorizedData -> authorizedData, getAuthorizedDataSchemaBuilder())
+                .build();
+    }
+
+    private static CanonicalSchema.Builder<AuthorizedData> getAuthorizedDataSchemaBuilder() {
+        return CanonicalSchema.<AuthorizedData>newBuilder()
+                .bytes(1, authorizedData -> authorizedData.signature.orElse(null))
+                .bytes(2, authorizedData -> authorizedData.authorizedPublicKeyBytes);
+    }
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AuthorizedData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> STORAGE_KEY_SCHEMA;
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     public AuthorizedDistributedData getAuthorizedDistributedData() {
         return (AuthorizedDistributedData) distributedData;
     }
 
-    public boolean isNotAuthorized() {
+    // Rule 2 of docs/specifications/bonded-roles/authorized-data.md: if the data has the static flag, or if its type
+    // requires a static key, the authorized key must be one of the static keys of the type. Other keys can authorize
+    // data only with a bonded role, which the network storage does not know (rule 3). The check is a lookup in a set of
+    // a few keys. So the store runs it before it verifies the signature, and also when it loads a store.
+    public boolean isAuthorizedKeyAllowed() {
+        AuthorizedDistributedData data = getAuthorizedDistributedData();
+        if (data.staticPublicKeysProvided() || data.isStaticPublicKeyRequired()) {
+            return isStaticAuthorizedKey();
+        }
+        return true;
+    }
+
+    // Rule 1 of docs/specifications/bonded-roles/authorized-data.md. Only removals use AuthorizedData without a
+    // signature.
+    public boolean isAuthorizationSignatureInvalid() {
+        if (signature.isEmpty()) {
+            return true;
+        }
         try {
-            AuthorizedDistributedData authorizedDistributedData = getAuthorizedDistributedData();
-            if (!SignatureUtil.verify(distributedData.serializeForHash(), signature.orElseThrow(), authorizedPublicKey)) {
-                return true;
-            }
-
-            if (authorizedDistributedData.staticPublicKeysProvided()) {
-                return !authorizedDistributedData.getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
-            }
-
-            return false;
+            return !SignatureUtil.verify(distributedData.serializeForHash(), signature.get(), authorizedPublicKey);
         } catch (GeneralSecurityException e) {
-            e.printStackTrace();
+            log.warn("Verifying the authorization signature failed", e);
             return true;
         }
     }
 
+    // Whether the authorized key is one of the keys which are written in the code for the type of the data
+    private boolean isStaticAuthorizedKey() {
+        return getAuthorizedDistributedData().getAuthorizedPublicKeys().contains(Hex.encode(authorizedPublicKeyBytes));
+    }
+
+    // The authorized key owns authorized data which names no owner. The authorization signature does not cover the
+    // owner of the add request, so the authorized key must own the data: otherwise anyone could publish and remove a
+    // copy of it.
+    //
+    // Only AuthorizedOracleNode names an owner: the key of its network ID, which nodes of v2.1.13 and earlier require
+    // as its publisher. Its authorized key owns it as well, but only if it is a static key of the type. So a later
+    // version can publish it with the authorized key pair of a root oracle node.
+    //
+    // Another authorized key is not an owner of data which names its owner. The store checks only the signature of
+    // authorized data without the static flag, unless its type requires a static key. So for the store, any key can be
+    // the authorized key of such data. If each authorized key were an owner, any node could publish an
+    // AuthorizedOracleNode with its own key. Nodes of v2.1.13 and earlier reject such an entry each time they receive
+    // it, so updated nodes would send it to them again with every inventory response (see
+    // docs/specifications/network/storage-ownership.md).
     @Override
-    public boolean isDataInvalid(byte[] ownerPubKeyHash) {
-        return distributedData.isDataInvalid(ownerPubKeyHash);
+    public boolean isOwner(byte[] pubKeyHash) {
+        if (distributedData instanceof OwnershipVerifiableData ownershipVerifiableData) {
+            return Arrays.equals(ownershipVerifiableData.getOwnerPubKeyHash(), pubKeyHash) ||
+                    (isAuthorizedKey(pubKeyHash) && isStaticAuthorizedKey());
+        }
+        return isAuthorizedKey(pubKeyHash);
+    }
+
+    private boolean isAuthorizedKey(byte[] pubKeyHash) {
+        return Arrays.equals(DigestUtil.hash(authorizedPublicKeyBytes), pubKeyHash);
+    }
+
+    @Override
+    public boolean isOtherOwnerAccepted(long created) {
+        return getAuthorizedDistributedData().isLegacyOwnerAccepted() && created < LEGACY_OWNER_CUTOFF_DATE.getTime();
     }
 
     @Override
@@ -173,12 +291,14 @@ public final class AuthorizedData extends AuthenticatedData {
                 "\r\n} ";
     }
 
+    // Optional.equals and Optional.hashCode would compare the signature arrays by reference. A node parses each copy of
+    // a request which it receives, so equal copies hold different arrays.
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AuthorizedData that)) return false;
         if (!super.equals(o)) return false;
 
-        return Objects.equals(signature, that.signature) &&
+        return OptionalUtils.optionalByteArrayEquals(signature, that.signature) &&
                 Arrays.equals(authorizedPublicKeyBytes, that.authorizedPublicKeyBytes) &&
                 Objects.equals(authorizedPublicKey, that.authorizedPublicKey);
     }
@@ -186,7 +306,7 @@ public final class AuthorizedData extends AuthenticatedData {
     @Override
     public int hashCode() {
         int result = super.hashCode();
-        result = 31 * result + Objects.hashCode(signature);
+        result = 31 * result + signature.map(Arrays::hashCode).orElse(0);
         result = 31 * result + Arrays.hashCode(authorizedPublicKeyBytes);
         result = 31 * result + Objects.hashCode(authorizedPublicKey);
         return result;

@@ -22,6 +22,7 @@ import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.platform.Version;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -46,8 +47,7 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     private static final int VERSION = 1;
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, ReleaseNotification.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -151,19 +151,24 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto) {
-        return new ReleaseNotification(
-                proto.getVersion(),
-                proto.getId(),
-                proto.getDate(),
-                proto.getIsPreRelease(),
-                proto.getIsLauncherUpdate(),
-                proto.getReleaseNotes(),
-                proto.getVersionString(),
-                proto.getReleaseManagerProfileId(),
-                proto.getStaticPublicKeysProvided(),
-                AppType.fromProto(proto.getAppType())
-        );
+    public static ReleaseNotification fromProto(bisq.bonded_roles.protobuf.ReleaseNotification proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ReleaseNotification(
+                    proto.getVersion(),
+                    proto.getId(),
+                    proto.getDate(),
+                    proto.getIsPreRelease(),
+                    proto.getIsLauncherUpdate(),
+                    proto.getReleaseNotes(),
+                    proto.getVersionString(),
+                    proto.getReleaseManagerProfileId(),
+                    proto.getStaticPublicKeysProvided(),
+                    AppType.fromProto(proto.getAppType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -186,17 +191,12 @@ public final class ReleaseNotification implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !Version.isValid(versionString) || releaseNotes.length() > MAX_MESSAGE_LENGTH;
     }
 }

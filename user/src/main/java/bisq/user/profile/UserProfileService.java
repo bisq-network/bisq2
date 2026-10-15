@@ -23,6 +23,7 @@ import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.observable.map.ReadOnlyObservableMap;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.DbSubDirectory;
@@ -32,12 +33,12 @@ import bisq.persistence.PersistenceService;
 import bisq.security.SecurityService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import bisq.user.contact_list.ContactListService;
+import bisq.user.identity.UserIdentityService;
 import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -83,7 +84,7 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         log.info("initialize");
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService -> {
-            dataService.getAuthenticatedData().forEach(authenticatedData -> {
+            StartupReplay.forEach(dataService.getAuthenticatedData(), authenticatedData -> {
                 if (authenticatedData.getDistributedData() instanceof UserProfile userProfile) {
                     processUserProfileAddedOrRefreshed(userProfile, true);
                 }
@@ -147,9 +148,9 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
     }
 
     public boolean isChatUserIgnored(String profileId) {
-        return findUserProfile(profileId)
-                .map(this::isChatUserIgnored)
-                .orElse(false);
+        // Must not depend on the profile being present locally, otherwise an ignored user
+        // would not be detected while their profile is not (yet) received from the network.
+        return getIgnoredUserProfileIds().contains(profileId);
     }
 
     public boolean isChatUserIgnored(UserProfile userProfile) {
@@ -211,6 +212,9 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
                 !existingUserProfile.get().getApplicationVersion().equals(userProfile.getApplicationVersion())) {
             if (verifyUserProfile(userProfile)) {
                 synchronized (persistableStore) {
+                    // A newer version of the profile can have another nickname and another nym
+                    findUserProfile(userProfileId).ifPresent(previousUserProfile ->
+                            removeNymFromNickNameHashMap(previousUserProfile.getNym(), previousUserProfile.getNickName()));
                     addNymToNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
                     userProfileById.put(userProfileId, userProfile);
                 }
@@ -220,7 +224,7 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
                     persist();
                 }
             } else {
-                log.warn("Invalid user profile {}", userProfile);
+                log.warn("Invalid user profile {}", userProfileId);
             }
         } else {
             if (userProfile.getPublishDate() > existingUserProfile.get().getPublishDate()) {
@@ -237,6 +241,13 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
 
     private void processUserProfileRemoved(UserProfile userProfile) {
         synchronized (persistableStore) {
+            // One profile ID has several versions, which are separate storage entries: an edit publishes a new version
+            // and removes the old one. The removal of an older version can arrive after the new version, or the old
+            // entry can expire later. It must not remove the version which we hold.
+            Optional<UserProfile> heldUserProfile = findUserProfile(userProfile.getId());
+            if (heldUserProfile.isEmpty() || !heldUserProfile.get().equals(userProfile)) {
+                return;
+            }
             removeNymFromNickNameHashMap(userProfile.getNym(), userProfile.getNickName());
             userProfileById.remove(userProfile.getId());
         }
@@ -244,14 +255,21 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         persist();
     }
 
+    // UserProfile.verify() already requires that the payload of the proof of work is the hash of the profile key
     private boolean verifyUserProfile(UserProfile userProfile) {
-        if (!Arrays.equals(userProfile.getProofOfWork().getPayload(), userProfile.getPubKeyHash())) {
-            log.warn("Payload of proof of work not matching pubKeyHash of user profile {}", userProfile);
+        // The verifier checks the work against the difficulty which the profile claims. The nym and the cat hash icon
+        // are derived from the solution, so the claimed difficulty must not be below the difficulty at minting.
+        // Otherwise searching for a nym and icon which look like those of another user costs almost nothing.
+        // The negated comparison also rejects NaN.
+        double difficulty = userProfile.getProofOfWork().getDifficulty();
+        if (!(difficulty >= UserIdentityService.MINT_NYM_DIFFICULTY)) {
+            log.warn("Proof of work difficulty {} of user profile {} is below the required minimum {}",
+                    difficulty, userProfile.getId(), UserIdentityService.MINT_NYM_DIFFICULTY);
             return false;
         }
 
         if (!hashCashProofOfWorkService.verify(userProfile.getProofOfWork())) {
-            log.warn("Proof of work verification of user profile {} failed", userProfile);
+            log.warn("Proof of work verification of user profile {} failed", userProfile.getId());
             return false;
         }
 
@@ -271,12 +289,11 @@ public class UserProfileService extends RateLimitedPersistenceClient<UserProfile
         nyms.add(nym);
     }
 
+    // A nickname stays in the map while a stored profile has it
     private void removeNymFromNickNameHashMap(String nym, String nickName) {
-        Map<String, Set<String>> nymsByNickName = getNymsByNickName();
-        if (!nymsByNickName.containsKey(nickName)) {
-            return;
-        }
-        Set<String> nyms = nymsByNickName.get(nickName);
-        nyms.remove(nym);
+        getNymsByNickName().computeIfPresent(nickName, (key, nyms) -> {
+            nyms.remove(nym);
+            return nyms.isEmpty() ? null : nyms;
+        });
     }
 }

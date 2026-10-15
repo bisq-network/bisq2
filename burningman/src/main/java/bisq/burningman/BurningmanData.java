@@ -18,6 +18,7 @@
 package bisq.burningman;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.Getter;
 import lombok.ToString;
@@ -62,7 +63,12 @@ public final class BurningmanData implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BurningmanData fromProto(bisq.burningman.protobuf.BurningmanData proto) {
-        return new BurningmanData(proto.getReceiverAddress(), proto.getCappedBurnAmountShare());
+    public static BurningmanData fromProto(bisq.burningman.protobuf.BurningmanData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BurningmanData(proto.getReceiverAddress(), proto.getCappedBurnAmountShare());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

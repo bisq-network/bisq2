@@ -17,7 +17,8 @@
 
 package bisq.desktop.main.content.bisq_easy.history;
 
-import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.ChatService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.desktop.ServiceProvider;
@@ -25,18 +26,21 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.bisq_easy.open_trades.trade_details.TradeDetailsController;
-import bisq.desktop.main.content.bisq_easy.open_trades.trade_state.OpenTradesUtils;
+import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.settings.DontShowAgainService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
+import bisq.user.profile.UserProfile;
 import bisq.user.reputation.ReputationService;
 import lombok.Getter;
 
+import java.util.HashSet;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 
 public class BisqEasyHistoryController implements Controller {
@@ -45,18 +49,19 @@ public class BisqEasyHistoryController implements Controller {
     private final BisqEasyHistoryModel model;
     private final BisqEasyTradeService bisqEasyTradeService;
     private final ReputationService reputationService;
-    private final MarketPriceService marketPriceService;
     private final DontShowAgainService dontShowAgainService;
+    private final ChatService chatService;
     private Pin closedTradesPin;
     private String searchText = "";
+    private final Set<String> knownTradeIds = new HashSet<>();
 
     public BisqEasyHistoryController(ServiceProvider serviceProvider) {
         model = new BisqEasyHistoryModel();
         view = new BisqEasyHistoryView(model, this);
         bisqEasyTradeService = serviceProvider.getTradeService().getBisqEasyTradeService();
         reputationService = serviceProvider.getUserService().getReputationService();
-        marketPriceService = serviceProvider.getBisqEasyService().getMarketPriceService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
+        chatService = serviceProvider.getChatService();
     }
 
     @Override
@@ -64,9 +69,9 @@ public class BisqEasyHistoryController implements Controller {
         closedTradesPin = bisqEasyTradeService.getClosedTrades().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(BisqEasyClosedTrade closedTrade) {
-                if (findListItem(closedTrade.trade().getId()).isEmpty()) {
+                if (knownTradeIds.add(closedTrade.trade().getId())) {
                     model.getBisqEasyTradeHistoryListItems().add(
-                            new BisqEasyTradeHistoryListItem(closedTrade, reputationService, marketPriceService));
+                            new BisqEasyTradeHistoryListItem(closedTrade, reputationService));
                     updatePlaceholderText();
                 }
             }
@@ -74,9 +79,8 @@ public class BisqEasyHistoryController implements Controller {
             @Override
             public void onRemoved(Object element) {
                 if (element instanceof BisqEasyClosedTrade closedTrade) {
-                    model.getBisqEasyTradeHistoryListItems().stream()
-                            .filter(item -> item.getTrade().equals(closedTrade.trade()))
-                            .findFirst()
+                    knownTradeIds.remove(closedTrade.trade().getId());
+                    findListItem(closedTrade.trade().getId())
                             .ifPresent(item -> model.getBisqEasyTradeHistoryListItems().remove(item));
                     updatePlaceholderText();
                 }
@@ -85,6 +89,7 @@ public class BisqEasyHistoryController implements Controller {
             @Override
             public void onCleared() {
                 model.getBisqEasyTradeHistoryListItems().clear();
+                knownTradeIds.clear();
                 updatePlaceholderText();
             }
         });
@@ -109,8 +114,13 @@ public class BisqEasyHistoryController implements Controller {
                         item.getTrade().getContract().getMediator()));
     }
 
+    void onContactPeer(UserProfile peer) {
+        chatService.createAndSelectTwoPartyPrivateChatChannel(ChatChannelDomain.DISCUSSION, peer)
+                .ifPresent(channel -> Navigation.navigateTo(NavigationTarget.CHAT_PRIVATE));
+    }
+
     void onExportTradeData(BisqEasyTrade trade) {
-        OpenTradesUtils.exportTrade(trade, getView().getRoot().getScene());
+        TradesUtils.exportTrade(trade, getView().getRoot().getScene());
     }
 
     void onDeleteTrade(BisqEasyTrade trade) {
@@ -146,8 +156,8 @@ public class BisqEasyHistoryController implements Controller {
                 || item.getMarket().getBaseCurrencyCode().toLowerCase().contains(searchText)
                 || item.getMarket().getQuoteCurrencyCode().toLowerCase().contains(searchText)
                 || item.getBaseAmountString().toLowerCase().contains(searchText)
-                || item.getQuoteAmountString().toLowerCase().contains(searchText)
-                || item.getPriceString().toLowerCase().contains(searchText)
+                || item.getQuoteAmountWithCodeString().toLowerCase().contains(searchText)
+                || item.getPriceWithCodeString().toLowerCase().contains(searchText)
                 || item.getPaymentMethodAsString().toLowerCase().contains(searchText)
                 || item.getMyRole().toLowerCase().contains(searchText);
     }

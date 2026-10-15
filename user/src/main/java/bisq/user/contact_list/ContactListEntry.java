@@ -18,6 +18,7 @@
 package bisq.user.contact_list;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,10 @@ import lombok.ToString;
 
 import java.util.Optional;
 
-@EqualsAndHashCode
+// Identity is the contact's profile id, matching how the store dedupes and every lookup filters.
+// Including the mutable annotations would change an entry's hash in place inside the hash-backed
+// ObservableSet, leaving it unremovable until the set is rebuilt.
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString
 @Getter
 public final class ContactListEntry implements PersistableProto {
@@ -82,14 +86,19 @@ public final class ContactListEntry implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto) {
-        return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
-                UserProfile.fromProto(proto.getMyUserProfile()),
-                proto.getDate(),
-                ContactReason.fromProto(proto.getContactReason()),
-                OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),
-                OptionalUtils.optionalIf(proto.hasTag(), proto::getTag),
-                OptionalUtils.optionalIf(proto.hasNotes(), proto::getNotes));
+    public static ContactListEntry fromProto(bisq.user.protobuf.ContactListEntry proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ContactListEntry(UserProfile.fromProto(proto.getUserProfile()),
+                    UserProfile.fromProto(proto.getMyUserProfile()),
+                    proto.getDate(),
+                    ContactReason.fromProto(proto.getContactReason()),
+                    OptionalUtils.optionalIf(proto.hasTrustScore(), proto::getTrustScore),
+                    OptionalUtils.optionalIf(proto.hasTag(), proto::getTag),
+                    OptionalUtils.optionalIf(proto.hasNotes(), proto::getNotes));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     void setTrustScore(Double newTrustScore) {
@@ -102,5 +111,10 @@ public final class ContactListEntry implements PersistableProto {
 
     void setNotes(String newNotes) {
         notes = Optional.ofNullable(newNotes);
+    }
+
+    @EqualsAndHashCode.Include
+    private String userProfileId() {
+        return userProfile.getId();
     }
 }

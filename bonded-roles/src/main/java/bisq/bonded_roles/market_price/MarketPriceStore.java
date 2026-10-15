@@ -22,8 +22,11 @@ import bisq.common.market.MarketRepository;
 import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -59,12 +62,30 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto) {
-        Map<Market, MarketPrice> map = proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
-                .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
-                .collect(Collectors.toMap(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
-                        e -> MarketPrice.fromProto(e.getValue())));
-        return new MarketPriceStore(map, Market.fromProto(proto.getSelectedMarket()));
+    public static MarketPriceStore fromProto(bisq.bonded_roles.protobuf.MarketPriceStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<String, bisq.bonded_roles.protobuf.MarketPrice> protosOfKnownMarkets =
+                    proto.getMarketPriceByCurrencyMapMap().entrySet().stream()
+                            .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).isPresent())
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            Map<Market, MarketPrice> map = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(protosOfKnownMarkets,
+                            MarketPrice::fromProto)
+                    // An earlier version could persist a price which is not positive. We skip only that price.
+                    .filter(e -> {
+                        boolean hasPositivePrice = e.getValue().hasPositivePrice();
+                        if (!hasPositivePrice) {
+                            log.warn("We skip a persisted market price which is not positive. market={}", e.getKey());
+                        }
+                        return hasPositivePrice;
+                    })
+                    .collect(Collectors.toMap(
+                            e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey()).orElseThrow(),
+                            Map.Entry::getValue));
+            return new MarketPriceStore(map, Market.fromProto(proto.getSelectedMarket()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -76,6 +97,14 @@ final class MarketPriceStore implements PersistableStore<MarketPriceStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The market prices come from the network, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

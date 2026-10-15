@@ -17,42 +17,44 @@
 
 package bisq.desktop.main.content.reputation.build_reputation.signedAccount.tab2;
 
-import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.ServiceProvider;
-import bisq.desktop.common.Browser;
-import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
-import lombok.Getter;
+import bisq.desktop.main.content.reputation.build_reputation.Tab2Controller;
+import bisq.desktop.navigation.NavigationTarget;
+import bisq.i18n.Res;
+import bisq.user.reputation.SignedWitnessService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SignedWitnessTab2Controller implements Controller {
-    @Getter
-    private final SignedWitnessTab2View view;
-
+public class SignedWitnessTab2Controller extends Tab2Controller<SignedWitnessTab2Model, SignedWitnessTab2View, SignedWitnessScoreSimulation> {
     public SignedWitnessTab2Controller(ServiceProvider serviceProvider) {
-        SignedWitnessTab2Model model = new SignedWitnessTab2Model();
-        SignedWitnessScoreSimulation simulation = new SignedWitnessScoreSimulation();
-        view = new SignedWitnessTab2View(model, this, simulation.getViewRoot());
+        super(serviceProvider);
     }
 
     @Override
-    public void onActivate() {
+    protected SignedWitnessTab2Model createModel() {
+        return new SignedWitnessTab2Model(Res.get("reputation.signedWitness.score.info"),
+                String.valueOf(SignedWitnessService.WEIGHT),
+                Res.get("reputation.signedWitness.formula"));
     }
 
     @Override
-    public void onDeactivate() {
+    protected SignedWitnessScoreSimulation createSimulation() {
+        return new SignedWitnessScoreSimulation();
     }
 
-    void onBack() {
+    @Override
+    protected SignedWitnessTab2View createView(SignedWitnessTab2Model model, SignedWitnessScoreSimulation simulation) {
+        return new SignedWitnessTab2View(model, this, simulation.getViewRoot());
+    }
+
+    @Override
+    public void onBack() {
         Navigation.navigateTo(NavigationTarget.SIGNED_WITNESS_TAB_1);
     }
 
-    void onNext() {
+    @Override
+    public void onNext() {
         Navigation.navigateTo(NavigationTarget.SIGNED_WITNESS_TAB_3);
-    }
-
-    void onLearnMore() {
-        Browser.open("https://bisq.wiki/Reputation");
     }
 }

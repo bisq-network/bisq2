@@ -156,7 +156,7 @@ public class MuSigTradeCompletedTable extends VBox {
         headerGridPane.add(tradeWith, col, rowTitle);
         headerGridPane.add(tradeWithValue, col, rowValue);
 
-        nonBtcCode.setText("  " + market.getNonBtcCurrencyCode().toUpperCase());
+        nonBtcCode.setText("  " + market.getRelevantCurrencyCode().toUpperCase());
         bitcoinAmountDisplay.setBtcAmount(btcAmount);
         nonBtcAmountValue.setText(nonBtcAmount);
 

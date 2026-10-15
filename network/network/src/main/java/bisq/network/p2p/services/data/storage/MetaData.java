@@ -17,9 +17,12 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
-import bisq.common.util.MathUtils;
-import bisq.common.validation.NetworkDataValidation;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,13 +32,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 /**
- * Meta data for storage properties per DistributedData
+ * Storage properties of a storable type. Each type declares one MetaData, and the storage layer takes it only from the
+ * StorableTypesRegistry by class name. See docs/specifications/network/storage-metadata.md.
  */
 @Slf4j
 @EqualsAndHashCode
 @ToString
 @Getter
-public final class MetaData implements NetworkProto {
+public final class MetaData implements NetworkProto, Canonical {
     public static final long TTL_2_DAYS = TimeUnit.DAYS.toMillis(2);
     public static final long TTL_5_DAYS = TimeUnit.DAYS.toMillis(5);
     public static final long TTL_10_DAYS = TimeUnit.DAYS.toMillis(10);
@@ -55,16 +59,18 @@ public final class MetaData implements NetworkProto {
     public static final int HIGH_PRIORITY = 1;
     public static final int HIGHEST_PRIORITY = 2;
 
+    private static final int MAX_CLASS_NAME_LENGTH = 50;
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
 
     // How long data are kept in the storage map
     private final long ttl;
     // Used for inventory request priority of delivery if inventory size exceeds limit
     private final int priority;
+    // Not used by this version. Nodes of earlier versions use it as an input of the cost factor of messages (see
+    // MessageCostPolicy). Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
+    private final int maxMapSize;
     // Used for name of storage file, for lookup of the store for a given distributedData object and for logging
     private final String className;
-    // Max file size of the storage file
-    private final int maxMapSize;
 
     public MetaData(String className) {
         this(TTL_10_DAYS, className);
@@ -93,9 +99,38 @@ public final class MetaData implements NetworkProto {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateText(className, 50);
-        if (!CLASS_NAME_PATTERN.matcher(className).matches()) {
-            throw new IllegalArgumentException("Invalid className");
+        validateClassName(className);
+    }
+
+    // Remove requests, refresh requests and mailbox data carry the class name also as a field of their own, which the
+    // sender sets. They apply the same rule at parsing (see docs/specifications/network/storage-metadata.md). The
+    // message of the exception does not contain the received value.
+    public static void validateClassName(String className) {
+        if (className.length() > MAX_CLASS_NAME_LENGTH || !CLASS_NAME_PATTERN.matcher(className).matches()) {
+            throw new IllegalArgumentException("Invalid className. length=" + className.length());
+        }
+    }
+
+    // Remove requests, refresh requests and mailbox data carry the deprecated metaData and a version. Since v2.1.0 they
+    // have version 1. Version 0 is the format of releases before the version field existed (see rule 6 of
+    // docs/specifications/network/storage-request-signatures.md).
+    public static void validateVersionOfMetaDataHolder(int version) {
+        if (version < 1) {
+            throw new IllegalArgumentException("The version of data with the deprecated metaData must be at least 1");
+        }
+    }
+
+    // MailboxData, RemoveMailboxRequest and RemoveAuthenticatedDataRequest: nodes up to version 2.1.13 leave metaData
+    // out of serializeForHash() only in versions 1 to 3, and this node in every version. In another version the two
+    // kinds of nodes would compute a different proof of work payload, storage key and preimage of signature V1 for the
+    // same message, and each would close the connection to a relay of the other. Any key pair can create such a
+    // message, also with signature V2, so the rule does not depend on the signatures. From the cutoff date of signature
+    // V1 on, nodes up to 2.1.13 cannot publish data anymore, signature V2 covers the version, and a later release can
+    // raise the version of these classes (see docs/specifications/network/storage-metadata.md).
+    public static void validateVersionForHashOfEarlierVersions(int version) {
+        if (version > 3 && !SignedRequest.isSignatureV2Required(System.currentTimeMillis())) {
+            throw new IllegalArgumentException("Before the cutoff date of signature V1, the version of data with " +
+                    "the deprecated metaData must be at most 3");
         }
     }
 
@@ -113,14 +148,35 @@ public final class MetaData implements NetworkProto {
                 .setMaxMapSize(maxMapSize);
     }
 
-    public static MetaData fromProto(bisq.network.protobuf.MetaData proto) {
-        return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+    public static MetaData fromProto(bisq.network.protobuf.MetaData proto) throws UnresolvableProtobufException {
+        try {
+            return new MetaData(proto.getTtl(), proto.getPriority(), proto.getClassName(), proto.getMaxMapSize());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
-    public double getCostFactor() {
-        double ttlImpact = MathUtils.bounded(0, 1, ttl / (double) TTL_100_DAYS);
-        double mapSizeImpact = MathUtils.bounded(0, 1, maxMapSize / (double) MAX_MAP_SIZE_10_000);
-        double impact = ttlImpact + mapSizeImpact;
-        return MathUtils.bounded(0, 1, impact);
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<MetaData> DEFAULT_SCHEMA = CanonicalSchema.<MetaData>newBuilder()
+            .sint64(1, MetaData::getTtl)
+            .sint32(2, MetaData::getPriority)
+            .sint32(3, MetaData::getMaxMapSize)
+            .string(4, MetaData::getClassName)
+            .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MetaData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 }

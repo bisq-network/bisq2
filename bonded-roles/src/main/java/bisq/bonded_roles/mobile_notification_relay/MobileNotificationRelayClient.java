@@ -20,12 +20,14 @@ package bisq.bonded_roles.mobile_notification_relay;
 import bisq.common.data.Pair;
 import bisq.common.json.JsonMapperProvider;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.util.ExceptionUtil;
 import bisq.network.NetworkService;
-import bisq.network.http.BaseHttpClient;
+import bisq.network.http.HttpRequest;
 import bisq.network.http.HttpRequestService;
 import bisq.network.http.HttpRequestServiceConfig;
 import bisq.network.http.HttpRequestUrlProvider;
-import lombok.Getter;
+import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpLogSanitizer;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -35,7 +37,7 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 
 @Slf4j
-public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, String> {
+public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, MobileNotificationRelayResult> {
 
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
@@ -51,65 +53,114 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     }
 
     @Override
-    protected String parseResult(String json) {
-        return json;
-    }
-
-    @Override
-    protected String getParam(HttpRequestUrlProvider provider, RequestData requestData) {
-        String params = provider.getApiPath() + "?" +
-                "isAndroid=" + requestData.isAndroid() +
-                "&token=" + requestData.getDeviceToken() +
-                "&msg=" + requestData.getEncryptedMessage();
-        if (requestData.isMutableContent()) {
-            params += "&mutableContent=true";
-        }
-        return params;
+    protected MobileNotificationRelayResult parseResult(String json) {
+        // Only 2xx bodies reach this method; non-2xx surfaces as HttpException and is
+        // translated in sendToRelayServer. Current relays answer 2xx with a structured
+        // accepted result; older relays answer with a plain ack, mapped to accepted.
+        // Logged at DEBUG: response bodies may include diagnostic data referencing
+        // tokens or operator details — keep INFO output free of them.
+        log.debug("Relay v1 response: {}", HttpLogSanitizer.loggableBody(json));
+        return MobileNotificationRelayResult.fromJson(json)
+                .map(MobileNotificationRelayClient::withoutPruneVerdictOnSuccess)
+                .orElseGet(MobileNotificationRelayResult::accepted);
     }
 
     /**
-     * Sends a push notification via the relay's v1 POST endpoint.
-     * Uses POST /v1/apns/device/{token} or /v1/fcm/device/{token} with a JSON body
-     * containing the Base64-encoded encrypted payload. This avoids the hex encoding
-     * round-trip of the legacy GET /relay endpoint which corrupts binary ciphertext.
+     * The gateway's "unregistered" verdict is final and removes the registration, so it is only
+     * trusted together with the 400 the relay sends it with. On a 2xx the body contradicts the
+     * status, and a relay that answers success with a prune verdict must not be able to remove
+     * a live registration on the strength of a token alone.
      */
-    public CompletableFuture<Boolean> sendToRelayServer(boolean isAndroid,
-                                                        String deviceToken,
-                                                        String encryptedBase64,
-                                                        boolean mutableContent) {
-        if (noProviderAvailable) {
-            return CompletableFuture.failedFuture(new RuntimeException("No relay provider available"));
+    static MobileNotificationRelayResult withoutPruneVerdictOnSuccess(MobileNotificationRelayResult result) {
+        if (!result.isUnregistered()) {
+            return result;
         }
+        log.warn("Relay answered 2xx with an unregistered verdict; ignoring the verdict and keeping the registration");
+        return new MobileNotificationRelayResult(result.wasAccepted(), result.errorCode(), result.errorMessage(), false);
+    }
 
-        HttpRequestUrlProvider provider = selectedProvider.get();
-        if (provider == null) {
-            return CompletableFuture.failedFuture(new RuntimeException("No relay provider selected"));
-        }
+    @Override
+    protected HttpRequest buildRequest(HttpRequestUrlProvider provider, RequestData requestData) {
+        // POST /v1/{platform}/device/{token} with JSON body containing the
+        // Base64-encoded encrypted payload. Avoids the hex-encoding round-trip
+        // of the legacy GET /relay endpoint which corrupts binary ciphertext.
+        String platformPath = requestData.isAndroid() ? "/v1/fcm/device/" : "/v1/apns/device/";
+        String path = platformPath + requestData.deviceToken();
+        // Device tokens are an installation identifier — redact from logs.
+        String logPath = platformPath + "<redacted>";
+        String body = buildJsonBody(requestData.encryptedMessage(), true, requestData.mutableContent());
+        // Push delivery is best-effort and 5xx from FCM/APNS is typically
+        // transient. We accept at-least-once semantics: a rare duplicate
+        // banner is preferable to a silent drop. Note: neither FCM
+        // collapse_key nor APNS apns-collapse-id / apns-id dedupes
+        // already-delivered notifications — they only collapse while the
+        // device is offline.
+        return HttpRequest.post(path,
+                logPath,
+                body,
+                new Pair<>("Content-Type", "application/json"),
+                true);
+    }
 
-        String platformPath = isAndroid ? "/v1/fcm/device/" : "/v1/apns/device/";
-        String baseUrl = provider.getBaseUrl().replaceAll("/+$", "");
-        String fullUrl = baseUrl + platformPath + deviceToken;
-        String jsonBody = buildJsonBody(encryptedBase64, true, mutableContent);
+    /**
+     * The relay answers every gateway rejection with 400 plus a structured body — transient
+     * upstream failures (FCM {@code UNAVAILABLE}, APNs {@code ServiceUnavailable}, ...)
+     * included. Reclassify those as recoverable so provider failover still gets a chance;
+     * permanent verdicts (unregistered token, invalid payload) and unstructured 400s keep
+     * failing fast.
+     */
+    @Override
+    protected boolean isRecoverableClientError(HttpException httpException) {
+        return httpException.getResponseCode() == 400
+                && MobileNotificationRelayResult.fromJson(httpException.getBody())
+                .map(MobileNotificationRelayResult::isRecoverable)
+                .orElse(false);
+    }
 
-        return CompletableFuture.supplyAsync(() -> {
-            BaseHttpClient client = networkService.getHttpClient(
-                    fullUrl, userAgent, provider.getTransportType());
-            try {
-                log.info("Sending push notification via POST to {}", provider.getBaseUrl() + platformPath + "...");
-                String response = client.post(jsonBody,
-                        Optional.of(new Pair<>("Content-Type", "application/json")));
-                log.info("Relay v1 response: {}", response);
-                return true;
-            } catch (Exception e) {
-                throw new CompletionException(e);
-            } finally {
-                try {
-                    client.shutdown();
-                } catch (Exception e) {
-                    log.warn("Failed to shut down HTTP client", e);
-                }
+    /**
+     * Sends a push notification via the relay's v1 POST endpoint, using the
+     * full {@link HttpRequestService} pipeline (provider failover, retry,
+     * timeout, lifecycle). Completes normally with a rejected result when the
+     * relay answered 400 with its structured body carrying a permanent verdict
+     * (e.g. an unregistered token); completes exceptionally for transient
+     * failures (5xx, timeout, transport, recoverable gateway rejections that
+     * exhausted all providers) and for rejections without a structured body.
+     */
+    public CompletableFuture<MobileNotificationRelayResult> sendToRelayServer(boolean isAndroid,
+                                                                              String deviceToken,
+                                                                              String encryptedBase64,
+                                                                              boolean mutableContent) {
+        return withRejectionTranslation(request(new RequestData(isAndroid, deviceToken, encryptedBase64, mutableContent)));
+    }
+
+    static CompletableFuture<MobileNotificationRelayResult> withRejectionTranslation(
+            CompletableFuture<MobileNotificationRelayResult> request) {
+        return request.handle((result, throwable) -> {
+            if (throwable == null) {
+                return result;
             }
-        }, executorService);
+            return structuredRejection(throwable)
+                    .orElseThrow(() -> throwable instanceof CompletionException completionException
+                            ? completionException
+                            : new CompletionException(throwable));
+        });
+    }
+
+    /**
+     * Recovers the relay's structured verdict from a 400 response. Only 400 carries one —
+     * the relay answers gateway rejections with 400 plus the serialized result, while its
+     * 5xx responses have an empty body — so any other failure is transient by contract.
+     * Only a permanent rejection is a verdict: an accepted body contradicting the 400 status
+     * (buggy or hostile relay) must not turn an error into a delivery, and a recoverable
+     * rejection stays exceptional so a transient failure is never mistaken for a final
+     * answer — regardless of how the retry pipeline wrapped it.
+     */
+    static Optional<MobileNotificationRelayResult> structuredRejection(Throwable throwable) {
+        return ExceptionUtil.getRootCause(throwable) instanceof HttpException httpException
+                && httpException.getResponseCode() == 400
+                ? MobileNotificationRelayResult.fromJson(httpException.getBody())
+                        .filter(result -> !result.wasAccepted() && !result.isRecoverable())
+                : Optional.empty();
     }
 
     static String buildJsonBody(String encryptedBase64, boolean isUrgent, boolean isMutableContent) {
@@ -123,19 +174,9 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
         }
     }
 
-    @Getter
-    public static class RequestData {
-        private final boolean isAndroid;
-        private final String deviceToken;
-        private final String encryptedMessage;
-        private final boolean mutableContent;
-
-        public RequestData(boolean isAndroid, String deviceToken, String encryptedMessage, boolean mutableContent) {
-            this.isAndroid = isAndroid;
-            this.deviceToken = deviceToken;
-            this.encryptedMessage = encryptedMessage;
-            this.mutableContent = mutableContent;
-        }
+    public record RequestData(boolean isAndroid,
+                              String deviceToken,
+                              String encryptedMessage,
+                              boolean mutableContent) {
     }
-
 }

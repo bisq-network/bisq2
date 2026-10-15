@@ -27,11 +27,14 @@ import bisq.desktop.main.content.chat.ChatUtil;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
 import bisq.i18n.Res;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.Tooltip;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
@@ -100,9 +103,9 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         inputField.textProperty().bindBidirectional(model.getTextInput());
 
-        caretPositionPin = EasyBind.subscribe(model.getCaretPosition(), position -> {
-            if (position != null) {
-                inputField.positionCaret(position.intValue());
+        caretPositionPin = EasyBind.subscribe(model.getCaretPositionRequest(), request -> {
+            if (request != null) {
+                inputField.positionCaret(request.position());
             }
         });
 
@@ -116,10 +119,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
 
         inputField.addEventFilter(KEY_PRESSED, keyPressedHandler);
 
-        sendButton.setOnAction(event -> {
-            controller.onSendMessage(inputField.getText().trim());
-            inputField.clear();
-        });
+        sendButton.setOnAction(event -> sendCurrentInput());
 
         userMentionPopup.getObservableList().setAll(model.getMentionableUsers().stream()
                 .map(ChatMentionPopupMenu.ListItem::new)
@@ -204,6 +204,14 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         return sendMessageBox;
     }
 
+    TextInputControl messageInput() {
+        return inputField;
+    }
+
+    Node sendMessageAction() {
+        return sendButton;
+    }
+
     private void setUpInputFieldAtMentions() {
         userMentionPopup = new ChatMentionPopupMenu(inputField, controller::onUserProfileSelected);
     }
@@ -236,6 +244,11 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
         userProfileSelectionRoot.disableProperty().unbind();
     }
 
+    @VisibleForTesting
+    ChatMentionPopupMenu userMentionPopup() {
+        return userMentionPopup;
+    }
+
     private void processKeyPressed(KeyEvent keyEvent) {
         if (keyEvent.getCode() == KeyCode.ENTER) {
             keyEvent.consume();
@@ -244,8 +257,7 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 inputField.insertText(caretPosition, System.lineSeparator());
                 inputField.positionCaret(caretPosition + System.lineSeparator().length());
             } else if (!inputField.getText().isEmpty()) {
-                controller.onSendMessage(inputField.getText().trim());
-                inputField.clear();
+                sendCurrentInput();
             }
         } else if (keyEvent.getCode() == KeyCode.UP) {
             if (inputField.getText().isEmpty() || inputField.getCaretPosition() == 0) {
@@ -270,5 +282,14 @@ public class ChatMessageContainerView extends bisq.desktop.common.view.View<VBox
                 keyEvent.consume();
             }
         }
+    }
+
+    private void sendCurrentInput() {
+        String text = inputField.getText() != null ? inputField.getText().trim() : "";
+        if (text.isEmpty()) {
+            return;
+        }
+        controller.onSendMessage(text);
+        inputField.clear();
     }
 }

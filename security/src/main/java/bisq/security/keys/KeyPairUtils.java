@@ -54,6 +54,9 @@ public class KeyPairUtils {
         throw new IllegalArgumentException("Invalid secp256k1 scalar length");
     }
 
+    /**
+     * The public key of the returned key pair is in canonical encoding (see {@link EcPublicKeyValidation}).
+     */
     public static KeyPair fromPrivateKey(String privateKeyHex) {
         try {
             byte[] privBytes = Hex.decode(privateKeyHex);

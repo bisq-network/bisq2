@@ -79,13 +79,13 @@ public class CameraDeviceLookupLinux implements CameraDeviceLookup {
 
     public CompletableFuture<FrameGrabber> find(int deviceNumber) {
         log.info("Try to find camera with device number {}", deviceNumber);
-        return CompletableFuture.supplyAsync(() -> {
-                    try (FrameGrabber frameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
+        return CompletableFuture.<FrameGrabber>supplyAsync(() -> {
+                    try (FrameGrabber probeFrameGrabber = new OpenCVFrameGrabber(deviceNumber)) {
                         // has a 10 sec. timeout built in
-                        frameGrabber.start();
-                        return frameGrabber;
+                        probeFrameGrabber.start();
+                        return new OpenCVFrameGrabber(deviceNumber);
                     } catch (Exception e) {
-                        log.error("frameGrabber.start() failed. {}", e.getMessage());
+                        log.error("Camera device lookup failed. {}", e.getMessage());
                         throw new WebcamException(ErrorCode.DEVICE_LOOKUP_FAILED, e);
                     }
                 }, ExecutorFactory.newSingleThreadScheduledExecutor("look-up-device"))

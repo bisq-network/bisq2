@@ -17,18 +17,21 @@
 
 package bisq.network.p2p.services.data.storage;
 
+import bisq.common.proto.NetworkProto;
 import bisq.common.proto.NetworkProtoResolverMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.Any;
 
 public class DistributedDataResolver {
     private static final NetworkProtoResolverMap<DistributedData> protoResolverMap = new NetworkProtoResolverMap<>();
 
-    public static void addResolver(String protoTypeName, ProtoResolver<DistributedData> resolver) {
+    // clazz is not used at runtime. ResolverConfigTest checks that protoTypeName, clazz and resolver name the same type.
+    public static void addResolver(String protoTypeName, Class<? extends NetworkProto> clazz, ProtoResolver<DistributedData> resolver) {
         protoResolverMap.addProtoResolver(protoTypeName, resolver);
     }
 
-    static DistributedData fromAny(Any any) {
+    static DistributedData fromAny(Any any) throws UnresolvableProtobufException {
         return protoResolverMap.fromAny(any);
     }
 }

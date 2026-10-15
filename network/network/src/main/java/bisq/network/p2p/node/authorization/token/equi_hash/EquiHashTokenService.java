@@ -8,6 +8,7 @@ import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 /**
  * TODO: Implement once EquiHash is production ready
@@ -31,7 +32,7 @@ public class EquiHashTokenService extends AuthorizationTokenService<EquiHashToke
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 Optional<NetworkLoad> previousNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         throw new RuntimeException("Not implemented yet");
     }

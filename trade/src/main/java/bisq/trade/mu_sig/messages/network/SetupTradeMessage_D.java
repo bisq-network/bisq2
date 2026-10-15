@@ -17,28 +17,37 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
-import lombok.EqualsAndHashCode;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
+import java.util.Objects;
+
 @Slf4j
 @ToString(callSuper = true)
 @Getter
-@EqualsAndHashCode(callSuper = true)
 public final class SetupTradeMessage_D extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_D.class);
+
     private final PartialSignatures partialSignatures;
+    private final byte[] depositPsbt;
 
     public SetupTradeMessage_D(String id,
                                String tradeId,
                                String protocolVersion,
                                NetworkId sender,
                                NetworkId receiver,
-                               PartialSignatures partialSignatures) {
+                               PartialSignatures partialSignatures,
+                               byte[] depositPsbt) {
         super(id, tradeId, protocolVersion, sender, receiver);
         this.partialSignatures = partialSignatures;
+        this.depositPsbt = depositPsbt;
 
         verify();
     }
@@ -61,22 +70,44 @@ public final class SetupTradeMessage_D extends MuSigTradeMessage {
 
     private bisq.trade.protobuf.SetupTradeMessage_D.Builder getSetupTradeMessage_D(boolean serializeForHash) {
         return bisq.trade.protobuf.SetupTradeMessage_D.newBuilder()
-                .setPartialSignatures(partialSignatures.toProto(serializeForHash));
+                .setPartialSignatures(partialSignatures.toProto(serializeForHash))
+                .setDepositPsbt(ByteString.copyFrom(depositPsbt));
     }
 
-    public static SetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.SetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageD();
-        return new SetupTradeMessage_D(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
+    public static SetupTradeMessage_D fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_D muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageD();
+            return new SetupTradeMessage_D(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()),
+                    muSigMessageProto.getDepositPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        return this == o || o instanceof SetupTradeMessage_D that && super.equals(o) &&
+                Objects.equals(partialSignatures, that.partialSignatures) &&
+                Arrays.equals(depositPsbt, that.depositPsbt);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + Objects.hashCode(partialSignatures);
+        result = 31 * result + Arrays.hashCode(depositPsbt);
+        return result;
     }
 }

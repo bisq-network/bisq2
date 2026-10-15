@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MuSigDisputeState implements ProtoEnum {
     NO_DISPUTE,
@@ -26,6 +27,7 @@ public enum MuSigDisputeState implements ProtoEnum {
     MEDIATION_OPEN,
     MEDIATION_CLOSED,
     MEDIATION_RE_OPENED,
+    ARBITRATION_REQUESTED,
     ARBITRATION_OPEN,
     ARBITRATION_CLOSED;
 
@@ -34,7 +36,21 @@ public enum MuSigDisputeState implements ProtoEnum {
         return bisq.trade.protobuf.MuSigDisputeState.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MuSigDisputeState fromProto(bisq.trade.protobuf.MuSigDisputeState proto) {
+    public static MuSigDisputeState fromProto(bisq.trade.protobuf.MuSigDisputeState proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MuSigDisputeState.class, proto.name(), NO_DISPUTE);
+    }
+
+    public static boolean isMediationState(MuSigDisputeState disputeState) {
+        return disputeState == MEDIATION_REQUESTED ||
+                disputeState == MEDIATION_OPEN ||
+                disputeState == MEDIATION_CLOSED ||
+                disputeState == MEDIATION_RE_OPENED;
+    }
+
+    public static boolean isArbitrationState(MuSigDisputeState disputeState) {
+        return disputeState == ARBITRATION_REQUESTED ||
+                disputeState == ARBITRATION_OPEN ||
+                disputeState == ARBITRATION_CLOSED;
     }
 }

@@ -21,6 +21,7 @@ import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -41,8 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 public final class BannedUserProfileData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, BannedUserProfileData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -90,12 +90,17 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto) {
-        return new BannedUserProfileData(
-                proto.getVersion(),
-                UserProfile.fromProto(proto.getUserProfile()),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static BannedUserProfileData fromProto(bisq.user.protobuf.BannedUserProfileData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BannedUserProfileData(
+                    proto.getVersion(),
+                    UserProfile.fromProto(proto.getUserProfile()),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -109,13 +114,8 @@ public final class BannedUserProfileData implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -45,8 +46,13 @@ public final class DepositTxSignatureRequest implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static DepositTxSignatureRequest fromProto(bisq.trade.protobuf.DepositTxSignatureRequest proto) {
-        return new DepositTxSignatureRequest(proto.getTradeId(),
-                PartialSignaturesMessage.fromProto(proto.getPeersPartialSignatures()));
+    public static DepositTxSignatureRequest fromProto(bisq.trade.protobuf.DepositTxSignatureRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new DepositTxSignatureRequest(proto.getTradeId(),
+                    PartialSignaturesMessage.fromProto(proto.getPeersPartialSignatures()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -36,9 +36,8 @@ import bisq.common.data.Result;
 import bisq.common.encoding.Hex;
 import bisq.common.threading.DiscardOldestPolicy;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.network.p2p.services.data.BroadcastResult;
@@ -64,6 +63,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.util.Arrays;
@@ -91,7 +91,6 @@ public class Bisq1BridgeRequestService implements Service,
     private final AccountAgeWitnessGrpcService accountAgeWitnessGrpcService;
     private final SignedWitnessGrpcService signedWitnessGrpcService;
     private final AccountTimestampGrpcService accountTimestampGrpcService;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
@@ -105,10 +104,10 @@ public class Bisq1BridgeRequestService implements Service,
     private final AtomicBoolean revalidationRequested = new AtomicBoolean();
 
     private ExecutorService executor;
+    private ExecutorService accountTimestampExecutor;
     private ExecutorService revalidationExecutor;
 
     public Bisq1BridgeRequestService(PersistenceService persistenceService,
-                                     IdentityService identityService,
                                      NetworkService networkService,
                                      AuthorizedBondedRolesService authorizedBondedRolesService,
                                      PrivateKey authorizedPrivateKey,
@@ -118,7 +117,6 @@ public class Bisq1BridgeRequestService implements Service,
                                      AuthorizedOracleNode myAuthorizedOracleNode,
                                      GrpcClient grpcClient) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -132,7 +130,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -143,7 +140,6 @@ public class Bisq1BridgeRequestService implements Service,
                               GrpcClient grpcClient,
                               BondedRoleGrpcService bondedRoleGrpcService) {
         this(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -159,7 +155,6 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     Bisq1BridgeRequestService(PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -171,7 +166,6 @@ public class Bisq1BridgeRequestService implements Service,
                               BondedRoleGrpcService bondedRoleGrpcService,
                               AccountAgeWitnessGrpcService accountAgeWitnessGrpcService,
                               SignedWitnessGrpcService signedWitnessGrpcService) {
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.authorizedPrivateKey = authorizedPrivateKey;
@@ -205,16 +199,16 @@ public class Bisq1BridgeRequestService implements Service,
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
-        int maxPoolSize = 5;
-        String name = "Bisq1BridgeRequestService";
-        int queueCapacity = 20;
-        executor = ExecutorFactory.boundedCachedPool(name,
-                1,
-                maxPoolSize,
-                10,
-                queueCapacity,
-                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)
-        );
+        // The node reads all registered stores once at its start, before it initializes the services. OracleNodeService
+        // creates this service only in its initialize(), because it needs the default identity, so the start did not
+        // read this store. Without the read, the conflict check would see only the witness bindings of this run, and the
+        // first write would replace the stored bindings (see docs/specifications/reputation/account-age.md).
+        readPersisted();
+        executor = createRequestExecutor("Bisq1BridgeRequestService");
+        // Anybody can send many account timestamp requests, and a full queue drops its oldest request. So they have their
+        // own queue, and they cannot drop the requests of the other types (see
+        // docs/specifications/bonded-roles/oracle-requests.md).
+        accountTimestampExecutor = createRequestExecutor("AccountTimestampRequests");
         revalidationExecutor = ExecutorFactory.newSingleThreadExecutor("BondedRoleRevalidation");
 
         return accountAgeWitnessGrpcService.initialize()
@@ -223,7 +217,11 @@ public class Bisq1BridgeRequestService implements Service,
                 .thenCompose(result -> bondedRoleGrpcService.initialize())
                 .thenApply(result -> {
                     authorizedBondedRolesService.addListener(this);
-                    networkService.addConfidentialMessageListener(this);
+                    // Requests can arrive before this service starts, for example from the mailbox. The node
+                    // removes a mailbox message from the network when it decrypted it, so without the delivery of
+                    // the processed messages no service would process such a request (see
+                    // docs/specifications/network/startup-replay.md).
+                    networkService.subscribeToConfidentialMessages(this);
                     recoverRegistrationRequestsFromLoadedData();
                     revalidateBondedRoles();
                     return result;
@@ -238,8 +236,11 @@ public class Bisq1BridgeRequestService implements Service,
         ExecutorService currentRevalidationExecutor = revalidationExecutor;
         revalidationExecutor = null;
         ExecutorFactory.shutdownAndAwaitTermination(currentRevalidationExecutor, 100);
+        revalidationInProgress.set(false);
         ExecutorFactory.shutdownAndAwaitTermination(executor, 100);
         executor = null;
+        ExecutorFactory.shutdownAndAwaitTermination(accountTimestampExecutor, 100);
+        accountTimestampExecutor = null;
         return bondedRoleGrpcService.shutdown()
                 .thenCompose(result -> accountTimestampGrpcService.shutdown())
                 .thenCompose(result -> signedWitnessGrpcService.shutdown())
@@ -278,6 +279,14 @@ public class Bisq1BridgeRequestService implements Service,
 
     @Override
     public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+        try {
+            recoverRegistrationRequest(authorizedData);
+        } catch (Exception e) {
+            log.error("Could not recover a bonded-role registration from authorized data", e);
+        }
+    }
+
+    private void recoverRegistrationRequest(AuthorizedData authorizedData) {
         if (!(authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole authorizedBondedRole)) {
             return;
         }
@@ -355,15 +364,26 @@ public class Bisq1BridgeRequestService implements Service,
     // Private
     /* --------------------------------------------------------------------- */
 
+    // Up to 5 threads and 20 waiting requests. If the queue is full, the oldest waiting request is dropped.
+    private static ExecutorService createRequestExecutor(String name) {
+        int maxPoolSize = 5;
+        int queueCapacity = 20;
+        return ExecutorFactory.boundedCachedPool(name,
+                1,
+                maxPoolSize,
+                10,
+                queueCapacity,
+                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize)
+        );
+    }
+
     @VisibleForTesting
     void recoverRegistrationRequestsFromLoadedData() {
         // AuthorizedBondedRolesService.addListener replays stored data only when that service completed its own
         // initialization first. This explicit replay makes recovery independent of the initialization order and is
         // idempotent. Read the authorized wrappers here because their outer signing key is required for ownership.
-        networkService.getDataService().ifPresent(dataService -> dataService.getAuthorizedData()
-                .filter(authorizedData ->
-                        authorizedData.getAuthorizedDistributedData() instanceof AuthorizedBondedRole)
-                .forEach(this::onAuthorizedDataAdded));
+        networkService.getDataService().ifPresent(dataService ->
+                StartupReplay.forEach(dataService.getAuthorizedData(), this::onAuthorizedDataAdded));
     }
 
     private void processAuthorizeAccountAgeRequest(PublicKey senderPublicKey,
@@ -381,8 +401,7 @@ public class Bisq1BridgeRequestService implements Service,
                     return;
                 }
                 if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
-                    log.warn("Rejecting account age witness {} because it is already authorized for another profile",
-                            request.getHashAsHex());
+                    log.warn("Rejecting an account age witness because it is already authorized for another profile");
                     return;
                 }
                 var response = accountAgeWitnessGrpcService.verifyAndRequestAuthorization(request);
@@ -451,8 +470,7 @@ public class Bisq1BridgeRequestService implements Service,
                     return;
                 }
                 if (hasWitnessClaimConflict(request.getHashAsHex(), request.getProfileId())) {
-                    log.warn("Rejecting signed witness {} because it is already authorized for another profile",
-                            request.getHashAsHex());
+                    log.warn("Rejecting a signed witness because it is already authorized for another profile");
                     return;
                 }
                 var response = signedWitnessGrpcService.verifyAndRequestAuthorization(request);
@@ -512,6 +530,16 @@ public class Bisq1BridgeRequestService implements Service,
                 }
                 BondedRoleRegistrationProtocol.verifyProof(protocolVersion,
                         request.getProposalTxId(), request.getLockupTxId());
+                // While only static oracle node keys may act as an oracle node, a role of type ORACLE_NODE of another
+                // key gives no authority (see docs/specifications/bonded-roles/authorized-data.md). A cancellation of
+                // such a role stays possible.
+                if (request.getBondedRoleType() == BondedRoleType.ORACLE_NODE &&
+                        !request.isCancellationRequest() &&
+                        !authorizedBondedRolesService.isOracleNodeKeyAllowed(request.getAuthorizedPublicKey())) {
+                    log.warn("Rejecting the registration of an oracle node whose key is not a static oracle node key: {}",
+                            request);
+                    return;
+                }
                 boolean knownRegistration = hasMatchingRegistrationRequest(request);
                 if (protocolVersion == BondedRoleRegistrationProtocol.LEGACY_VERSION &&
                         !knownRegistration) {
@@ -520,6 +548,11 @@ public class Bisq1BridgeRequestService implements Service,
                 }
                 if (request.isCancellationRequest() && !knownRegistration) {
                     log.info("No matching persisted bonded-role registration found for cancellation request {}", request);
+                    return;
+                }
+                // The oracle accepts only a registration whose role data it can publish. For example, the role of a
+                // node must contain the addresses of the node (see docs/specifications/bonded-roles/registration.md).
+                if (!request.isCancellationRequest() && !hasValidRoleData(request)) {
                     return;
                 }
 
@@ -557,13 +590,24 @@ public class Bisq1BridgeRequestService implements Service,
 
     @VisibleForTesting
     void revalidateBondedRolesNow() {
-        List<BondedRoleRegistrationRequest> requests = persistableStore.getBondedRoleRegistrationRequests().stream()
+        List<BondedRoleRegistrationRequest> supportedRequests = persistableStore.getBondedRoleRegistrationRequests().stream()
                 .filter(request -> BondedRoleRegistrationProtocol.isSupported(request.getRegistrationProtocolVersion()))
                 .toList();
-        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - requests.size();
+        int unsupportedRequestCount = persistableStore.getBondedRoleRegistrationRequests().size() - supportedRequests.size();
         if (unsupportedRequestCount > 0) {
             log.warn("Retaining {} bonded-role registrations with unsupported protocol versions without revalidation",
                     unsupportedRequestCount);
+        }
+        // A record which cannot be expressed as a bridge message would make the batch message constructor throw and
+        // thereby skip revalidation of every other registration, for as long as that record is persisted. Such a
+        // record can never be verified, so it is retained and reported while the remaining ones are revalidated.
+        List<BondedRoleRegistrationRequest> requests = supportedRequests.stream()
+                .filter(BondedRoleGrpcService::canBeVerifiedByBridge)
+                .toList();
+        int unusableRequestCount = supportedRequests.size() - requests.size();
+        if (unusableRequestCount > 0) {
+            log.warn("Retaining {} bonded-role registrations which cannot be verified by the Bisq 1 bridge",
+                    unusableRequestCount);
         }
         if (requests.isEmpty()) {
             return;
@@ -611,8 +655,30 @@ public class Bisq1BridgeRequestService implements Service,
         matchingRequests.forEach(this::deactivateRegistration);
     }
 
+    private boolean hasValidRoleData(BondedRoleRegistrationRequest request) {
+        try {
+            toAuthorizedBondedRole(request);
+            return true;
+        } catch (IllegalArgumentException e) {
+            log.warn("Rejecting the bonded-role registration of profile {}, because its role data is invalid: {}",
+                    request.getProfileId(), e.getMessage());
+            return false;
+        }
+    }
+
     private void deactivateRegistration(BondedRoleRegistrationRequest request) {
-        AuthorizedBondedRole data = toAuthorizedBondedRole(request);
+        AuthorizedBondedRole data;
+        try {
+            data = toAuthorizedBondedRole(request);
+        } catch (IllegalArgumentException e) {
+            // An oracle of an earlier version could persist a registration whose role data this version rejects, for
+            // example the role of a node without addresses. Nodes of this version drop such role data, and this
+            // oracle cannot create its removal. So it removes only the persisted registration.
+            log.warn("Removing the bonded-role registration of profile {} without a removal of its role data, " +
+                    "because the role data is invalid: {}", request.getProfileId(), e.getMessage());
+            removeRegistrationRequest(request);
+            return;
+        }
         removeAuthorizedData(data).whenComplete((broadcastResult, throwable) -> {
             if (throwable == null) {
                 log.info("Tried to broadcast bonded-role removal. Size of broadcastResult: {}", broadcastResult.size());
@@ -757,7 +823,7 @@ public class Bisq1BridgeRequestService implements Service,
             } catch (Exception e) {
                 log.warn("AuthorizeAccountTimestampV1Request is invalid", e);
             }
-        }, executor);
+        }, accountTimestampExecutor);
     }
 
 
@@ -793,7 +859,7 @@ public class Bisq1BridgeRequestService implements Service,
             } catch (Exception e) {
                 log.warn("AuthorizeAccountTimestampV2Request is invalid", e);
             }
-        }, executor);
+        }, accountTimestampExecutor);
     }
 
     private void persistAccountTimestamp(AccountTimestamp accountTimestamp) {
@@ -802,19 +868,18 @@ public class Bisq1BridgeRequestService implements Service,
         persist();
     }
 
+    // The authorized key owns the authorized data which this node publishes (see
+    // docs/specifications/network/storage-ownership.md)
     private CompletableFuture<BroadcastResult> publishAuthorizedData(AuthorizedDistributedData data) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.publishAuthorizedData(data,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        return networkService.publishAuthorizedData(data, getAuthorizedKeyPair());
     }
 
     private CompletableFuture<BroadcastResult> removeAuthorizedData(AuthorizedBondedRole authorizedDistributedData) {
-        Identity identity = identityService.getOrCreateDefaultIdentity();
-        return networkService.removeAuthorizedData(authorizedDistributedData,
-                identity.getNetworkIdWithKeyPair().getKeyPair(),
-                authorizedPublicKey);
+        return networkService.removeAuthorizedData(authorizedDistributedData, getAuthorizedKeyPair());
+    }
+
+    private KeyPair getAuthorizedKeyPair() {
+        return new KeyPair(authorizedPublicKey, authorizedPrivateKey);
     }
 
 

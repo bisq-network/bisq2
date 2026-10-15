@@ -18,19 +18,23 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
-import bisq.common.proto.ProtoResolver;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class PersistableStoreReaderWriterTests {
 
@@ -45,6 +49,39 @@ public class PersistableStoreReaderWriterTests {
     }
 
     @Test
+    void writeSurfacesFailureAndLeavesStoreUntouched(@TempDir Path tempDirPath) throws IOException {
+        Path storageFilePath = tempDirPath.resolve("protoFile");
+        var storeFileManager = new PersistableStoreFileManager(storageFilePath);
+        var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager, new RestoreService());
+        // A directory where the temp file goes makes the write fail before the store is touched;
+        // the temp file step reports that as a failed serialization.
+        Files.createDirectories(storeFileManager.getTempFilePath());
+
+        assertThrows(CouldNotSerializePersistableStore.class, () -> persistableStoreReaderWriter.write(new TimestampStore()));
+        assertThat(storageFilePath).doesNotExist();
+    }
+
+    @Test
+    void writeSurfacesARefusedRenameOfTheTempFile(@TempDir Path tempDirPath) throws IOException {
+        // The temp file is written in place, so the failure is confined to the final rename: the
+        // step whose result used to be ignored, reporting a write that left no active store behind.
+        PersistableStoreFileManagerTests.assumeCanRevokeDirectoryWrite();
+        Path storageFilePath = tempDirPath.resolve("protoFile");
+        var storeFileManager = new PersistableStoreFileManager(storageFilePath);
+        var persistableStoreReaderWriter = new PersistableStoreReaderWriter<TimestampStore>(storeFileManager, new RestoreService());
+        FileMutatorUtils.createFile(storeFileManager.getTempFilePath());
+
+        Set<PosixFilePermission> original = Files.getPosixFilePermissions(tempDirPath);
+        Files.setPosixFilePermissions(tempDirPath, PosixFilePermissions.fromString("r-x------"));
+        try {
+            assertThrows(IllegalStateException.class, () -> persistableStoreReaderWriter.write(new TimestampStore()));
+        } finally {
+            Files.setPosixFilePermissions(tempDirPath, original);
+        }
+        assertThat(storageFilePath).doesNotExist();
+    }
+
+    @Test
     void writeAndReadStore(@TempDir Path tempDirPath) {
         var timestampStore = new TimestampStore();
         Map<String, Long> timestampsByProfileId = timestampStore.getTimestampsByProfileId();
@@ -52,8 +89,7 @@ public class PersistableStoreReaderWriterTests {
         timestampsByProfileId.put("B", 2L);
         timestampsByProfileId.put("C", 3L);
 
-        ProtoResolver<PersistableStore<?>> resolver = timestampStore.getResolver();
-        PersistableStoreResolver.addResolver(resolver);
+        PersistableStoreResolver.addResolver(timestampStore);
 
         Path storageFilePath = tempDirPath.resolve("protoFile");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath);
@@ -88,8 +124,7 @@ public class PersistableStoreReaderWriterTests {
         modifiedMap.put("C", 30L);
 
         // register resolver
-        ProtoResolver<PersistableStore<?>> resolver = originalStore.getResolver();
-        PersistableStoreResolver.addResolver(resolver);
+        PersistableStoreResolver.addResolver(originalStore);
 
         Path storageFilePath = tempDirPath.resolve("alice").resolve("db").resolve("test-protofile-store.protobuf");
         var storeFileManager = new PersistableStoreFileManager(storageFilePath, MaxBackupSize.TEN_MB);

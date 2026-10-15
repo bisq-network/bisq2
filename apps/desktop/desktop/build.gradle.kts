@@ -1,5 +1,6 @@
 plugins {
     id("bisq.java-library")
+    id("bisq.javafx-tests")
     alias(libs.plugins.openjfx)
 }
 
@@ -60,4 +61,41 @@ dependencies {
 
     testImplementation(libs.testfx.junit5)
     testImplementation(libs.hamcrest)
+    testImplementation(libs.junit.platform.launcher)
+}
+
+// Test classes annotated with @DesktopUiTest drive mouse and keyboard input with a TestFX robot. On a real
+// desktop the robot controls the developer's pointer and keyboard focus, and on macOS it needs the
+// Accessibility permission. They are excluded from the default test run and run only with uiTest.
+val desktopUiTestTag = "ui"
+
+tasks.withType<Test>().configureEach {
+    if (name != "uiTest") {
+        useJUnitPlatform {
+            excludeTags(desktopUiTestTag)
+        }
+        systemProperty("bisq.uiTest", "false")
+    }
+}
+
+// Headless (Monocle) by default, so the robot only acts on a virtual screen.
+// Use -PuiTest.native=true to run on the real desktop, for example to watch a test.
+val uiTestNative = providers.gradleProperty("uiTest.native").map { it.toBoolean() }.orElse(false)
+
+tasks.register<Test>("uiTest") {
+    group = "verification"
+    description = "Runs the JavaFX UI tests which drive input with a TestFX robot. Headless unless -PuiTest.native=true."
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    shouldRunAfter("test")
+    useJUnitPlatform {
+        includeTags(desktopUiTestTag)
+    }
+    systemProperty("bisq.uiTest", "true")
+
+    if (uiTestNative.get()) {
+        systemProperty("testfx.headless", "false")
+        systemProperties.keys.removeAll(listOf("glass.platform", "monocle.platform", "prism.order"))
+        systemProperty("java.awt.headless", "false")
+    }
 }

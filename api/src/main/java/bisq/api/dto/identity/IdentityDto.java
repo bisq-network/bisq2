@@ -18,7 +18,17 @@
 package bisq.api.dto.identity;
 
 import bisq.api.dto.network.identity.NetworkIdDto;
-import bisq.api.dto.security.keys.KeyBundleDto;
 
-public record IdentityDto(String tag, NetworkIdDto networkId, KeyBundleDto keyBundle) {
+/**
+ * The {@code keyBundle} field (private key material — asymmetric key pair, Tor and
+ * I2P identity keys) was removed from this DTO as of issue bisq-network/bisq-mobile#1432.
+ * Sending private keys over the wire — even to trusted nodes — is an unnecessary
+ * security exposure: nothing on the consuming side legitimately requires it.
+ *
+ * <p>Removed only after the mobile client (bisq-network/bisq-mobile#1389) stopped
+ * reading the field via {@code @Transient}. Trusted-node operators serving older
+ * clients (pre-{@code @Transient}) should coordinate a desktop upgrade alongside
+ * this change.
+ */
+public record IdentityDto(String tag, NetworkIdDto networkId) {
 }

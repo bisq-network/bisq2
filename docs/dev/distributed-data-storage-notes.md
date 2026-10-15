@@ -27,6 +27,7 @@ requests). Additionally, it comes with the benefit that client code do not need 
 via initial getInventory requests or later as gossip broadcast messages. They always get the add or remove requests. 
 This makes the initial inventory request process less problematic (as it is in Bisq 1).
 There are also refresh requests which are lightweight requests to increase the sequence number of existing data.
+See [Refresh requests](../specifications/network/storage-refresh-requests.md).
 
 ### MailboxData
 MailboxData are inheriting the features of AuthenticatedData but handle the remove differently. 

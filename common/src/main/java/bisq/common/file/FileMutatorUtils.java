@@ -29,6 +29,7 @@ import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
@@ -264,6 +265,21 @@ public class FileMutatorUtils {
         }
     }
 
+    /**
+     * Replaces targetPath with sourcePath in one rename, so that targetPath always names either the old or the new
+     * file. Uses an atomic move where the file system supports it.
+     *
+     * @throws IOException if the file could not be replaced. targetPath is then unchanged.
+     */
+    public static void replaceFile(Path sourcePath, Path targetPath) throws IOException {
+        try {
+            Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+        } catch (AtomicMoveNotSupportedException e) {
+            Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
+        }
+        applyDefaultPermissions(targetPath);
+    }
+
     public static void backupCorruptedFile(Path dirPath, Path storageFilePath, String fileName, String backupFolderName)
             throws IOException {
         if (Files.exists(storageFilePath)) {
@@ -320,17 +336,27 @@ public class FileMutatorUtils {
         }
     }
 
+    /**
+     * @param sourceDirPath      The directory to copy from
+     * @param destinationDirPath The directory to copy to
+     * @param extensionsToSkip   File extensions without the leading dot, of files which are not copied
+     * @param fileNamesToSkip    Full file names of files which are not copied. Use this for files which must not even
+     *                           be opened for reading, like lock files.
+     * @throws IOException if an I/O error occurs
+     */
     public static void copyDirectory(Path sourceDirPath,
                                      Path destinationDirPath,
-                                     Set<String> extensionsToSkip) throws IOException {
+                                     Set<String> extensionsToSkip,
+                                     Set<String> fileNamesToSkip) throws IOException {
         AtomicReference<IOException> exception = new AtomicReference<>();
         try (Stream<Path> stream = Files.walk(sourceDirPath)) {
             stream.forEach(source -> {
                 boolean shouldSkip = false;
                 if (!Files.isDirectory(source)) {
                     String fileName = source.getFileName().toString();
+                    shouldSkip = fileNamesToSkip.contains(fileName);
                     int lastDotIndex = fileName.lastIndexOf('.');
-                    if (lastDotIndex > 0) {
+                    if (!shouldSkip && lastDotIndex > 0) {
                         String extension = fileName.substring(lastDotIndex + 1);
                         shouldSkip = extensionsToSkip.contains(extension);
                     }

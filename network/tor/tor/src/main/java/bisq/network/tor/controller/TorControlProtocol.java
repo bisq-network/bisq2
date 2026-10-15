@@ -161,7 +161,8 @@ public class TorControlProtocol implements AutoCloseable {
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
         if (!isSuccessReply(reply)) {
-            throw new ControlCommandFailedException("Couldn't set config: " + configName + "=" + configValue);
+            // The value can be a secret, and exception messages get logged
+            throw new ControlCommandFailedException("Couldn't set config option: " + configName);
         }
     }
 
@@ -320,13 +321,7 @@ public class TorControlProtocol implements AutoCloseable {
             throw new IllegalStateException("TorControlProtocol output stream not initialized. Cannot send command.");
         }
         try {
-            String commandToLog = command.contains("AUTHENTICATE")
-                    ? command.split(" ")[0] + " [authentication data hidden in logs]"
-                    : command;
-            if (commandToLog.endsWith("\r\n")) {
-                commandToLog = commandToLog.substring(0, commandToLog.length() - 2);
-            }
-            log.info("Send Tor control command: {}", commandToLog);
+            log.info("Send Tor control command: {}", TorControlLogFormat.toLoggableCommand(command));
             @SuppressWarnings("resource") OutputStream os = this.outputStream.orElseThrow();
             byte[] commandBytes = command.getBytes(StandardCharsets.US_ASCII);
             os.write(commandBytes);
@@ -379,7 +374,8 @@ public class TorControlProtocol implements AutoCloseable {
         } else if (hasOK250) {
             return OK250;
         } else {
-            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + replies);
+            List<String> loggableReplies = replies.stream().map(TorControlLogFormat::toLoggableReply).toList();
+            throw new ControlCommandFailedException("Invalid " + commandName + " reply: " + loggableReplies);
         }
 
        /* if (replies.size() != 2) {

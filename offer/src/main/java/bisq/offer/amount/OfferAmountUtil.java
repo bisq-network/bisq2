@@ -20,17 +20,17 @@ package bisq.offer.amount;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.AmountSpecFactory;
 import bisq.offer.amount.spec.AmountSpecUtil;
 import bisq.offer.amount.spec.BaseSideAmountSpec;
 import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
-import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.amount.spec.FixedAmountSpec;
 import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
-import bisq.offer.amount.spec.QuoteSideRangeAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.price.PriceUtil;
 import bisq.offer.price.spec.PriceSpec;
@@ -239,7 +239,7 @@ public class OfferAmountUtil {
                             .map(quote -> quote.toQuoteSideMonetary(maxAmount)))
                     .map(Monetary::getValue);
             if (minQuoteSideAmount.isPresent() && maxQuoteSideAmount.isPresent()) {
-                return Optional.of(new QuoteSideRangeAmountSpec(minQuoteSideAmount.get(), maxQuoteSideAmount.get()));
+                return Optional.of(AmountSpecFactory.createQuoteSideAmountSpec(minQuoteSideAmount.get(), maxQuoteSideAmount.get()));
             } else {
                 return Optional.empty();
             }
@@ -268,7 +268,7 @@ public class OfferAmountUtil {
                             .map(quote -> quote.toBaseSideMonetary(maxAmount)))
                     .map(Monetary::getValue);
             if (minBaseSideAmount.isPresent() && maxBaseSideAmount.isPresent()) {
-                return Optional.of(new BaseSideRangeAmountSpec(minBaseSideAmount.get(), maxBaseSideAmount.get()));
+                return Optional.of(AmountSpecFactory.createBaseSideAmountSpec(minBaseSideAmount.get(), maxBaseSideAmount.get()));
             } else {
                 return Optional.empty();
             }
@@ -295,5 +295,61 @@ public class OfferAmountUtil {
                                                          double securityDeposit) {
         checkArgument(btcSideMonetary.getCode().equals("BTC"));
         return Monetary.from(MathUtils.roundDoubleToLong(btcSideMonetary.getValue() * securityDeposit), btcSideMonetary.getCode());
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Variants converting with an explicitly resolved price quote. The create-offer review uses
+    // these with a snapshot so a concurrent market-price update cannot produce mixed values.
+    /* --------------------------------------------------------------------- */
+
+    // The overloads take the quote and the market independently, and PriceQuote conversion
+    // checks only the Fiat/Coin runtime type - a quote from another market would silently
+    // convert with the wrong rate.
+    private static void verifyQuoteMatchesMarket(PriceQuote resolvedPriceQuote, Market market) {
+        checkArgument(resolvedPriceQuote.getMarket().equals(market),
+                "The resolved price quote's market %s must match the offer market %s",
+                resolvedPriceQuote.getMarket(), market);
+    }
+
+    public static Optional<Monetary> findBaseSideFixedAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                        .map(resolvedPriceQuote::toBaseSideMonetary));
+    }
+
+    public static Optional<Monetary> findBaseSideMinAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                        .map(resolvedPriceQuote::toBaseSideMonetary));
+    }
+
+    public static Optional<Monetary> findBaseSideMaxAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                .or(() -> AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                        .map(resolvedPriceQuote::toBaseSideMonetary));
+    }
+
+    public static Optional<Monetary> findQuoteSideFixedAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findQuoteSideFixedAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideFixedAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                        .map(resolvedPriceQuote::toQuoteSideMonetary));
+    }
+
+    public static Optional<Monetary> findQuoteSideMinAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findQuoteSideMinAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMinAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                        .map(resolvedPriceQuote::toQuoteSideMonetary));
+    }
+
+    public static Optional<Monetary> findQuoteSideMaxAmount(PriceQuote resolvedPriceQuote, AmountSpec amountSpec, Market market) {
+        verifyQuoteMatchesMarket(resolvedPriceQuote, market);
+        return AmountSpecUtil.findQuoteSideMaxAmountFromSpec(amountSpec, market.getQuoteCurrencyCode())
+                .or(() -> AmountSpecUtil.findBaseSideMaxAmountFromSpec(amountSpec, market.getBaseCurrencyCode())
+                        .map(resolvedPriceQuote::toQuoteSideMonetary));
     }
 }

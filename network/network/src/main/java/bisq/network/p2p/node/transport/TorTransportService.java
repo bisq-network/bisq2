@@ -17,7 +17,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Optional;
@@ -95,15 +94,8 @@ public class TorTransportService implements TransportService {
         if (address instanceof TorAddress torAddress) {
             long ts = System.currentTimeMillis();
             log.info("Start creating tor socket to {}", torAddress);
-            Socket socket = torService.getSocket(null); // Blocking call. Takes 5-15 sec usually.
-            socket.setSoTimeout(socketTimeout);
-            InetSocketAddress inetSocketAddress = InetSocketAddress.createUnresolved(torAddress.getHost(), torAddress.getPort());
-            try {
-                socket.connect(inetSocketAddress);
-            } catch (IOException e) {
-                socket.close();
-                throw e;
-            }
+            // Blocking call. Takes 5-15 sec usually. The node ID isolates the circuits of the nodes of one user.
+            Socket socket = torService.getSocket(torAddress.getHost(), torAddress.getPort(), nodeId, socketTimeout);
             log.info("Tor socket creation to {} took {} ms", torAddress, System.currentTimeMillis() - ts);
             return socket;
         } else {
@@ -122,7 +114,7 @@ public class TorTransportService implements TransportService {
 
     @Override
     public Optional<Socks5Proxy> getSocksProxy() throws IOException {
-        return Optional.of(torService.getSocks5Proxy(null));
+        return Optional.of(torService.getSocks5Proxy());
     }
 
     public Observable<Boolean> getUseExternalTor() {

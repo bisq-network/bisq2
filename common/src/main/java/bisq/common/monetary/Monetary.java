@@ -19,6 +19,7 @@ package bisq.common.monetary;
 
 import bisq.common.asset.Asset;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.MathUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -28,6 +29,9 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 @EqualsAndHashCode
 @Getter
@@ -107,7 +111,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
                 .setLowPrecision(lowPrecision);
     }
 
-    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) {
+    public static Monetary fromProto(bisq.common.protobuf.Monetary proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case COIN -> Coin.fromProto(proto);
             case FIAT -> Fiat.fromProto(proto);
@@ -118,6 +122,7 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
     public double toDouble(long value) {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
     }
+
     public double asDouble() {
         return toDouble(value);
     }
@@ -195,11 +200,78 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         };
     }
 
+    public Monetary clamp(Monetary min, Monetary max) {
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+        checkArgument(code.equals(min.getCode()),
+                "min must use same code as this monetary. this.code=%s; min.code=%s", code, min.getCode());
+        checkArgument(code.equals(max.getCode()),
+                "max must use same code as this monetary. this.code=%s; max.code=%s", code, max.getCode());
+        if (value < min.getValue()) {
+            return Monetary.from(this, min.getValue());
+        } else if (value > max.getValue()) {
+            return Monetary.from(this, max.getValue());
+        } else {
+            return this;
+        }
+    }
+
+    public Monetary clamp(MonetaryRange limits) {
+        checkNotNull(limits, "limits must not be null");
+        return clamp(limits.getMin(), limits.getMax());
+    }
+
+    // -1 if below min, 0 if within [min, max], 1 if above max
+    public int compareToRange(Monetary min, Monetary max) {
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+        checkArgument(code.equals(min.getCode()),
+                "min must use same code as this monetary. this.code=%s; min.code=%s", code, min.getCode());
+        checkArgument(code.equals(max.getCode()),
+                "max must use same code as this monetary. this.code=%s; max.code=%s", code, max.getCode());
+        if (value < min.getValue()) {
+            return -1;
+        } else if (value > max.getValue()) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    // -1 if below min, 0 if within [min, max], 1 if above max
+    public int compareToRange(MonetaryRange limits) {
+        checkNotNull(limits, "limits must not be null");
+        return compareToRange(limits.getMin(), limits.getMax());
+    }
+
+    public Monetary multiply(double factor) {
+        long newValue = MathUtils.roundDoubleToLong(value * factor);
+        return from(this, newValue);
+    }
+
+    public boolean isBitcoin() {
+        // Exact match only: L-BTC and LN-BTC are distinct assets whose units must not be
+        // treated as satoshis.
+        return "BTC".equals(code);
+    }
+
     private enum ComparisonOperator {
         IS_LESS_THAN,
         IS_LESS_THAN_OR_EQUAL,
         IS_GREATER_THAN,
         IS_GREATER_THAN_OR_EQUAL,
         IS_EQUAL
+    }
+
+    public String printAsDouble(boolean includeCode) {
+        if (includeCode) {
+            return asDouble() + " " + code;
+        } else {
+            return String.valueOf(asDouble());
+        }
+    }
+
+    public String printAsDouble() {
+        return printAsDouble(true);
     }
 }

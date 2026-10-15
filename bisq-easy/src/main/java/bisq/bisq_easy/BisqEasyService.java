@@ -82,6 +82,7 @@ public class BisqEasyService implements Service {
     private final Set<String> bannedAccountDataSet = new HashSet<>();
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+    private final BisqEasyMobileTradeNotificationService bisqEasyMobileTradeNotificationService;
 
     private Pin difficultyAdjustmentFactorPin, ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDiffAdjustmentValueOrDefaultPin, selectedMarketPin, authorizedAlertDataSetPin;
@@ -128,7 +129,19 @@ public class BisqEasyService implements Service {
         bisqEasySellersReputationBasedTradeAmountService = new BisqEasySellersReputationBasedTradeAmountService(userService.getUserProfileService(),
                 userService.getReputationService(),
                 marketPriceService);
-        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService, userService, bisqEasySellersReputationBasedTradeAmountService);
+        bisqEasyOfferbookMessageService = new BisqEasyOfferbookMessageService(chatService,
+                userService,
+                bisqEasySellersReputationBasedTradeAmountService,
+                marketPriceService);
+
+        // Mobile push notifications for Bisq Easy trade-state transitions, mirroring the
+        // proven Android nodeApp OpenTradesNotificationService whitelist. Dispatch is
+        // mobile-only (desktop already shows these via the trade chat protocol log).
+        // See bisq-network/bisq-mobile#1450.
+        bisqEasyMobileTradeNotificationService = new BisqEasyMobileTradeNotificationService(
+                tradeService.getBisqEasyTradeService(),
+                userService.getUserProfileService(),
+                notificationService);
     }
 
 
@@ -178,7 +191,8 @@ public class BisqEasyService implements Service {
         });
         return bisqEasySellersReputationBasedTradeAmountService.initialize()
                 .thenCompose(result -> bisqEasyOfferbookMessageService.initialize())
-                .thenCompose(result -> bisqEasyNotificationsService.initialize());
+                .thenCompose(result -> bisqEasyNotificationsService.initialize())
+                .thenCompose(result -> bisqEasyMobileTradeNotificationService.initialize());
     }
 
     public CompletableFuture<Boolean> shutdown() {
@@ -193,6 +207,7 @@ public class BisqEasyService implements Service {
         return getStorePendingMessagesInMailboxFuture().exceptionally(e -> false) // continue even if flush fails
                 .thenCompose(v -> CompletableFutureUtils.allOf( // shut down in parallel
                         bisqEasyNotificationsService.shutdown().exceptionally(e -> false),
+                        bisqEasyMobileTradeNotificationService.shutdown().exceptionally(e -> false),
                         bisqEasyOfferbookMessageService.shutdown().exceptionally(e -> false),
                         bisqEasySellersReputationBasedTradeAmountService.shutdown().exceptionally(e -> false)))
                 .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));

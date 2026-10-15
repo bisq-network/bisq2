@@ -19,7 +19,9 @@ package bisq.contract;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -64,7 +66,7 @@ public final class ContractSignatureData implements NetworkProto {
     public void verify() {
         NetworkDataValidation.validateHash(contractHash);
         NetworkDataValidation.validateECSignature(signature);
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
     }
 
     @Override
@@ -80,15 +82,15 @@ public final class ContractSignatureData implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto) {
+    public static ContractSignatureData fromProto(bisq.contract.protobuf.ContractSignatureData proto)
+            throws UnresolvableProtobufException {
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKeyBytes().toByteArray());
             return new ContractSignatureData(proto.getContractHash().toByteArray(),
                     proto.getSignature().toByteArray(),
                     publicKey);
-        } catch (GeneralSecurityException e) {
-            log.error("Could not generate key from protobuf ContractSignatureData.publicKeyBytes", e);
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 

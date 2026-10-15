@@ -33,17 +33,28 @@ import java.util.Set;
 @EqualsAndHashCode
 public class Transition {
     private final Set<State> sourceStates = new HashSet<>();
-    @Setter
-    private State targetState;
+    private Optional<State> targetState = Optional.empty();
     @Setter
     private Class<? extends Event> eventClass;
     @Setter
     private Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass = Optional.empty();
+    private boolean internal;
+
+    void markInternal() {
+        internal = true;
+    }
+
+    void setTargetState(State targetState) {
+        this.targetState = Optional.ofNullable(targetState);
+    }
 
     boolean isValid() {
-        return !sourceStates.isEmpty() &&
-                targetState != null &&
-                eventClass != null &&
-                !sourceStates.contains(targetState);
+        if (sourceStates.isEmpty() || eventClass == null) {
+            return false;
+        }
+
+        return internal
+                ? targetState.isEmpty()
+                : targetState.filter(state -> !sourceStates.contains(state)).isPresent();
     }
 }

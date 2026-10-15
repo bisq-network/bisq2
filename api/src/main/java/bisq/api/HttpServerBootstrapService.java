@@ -17,31 +17,38 @@
 
 package bisq.api;
 
+import bisq.api.access.filter.SingleHandshakeWebSocketFilter;
 import bisq.api.access.filter.WebSocketFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
-import bisq.api.access.permissions.PermissionService;
-import bisq.api.access.permissions.RestPermissionMapping;
 import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.util.StaticFileHandler;
 import bisq.api.web_socket.WebSocketService;
+import bisq.api.web_socket.compression.PerMessageDeflateAddOn;
 import bisq.api.web_socket.util.GrizzlySwaggerHttpHandler;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
+import com.google.common.annotations.VisibleForTesting;
 import jakarta.ws.rs.core.UriBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.glassfish.grizzly.http.server.AddOn;
+import org.glassfish.grizzly.http.server.HttpHandler;
+import org.glassfish.grizzly.http.server.HttpHandlerRegistration;
 import org.glassfish.grizzly.http.server.HttpServer;
 import org.glassfish.grizzly.http.server.NetworkListener;
+import org.glassfish.grizzly.http.server.Request;
+import org.glassfish.grizzly.http.server.Response;
 import org.glassfish.grizzly.http.server.ServerConfiguration;
 import org.glassfish.grizzly.ssl.SSLEngineConfigurator;
-import org.glassfish.grizzly.websockets.WebSocketAddOn;
 import org.glassfish.grizzly.websockets.WebSocketEngine;
 import org.glassfish.jersey.grizzly2.httpserver.GrizzlyHttpServerFactory;
 import org.glassfish.jersey.server.ResourceConfig;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -62,7 +69,6 @@ public class HttpServerBootstrapService implements Service {
     private final ResourceConfig resourceConfig;
     private final Optional<WebSocketService> webSocketService;
     private final SessionAuthenticationService sessionAuthenticationService;
-    private final PermissionService<RestPermissionMapping> permissionService;
     private final TlsContextService tlsContextService;
 
     private Optional<HttpServer> httpServer = Optional.empty();
@@ -73,14 +79,12 @@ public class HttpServerBootstrapService implements Service {
                                       ResourceConfig resourceConfig,
                                       Optional<WebSocketService> webSocketService,
                                       SessionAuthenticationService sessionAuthenticationService,
-                                      PermissionService<RestPermissionMapping> permissionService,
                                       TlsContextService tlsContextService
     ) {
         this.apiConfig = apiConfig;
         this.resourceConfig = resourceConfig;
         this.webSocketService = webSocketService;
         this.sessionAuthenticationService = sessionAuthenticationService;
-        this.permissionService = permissionService;
         this.tlsContextService = tlsContextService;
     }
 
@@ -133,8 +137,7 @@ public class HttpServerBootstrapService implements Service {
                     boolean websocketEnabled = apiConfig.isWebsocketEnabled();
                     if (websocketEnabled) {
                         checkArgument(webSocketService.isPresent(), "If websocketEnabled is true we expect that webSocketService is present");
-                        networkListener.registerAddOn(new WebSocketAddOn());
-                        networkListener.registerAddOn(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
+                        webSocketAddOns(apiConfig, sessionAuthenticationService).forEach(networkListener::registerAddOn);
                         WebSocketEngine.getEngine().register("", "/websocket", webSocketService.get().getWebSocketConnectionHandler());
                     }
 
@@ -210,6 +213,26 @@ public class HttpServerBootstrapService implements Service {
                 });
     }
 
+    /**
+     * The add-ons which build the WebSocket part of the filter chain of the listener, in the order of registration.
+     * The first installs the {@code WebSocketFilter} of Grizzly, with at most one handshake per connection
+     * ({@link SingleHandshakeWebSocketFilter}). Each other add-on inserts its filters directly before the
+     * {@code WebSocketFilter}, so the order of registration decides the order of the filters. The tests of the
+     * listener register the same list, so that they run the filter chain which ships.
+     */
+    @VisibleForTesting
+    public static List<AddOn> webSocketAddOns(ApiConfig apiConfig,
+                                              SessionAuthenticationService sessionAuthenticationService) {
+        List<AddOn> addOns = new ArrayList<>();
+        addOns.add(SingleHandshakeWebSocketFilter.addOn());
+        addOns.add(new WebSocketFilterAddOn(apiConfig, sessionAuthenticationService));
+        if (apiConfig.isWebsocketCompressionEnabled()) {
+            // Registered last so the filter ends up directly below the WebSocketFilter
+            addOns.add(new PerMessageDeflateAddOn());
+        }
+        return addOns;
+    }
+
     @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
@@ -237,6 +260,17 @@ public class HttpServerBootstrapService implements Service {
         httpServer.ifPresentOrElse(httpServer ->
                         httpServer.getServerConfiguration().addHttpHandler(new StaticFileHandler(context), path),
                 () -> log.error("addStaticFileHandler called before httpServer is set."));
+    }
+
+    public void addRedirectHandler(String path, String location) {
+        httpServer.ifPresentOrElse(httpServer ->
+                        httpServer.getServerConfiguration().addHttpHandler(new HttpHandler() {
+                            @Override
+                            public void service(Request request, Response response) throws IOException {
+                                response.sendRedirect(location);
+                            }
+                        }, HttpHandlerRegistration.fromString(path)),
+                () -> log.error("addRedirectHandler called before httpServer is set."));
     }
 
     public ReadOnlyObservable<State> getState() {

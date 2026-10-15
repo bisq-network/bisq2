@@ -146,9 +146,11 @@ public class BisqEasyMediationCaseDetailsController extends NavigationController
         var counts = bisqEasyMediatorService.getMediationCases().stream()
                 .filter(mediationCase -> {
                     BisqEasyMediationRequest request = mediationCase.getBisqEasyMediationRequest();
-                    return userProfile.equals(request.getRequester()) || userProfile.equals(request.getPeer());
+                    // By ID, the hash of the key: the terms, statement and addresses of a profile can change
+                    return userProfile.getId().equals(request.getRequester().getId()) ||
+                            userProfile.getId().equals(request.getPeer().getId());
                 })
-                .collect(Collectors.partitioningBy(mediationCase -> mediationCase.getIsClosed().get(),
+                .collect(Collectors.partitioningBy(BisqEasyMediationCase::isClosed,
                         Collectors.counting()));
         int closed = counts.getOrDefault(true, 0L).intValue();
         int open = counts.getOrDefault(false, 0L).intValue();

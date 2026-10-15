@@ -32,13 +32,21 @@ import bisq.user.profile.UserProfile;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 @Slf4j
 public class BannedUserService extends RateLimitedPersistenceClient<BannedUserStore> implements Service, AuthorizedBondedRolesService.Listener {
+    // Limits of public chat messages and reactions per author (user profile ID)
+    static final int MAX_MESSAGES_PER_SECOND = 3;
+    static final int MAX_MESSAGES_PER_MINUTE = 30;
+    static final int MAX_MESSAGES_PER_HOUR = 120;
+    static final int MAX_MESSAGES_PER_DAY = 300;
+    // Far more than the authors of honest chat traffic of one day. At the limit, an author with the newest events takes
+    // at most about 7 KB, so the rate limiter takes at most about 70 MB.
+    static final int MAX_RATE_LIMITED_AUTHORS = 10_000;
+
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     @Getter
     private final BannedUserStore persistableStore = new BannedUserStore();
@@ -46,12 +54,37 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     private final Persistence<BannedUserStore> persistence;
     @Getter
     private final ObservableSet<String> rateLimitExceedingUserProfiles = new ObservableSet<>();
-    private final RateLimiter rateLimiter = new RateLimiter();
+    private final RateLimiter rateLimiter;
+    private final boolean rateLimitEnabled;
 
     public BannedUserService(PersistenceService persistenceService,
-                             AuthorizedBondedRolesService authorizedBondedRolesService) {
+                             AuthorizedBondedRolesService authorizedBondedRolesService,
+                             boolean rateLimitEnabled) {
+        this(persistenceService,
+                authorizedBondedRolesService,
+                new RateLimiter(MAX_MESSAGES_PER_SECOND,
+                        MAX_MESSAGES_PER_MINUTE,
+                        MAX_MESSAGES_PER_HOUR,
+                        MAX_MESSAGES_PER_DAY,
+                        MAX_RATE_LIMITED_AUTHORS),
+                rateLimitEnabled);
+    }
+
+    BannedUserService(PersistenceService persistenceService,
+                      AuthorizedBondedRolesService authorizedBondedRolesService,
+                      RateLimiter rateLimiter,
+                      boolean rateLimitEnabled) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.CACHE, persistableStore);
         this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.rateLimiter = Objects.requireNonNull(rateLimiter, "rateLimiter");
+        this.rateLimitEnabled = rateLimitEnabled;
+        if (rateLimitEnabled) {
+            // A profile stays flagged at most while the rate limiter keeps its events. Otherwise the flag of a profile
+            // which sends nothing more would stay until shutdown.
+            rateLimiter.addRemovedKeyListener(rateLimitExceedingUserProfiles::remove);
+        } else {
+            log.warn("Chat profile rate limiting disabled. Use only for local/dev testing.");
+        }
     }
 
 
@@ -89,14 +122,17 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
         }
     }
 
+    // Several moderators can ban the same user profile, each with its own key. The node keeps a ban while the network
+    // storage holds a publication of it which a moderator authorized (see
+    // docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData) {
-            if (isAuthorized(authorizedData)) {
-                BannedUserProfileData bannedUserProfileData = (BannedUserProfileData) authorizedData.getAuthorizedDistributedData();
-                getBannedUserProfileDataSet().remove(bannedUserProfileData);
-                persist();
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof BannedUserProfileData bannedUserProfileData &&
+                getBannedUserProfileDataSet().contains(bannedUserProfileData) &&
+                !authorizedBondedRolesService.hasAuthorizedPublication(bannedUserProfileData,
+                        BondedRoleType.MODERATOR)) {
+            getBannedUserProfileDataSet().remove(bannedUserProfileData);
+            persist();
         }
     }
 
@@ -122,6 +158,9 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     }
 
     public void checkRateLimit(String userProfileId, long timeStamp) {
+        if (!rateLimitEnabled) {
+            return;
+        }
         boolean exceedsLimit = rateLimiter.exceedsLimit(userProfileId, timeStamp);
         if (exceedsLimit) {
             log.warn("User with profile ID {} exceeded rate limit.", userProfileId);
@@ -136,11 +175,17 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     }
 
     public boolean isRateLimitExceeding(String userProfileId) {
+        if (!rateLimitEnabled) {
+            return false;
+        }
         refresh(userProfileId);
         return rateLimitExceedingUserProfiles.contains(userProfileId);
     }
 
     public Optional<String> getExceedsLimitInfo(String userProfileId) {
+        if (!rateLimitEnabled) {
+            return Optional.empty();
+        }
         return rateLimiter.getExceedsLimitInfo(userProfileId);
     }
 
@@ -149,11 +194,10 @@ public class BannedUserService extends RateLimitedPersistenceClient<BannedUserSt
     /* --------------------------------------------------------------------- */
 
     private void refresh(String userProfileId) {
-        Set<String> clone = new HashSet<>(rateLimitExceedingUserProfiles);
-        clone.stream().filter(e -> e.equals(userProfileId))
-                .filter(e -> !rateLimiter.exceedsLimit(e)) // Time window has moved so we are not exceeding anymore
-                .findAny()
-                .ifPresent(rateLimitExceedingUserProfiles::remove);
+        // A flagged profile loses its flag when the time windows have moved and it no longer exceeds the limit
+        if (rateLimitExceedingUserProfiles.contains(userProfileId) && !rateLimiter.exceedsLimit(userProfileId)) {
+            rateLimitExceedingUserProfiles.remove(userProfileId);
+        }
     }
 
 

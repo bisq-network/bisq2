@@ -21,6 +21,7 @@ import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -41,7 +42,10 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     public RateLimitedPersistenceClient() {
         //todo (Critical) check if we want to use ShutdownHook here
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            Thread.currentThread().setName("RateLimitedPersistenceClient.shutdownHook-" + StringUtils.truncate(getPersistence().getStorePath(), 8));
+            Path storePath = getPersistence().getStorePath();
+            if (storePath != null) {
+                Thread.currentThread().setName("RateLimitedPersistenceClient.shutdownHook-" + StringUtils.truncate(storePath, 8));
+            }
             persistOnShutdown();
         }));
     }
@@ -60,6 +64,11 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
                     .persistAsync(getPersistableStore().getClone())
                     .handle((nil, throwable) -> {
                         writeInProgress = false;
+                        if (throwable != null) {
+                            // The state is not on disk. The next call or the shutdown hook writes it again
+                            // (see docs/specifications/persistence/store-write-results.md).
+                            dropped = true;
+                        }
                         return throwable == null;
                     });
         }
@@ -72,7 +81,12 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
     private void persistOnShutdown() {
         if (dropped) {
             dropped = false;
-            getPersistence().persist(getPersistableStore().getClone());
+            try {
+                getPersistence().persist(getPersistableStore().getClone());
+            } catch (RuntimeException e) {
+                // Persistence.persist has logged the failure without store content. The default handler of the
+                // shutdown hook thread would print the messages of all causes.
+            }
         }
     }
 }

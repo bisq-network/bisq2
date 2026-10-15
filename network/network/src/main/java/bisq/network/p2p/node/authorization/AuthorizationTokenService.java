@@ -5,6 +5,7 @@ import bisq.network.p2p.node.network_load.NetworkLoad;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 public abstract class AuthorizationTokenService<T extends AuthorizationToken> {
@@ -18,6 +19,6 @@ public abstract class AuthorizationTokenService<T extends AuthorizationToken> {
                                          AuthorizationToken authorizationToken,
                                          NetworkLoad currentNetworkLoad,
                                          Optional<NetworkLoad> previousNetworkLoad,
-                                         String connectionId,
+                                         Set<Integer> receivedMessageCounters,
                                          String myAddress);
 }

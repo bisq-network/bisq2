@@ -18,6 +18,7 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.contract.mu_sig.MuSigContract;
@@ -31,7 +32,11 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
     protected final Party taker;
 
     public TwoPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party taker) {
-        super(takeOfferDate, offer, protocolType);
+        this(takeOfferDate, offer, protocolType, new Party(Role.MAKER, offer.getMakerNetworkId()), taker);
+    }
+
+    public TwoPartyContract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party maker, Party taker) {
+        super(takeOfferDate, offer, protocolType, maker);
         this.taker = taker;
     }
 
@@ -43,11 +48,16 @@ public abstract class TwoPartyContract<T extends Offer<?, ?>> extends Contract<T
         return resolveBuilder(getTwoPartyContractBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
-        return switch (proto.getTwoPartyContract().getMessageCase()) {
-            case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
-            case MUSIGCONTRACT -> MuSigContract.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto)
+            throws UnresolvableProtobufException {
+        try {
+            return switch (proto.getTwoPartyContract().getMessageCase()) {
+                case BISQEASYCONTRACT -> BisqEasyContract.fromProto(proto);
+                case MUSIGCONTRACT -> MuSigContract.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

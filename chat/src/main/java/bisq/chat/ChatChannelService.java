@@ -89,6 +89,17 @@ public abstract class ChatChannelService<M extends ChatMessage, C extends ChatCh
             //log.warn("Message invalid as sender is banned. AuthorUserProfileId={}", authorUserProfileId);
             return false;
         }
+        if (!message.hasSupportedChatMessageType()) {
+            log.warn("Message ignored as type {} is not supported for {}. MessageId={}, authorUserProfileId={}",
+                    message.getChatMessageType(), message.getClass().getSimpleName(), message.getId(),
+                    authorUserProfileId);
+            return false;
+        }
+        if (!message.hasValidChannelId()) {
+            log.warn("Message ignored as its channel ID is invalid for {}. MessageId={}, authorUserProfileId={}",
+                    message.getClass().getSimpleName(), message.getId(), authorUserProfileId);
+            return false;
+        }
         if (bannedUserService.isRateLimitExceeding(authorUserProfileId)) {
             log.warn("Message ignored as sender exceeded rate limit");
             return false;

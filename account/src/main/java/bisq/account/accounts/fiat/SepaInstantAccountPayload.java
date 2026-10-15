@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -78,19 +79,24 @@ public final class SepaInstantAccountPayload extends CountryBasedAccountPayload 
         verify();
     }
 
-    public static SepaInstantAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
+    public static SepaInstantAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            var payload = countryBasedAccountPayload.getSepaInstantAccountPayload();
 
-        return new SepaInstantAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getHolderName(),
-                payload.getIban(),
-                payload.getBic(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getAcceptedCountryCodesList()
-        );
+            return new SepaInstantAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getHolderName(),
+                    payload.getIban(),
+                    payload.getBic(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getAcceptedCountryCodesList()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

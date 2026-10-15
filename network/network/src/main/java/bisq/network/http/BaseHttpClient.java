@@ -31,13 +31,22 @@ import java.util.Optional;
 @Slf4j
 public abstract class BaseHttpClient implements HttpClient {
     public final String baseUrl;
+    /**
+     * Redacted variant of {@link #baseUrl} used for log statements and
+     * exception messages. Subclasses MUST log {@code logBaseUrl} (never
+     * {@code baseUrl}) so that secrets in the path — device tokens, session
+     * ids, etc. — never reach log files. When the caller has nothing to
+     * redact, it can pass the same value as {@code baseUrl}.
+     */
+    public final String logBaseUrl;
     public final String userAgent;
     protected final String uid;
 
     public boolean hasPendingRequest;
 
-    public BaseHttpClient(String baseUrl, String userAgent) {
+    public BaseHttpClient(String baseUrl, String logBaseUrl, String userAgent) {
         this.baseUrl = baseUrl;
+        this.logBaseUrl = logBaseUrl;
         this.userAgent = userAgent;
 
         uid = StringUtils.createUid();
@@ -61,6 +70,11 @@ public abstract class BaseHttpClient implements HttpClient {
     @Override
     public String getBaseUrl() {
         return baseUrl;
+    }
+
+    @Override
+    public String getLogBaseUrl() {
+        return logBaseUrl;
     }
 
     protected abstract String doRequest(String param,

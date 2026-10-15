@@ -29,6 +29,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.observable.collection.ObservableSet;
+import bisq.common.util.StringUtils;
 import bisq.i18n.Res;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.DbSubDirectory;
@@ -40,7 +41,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +55,9 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public final static double DEFAULT_MAX_TRADE_PRICE_DEVIATION = 0.05; // 5%
     public final static double MIN_TRADE_PRICE_DEVIATION = 0.01; // 1%
     public final static double MAX_TRADE_PRICE_DEVIATION = 0.1; // 10%
+    public final static double DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD = 0.1; // 10%
+    public final static double MIN_PRICE_DEVIATION_WARNING_THRESHOLD = 0.01; // 1%
+    public final static double MAX_PRICE_DEVIATION_WARNING_THRESHOLD = 0.5; // 50%
 
     public final static int DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 90;
     public final static int MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA = 30;
@@ -72,6 +75,8 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     @Getter
     private final Persistence<SettingsStore> persistence;
     @Getter
+    private final FavouriteMarketsService favouriteMarketsService;
+    @Getter
     private final Observable<Boolean> cookieChanged = new Observable<>(false);
     private boolean isInitialized;
 
@@ -80,6 +85,8 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public SettingsService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
         instance = this;
+
+        favouriteMarketsService = new FavouriteMarketsService(persistableStore.favouriteMarkets);
     }
 
 
@@ -96,7 +103,6 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         }
 
         // If used with FxBindings.bindBiDir we need to trigger persist call
-        pins.add(getIsTacAccepted().addObserver(value -> persist()));
         pins.add(getChatNotificationType().addObserver(value -> persist()));
         pins.add(getUseAnimations().addObserver(value -> persist()));
         pins.add(getPreventStandbyMode().addObserver(value -> persist()));
@@ -107,10 +113,13 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getBisqEasyTradeRulesConfirmed().addObserver(value -> persist()));
         pins.add(getMuSigTradeRulesConfirmed().addObserver(value -> persist()));
         pins.add(getLanguageTag().addObserver(value -> persist()));
+        pins.add(getCountryCode().addObserver(value -> persist()));
+        pins.add(getCurrencyCode().addObserver(value -> persist()));
         pins.add(getDifficultyAdjustmentFactor().addObserver(value -> persist()));
         pins.add(getIgnoreDiffAdjustmentFromSecManager().addObserver(value -> persist()));
         pins.add(getFavouriteMarkets().addObserver(this::persist));
         pins.add(getMaxTradePriceDeviation().addObserver(value -> persist()));
+        pins.add(getPriceDeviationWarningThreshold().addObserver(value -> persist()));
         pins.add(getShowBuyOffers().addObserver(value -> persist()));
         pins.add(getShowOfferListExpanded().addObserver(value -> persist()));
         pins.add(getShowMarketSelectionListCollapsed().addObserver(value -> persist()));
@@ -124,11 +133,13 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.add(getNumDaysAfterRedactingTradeData().addObserver(value -> persist()));
         pins.add(getMuSigActivated().addObserver(value -> persist()));
         pins.add(getAutoAddToContactsList().addObserver(value -> persist()));
+        pins.add(getMuSigLastSelectedFiatMarket().addObserver(value -> persist()));
+        pins.add(getMuSigLastSelectedOtherMarket().addObserver(value -> persist()));
         pins.add(getSelectedWalletMarket().addObserver(value -> persist()));
+        pins.add(getShowLatestTxs().addObserver(value -> persist()));
 
         isInitialized = true;
-
-        return CompletableFuture.completedFuture(true);
+        return favouriteMarketsService.initialize();
     }
 
     @Override
@@ -141,7 +152,7 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         pins.clear();
 
         isInitialized = false;
-        return CompletableFuture.completedFuture(true);
+        return favouriteMarketsService.shutdown();
     }
 
     @Override
@@ -161,7 +172,16 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     @Override
     public void onPersistedApplied(SettingsStore persisted) {
-        String languageTag = getLanguageTag().get();
+        applyLanguageTag(getLanguageTag().get());
+    }
+
+    /**
+     * Applies the given language tag to all locale-dependent singletons
+     * (Res i18n bundles, default locale, country/currency repositories).
+     * Called both on startup (via onPersistedApplied) and on live language changes
+     * (via setLanguageTag) to ensure Res.get() immediately reflects the new language.
+     */
+    private void applyLanguageTag(String languageTag) {
         LanguageRepository.setDefaultLanguageTag(languageTag);
         Res.setAndApplyLanguageTag(languageTag);
         Locale locale = Locale.forLanguageTag(languageTag);
@@ -208,12 +228,16 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return persistableStore.maxTradePriceDeviation;
     }
 
+    public ReadOnlyObservable<Double> getPriceDeviationWarningThreshold() {
+        return persistableStore.priceDeviationWarningThreshold;
+    }
+
     public ReadOnlyObservable<ChatNotificationType> getChatNotificationType() {
         return persistableStore.chatNotificationType;
     }
 
-    public ReadOnlyObservable<Boolean> getIsTacAccepted() {
-        return persistableStore.isTacAccepted;
+    public boolean isCurrentTacAccepted() {
+        return persistableStore.tacAcceptances.stream().anyMatch(TacAcceptance::isCurrent);
     }
 
     public ObservableSet<String> getConsumedAlertIds() {
@@ -230,6 +254,14 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
 
     public ReadOnlyObservable<String> getLanguageTag() {
         return persistableStore.languageTag;
+    }
+
+    public ReadOnlyObservable<String> getCountryCode() {
+        return persistableStore.countryCode;
+    }
+
+    public ReadOnlyObservable<String> getCurrencyCode() {
+        return persistableStore.currencyCode;
     }
 
     public ObservableSet<Market> getFavouriteMarkets() {
@@ -280,12 +312,20 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         return getAutoAddToContactsList().get();
     }
 
-    public Map<String, Market> getMuSigLastSelectedMarketByBaseCurrencyMap() {
-        return Collections.unmodifiableMap(persistableStore.muSigLastSelectedMarketByBaseCurrencyMap);
+    public ReadOnlyObservable<Market> getMuSigLastSelectedFiatMarket() {
+        return persistableStore.muSigLastSelectedFiatMarket;
+    }
+
+    public ReadOnlyObservable<Market> getMuSigLastSelectedOtherMarket() {
+        return persistableStore.muSigLastSelectedOtherMarket;
     }
 
     public ReadOnlyObservable<Market> getSelectedWalletMarket() {
         return persistableStore.selectedWalletMarket;
+    }
+
+    public ReadOnlyObservable<Boolean> getShowLatestTxs() {
+        return persistableStore.showLatestTxs;
     }
 
 
@@ -331,12 +371,23 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         }
     }
 
+    public void setPriceDeviationWarningThreshold(double value) {
+        if (value >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD && value <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD) {
+            persistableStore.priceDeviationWarningThreshold.set(value);
+        }
+    }
+
     public void setChatNotificationType(ChatNotificationType chatNotificationType) {
         persistableStore.chatNotificationType.set(chatNotificationType);
     }
 
-    public void setIsTacAccepted(boolean isTacAccepted) {
-        persistableStore.isTacAccepted.set(isTacAccepted);
+    public synchronized void acceptCurrentTac() {
+        if (isCurrentTacAccepted()) {
+            return;
+        }
+
+        persistableStore.tacAcceptances.add(TacAcceptance.current());
+        persist();
     }
 
     public void setCloseMyOfferWhenTaken(boolean closeMyOfferWhenTaken) {
@@ -346,6 +397,19 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
     public void setLanguageTag(String languageTag) {
         if (languageTag != null && LanguageRepository.LANGUAGE_TAGS.contains(languageTag)) {
             persistableStore.languageTag.set(languageTag);
+            applyLanguageTag(languageTag);
+        }
+    }
+
+    public void setCountryCode(String countryCode) {
+        if (StringUtils.isNotEmpty(countryCode)) {
+            persistableStore.countryCode.set(countryCode);
+        }
+    }
+
+    public void setCurrencyCode(String currencyCode) {
+        if (StringUtils.isNotEmpty(currencyCode)) {
+            persistableStore.currencyCode.set(currencyCode);
         }
     }
 
@@ -395,10 +459,15 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         persistableStore.autoAddToContactsList.set(value);
     }
 
-    public void setMuSigLastSelectedMarketByBaseCurrencyMap(Market market) {
+    public void setMuSigLastSelectedFiatMarket(Market market) {
         if (market != null) {
-            persistableStore.muSigLastSelectedMarketByBaseCurrencyMap.put(market.getBaseCurrencyCode(), market);
-            persist();
+            persistableStore.muSigLastSelectedFiatMarket.set(market);
+        }
+    }
+
+    public void setMuSigLastSelectedOtherMarket(Market market) {
+        if (market != null) {
+            persistableStore.muSigLastSelectedOtherMarket.set(market);
         }
     }
 
@@ -406,6 +475,10 @@ public class SettingsService extends RateLimitedPersistenceClient<SettingsStore>
         if (market != null) {
             persistableStore.selectedWalletMarket.set(market);
         }
+    }
+
+    public void setShowLatestTxs(boolean showLatestTxs) {
+        persistableStore.showLatestTxs.set(showLatestTxs);
     }
 
 

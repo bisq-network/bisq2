@@ -36,6 +36,10 @@ import java.util.Optional;
 public class WebSocketRestApiResponse implements WebSocketMessage {
     private final String requestId;
     private final int statusCode;
+    // The body is the response of a REST call. It can contain a private key, payment account data or chat
+    // messages. toString() prints only the length of the body, so that no log statement which prints this
+    // object writes the body to the log file.
+    @ToString.Exclude
     private final String body;
 
     @JsonCreator
@@ -45,6 +49,11 @@ public class WebSocketRestApiResponse implements WebSocketMessage {
         this.requestId = requestId;
         this.statusCode = statusCode;
         this.body = body;
+    }
+
+    @ToString.Include(name = "bodyLength")
+    private int bodyLength() {
+        return body == null ? 0 : body.length();
     }
 
     @JsonIgnore

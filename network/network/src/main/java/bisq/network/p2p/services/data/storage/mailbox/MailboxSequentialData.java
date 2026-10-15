@@ -18,11 +18,19 @@
 package bisq.network.p2p.services.data.storage.mailbox;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.DigestUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
@@ -30,44 +38,20 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
+@Slf4j
 @Getter
-public final class MailboxSequentialData implements NetworkProto {
+public final class MailboxSequentialData implements NetworkProto, Canonical {
     private final MailboxData mailboxData;
-    private final byte[] senderPublicKeyHash;
-    private final byte[] receiversPublicKeyHash;
-    private final byte[] receiversPubKeyBytes;
-    private final long created;
+    // Sequence number is always 1 as it is used only in AddMailboxRequests and those are permitted only once.
+    // The RemoveMailboxRequest will set it to Integer.MAX and disallow by that another message.
     private final int sequenceNumber;
-    // transient fields are excluded by default for EqualsAndHashCode
+    private final byte[] senderPublicKeyHash;
+    private final long created;
+    private final byte[] receiversPubKeyBytes;
+    private final byte[] receiversPublicKeyHash;
     private transient final PublicKey receiversPubKey;
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                System.currentTimeMillis(),
-                sequenceNumber);
-    }
-
-    public MailboxSequentialData(MailboxData mailboxData,
-                                 byte[] senderPublicKeyHash,
-                                 byte[] receiversPublicKeyHash,
-                                 PublicKey receiversPubKey,
-                                 long created,
-                                 int sequenceNumber) {
-        this(mailboxData,
-                senderPublicKeyHash,
-                receiversPublicKeyHash,
-                receiversPubKey,
-                receiversPubKey.getEncoded(),
-                created,
-                sequenceNumber);
-    }
 
     public MailboxSequentialData(MailboxData mailboxData,
                                  byte[] senderPublicKeyHash,
@@ -89,9 +73,17 @@ public final class MailboxSequentialData implements NetworkProto {
 
     @Override
     public void verify() {
+        checkArgument(sequenceNumber == 1,
+                "sequenceNumber must be 1. sequenceNumber=" + sequenceNumber);
         NetworkDataValidation.validateHash(senderPublicKeyHash);
         NetworkDataValidation.validateHash(receiversPublicKeyHash);
-        NetworkDataValidation.validateECPubKey(receiversPubKeyBytes);
+        EcPublicKeyValidation.validate(receiversPubKeyBytes);
+        // Storage key V2 and removal authorization must identify the same receiver.
+        checkArgument(Arrays.equals(receiversPublicKeyHash, DigestUtil.hash(receiversPubKeyBytes)),
+                "Receiver public key hash must match receiver public key bytes");
+        // The sender must be the owner of the confidential message (see docs/specifications/network/storage-ownership.md)
+        checkArgument(Arrays.equals(senderPublicKeyHash, mailboxData.getConfidentialMessage().getOwnerPubKeyHash()),
+                "Sender public key hash must match the sender of the confidential message");
         NetworkDataValidation.validateDate(created);
     }
 
@@ -111,9 +103,10 @@ public final class MailboxSequentialData implements NetworkProto {
                 .setSequenceNumber(sequenceNumber);
     }
 
-    public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto) {
-        byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
+    public static MailboxSequentialData fromProto(bisq.network.protobuf.MailboxSequentialData proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] receiversPubKeyBytes = proto.getReceiversPubKeyBytes().toByteArray();
             PublicKey receiversPubKey = KeyGeneration.generatePublic(receiversPubKeyBytes);
             return new MailboxSequentialData(
                     MailboxData.fromProto(proto.getMailboxData()),
@@ -124,19 +117,38 @@ public final class MailboxSequentialData implements NetworkProto {
                     proto.getCreated(),
                     proto.getSequenceNumber()
             );
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 
-    public boolean isSequenceNrInvalid(long seqNumberFromMap) {
-        return sequenceNumber <= seqNumberFromMap;
-    }
 
-    public boolean isExpired() {
-        return (System.currentTimeMillis() - created) >
-                Math.min(MailboxData.MAX_TLL, mailboxData.getMetaData().getTtl());
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<MailboxSequentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<MailboxSequentialData>newBuilder()
+                    .canonical(1, MailboxSequentialData::getMailboxData)
+                    .sint32(2, MailboxSequentialData::getSequenceNumber)
+                    .bytes(3, MailboxSequentialData::getSenderPublicKeyHash)
+                    .sint64(4, MailboxSequentialData::getCreated)
+                    .bytes(5, MailboxSequentialData::getReceiversPubKeyBytes)
+                    .bytes(6, MailboxSequentialData::getReceiversPublicKeyHash)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<MailboxSequentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            // Only the stored data has a storage key encoding (see docs/specifications/network/storage-keys.md)
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for MailboxSequentialData");
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override

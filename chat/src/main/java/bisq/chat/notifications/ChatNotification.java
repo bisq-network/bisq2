@@ -23,6 +23,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.notifications.Notification;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -39,6 +40,47 @@ import java.util.Optional;
 public class ChatNotification implements Notification, PersistableProto {
     public static String createId(String channelId, String messageId) {
         return channelId + "." + messageId;
+    }
+
+    @Override
+    public Category getCategory() {
+        return Category.CHAT_MESSAGE;
+    }
+
+    /**
+     * Exposes the per-channel tradeId (already tracked as a domain field) to the
+     * mobile relay so taps on a chat-message push deep-link straight to the
+     * relevant trade chat instead of the generic open-trade list.
+     */
+    @Override
+    public Optional<String> getTradeId() {
+        return tradeId;
+    }
+
+    /**
+     * The channel is already a domain field, so this needs no proto change. Reported for
+     * every chat notification, trade chats included: {@code MobileNotificationPayload#from}
+     * is where it gets dropped in favour of the trade id.
+     */
+    @Override
+    public Optional<String> getChannelId() {
+        return Optional.of(chatChannelId);
+    }
+
+    /**
+     * The message sender, which is the counterparty for every notification that reaches the mobile
+     * relay: the eligibility whitelists let through only trade chats and DMs, and a user is never
+     * notified about their own message. In a public channel the sender is nobody's counterparty, but
+     * those notifications stay on the desktop. Already a domain field, so this needs no proto change
+     * either.
+     * <p>
+     * Empty when the profile could not be resolved, which is the same condition under which
+     * {@link #title} falls back to {@code Res.get("data.na")}. The client treats that as "no name"
+     * rather than displaying a placeholder it cannot localise.
+     */
+    @Override
+    public Optional<String> getPeerUserName() {
+        return senderUserProfile.map(UserProfile::getUserName);
     }
 
     private final String id;
@@ -122,20 +164,25 @@ public class ChatNotification implements Notification, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto) {
-        return new ChatNotification(
-                proto.getId(),
-                proto.getTitle(),
-                proto.getMessage(),
-                proto.getDate(),
-                proto.getChatChannelId(),
-                ChatChannelDomain.fromProto(proto.getChatChannelDomain()),
-                proto.getChatMessageId(),
-                proto.hasTradeId() ? Optional.of(proto.getTradeId()) : Optional.empty(),
-                proto.hasSenderUserProfile() ? Optional.of(UserProfile.fromProto(proto.getSenderUserProfile())) : Optional.empty(),
-                proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
-                proto.getIsConsumed()
-        );
+    public static ChatNotification fromProto(bisq.chat.protobuf.ChatNotification proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ChatNotification(
+                    proto.getId(),
+                    proto.getTitle(),
+                    proto.getMessage(),
+                    proto.getDate(),
+                    proto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(proto.getChatChannelDomain()),
+                    proto.getChatMessageId(),
+                    proto.hasTradeId() ? Optional.of(proto.getTradeId()) : Optional.empty(),
+                    proto.hasSenderUserProfile() ? Optional.of(UserProfile.fromProto(proto.getSenderUserProfile())) : Optional.empty(),
+                    proto.hasMediator() ? Optional.of(UserProfile.fromProto(proto.getMediator())) : Optional.empty(),
+                    proto.getIsConsumed()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private static Optional<String> findTradeId(ChatChannel<? extends ChatMessage> chatChannel) {

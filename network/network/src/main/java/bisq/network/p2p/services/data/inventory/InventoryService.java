@@ -29,11 +29,14 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.data.AddDataRequest;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.RemoveDataRequest;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
+import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -151,10 +154,10 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
 
     @Override
     public void onDisconnect(Connection connection, CloseReason closeReason) {
+        super.onDisconnect(connection, closeReason);
         if (node.getNumConnections() == 0) {
             policy.onAllConnectionsLost();
         }
-        // Might let fail a pending request
         updateNumPendingRequests();
     }
 
@@ -267,17 +270,37 @@ public class InventoryService extends RequestResponseHandler<InventoryRequest, I
                         model.getRequestTimestampByConnectionId().remove(connection.getId());
                     }
                 })
-                .thenApply(response -> {
+                .thenCompose(response -> {
                     Inventory inventory = response.getInventory();
-                    inventory.getEntries().forEach(dataRequest -> {
-                        if (dataRequest instanceof AddDataRequest) {
-                            dataService.processAddDataRequest((AddDataRequest) dataRequest, false);
-                        } else if (dataRequest instanceof RemoveDataRequest) {
-                            dataService.processRemoveDataRequest((RemoveDataRequest) dataRequest, false);
-                        }
-                    });
-                    return inventory;
+                    return storeEntries(dataService, inventory)
+                            .thenApply(numStoredEntries -> {
+                                policy.onInventoryProcessed(connection, inventory, numStoredEntries);
+                                return inventory;
+                            });
                 });
+    }
+
+    // Returns the number of entries which the stores accepted
+    @VisibleForTesting
+    static CompletableFuture<Integer> storeEntries(DataService dataService, Inventory inventory) {
+        List<CompletableFuture<Boolean>> results = inventory.getEntries().stream()
+                .map(dataRequest -> store(dataService, dataRequest))
+                .toList();
+        return CompletableFutureUtils.allOf(results)
+                .thenApply(stored -> (int) stored.stream().filter(Boolean::booleanValue).count());
+    }
+
+    private static CompletableFuture<Boolean> store(DataService dataService, DataRequest dataRequest) {
+        CompletableFuture<DataStorageResult> result;
+        if (dataRequest instanceof AddDataRequest addDataRequest) {
+            result = dataService.processAddDataRequest(addDataRequest, false);
+        } else if (dataRequest instanceof RemoveDataRequest removeDataRequest) {
+            result = dataService.processRemoveDataRequest(removeDataRequest, false);
+        } else {
+            return CompletableFuture.completedFuture(false);
+        }
+        // The future fails if the node has no store for the type of the request
+        return result.handle((dataStorageResult, throwable) -> throwable == null && dataStorageResult.isSuccess());
     }
 
     private void startPeriodicRequests(long interval) {

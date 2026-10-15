@@ -22,6 +22,7 @@ import bisq.chat.ChatMessage;
 import bisq.chat.pub.PublicChatMessage;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqMenuItem;
+import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.DropdownMenu;
 import bisq.desktop.components.controls.DropdownBisqMenuItem;
 import bisq.desktop.main.content.chat.message_container.list.ChatMessageListItem;
@@ -29,8 +30,10 @@ import bisq.desktop.main.content.chat.message_container.list.ChatMessagesListCon
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
@@ -60,6 +63,12 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         userNameAndDateHBox = new HBox(10, item.getBondedRoleBadge(), userName, dateTime);
         userNameAndDateHBox.setAlignment(Pos.CENTER_LEFT);
+        if (item.isUnverifiedForwardedMessage()) {
+            Label unverifiedLabel = new Label(Res.get("authorizedRole.mediator.unverifiedMessage"));
+            unverifiedLabel.getStyleClass().addAll("bisq-text-yellow-dim", "font-size-09", "font-light");
+            unverifiedLabel.setTooltip(new BisqTooltip(Res.get("authorizedRole.mediator.unverifiedMessage.tooltip")));
+            userNameAndDateHBox.getChildren().add(2, unverifiedLabel);
+        }
     }
 
     @Override
@@ -120,9 +129,12 @@ public class PeerTextMessageBox extends BubbleMessageBox {
 
         // Message
         quotedMessageVBox.setId("chat-message-quote-box-peer-msg");
-        message.setAlignment(Pos.CENTER_LEFT);
-        message.maxWidthProperty().bind(list.widthProperty().subtract(140));
-        VBox messageVBox = new VBox(quotedMessageVBox, message);
+        setMessageAlignment(Pos.CENTER_LEFT);
+        bindMessageMaxWidth(list.widthProperty().subtract(140));
+        VBox messageVBox = new VBox(quotedMessageVBox, messageNode);
+        messageVBox.setFillWidth(true);
+        messageVBox.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(messageVBox, Priority.SOMETIMES);
         HBox.setMargin(messageVBox, new Insets(0, 0, 0, -10));
 
         // Message background
@@ -134,7 +146,7 @@ public class PeerTextMessageBox extends BubbleMessageBox {
     public void dispose() {
         super.dispose();
 
-        message.maxWidthProperty().unbind();
+        unbindMessageMaxWidth();
 
         userName.setOnMouseClicked(null);
         userProfileIcon.setOnMouseClicked(null);

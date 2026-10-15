@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -62,12 +63,17 @@ public final class StrikeAccountPayload extends CountryBasedAccountPayload imple
         return bisq.account.protobuf.StrikeAccountPayload.newBuilder().setHolderName(holderName);
     }
 
-    public static StrikeAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        return new StrikeAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                proto.getCountryBasedAccountPayload().getCountryCode(),
-                proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
+    public static StrikeAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new StrikeAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    proto.getCountryBasedAccountPayload().getCountryCode(),
+                    proto.getCountryBasedAccountPayload().getStrikeAccountPayload().getHolderName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

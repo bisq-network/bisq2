@@ -22,6 +22,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
+import bisq.common.logging.LegacyLogSecrets;
 import bisq.common.platform.OS;
 import bisq.common.platform.Platform;
 import bisq.common.platform.PlatformUtils;
@@ -86,6 +87,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -144,7 +146,7 @@ public abstract class Overlay<T extends Overlay<T>> {
         INFORMATION(AnimationType.FadeInAtCenter),
         INSTRUCTION(AnimationType.ScaleFromCenter),
         ATTENTION(AnimationType.ScaleFromCenter),
-        CONFIRMATION(AnimationType.ScaleYFromCenter),
+        CONFIRMATION(AnimationType.SlideDownFromCenterTop),
 
         WARNING(AnimationType.ScaleDownToCenter),
         INVALID(AnimationType.SlideDownFromCenterTop, Transitions.Type.LIGHT_BLUR_LIGHT),
@@ -1021,7 +1023,7 @@ public abstract class Overlay<T extends Overlay<T>> {
                         Files.deleteIfExists(debugLogForZipFilePath);
                         FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
                         String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
-                        logContent = StringUtils.maskHomeDirectory(logContent);
+                        logContent = LegacyLogSecrets.redact(StringUtils.maskHomeDirectory(logContent));
                         FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -1035,7 +1037,13 @@ public abstract class Overlay<T extends Overlay<T>> {
                         logPaths.forEach(logPath -> {
                             if (Files.isRegularFile(logPath)) {
                                 try {
-                                    FileMutatorUtils.copyFile(logPath, zipFileSystem.getPath(logPath.getFileName().toString()));
+                                    // Log files are appended across versions, and versions 2.1.3 to 2.1.13 logged the
+                                    // onion private keys of all identities. ISO-8859-1 maps each byte to one
+                                    // character, so the copy keeps all other bytes unchanged.
+                                    String logContent = Files.readString(logPath, StandardCharsets.ISO_8859_1);
+                                    Files.writeString(zipFileSystem.getPath(logPath.getFileName().toString()),
+                                            LegacyLogSecrets.redact(logContent),
+                                            StandardCharsets.ISO_8859_1);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }

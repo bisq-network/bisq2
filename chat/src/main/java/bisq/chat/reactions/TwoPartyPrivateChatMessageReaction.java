@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -35,8 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with TwoPartyPrivateChatMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_15_DAYS, TwoPartyPrivateChatMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessageReaction(String id,
                                               UserProfile senderUserProfile,
@@ -50,6 +50,8 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                                               boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override
@@ -70,23 +72,28 @@ public final class TwoPartyPrivateChatMessageReaction extends PrivateChatMessage
                 .setIsRemoved(isRemoved);
     }
 
-    public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-        bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction privateChatMessageReaction = baseProto.getTwoPartyPrivateChatMessageReaction();
-        return new TwoPartyPrivateChatMessageReaction(
-                baseProto.getId(),
-                UserProfile.fromProto(privateChatMessageReaction.getSender()),
-                privateChatMessageReaction.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate(),
-                privateChatMessageReaction.getIsRemoved());
+    public static TwoPartyPrivateChatMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.chat.protobuf.TwoPartyPrivateChatMessageReaction privateChatMessageReaction = baseProto.getTwoPartyPrivateChatMessageReaction();
+            return new TwoPartyPrivateChatMessageReaction(
+                    baseProto.getId(),
+                    UserProfile.fromProto(privateChatMessageReaction.getSender()),
+                    privateChatMessageReaction.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate(),
+                    privateChatMessageReaction.getIsRemoved());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

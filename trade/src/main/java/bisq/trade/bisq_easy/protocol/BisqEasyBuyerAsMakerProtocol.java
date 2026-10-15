@@ -39,6 +39,11 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .to(FAILED);
 
         fromAny()
+                .on(BisqEasyChatChannelMismatchEvent.class)
+                .run(BisqEasyChatChannelMismatchEventHandler.class)
+                .to(FAILED);
+
+        fromAny()
                 .on(BisqEasyReportErrorMessage.class)
                 .run(BisqEasyReportErrorMessageHandler.class)
                 .to(FAILED_AT_PEER);

@@ -18,19 +18,23 @@
 package bisq.security;
 
 import bisq.common.encoding.Hex;
+import bisq.common.encoding.canonical.Canonical;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
+import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
-@Slf4j
 @Getter
-public final class ConfidentialData implements NetworkProto {
+public final class ConfidentialData implements NetworkProto, Canonical {
     private static final int MAX_SIZE_CIPHERTEXT = 20_000;
 
     private final byte[] senderPublicKey;
@@ -47,19 +51,15 @@ public final class ConfidentialData implements NetworkProto {
         this.cipherText = cipherText;
         this.signature = signature;
 
-        try {
-            verify();
-        } catch (Exception e) {
-            log.error("ConfidentialData verification failed", e);
-            throw e;
-        }
+        // The caller reports invalid data: fromProto for received data, HybridEncryption for data which we create.
+        verify();
     }
 
     @Override
     public void verify() {
         checkArgument(iv.length <= 20);
         checkArgument(cipherText.length <= MAX_SIZE_CIPHERTEXT, "cipherText size must not exceed 20 000 bytes");
-        NetworkDataValidation.validateECPubKey(senderPublicKey);
+        EcPublicKeyValidation.validate(senderPublicKey);
         NetworkDataValidation.validateECSignature(signature);
     }
 
@@ -77,15 +77,41 @@ public final class ConfidentialData implements NetworkProto {
                 .setSignature(ByteString.copyFrom(signature));
     }
 
-    public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto) {
-        return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
-                proto.getIv().toByteArray(),
-                proto.getCipherText().toByteArray(),
-                proto.getSignature().toByteArray());
+    public static ConfidentialData fromProto(bisq.security.protobuf.ConfidentialData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ConfidentialData(proto.getSenderPublicKey().toByteArray(),
+                    proto.getIv().toByteArray(),
+                    proto.getCipherText().toByteArray(),
+                    proto.getSignature().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
-    public double getCostFactor() {
-        return cipherText.length / (double) MAX_SIZE_CIPHERTEXT;
+
+    /* --------------------------------------------------------------------- */
+    // Canonical
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<ConfidentialData> DEFAULT_SCHEMA =
+            CanonicalSchema.<ConfidentialData>newBuilder()
+                    .bytes(1, ConfidentialData::getSenderPublicKey)
+                    .bytes(2, ConfidentialData::getIv)
+                    .bytes(3, ConfidentialData::getCipherText)
+                    .bytes(4, ConfidentialData::getSignature)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<ConfidentialData> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> DEFAULT_SCHEMA;
+            case STORAGE_KEY -> DEFAULT_SCHEMA;
+            case PROOF_OF_WORK -> DEFAULT_SCHEMA;
+            case TRADE_CONTRACT -> DEFAULT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
     }
 
     @Override

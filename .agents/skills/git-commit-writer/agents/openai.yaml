@@ -1,0 +1,8 @@
+interface:
+  display_name: "Git Commit Writer"
+  short_description: "Write clear, reviewable commit messages"
+  brand_color: "#2E8B57"
+  default_prompt: "Use $git-commit-writer to draft a concise commit message for my staged changes."
+
+policy:
+  allow_implicit_invocation: true

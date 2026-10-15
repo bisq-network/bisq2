@@ -22,6 +22,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -201,52 +202,57 @@ public final class SwiftAccountPayload extends CountryBasedAccountPayload implem
         return builder;
     }
 
-    public static SwiftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
-        bisq.account.protobuf.SwiftAccountPayload payload = countryBasedAccountPayload.getSwiftAccountPayload();
-        Optional<String> beneficiaryPhone = payload.hasBeneficiaryPhone()
-                ? Optional.of(payload.getBeneficiaryPhone())
-                : Optional.empty();
-        Optional<String> bankBranch = payload.hasBankBranch()
-                ? Optional.of(payload.getBankBranch())
-                : Optional.empty();
-        Optional<String> intermediaryBankCountryCode = payload.hasIntermediaryBankCountryCode()
-                ? Optional.of(payload.getIntermediaryBankCountryCode())
-                : Optional.empty();
-        Optional<String> intermediaryBankSwiftCode = payload.hasIntermediaryBankSwiftCode()
-                ? Optional.of(payload.getIntermediaryBankSwiftCode())
-                : Optional.empty();
-        Optional<String> intermediaryBankName = payload.hasIntermediaryBankName()
-                ? Optional.of(payload.getIntermediaryBankName())
-                : Optional.empty();
-        Optional<String> intermediaryBankBranch = payload.hasIntermediaryBankBranch()
-                ? Optional.of(payload.getIntermediaryBankBranch())
-                : Optional.empty();
-        Optional<String> intermediaryBankAddress = payload.hasIntermediaryBankAddress()
-                ? Optional.of(payload.getIntermediaryBankAddress())
-                : Optional.empty();
-        Optional<String> additionalInstructions = payload.hasAdditionalInstructions()
-                ? Optional.of(payload.getAdditionalInstructions())
-                : Optional.empty();
-        return new SwiftAccountPayload(proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedAccountPayload.getCountryCode(),
-                payload.getBeneficiaryName(),
-                payload.getBeneficiaryAccountNr(),
-                beneficiaryPhone,
-                payload.getBeneficiaryAddress(),
-                payload.getSelectedCurrencyCode(),
-                payload.getBankSwiftCode(),
-                payload.getBankName(),
-                bankBranch,
-                payload.getBankAddress(),
-                intermediaryBankCountryCode,
-                intermediaryBankSwiftCode,
-                intermediaryBankName,
-                intermediaryBankBranch,
-                intermediaryBankAddress,
-                additionalInstructions
-        );
+    public static SwiftAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.account.protobuf.CountryBasedAccountPayload countryBasedAccountPayload = proto.getCountryBasedAccountPayload();
+            bisq.account.protobuf.SwiftAccountPayload payload = countryBasedAccountPayload.getSwiftAccountPayload();
+            Optional<String> beneficiaryPhone = payload.hasBeneficiaryPhone()
+                    ? Optional.of(payload.getBeneficiaryPhone())
+                    : Optional.empty();
+            Optional<String> bankBranch = payload.hasBankBranch()
+                    ? Optional.of(payload.getBankBranch())
+                    : Optional.empty();
+            Optional<String> intermediaryBankCountryCode = payload.hasIntermediaryBankCountryCode()
+                    ? Optional.of(payload.getIntermediaryBankCountryCode())
+                    : Optional.empty();
+            Optional<String> intermediaryBankSwiftCode = payload.hasIntermediaryBankSwiftCode()
+                    ? Optional.of(payload.getIntermediaryBankSwiftCode())
+                    : Optional.empty();
+            Optional<String> intermediaryBankName = payload.hasIntermediaryBankName()
+                    ? Optional.of(payload.getIntermediaryBankName())
+                    : Optional.empty();
+            Optional<String> intermediaryBankBranch = payload.hasIntermediaryBankBranch()
+                    ? Optional.of(payload.getIntermediaryBankBranch())
+                    : Optional.empty();
+            Optional<String> intermediaryBankAddress = payload.hasIntermediaryBankAddress()
+                    ? Optional.of(payload.getIntermediaryBankAddress())
+                    : Optional.empty();
+            Optional<String> additionalInstructions = payload.hasAdditionalInstructions()
+                    ? Optional.of(payload.getAdditionalInstructions())
+                    : Optional.empty();
+            return new SwiftAccountPayload(proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedAccountPayload.getCountryCode(),
+                    payload.getBeneficiaryName(),
+                    payload.getBeneficiaryAccountNr(),
+                    beneficiaryPhone,
+                    payload.getBeneficiaryAddress(),
+                    payload.getSelectedCurrencyCode(),
+                    payload.getBankSwiftCode(),
+                    payload.getBankName(),
+                    bankBranch,
+                    payload.getBankAddress(),
+                    intermediaryBankCountryCode,
+                    intermediaryBankSwiftCode,
+                    intermediaryBankName,
+                    intermediaryBankBranch,
+                    intermediaryBankAddress,
+                    additionalInstructions
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -19,6 +19,8 @@ package bisq.chat.bisq_easy.open_trades;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyOpenTradeChannelStore> {
+public final class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyOpenTradeChannelStore> {
     private final ObservableSet<BisqEasyOpenTradeChannel> channels = new ObservableSet<>();
 
     private BisqEasyOpenTradeChannelStore(Set<BisqEasyOpenTradeChannel> privateTradeChannels) {
@@ -51,11 +53,17 @@ public class BisqEasyOpenTradeChannelStore implements PersistableStore<BisqEasyO
         return unsafeToProto(serializeForHash);
     }
 
-    public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto) {
-        Set<BisqEasyOpenTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
+    public static BisqEasyOpenTradeChannelStore fromProto(bisq.chat.protobuf.BisqEasyOpenTradeChannelStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<BisqEasyOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(),
+                            e -> (BisqEasyOpenTradeChannel) BisqEasyOpenTradeChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new BisqEasyOpenTradeChannelStore(privateTradeChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

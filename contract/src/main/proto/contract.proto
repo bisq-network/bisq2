@@ -36,6 +36,7 @@ enum Role {
 message Party {
   Role role = 1;
   network.identity.NetworkId networkId = 2;
+  optional bytes saltedAccountPayloadHash = 3;
 }
 message Contract {
   uint64 takeOfferDate = 1;
@@ -82,7 +83,7 @@ message BisqEasyContract {
   account.PaymentMethodSpec baseSidePaymentMethodSpec = 3;
   account.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
   optional user.UserProfile mediator = 12;
-  offer.PriceSpec priceSpec = 13;
+  offer.PriceSpec priceSpec = 13 [deprecated = true]; // Equals the price spec of the offer since 2.1.14, kept for the contract hash and older nodes
   uint64 marketPrice = 14;
 }
 
@@ -94,6 +95,7 @@ message MuSigContract {
   account.PaymentMethodSpec baseSidePaymentMethodSpec = 3;
   account.PaymentMethodSpec quoteSidePaymentMethodSpec = 4;
   optional user.UserProfile mediator = 5;
-  offer.PriceSpec priceSpec =6;
-  sint64 marketPrice = 7;
+  optional user.UserProfile arbitrator = 6;
+  offer.PriceSpec priceSpec = 7;
+  sint64 marketPrice = 8;
 }

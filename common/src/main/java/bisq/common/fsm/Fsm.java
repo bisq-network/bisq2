@@ -40,8 +40,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
- * The Fsm does not allow cycle graphs or transitions to previous states. For determining the order of the states we
- * use getOrdinal() which returns in case of enums the ordinal.
+ * State-changing transitions do not allow cycle graphs or transitions to previous states. For determining the order
+ * of the states we use getOrdinal() which returns in case of enums the ordinal. Internal transitions can process an
+ * event without changing the current state.
  */
 @Slf4j
 public abstract class Fsm<M extends FsmModel> {
@@ -67,20 +68,26 @@ public abstract class Fsm<M extends FsmModel> {
                 State currentState = model.getState();
                 checkNotNull(currentState, "currentState must not be null");
                 if (currentState.isFinalState()) {
-                    log.warn("We have reached the final state and do not allow further state transition. New event was: {}", event);
+                    log.warn("We have reached the final state and do not allow further state transition. New event was: {}",
+                            describe(event));
                     return;
                 }
                 log.info("Start transition from currentState {}", currentState);
                 Class<? extends Event> eventClass = event.getClass();
                 var transitionMapEntriesForEvent = findTransitionMapEntriesForEvent(eventClass);
-                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + event);
+                checkArgument(!transitionMapEntriesForEvent.isEmpty(), "No transition found for given event " + describe(event));
                 Optional<Transition> transition = findTransition(currentState, transitionMapEntriesForEvent);
                 if (transition.isPresent()) {
-                    State targetState = transition.get().getTargetState();
-                    checkArgument(targetState.getOrdinal() > currentState.getOrdinal(),
-                            "The target state ordinal must be higher than the current state ordinal. " +
-                                    "currentState=%s, targetState=%s", currentState, targetState);
-                    Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass = transition.get().getEventHandlerClass();
+                    Transition selectedTransition = transition.orElseThrow();
+                    Optional<State> targetState = selectedTransition.getTargetState();
+                    if (!selectedTransition.isInternal()) {
+                        State newState = targetState.orElseThrow();
+                        checkArgument(newState.getOrdinal() > currentState.getOrdinal(),
+                                "The target state ordinal must be higher than the current state ordinal. " +
+                                        "currentState=%s, targetState=%s", currentState, newState);
+                    }
+                    Optional<Class<? extends EventHandler<? extends Event>>> eventHandlerClass =
+                            selectedTransition.getEventHandlerClass();
                     if (eventHandlerClass.isPresent()) {
                         @SuppressWarnings("unchecked")
                         EventHandler<E> eventHandler = newEventHandlerFromClass((Class<? extends EventHandler<E>>) eventHandlerClass.get());
@@ -89,20 +96,25 @@ public abstract class Fsm<M extends FsmModel> {
                         eventHandler.handle(event);
                     }
 
-                    log.info("Transition completed to new state {}", targetState);
-                    model.setNewState(targetState);
                     model.eventQueue.remove(event);
-                    if (targetState.isFinalState()) {
-                        model.processedEvents.clear();
-                        model.eventQueue.clear();
+                    if (selectedTransition.isInternal()) {
+                        log.info("Internal transition completed at state {}", currentState);
                     } else {
-                        model.processedEvents.add(eventClass);
-                        // Apply all pending events to see if any of those match our current state.
-                        // If an exception is thrown by the processed pending event it will get thrown to the
-                        // caller. This would be a different triggering event as the event which cause
-                        // the exception (the one from the queue).
-                        // Clone set to avoid ConcurrentModificationException
-                        new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                        State newState = targetState.orElseThrow();
+                        log.info("Transition completed to new state {}", newState);
+                        model.setNewState(newState);
+                        if (newState.isFinalState()) {
+                            model.processedEvents.clear();
+                            model.eventQueue.clear();
+                        } else {
+                            model.processedEvents.add(eventClass);
+                            // Apply all pending events to see if any of those match our current state.
+                            // If an exception is thrown by the processed pending event it will get thrown to the
+                            // caller. This would be a different triggering event as the event which cause
+                            // the exception (the one from the queue).
+                            // Clone set to avoid ConcurrentModificationException
+                            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                        }
                     }
                 } else {
                     log.info("We did not find a transition with state {} and event {}. " +
@@ -116,7 +128,7 @@ public abstract class Fsm<M extends FsmModel> {
                             .forEach(e -> model.eventQueue.add(event));
                 }
             } catch (Exception exception) {
-                log.error("Error at handling {}.", event, exception);
+                log.error("Error at handling {}.", describe(event), exception);
                 FsmException fsmException = new FsmException(exception, event);
                 // In case of an exception we fire the FsmErrorEvent to trigger an error state.
                 // We apply that only if the event which triggered the exception was not the FsmErrorEvent itself
@@ -239,6 +251,16 @@ public abstract class Fsm<M extends FsmModel> {
             return this;
         }
 
+        /**
+         * Runs an internal transition without changing the current state. The event is consumed without recording its
+         * class as processed, so later events of the same class can still be handled.
+         */
+        public TransitionBuilder<M> stay() {
+            transition.markInternal();
+            fsm.insertTransition(transition);
+            return this;
+        }
+
         // The paths param is not used. It is just to allow nesting the paths inside the branch for better readability.
         public TransitionBuilder<M> branch(Object... paths) {
             return this;
@@ -247,5 +269,11 @@ public abstract class Fsm<M extends FsmModel> {
         public TransitionBuilder<M> then() {
             return new TransitionBuilder<>(fsm);
         }
+    }
+
+    // Events can be network messages, for example trade messages with the payment account data of the peer. Users
+    // share their log files, and exception messages reach the logs and error reports. So we name only the type.
+    private static String describe(Event event) {
+        return event == null ? "null" : event.getClass().getSimpleName();
     }
 }

@@ -21,12 +21,11 @@ import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.mu_sig.MuSigOffer;
-import bisq.support.mediation.mu_sig.MuSigMediationResult;
-import bisq.trade.MuSigDisputeState;
 import bisq.trade.Trade;
 import bisq.trade.TradeLifecycleState;
 import bisq.trade.TradeParty;
@@ -56,8 +55,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     private final Observable<String> depositTxId = new Observable<>("TODO depositTxId");
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
-    private final Observable<MuSigDisputeState> disputeState = new Observable<>(MuSigDisputeState.NO_DISPUTE);
-    private Optional<MuSigMediationResult> muSigMediationResult = Optional.empty();
+    private MuSigTradeDispute tradeDispute = new MuSigTradeDispute();
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -111,56 +109,57 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         var builder = bisq.trade.protobuf.MuSigTrade.newBuilder();
         Optional.ofNullable(depositTxId.get()).ifPresent(builder::setDepositTxId);
         tradeCompletedDate.ifPresent(builder::setTradeCompletedDate);
-        builder.setDisputeState(disputeState.get().toProtoEnum());
-        muSigMediationResult.ifPresent(result -> builder.setMuSigMediationResult(result.toProto(serializeForHash)));
+        builder.setTradeDispute(tradeDispute.toProto(serializeForHash));
         return builder;
     }
 
-    public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) {
-        bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
-        MuSigTradeState state = ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState(), MuSigTradeState.UNSPECIFIED);
-        MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
-                state,
-                proto.getId(),
-                TradeRole.fromProto(proto.getTradeRole()),
-                Identity.fromProto(proto.getMyIdentity()),
-                TradeParty.protoToMuSigTradeParty(proto.getTaker()),
-                TradeParty.protoToMuSigTradeParty(proto.getMaker()),
-                TradeLifecycleState.fromProto(proto.getLifecycleState()));
-        if (proto.hasErrorMessage()) {
-            trade.setErrorMessage(proto.getErrorMessage());
-        }
-        if (proto.hasErrorStackTrace()) {
-            trade.setErrorStackTrace(proto.getErrorStackTrace());
-        }
-        if (proto.hasPeersErrorMessage()) {
-            trade.setPeersErrorMessage(proto.getPeersErrorMessage());
-        }
-        if (proto.hasPeersErrorStackTrace()) {
-            trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
-        }
-        if (proto.hasTradeProtocolFailure()) {
-            trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
-        }
-        if (proto.hasPeersTradeProtocolFailure()) {
-            trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
-        }
+    public static MuSigTrade fromProto(bisq.trade.protobuf.Trade proto) throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.MuSigTrade muSigTradeProto = proto.getMuSigTrade();
+            MuSigTradeState state = ProtobufUtils.enumFromProto(MuSigTradeState.class, proto.getState(), MuSigTradeState.UNSPECIFIED);
+            MuSigTrade trade = new MuSigTrade(MuSigContract.fromProto(proto.getContract()),
+                    state,
+                    proto.getId(),
+                    TradeRole.fromProto(proto.getTradeRole()),
+                    Identity.fromProto(proto.getMyIdentity()),
+                    TradeParty.protoToMuSigTradeParty(proto.getTaker()),
+                    TradeParty.protoToMuSigTradeParty(proto.getMaker()),
+                    TradeLifecycleState.fromProto(proto.getLifecycleState()));
+            if (proto.hasErrorMessage()) {
+                trade.setErrorMessage(proto.getErrorMessage());
+            }
+            if (proto.hasErrorStackTrace()) {
+                trade.setErrorStackTrace(proto.getErrorStackTrace());
+            }
+            if (proto.hasPeersErrorMessage()) {
+                trade.setPeersErrorMessage(proto.getPeersErrorMessage());
+            }
+            if (proto.hasPeersErrorStackTrace()) {
+                trade.setPeersErrorStackTrace(proto.getPeersErrorStackTrace());
+            }
+            if (proto.hasTradeProtocolFailure()) {
+                trade.setTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getTradeProtocolFailure()));
+            }
+            if (proto.hasPeersTradeProtocolFailure()) {
+                trade.setPeersTradeProtocolFailure(TradeProtocolFailure.fromProto(proto.getPeersTradeProtocolFailure()));
+            }
 
-        if (muSigTradeProto.hasTradeCompletedDate()) {
-            trade.setTradeCompletedDate(muSigTradeProto.getTradeCompletedDate());
+            if (muSigTradeProto.hasTradeCompletedDate()) {
+                trade.setTradeCompletedDate(muSigTradeProto.getTradeCompletedDate());
+            }
+
+            if (muSigTradeProto.hasDepositTxId()) {
+                trade.setDepositTxId(muSigTradeProto.getDepositTxId());
+            }
+
+            if (muSigTradeProto.hasTradeDispute()) {
+                trade.setTradeDispute(MuSigTradeDispute.fromProto(muSigTradeProto.getTradeDispute()));
+            }
+
+            return trade;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-
-        if (muSigTradeProto.hasDepositTxId()) {
-            trade.setDepositTxId(muSigTradeProto.getDepositTxId());
-        }
-
-        trade.setDisputeState(MuSigDisputeState.fromProto(muSigTradeProto.getDisputeState()));
-
-        if (muSigTradeProto.hasMuSigMediationResult()) {
-            trade.setMuSigMediationResult(MuSigMediationResult.fromProto(muSigTradeProto.getMuSigMediationResult()));
-        }
-
-        return trade;
     }
 
     public MuSigTradeState getTradeState() {
@@ -217,27 +216,11 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
         return getOffer().getMarket();
     }
 
-    public void setDisputeState(MuSigDisputeState disputeState) {
-        this.disputeState.set(disputeState);
+    public MuSigTradeDispute getTradeDispute() {
+        return tradeDispute;
     }
 
-    public MuSigDisputeState getDisputeState() {
-        return disputeState.get();
-    }
-
-    public ReadOnlyObservable<MuSigDisputeState> disputeStateObservable() {
-        return disputeState;
-    }
-
-    public boolean setMuSigMediationResult(MuSigMediationResult muSigMediationResult) {
-        if (this.muSigMediationResult.isPresent()) {
-            return false;
-        }
-        this.muSigMediationResult = Optional.of(muSigMediationResult);
-        return true;
-    }
-
-    public Optional<MuSigMediationResult> getMuSigMediationResult() {
-        return muSigMediationResult;
+    private void setTradeDispute(MuSigTradeDispute tradeDispute) {
+        this.tradeDispute = tradeDispute;
     }
 }

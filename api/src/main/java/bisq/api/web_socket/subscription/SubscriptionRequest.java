@@ -42,7 +42,8 @@ public class SubscriptionRequest implements WebSocketMessage {
         try {
             return Optional.of(JsonMapperProvider.get().readValue(json, SubscriptionRequest.class));
         } catch (JsonProcessingException e) {
-            log.error("Json deserialization failed. Message={}", json, e);
+            // Only the length of the message is logged, like for every message which a client sends
+            log.error("Json deserialization of a SubscriptionRequest failed. Message length={}", json.length(), e);
         }
         return Optional.empty();
     }

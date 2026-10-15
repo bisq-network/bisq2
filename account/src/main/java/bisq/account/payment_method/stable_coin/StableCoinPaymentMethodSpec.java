@@ -18,6 +18,7 @@
 package bisq.account.payment_method.stable_coin;
 
 import bisq.account.payment_method.PaymentMethodSpec;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,8 +55,13 @@ public final class StableCoinPaymentMethodSpec extends PaymentMethodSpec<StableC
         return unsafeToProto(serializeForHash);
     }
 
-    public static StableCoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto) {
-        return new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromProto(proto.getPaymentMethod()),
-                proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+    public static StableCoinPaymentMethodSpec fromProto(bisq.account.protobuf.PaymentMethodSpec proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new StableCoinPaymentMethodSpec(StableCoinPaymentMethod.fromProto(proto.getPaymentMethod()),
+                    proto.hasSaltedMakerAccountId() ? Optional.of(proto.getSaltedMakerAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

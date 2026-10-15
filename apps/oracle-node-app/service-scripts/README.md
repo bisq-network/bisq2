@@ -60,6 +60,10 @@ JAVA_OPTS="
 "
 ```
 
+Currently `[PUB_KEY]` must be one of the keys in `AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS`. Otherwise the oracle node
+does not start, because other nodes accept only oracle nodes with such a key
+(`application.bondedRoles.onlyStaticOracleNodes` is `true`).
+
 ### Part 3: Finalize install
 
 After the contents of `/etc/default/bisq2-oracle.env` have been set, we can start the service:

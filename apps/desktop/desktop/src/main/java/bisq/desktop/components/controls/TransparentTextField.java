@@ -77,9 +77,9 @@ public class TransparentTextField extends MaterialTextField {
         editWhiteIcon = ImageUtil.getImageViewById("edit-white");
         cancelGreyIcon = ImageUtil.getImageViewById("close-mid-grey");
         cancelWhiteIcon = ImageUtil.getImageViewById("close-mid-white");
-        saveGreyIcon = ImageUtil.getImageViewById("save-grey");
-        saveWhiteIcon = ImageUtil.getImageViewById("save-white");
-        saveGreenIcon = ImageUtil.getImageViewById("save-green");
+        saveGreyIcon = ImageUtil.getImageViewById("save-mid-grey");
+        saveWhiteIcon = ImageUtil.getImageViewById("save-mid-white");
+        saveGreenIcon = ImageUtil.getImageViewById("save-mid-green");
 
         editButton = createAndGetIconButton(editGreyIcon,
                 Res.get("user.profileCard.myNotes.transparentTextField.buttonTooltip.edit"),

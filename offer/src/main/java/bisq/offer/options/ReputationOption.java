@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,8 +53,13 @@ public final class ReputationOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto) {
-        //noinspection deprecation
-        return new ReputationOption(proto.getRequiredTotalReputationScore());
+    public static ReputationOption fromProto(bisq.offer.protobuf.ReputationOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            //noinspection deprecation
+            return new ReputationOption(proto.getRequiredTotalReputationScore());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

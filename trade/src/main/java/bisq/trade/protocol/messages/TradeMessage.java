@@ -19,6 +19,7 @@ package bisq.trade.protocol.messages;
 
 import bisq.common.fsm.Event;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -90,7 +91,7 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
 
     abstract public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash);
 
-    public static TradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
+    public static TradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BISQEASYTRADEMESSAGE -> BisqEasyTradeMessage.fromProto(proto);
             case MUSIGTRADEMESSAGE -> MuSigTradeMessage.fromProto(proto);
