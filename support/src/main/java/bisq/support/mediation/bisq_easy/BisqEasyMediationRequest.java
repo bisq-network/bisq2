@@ -19,9 +19,12 @@ package bisq.support.mediation.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.contract.TradeId;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
@@ -46,6 +49,7 @@ import java.util.stream.Collectors;
 import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -58,12 +62,11 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return "MediationRequest" + "." + tradeId;
     }
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediationRequest.class.getSimpleName());
     private final BisqEasyContract contract;
     private final String tradeId;
-
-    @EqualsAndHashCode.Exclude
+    // Part of the identity, so that the network layer does not drop the other trader's request for the same
+    // contract as a duplicate. The case identity is the contract and the trade ID, see BisqEasyMediationCase.
     private final UserProfile requester;
     @EqualsAndHashCode.Exclude
     private final UserProfile peer;
@@ -94,6 +97,11 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     @Override
     public void verify() {
         NetworkDataValidation.validateTradeId(tradeId);
+        // The mediator files the request under its trade ID and adds its chat messages to the trade channel of this
+        // ID. So the trade ID must be the ID of the trade of the contract, not any ID which the sender chooses, for
+        // example the ID of a mediation case of other users (see docs/specifications/trade/trade-id.md).
+        checkArgument(TradeId.isIdOfContract(tradeId, contract),
+                "The trade ID of a mediation request must be the ID of the trade of its contract");
         if (getSerializedSize() > MAX_SERIALIZED_SIZE) {
             throw new SerializedSizeExceededException(
                     "Serialized mediation request size must not exceed " + MAX_SERIALIZED_SIZE + " bytes");
@@ -123,15 +131,23 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto) {
-        return new BisqEasyMediationRequest(proto.getTradeId(),
-                BisqEasyContract.fromProto(proto.getContract()),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                proto.getChatMessagesList().stream()
-                        .map(BisqEasyOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getMediatorNetworkId()));
+    public static BisqEasyMediationRequest fromProto(bisq.support.protobuf.MediationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyMediationRequest(proto.getTradeId(),
+                    BisqEasyContract.fromProto(proto.getContract()),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // request unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    BisqEasyOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getMediatorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 
@@ -165,11 +181,6 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return mediatorNetworkId;
     }
 
-    @Override
-    public boolean allFieldsValid() {
-        return true;
-    }
-
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
         return any -> {
             try {
@@ -182,8 +193,8 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
 }

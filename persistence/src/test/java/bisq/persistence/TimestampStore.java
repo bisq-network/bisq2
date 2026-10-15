@@ -19,6 +19,8 @@ package bisq.persistence;
 
 import bisq.common.data.StringLongPair;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
@@ -30,11 +32,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class TimestampStore implements PersistableStore<TimestampStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, Long> timestampsByProfileId = new ConcurrentHashMap<>();
+    private UnreadableStoreFilePolicy unreadableStoreFilePolicy = UnreadableStoreFilePolicy.ARCHIVE;
 
     private TimestampStore(Map<String, Long> timestampsByProfileId) {
         this.timestampsByProfileId.putAll(timestampsByProfileId);
@@ -54,11 +59,19 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
                         .collect(Collectors.toSet()));
     }
 
-    public static TimestampStore fromProto(bisq.persistence.protobuf.TimestampStore proto) {
-        Map<String, Long> map = proto.getStringLongPairsList().stream()
-                .map(StringLongPair::fromProto)
+    public static TimestampStore fromProto(bisq.persistence.protobuf.TimestampStore proto)
+            throws UnresolvableProtobufException {
+        Map<String, Long> map = ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getStringLongPairsList(),
+                        TimestampStore::pairFromProto)
                 .collect(Collectors.toMap(StringLongPair::getKey, StringLongPair::getValue));
         return new TimestampStore(map);
+    }
+
+    // An entry with an empty profile ID stands for an entry which a rule of a later version rejects at parsing
+    private static StringLongPair pairFromProto(bisq.common.protobuf.StringLongPair proto)
+            throws UnresolvableProtobufException {
+        checkArgument(!proto.getKey().isEmpty(), "The profile ID must not be empty");
+        return StringLongPair.fromProto(proto);
     }
 
     @Override
@@ -70,6 +83,17 @@ final class TimestampStore implements PersistableStore<TimestampStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    static TimestampStore withUnreadableStoreFilePolicy(UnreadableStoreFilePolicy unreadableStoreFilePolicy) {
+        TimestampStore store = new TimestampStore();
+        store.unreadableStoreFilePolicy = unreadableStoreFilePolicy;
+        return store;
+    }
+
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return unreadableStoreFilePolicy;
     }
 
     @Override

@@ -19,6 +19,8 @@ package bisq.support.moderator;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -66,24 +68,30 @@ public final class ModeratorStore implements PersistableStore<ModeratorStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto) {
-        Set<ReportToModeratorMessage> messages = proto.getReportToModeratorMessagesList().stream()
-                .map(ReportToModeratorMessage::fromProto)
-                .collect(Collectors.toSet());
+    public static ModeratorStore fromProto(bisq.support.protobuf.ModeratorStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<ReportToModeratorMessage> messages = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getReportToModeratorMessagesList(),
+                            ReportToModeratorMessage::fromProto)
+                    .collect(Collectors.toSet());
 
-        Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
-        if (proto.getBannedUserModeratorDataCount() > 0) {
-            bannedDataMap = proto.getBannedUserModeratorDataList().stream()
-                    .map(BannedUserModeratorData::fromProto)
-                    .collect(Collectors.toMap(
-                            BannedUserModeratorData::getAccusedUserProfileId,
-                            data -> data,
-                            (existing, replacement) -> replacement,
-                            TreeMap::new
-                    ));
+            Map<String, BannedUserModeratorData> bannedDataMap = new TreeMap<>();
+            if (proto.getBannedUserModeratorDataCount() > 0) {
+                bannedDataMap = ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getBannedUserModeratorDataList(),
+                                BannedUserModeratorData::fromProto)
+                        .collect(Collectors.toMap(
+                                BannedUserModeratorData::getAccusedUserProfileId,
+                                data -> data,
+                                (existing, replacement) -> replacement,
+                                TreeMap::new
+                        ));
+            }
+
+            return new ModeratorStore(messages, bannedDataMap);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-
-        return new ModeratorStore(messages, bannedDataMap);
     }
 
     @Override

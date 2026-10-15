@@ -19,12 +19,14 @@ package bisq.network.p2p.node;
 
 import bisq.common.network.Address;
 import bisq.network.p2p.node.authorization.AuthorizationService;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.Socket;
+import java.util.Set;
 import java.util.function.BiConsumer;
 
 @Slf4j
@@ -35,21 +37,25 @@ public class OutboundConnection extends Connection {
 
     OutboundConnection(AuthorizationService authorizationService,
                        String connectionId,
+                       Set<Integer> receivedMessageCounters,
                        Socket socket,
                        Address address,
                        Capability peersCapability,
                        NetworkLoadSnapshot peersNetworkLoadSnapshot,
                        ConnectionMetrics connectionMetrics,
                        ConnectionThrottle connectionThrottle,
+                       ParseMemoryBudget parseMemoryBudget,
                        Handler handler,
                        BiConsumer<Connection, Exception> errorHandler) {
         super(authorizationService,
                 connectionId,
+                receivedMessageCounters,
                 socket,
                 peersCapability,
                 peersNetworkLoadSnapshot,
                 connectionMetrics,
                 connectionThrottle,
+                parseMemoryBudget,
                 handler,
                 errorHandler);
 

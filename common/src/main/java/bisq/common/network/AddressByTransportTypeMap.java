@@ -18,6 +18,8 @@
 package bisq.common.network;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.common.base.Joiner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -75,11 +77,17 @@ public final class AddressByTransportTypeMap implements Map<TransportType, Addre
                                 e -> e.getValue().toProto(serializeForHash))));
     }
 
-    public static AddressByTransportTypeMap fromProto(bisq.common.protobuf.AddressByTransportTypeMap proto) {
-        Map<TransportType, Address> map = proto.getAddressByTransportTypeMap().entrySet().stream()
-                .collect(Collectors.toMap(e -> Enum.valueOf(TransportType.class, e.getKey()),
-                        e -> Address.fromProto(e.getValue())));
-        return new AddressByTransportTypeMap(map);
+    public static AddressByTransportTypeMap fromProto(bisq.common.protobuf.AddressByTransportTypeMap proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<TransportType, Address> map = ProtobufUtils.fromProtoEntryStream(proto.getAddressByTransportTypeMap(),
+                            Address::fromProto)
+                    .collect(Collectors.toMap(e -> Enum.valueOf(TransportType.class, e.getKey()),
+                            Map.Entry::getValue));
+            return new AddressByTransportTypeMap(map);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // Delegates

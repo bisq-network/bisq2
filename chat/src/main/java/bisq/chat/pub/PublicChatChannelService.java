@@ -26,11 +26,12 @@ import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.Reaction;
 import bisq.common.observable.Pin;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.ServiceNode;
 import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.persistence.PersistableStore;
 import bisq.user.UserService;
@@ -75,7 +76,7 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
 
         networkService.addDataServiceListener(this);
         networkService.getDataService().ifPresent(dataService ->
-                dataService.getAuthenticatedData().forEach(this::handleAuthenticatedDataAdded));
+                StartupReplay.forEach(dataService.getAuthenticatedData(), this::handleAuthenticatedDataAdded));
 
         networkService.getSupportedTransportTypes().forEach(type ->
                 networkService.getServiceNodesByTransport().findServiceNode(type)
@@ -138,6 +139,12 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
     public CompletableFuture<BroadcastResult> publishEditedChatMessage(M originalChatMessage,
                                                                        String editedText,
                                                                        UserIdentity userIdentity) {
+        // Only the author edits its message. With another identity the removal of the original fails, while the edited
+        // message is published under the other profile, which links the two profiles.
+        if (!userIdentity.getId().equals(originalChatMessage.getAuthorUserProfileId())) {
+            return CompletableFuture.failedFuture(
+                    new IllegalArgumentException("Only the author of a message can edit it"));
+        }
         KeyPair ownerKeyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
         return networkService.removeAuthenticatedData(originalChatMessage, ownerKeyPair)
                 .thenCompose(result -> {
@@ -159,19 +166,19 @@ public abstract class PublicChatChannelService<M extends PublicChatMessage, C ex
         }
 
         R chatMessageReaction = createChatMessageReaction(message, reaction, userIdentity);
-        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
+        checkArgument(chatMessageReaction instanceof OwnershipVerifiableData, "A public chat message reaction needs to implement OwnershipVerifiableData.");
 
         // Sender adds the message at sending to avoid the delayed display if using the received message from the network.
         addMessageReaction(chatMessageReaction, message);
 
         KeyPair keyPair = userIdentity.getNetworkIdWithKeyPair().getKeyPair();
-        return networkService.publishAuthenticatedData((DistributedData) chatMessageReaction, keyPair);
+        return networkService.publishAuthenticatedData((OwnershipVerifiableData) chatMessageReaction, keyPair);
     }
 
     public CompletableFuture<BroadcastResult> deleteChatMessageReaction(R chatMessageReaction,
                                                                         NetworkIdWithKeyPair networkIdWithKeyPair) {
-        checkArgument(chatMessageReaction instanceof DistributedData, "A public chat message reaction needs to implement DistributedData.");
-        return networkService.removeAuthenticatedData((DistributedData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
+        checkArgument(chatMessageReaction instanceof OwnershipVerifiableData, "A public chat message reaction needs to implement OwnershipVerifiableData.");
+        return networkService.removeAuthenticatedData((OwnershipVerifiableData) chatMessageReaction, networkIdWithKeyPair.getKeyPair());
     }
 
     @Override

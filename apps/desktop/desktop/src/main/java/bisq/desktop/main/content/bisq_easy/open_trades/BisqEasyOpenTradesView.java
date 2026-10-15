@@ -480,8 +480,8 @@ public final class BisqEasyOpenTradesView extends ChatView<BisqEasyOpenTradesVie
             protected void updateItem(OpenTradeListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
-                if (item != null && !empty && item.getChannel().getMediator().isPresent()) {
-                    UserProfile mediator = item.getChannel().getMediator().get();
+                if (item != null && !empty && item.getTrade().getContract().getMediator().isPresent()) {
+                    UserProfile mediator = item.getTrade().getContract().getMediator().get();
                     if (userProfileDisplay != null) {
                         userProfileDisplay.dispose();
                     }

@@ -17,6 +17,7 @@
 
 package bisq.wallet.vo;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,13 +34,17 @@ public final class Utxo {
     private final String address;
     private final int numConfirmations;
 
-    public static Utxo fromProto(bisq.wallet.protobuf.Utxo utxo) {
-        return new Utxo(
-                utxo.getTxId(),
-                utxo.getVout(),
-                utxo.getAmount(),
-                utxo.getAddress(),
-                utxo.getNumConfirmations()
-        );
+    public static Utxo fromProto(bisq.wallet.protobuf.Utxo utxo) throws UnresolvableProtobufException {
+        try {
+            return new Utxo(
+                    utxo.getTxId(),
+                    utxo.getVout(),
+                    utxo.getAmount(),
+                    utxo.getAddress(),
+                    utxo.getNumConfirmations()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

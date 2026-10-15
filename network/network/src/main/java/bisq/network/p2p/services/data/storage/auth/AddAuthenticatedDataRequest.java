@@ -17,14 +17,22 @@
 
 package bisq.network.p2p.services.data.storage.auth;
 
+import bisq.common.annotation.ExcludeForHash;
+import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
-import bisq.common.util.MathUtils;
-import bisq.common.validation.NetworkDataValidation;
+import bisq.common.encoding.canonical.CanonicalEncoder;
+import bisq.common.encoding.canonical.CanonicalSchema;
+import bisq.common.encoding.canonical.EncodingPurpose;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.AddDataRequest;
 import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.SignatureValidation;
+import bisq.network.p2p.services.data.storage.StorageKeyV2;
 import bisq.network.protobuf.DataRequest;
 import bisq.security.DigestUtil;
 import bisq.security.SignatureUtil;
+import bisq.security.keys.EcPublicKeyValidation;
 import bisq.security.keys.KeyGeneration;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
@@ -34,8 +42,8 @@ import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
 import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Request for adding authenticated data to the data storage.
@@ -44,64 +52,140 @@ import java.util.Optional;
  */
 @Slf4j
 public final class AddAuthenticatedDataRequest implements AuthenticatedDataRequest, AddDataRequest {
+    private final static int VERSION = 2;
+
     public static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
                                                    AuthenticatedData authenticatedData,
                                                    KeyPair keyPair)
             throws GeneralSecurityException {
+        return from(store, authenticatedData, keyPair, 1);
+    }
 
-        byte[] hashForStoreMap = DigestUtil.hash(authenticatedData.serializeForHash());
-        byte[] pubKeyHash = DigestUtil.hash(keyPair.getPublic().getEncoded());
-        int sequenceNumber = store.getSequenceNumber(hashForStoreMap) + 1;
-        AuthenticatedSequentialData data =
-                new AuthenticatedSequentialData(authenticatedData, sequenceNumber, pubKeyHash, System.currentTimeMillis());
-        byte[] messageForSignature = data.serializeForHash();
-        // messageForSignature will get hashed internally by signature algo (SHA256withECDSA)
-        byte[] signature = SignatureUtil.sign(messageForSignature, keyPair.getPrivate());
-         /*  log.error("hashForStoreMap={}", Hex.encode(hashForStoreMap));
-        log.error("keyPair.getPublic().getEncoded()={}", Hex.encode(keyPair.getPublic().getEncoded()));
-        log.error("pubKeyHash={}", Hex.encode(pubKeyHash));
-        log.error("sequenceNumber={}", sequenceNumber);
-        log.error("messageForSignature={}", Hex.encode(messageForSignature));
-        log.error("signature={}", Hex.encode(signature));
-        log.error("data={}", data);*/
-        return new AddAuthenticatedDataRequest(data, signature, keyPair.getPublic());
+    // The sequence number is at least minSequenceNumber (see AuthorizedDataPublisherMigration)
+    static AddAuthenticatedDataRequest from(AuthenticatedDataStorageService store,
+                                            AuthenticatedData authenticatedData,
+                                            KeyPair keyPair,
+                                            int minSequenceNumber)
+            throws GeneralSecurityException {
+        int version = VERSION;
+        PublicKey publicKey = keyPair.getPublic();
+        byte[] publicKeyEncoded = publicKey.getEncoded();
+        ByteArray storageKey = getStorageKey(getAuthenticatedDataHash(authenticatedData), publicKeyEncoded);
+        byte[] pubKeyHash = DigestUtil.hash(publicKeyEncoded);
+        int sequenceNumber = Math.max(store.getNextSequenceNumber(storageKey), minSequenceNumber);
+        long created = System.currentTimeMillis();
+        AuthenticatedSequentialData sequentialData = new AuthenticatedSequentialData(authenticatedData,
+                sequenceNumber,
+                pubKeyHash,
+                created);
+        byte[] signatureV1 = SignatureUtil.sign(sequentialData.serializeForHash(), keyPair.getPrivate());
+
+        AddAuthenticatedDataRequest requestToSign = AddAuthenticatedDataRequest.withoutSignatureV2(sequentialData,
+                signatureV1,
+                publicKeyEncoded,
+                publicKey,
+                version);
+        byte[] signatureV2 = SignatureUtil.sign(requestToSign.getPreImageV2(), keyPair.getPrivate());
+
+        return new AddAuthenticatedDataRequest(sequentialData,
+                signatureV1,
+                publicKeyEncoded,
+                publicKey,
+                signatureV2,
+                version);
+    }
+
+    private static AddAuthenticatedDataRequest withoutSignatureV2(AuthenticatedSequentialData sequentialData,
+                                                                  byte[] signatureV1,
+                                                                  byte[] publicKeyEncoded,
+                                                                  PublicKey publicKey,
+                                                                  int version) {
+        return new AddAuthenticatedDataRequest(sequentialData,
+                signatureV1,
+                publicKeyEncoded,
+                publicKey,
+                new byte[]{},
+                version);
+    }
+
+    public static AddAuthenticatedDataRequest from(AddAuthenticatedDataRequest requestFromMap,
+                                                   RefreshAuthenticatedDataRequest refreshRequest) {
+        long newTimestamp = refreshRequest.getCreated();
+        int newSequenceNumber = refreshRequest.getSequenceNumber();
+        byte[] newSignatureV1 = refreshRequest.getSignatureV1();
+        byte[] newSignatureV2 = refreshRequest.getSignatureV2();
+
+        AuthenticatedSequentialData sequentialDataFromMap = requestFromMap.getAuthenticatedSequentialData();
+        AuthenticatedSequentialData newSequentialData = new AuthenticatedSequentialData(
+                sequentialDataFromMap.getAuthenticatedData(),
+                newSequenceNumber,
+                sequentialDataFromMap.getPubKeyHash(),
+                newTimestamp);
+        return new AddAuthenticatedDataRequest(newSequentialData,
+                newSignatureV1,
+                refreshRequest.getSignaturePubKeyEncoded(),
+                refreshRequest.getSignaturePublicKey(),
+                newSignatureV2,
+                // The owner signs an AddAuthenticatedDataRequest with this version and copies the version into the
+                // refresh request (see RefreshAuthenticatedDataRequest.from). Signature V2 covers it.
+                refreshRequest.getVersion());
     }
 
     @Getter
     private final AuthenticatedSequentialData authenticatedSequentialData;
-    @Getter
     private final byte[] signature;
-    @Getter
     private final byte[] ownerPublicKeyBytes;
-    // transient fields are excluded by default for EqualsAndHashCode
-    private transient final PublicKey ownerPublicKey;
+    private final transient PublicKey ownerPublicKey;
+    // Added in v2.1.14. Empty if received from nodes of earlier versions. Excluded from the hash, so that the proof of
+    // work payload stays the same as that of nodes of earlier versions.
+    @ExcludeForHash
+    private final byte[] signatureV2;
+    // Added in v2.1.14. 0 if received from nodes of earlier versions. Version 2 is the first version with signature V2.
+    // Excluded from the hash for the same reason as signatureV2.
+    @ExcludeForHash
+    private final int version;
 
     public AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
                                        byte[] signature,
-                                       PublicKey ownerPublicKey) {
-        this(authenticatedSequentialData,
-                signature,
-                ownerPublicKey.getEncoded(),
-                ownerPublicKey);
-    }
-
-    private AddAuthenticatedDataRequest(AuthenticatedSequentialData authenticatedSequentialData,
-                                        byte[] signature,
-                                        byte[] ownerPublicKeyBytes,
-                                        PublicKey ownerPublicKey) {
+                                       byte[] ownerPublicKeyBytes,
+                                       PublicKey ownerPublicKey,
+                                       byte[] signatureV2,
+                                       int version) {
         this.authenticatedSequentialData = authenticatedSequentialData;
         this.signature = signature;
         this.ownerPublicKeyBytes = ownerPublicKeyBytes;
         this.ownerPublicKey = ownerPublicKey;
+        this.signatureV2 = signatureV2;
+        this.version = version;
 
         verify();
     }
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECSignature(signature);
-        NetworkDataValidation.validateECPubKey(ownerPublicKeyBytes);
+        EcPublicKeyValidation.validate(ownerPublicKeyBytes);
+        // The publisher hash must name the key which signs the request (see docs/specifications/network/storage-ownership.md).
+        checkArgument(Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes)),
+                "pubKeyHash must match the hash of ownerPublicKeyBytes");
+        SignatureValidation.validateSignatures(signature, signatureV2);
+        SignatureValidation.validateVersionOfSignatureV2(signatureV2, version);
+        // The publisher must be the owner of the data. The transition rule (rule 12 of
+        // docs/specifications/network/storage-ownership.md) accepts another owner only for the data of oracle and seed
+        // nodes of earlier versions: of the transition types, created before the cutoff date, and without signature V2,
+        // because these nodes create only signature V1. A node of this version publishes its own data with the key of
+        // the owner, so a request with signature V2 of another owner is a copy which any key can create.
+        AuthenticatedData authenticatedData = authenticatedSequentialData.getAuthenticatedData();
+        boolean isOwner = authenticatedData.isOwner(authenticatedSequentialData.getPubKeyHash());
+        checkArgument(isOwner || authenticatedData.isOtherOwnerAccepted(authenticatedSequentialData.getCreated()),
+                "The publisher is not the owner of the data");
+        checkArgument(isOwner || signatureV2.length == 0,
+                "A request with signature V2 must be published by the owner of the data");
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Protobuf
+    /* --------------------------------------------------------------------- */
 
     @Override
     public DataRequest.Builder getDataRequestBuilder(boolean serializeForHash) {
@@ -118,67 +202,171 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
         return bisq.network.protobuf.AddAuthenticatedDataRequest.newBuilder()
                 .setAuthenticatedSequentialData(authenticatedSequentialData.toProto(serializeForHash))
                 .setSignature(ByteString.copyFrom(signature))
-                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes)
-                );
+                .setOwnerPublicKeyBytes(ByteString.copyFrom(ownerPublicKeyBytes))
+                .setSignatureV2(ByteString.copyFrom(signatureV2))
+                .setVersion(version);
     }
 
-    public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto) {
-        byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
+    public static AddAuthenticatedDataRequest fromProto(bisq.network.protobuf.AddAuthenticatedDataRequest proto)
+            throws UnresolvableProtobufException {
         try {
+            byte[] ownerPublicKeyBytes = proto.getOwnerPublicKeyBytes().toByteArray();
             PublicKey ownerPublicKey = KeyGeneration.generatePublic(ownerPublicKeyBytes);
             return new AddAuthenticatedDataRequest(
                     AuthenticatedSequentialData.fromProto(proto.getAuthenticatedSequentialData()),
                     proto.getSignature().toByteArray(),
                     ownerPublicKeyBytes,
-                    ownerPublicKey
+                    ownerPublicKey,
+                    proto.getSignatureV2().toByteArray(),
+                    proto.getVersion()
             );
-        } catch (GeneralSecurityException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
+    }
+
+    // Overrides Proto.getVersion(). Proto uses it to resolve @ExcludeForHash(excludeOnlyInVersions = ...), so it
+    // determines the result of serializeForHash(), which is the payload of the proof of work. It must return the
+    // version of the message.
+    @Override
+    public int getVersion() {
+        return version;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Canonical implementation
+    /* --------------------------------------------------------------------- */
+
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> DEFAULT_SCHEMA =
+            bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(1,
+                    CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
+                            .canonical(1, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                            .bytes(2, request -> request.signature)
+                            .bytes(3, request -> request.ownerPublicKeyBytes)
+                            .bytes(4, request -> request.signatureV2)
+                            .sint32(5, request -> request.version));
+
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> PROOF_OF_WORK_SCHEMA = createSchemaForHash();
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> TRADE_CONTRACT_SCHEMA = createSchemaForHash();
+
+    // Leaves out the fields annotated with @ExcludeForHash, as serializeForHash() does: signatureV2 (field 4) and
+    // version (field 5).
+    private static CanonicalSchema<AddAuthenticatedDataRequest> createSchemaForHash() {
+        return bisq.network.p2p.services.data.DataRequest.createCanonicalSchema(1,
+                CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
+                        .canonical(1, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                        .bytes(2, request -> request.signature)
+                        .bytes(3, request -> request.ownerPublicKeyBytes));
+    }
+
+    // The preimage of signature V2. It is a new message, not the protobuf message: a domain separation tag, then every
+    // field except signatureV2 itself. The @ExcludeForHash annotations do not apply. The nested objects receive the
+    // SIGNATURE purpose, so their own @ExcludeForHash fields are covered as well.
+    public static final CanonicalSchema<AddAuthenticatedDataRequest> SIGNATURE_V2_SCHEMA =
+            CanonicalSchema.<AddAuthenticatedDataRequest>newBuilder()
+                    .string(1, ignore -> "bisq.AddAuthenticatedDataRequest.signatureV2")
+                    .sint32(2, request -> request.version)
+                    .canonical(3, AddAuthenticatedDataRequest::getAuthenticatedSequentialData)
+                    .bytes(4, request -> request.ownerPublicKeyBytes)
+                    .bytes(5, request -> request.signature)
+                    .build();
+
+    @Override
+    public byte[] encodeCanonical(CanonicalEncoder canonicalEncoder, EncodingPurpose encodingPurpose) {
+        CanonicalSchema<AddAuthenticatedDataRequest> schema = switch (encodingPurpose) {
+            case DEFAULT -> DEFAULT_SCHEMA;
+            case SIGNATURE -> SIGNATURE_V2_SCHEMA;
+            case STORAGE_KEY ->
+                    throw new IllegalArgumentException("Storage key not supported for AddAuthenticatedDataRequest");
+            case PROOF_OF_WORK -> PROOF_OF_WORK_SCHEMA;
+            case TRADE_CONTRACT -> TRADE_CONTRACT_SCHEMA;
+        };
+        return canonicalEncoder.encode(this, schema, encodingPurpose);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // DataRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public ByteArray getStorageKeyV1() {
+        return new ByteArray(DigestUtil.hash(authenticatedSequentialData.getAuthenticatedData().serializeForHash()));
+    }
+
+    // The data hash must be the one which remove and refresh requests carry (see getAuthenticatedDataHash).
+    @Override
+    public byte[] getStorageKeyPreImageV2() {
+        return StorageKeyV2.createPreImage(StorageKeyV2.AUTHENTICATED_DATA_TAG,
+                getAuthenticatedDataHash(authenticatedSequentialData.getAuthenticatedData()),
+                ownerPublicKeyBytes);
+    }
+
+    // The hash which remove and refresh requests carry. The STORAGE_KEY encoding of AuthenticatedData equals its
+    // serializeForHash(), so nodes of earlier versions compute the same hash.
+    static byte[] getAuthenticatedDataHash(AuthenticatedData authenticatedData) {
+        return DigestUtil.hash(authenticatedData.encodeCanonical(EncodingPurpose.STORAGE_KEY));
+    }
+
+    static ByteArray getStorageKey(byte[] authenticatedDataHash, byte[] ownerPublicKeyBytes) {
+        return StorageKeyV2.create(StorageKeyV2.AUTHENTICATED_DATA_TAG, authenticatedDataHash, ownerPublicKeyBytes);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignedRequest implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getPreImageV1() {
+        return authenticatedSequentialData.serializeForHash();
     }
 
     @Override
-    public double getCostFactor() {
-        DistributedData distributedData = authenticatedSequentialData.getDistributedData();
-        double metaDataImpact = distributedData.getMetaData().getCostFactor();
-        double dataImpact = distributedData.getCostFactor();
-        double impact = metaDataImpact + dataImpact;
-        return MathUtils.bounded(0.25, 0.75, impact);
+    public byte[] getPreImageV2() {
+        return encodeCanonical(EncodingPurpose.SIGNATURE);
     }
 
-    public boolean isSignatureInvalid() {
-        try {
-            return !SignatureUtil.verify(authenticatedSequentialData.serializeForHash(), signature, getOwnerPublicKey());
-        } catch (Exception e) {
-            log.warn(e.toString(), e);
-            return true;
-        }
+    @Override
+    public PublicKey getSignaturePublicKey() {
+        return ownerPublicKey;
     }
 
-    public boolean isPublicKeyInvalid() {
-        try {
-            return !Arrays.equals(authenticatedSequentialData.getPubKeyHash(), DigestUtil.hash(ownerPublicKeyBytes));
-        } catch (Exception e) {
-            return true;
-        }
+    @Override
+    public byte[] getSignatureV1() {
+        return signature;
     }
 
-    public PublicKey getOwnerPublicKey() {
-        return Optional.ofNullable(ownerPublicKey).orElseGet(() -> {
-            try {
-                return KeyGeneration.generatePublic(ownerPublicKeyBytes);
-            } catch (GeneralSecurityException e) {
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
-        });
+    @Override
+    public byte[] getSignatureV2() {
+        return signatureV2;
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // SignaturePubKeyHashVerifier implementation
+    /* --------------------------------------------------------------------- */
+
+    @Override
+    public byte[] getSignaturePubKeyEncoded() {
+        return ownerPublicKeyBytes;
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Sequential implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public int getSequenceNumber() {
         return authenticatedSequentialData.getSequenceNumber();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Expirable implementation
+    /* --------------------------------------------------------------------- */
 
     @Override
     public long getCreated() {
@@ -186,44 +374,59 @@ public final class AddAuthenticatedDataRequest implements AuthenticatedDataReque
     }
 
     @Override
-    public int getMaxMapSize() {
-        return authenticatedSequentialData.getAuthenticatedData().getMetaData().getMaxMapSize();
+    public boolean isExpired() {
+        return (System.currentTimeMillis() - getCreated()) > getTtl();
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // StorageConstraint
+    /* --------------------------------------------------------------------- */
+
     @Override
-    public boolean isExpired() {
-        return authenticatedSequentialData.isExpired();
+    public MetaData getMetaData() {
+        return authenticatedSequentialData.getAuthenticatedData().getMetaData();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Delegates
+    /* --------------------------------------------------------------------- */
 
     public DistributedData getDistributedData() {
         return authenticatedSequentialData.getDistributedData();
     }
 
-    @Override
-    public String toString() {
-        return "AddAuthenticatedDataRequest{" +
-                "\r\n     signature=" + Hex.encode(signature) +
-                ", \r\n     ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
-                ", \r\n     authenticatedSequentialData=" + authenticatedSequentialData +
-                "\r\n}";
-    }
+
+    /* --------------------------------------------------------------------- */
+    // Misc
+    /* --------------------------------------------------------------------- */
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof AddAuthenticatedDataRequest that)) return false;
 
-        return Objects.equals(authenticatedSequentialData, that.authenticatedSequentialData) &&
-                Arrays.equals(signature, that.signature) &&
-                Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) &&
-                Objects.equals(ownerPublicKey, that.ownerPublicKey);
+        return version == that.version && authenticatedSequentialData.equals(that.authenticatedSequentialData) && Arrays.equals(signature, that.signature) && Arrays.equals(ownerPublicKeyBytes, that.ownerPublicKeyBytes) && Arrays.equals(signatureV2, that.signatureV2);
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hashCode(authenticatedSequentialData);
+        int result = authenticatedSequentialData.hashCode();
         result = 31 * result + Arrays.hashCode(signature);
         result = 31 * result + Arrays.hashCode(ownerPublicKeyBytes);
-        result = 31 * result + Objects.hashCode(ownerPublicKey);
+        result = 31 * result + Arrays.hashCode(signatureV2);
+        result = 31 * result + version;
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "AddAuthenticatedDataRequest{" +
+                "authenticatedSequentialData=" + authenticatedSequentialData +
+                ", signature=" + Hex.encode(signature) +
+                ", ownerPublicKeyBytes=" + Hex.encode(ownerPublicKeyBytes) +
+                ", signatureV2=" + Hex.encode(signatureV2) +
+                ", version=" + version +
+                '}';
     }
 }

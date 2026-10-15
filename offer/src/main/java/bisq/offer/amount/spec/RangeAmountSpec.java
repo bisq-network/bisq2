@@ -17,6 +17,7 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -49,7 +50,7 @@ public abstract class RangeAmountSpec implements AmountSpec {
                 .setMaxAmount(maxAmount);
     }
 
-    static RangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) {
+    static RangeAmountSpec fromProto(bisq.offer.protobuf.RangeAmountSpec proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BASESIDERANGEAMOUNTSPEC -> BaseSideRangeAmountSpec.fromProto(proto);
             case QUOTESIDERANGEAMOUNTSPEC -> QuoteSideRangeAmountSpec.fromProto(proto);

@@ -18,6 +18,7 @@
 package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -45,7 +46,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 public final class MuSigArbitrationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigArbitrationStateChangeMessage.class.getSimpleName());
     private final String id;
     private final String tradeId;
     private final NetworkId senderNetworkId;
@@ -87,19 +88,24 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
         return builder;
     }
 
-    public static MuSigArbitrationStateChangeMessage fromProto(bisq.support.protobuf.MuSigArbitrationStateChangeMessage proto) {
-        return new MuSigArbitrationStateChangeMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
-                proto.hasMuSigArbitrationResult()
-                        ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
-                        : Optional.empty(),
-                proto.hasArbitrationResultSignature()
-                        ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+    public static MuSigArbitrationStateChangeMessage fromProto(bisq.support.protobuf.MuSigArbitrationStateChangeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigArbitrationStateChangeMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    ArbitrationCaseState.fromProto(proto.getArbitrationCaseState()),
+                    proto.hasMuSigArbitrationResult()
+                            ? Optional.of(MuSigArbitrationResult.fromProto(proto.getMuSigArbitrationResult()))
+                            : Optional.empty(),
+                    proto.hasArbitrationResultSignature()
+                            ? Optional.of(proto.getArbitrationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -111,11 +117,6 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
-    }
-
-    @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
     }
 
     @Override
@@ -145,5 +146,10 @@ public final class MuSigArbitrationStateChangeMessage implements MailboxMessage,
         int result = Objects.hash(id, tradeId, senderNetworkId, arbitrationCaseState, muSigArbitrationResult);
         result = 31 * result + arbitrationResultSignature.map(Arrays::hashCode).orElse(0);
         return result;
+    }
+
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

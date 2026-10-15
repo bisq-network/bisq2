@@ -20,6 +20,7 @@ package bisq.account.accounts.fiat;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.protobuf.Account;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 import java.security.KeyPair;
@@ -49,14 +50,18 @@ public abstract class BankAccount<P extends BankAccountPayload> extends CountryB
                 .setBankAccount(toBankAccountProto(serializeForHash));
     }
 
-    public static BankAccount<?> fromProto(Account proto) {
-        return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
-            case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
-            case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
-            case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
-            case SAMEBANKACCOUNT -> SameBankAccount.fromProto(proto);
-            case DOMESTICWIRETRANSFERACCOUNT -> DomesticWireTransferAccount.fromProto(proto);
-            case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
-        };
+    public static BankAccount<?> fromProto(Account proto) throws UnresolvableProtobufException {
+        try {
+            return switch (proto.getCountryBasedAccount().getBankAccount().getMessageCase()) {
+                case ACHTRANSFERACCOUNT -> AchTransferAccount.fromProto(proto);
+                case NATIONALBANKACCOUNT -> NationalBankAccount.fromProto(proto);
+                case CASHDEPOSITACCOUNT -> CashDepositAccount.fromProto(proto);
+                case SAMEBANKACCOUNT -> SameBankAccount.fromProto(proto);
+                case DOMESTICWIRETRANSFERACCOUNT -> DomesticWireTransferAccount.fromProto(proto);
+                case MESSAGE_NOT_SET -> throw new UnresolvableProtobufMessageException("MESSAGE_NOT_SET", proto);
+            };
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

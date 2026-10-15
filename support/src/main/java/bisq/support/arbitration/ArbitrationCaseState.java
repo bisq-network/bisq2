@@ -19,6 +19,7 @@ package bisq.support.arbitration;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum ArbitrationCaseState implements ProtoEnum {
     OPEN,
@@ -29,7 +30,8 @@ public enum ArbitrationCaseState implements ProtoEnum {
         return bisq.support.protobuf.ArbitrationCaseState.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static ArbitrationCaseState fromProto(bisq.support.protobuf.ArbitrationCaseState proto) {
+    public static ArbitrationCaseState fromProto(bisq.support.protobuf.ArbitrationCaseState proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(ArbitrationCaseState.class, proto.name(), OPEN);
     }
 }

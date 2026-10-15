@@ -217,6 +217,21 @@ public class IdentityService extends RateLimitedPersistenceClient<IdentityStore>
         }
     }
 
+    /**
+     * Finds the default identity, an active or a retired identity by its ID, the hash of its public key. The ID of a
+     * network ID is the same hash. Unlike {@link #findAnyIdentityByNetworkId}, the addresses of the network ID do not
+     * matter: they are routing data, and they change, for example, when the user adds a transport.
+     */
+    public Optional<Identity> findAnyIdentityById(String id) {
+        synchronized (lock) {
+            return Stream.concat(Stream.concat(persistableStore.getDefaultIdentity().stream(),
+                                    getActiveIdentityByTag().values().stream()),
+                            getRetired().stream())
+                    .filter(identity -> identity.getId().equals(id))
+                    .findFirst();
+        }
+    }
+
     public Map<String, Identity> getActiveIdentityByTag() {
         return persistableStore.getActiveIdentityByTag();
     }

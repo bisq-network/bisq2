@@ -20,7 +20,7 @@ package bisq.desktop.main.content.chat.message_container;
 import bisq.chat.ChatChannelDomain;
 import bisq.desktop.main.content.chat.message_container.components.ChatMentionPopupMenu;
 import bisq.desktop.main.content.components.UserProfileSelection;
-import bisq.desktop.testutil.TestFxHeadlessSupport;
+import bisq.desktop.testutil.DesktopUiTest;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -30,11 +30,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.testfx.api.FxRobot;
-import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -48,8 +46,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-@ExtendWith(ApplicationExtension.class)
-class ChatMessageContainerViewTest extends TestFxHeadlessSupport {
+@DesktopUiTest
+class ChatMessageContainerViewTest {
     private static final String EMOJI_PROMPT = "\uD83E\uDD16 how do I restore my wallet?";
 
     @Mock

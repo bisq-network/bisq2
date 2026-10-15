@@ -26,9 +26,8 @@ import bisq.common.application.Service;
 import bisq.common.data.ByteArray;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
-import bisq.identity.Identity;
-import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.node.CloseReason;
@@ -108,11 +107,13 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
     private final GrpcClient grpcClient;
     private final Bisq1BridgeService.Config config;
-    private final IdentityService identityService;
     private final NetworkService networkService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final PrivateKey authorizedPrivateKey;
     private final PublicKey authorizedPublicKey;
+    // The authorized key owns the authorized data which this node publishes (see
+    // docs/specifications/network/storage-ownership.md)
+    private final KeyPair authorizedKeyPair;
     private final BsqBlockGrpcService bsqBlockGrpcService;
     private final BurningmanGrpcService burningmanGrpcService;
     private final AuthorizedOracleNode myAuthorizedOracleNode;
@@ -122,14 +123,11 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     private final Set<ByteArray> userProfileBondedReputationHashes = new ObservableSet<>();
 
     @Nullable
-    private KeyPair keyPair;
-    @Nullable
     private volatile ScheduledExecutorService executor;
     private final Object executorLock = new Object();
 
     public Bisq1BridgeService(Config config,
                               PersistenceService persistenceService,
-                              IdentityService identityService,
                               NetworkService networkService,
                               AuthorizedBondedRolesService authorizedBondedRolesService,
                               PrivateKey authorizedPrivateKey,
@@ -139,17 +137,16 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
         grpcClient = new GrpcClient(config.getGrpcServicePort());
         this.config = config;
-        this.identityService = identityService;
         this.networkService = networkService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
         this.myAuthorizedOracleNode = myAuthorizedOracleNode;
         this.authorizedPrivateKey = authorizedPrivateKey;
         this.authorizedPublicKey = authorizedPublicKey;
+        authorizedKeyPair = new KeyPair(authorizedPublicKey, authorizedPrivateKey);
 
         burningmanGrpcService = new BurningmanGrpcService(staticPublicKeysProvided, grpcClient);
 
         bisq1BridgeRequestService = new Bisq1BridgeRequestService(persistenceService,
-                identityService,
                 networkService,
                 authorizedBondedRolesService,
                 authorizedPrivateKey,
@@ -172,15 +169,15 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
 
         networkService.addDataServiceListener(this);
         String storageKey = UserProfile.class.getSimpleName();
-        networkService.getDataService()
-                .stream() // turns Optional<DataService> into Stream<DataService>
-                .flatMap(dataService ->
-                        dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
-                                .map(AuthenticatedData::getDistributedData)
-                                .filter(UserProfile.class::isInstance)
-                                .map(UserProfile.class::cast)
-                )
-                .forEach(this::handleUserProfileAdded);
+        StartupReplay.forEach(networkService.getDataService()
+                        .stream() // turns Optional<DataService> into Stream<DataService>
+                        .flatMap(dataService ->
+                                dataService.getAuthenticatedPayloadStreamByStoreName(storageKey)
+                                        .map(AuthenticatedData::getDistributedData)
+                                        .filter(UserProfile.class::isInstance)
+                                        .map(UserProfile.class::cast)
+                        ),
+                this::handleUserProfileAdded);
 
         return grpcClient.initialize()
                 .thenCompose(result -> bisq1BridgeRequestService.initialize())
@@ -375,15 +372,7 @@ public class Bisq1BridgeService implements Service, Node.Listener, DataService.L
     }
 
     private void publishAuthorizedData(AuthorizedDistributedData data) {
-        if (keyPair == null) {
-            Identity identity = identityService.getOrCreateDefaultIdentity();
-            keyPair = identity.getNetworkIdWithKeyPair().getKeyPair();
-        }
-
-        networkService.publishAuthorizedData(data,
-                keyPair,
-                authorizedPrivateKey,
-                authorizedPublicKey);
+        networkService.publishAuthorizedData(data, authorizedKeyPair);
     }
 
     private void handleUserProfileAdded(UserProfile userProfile) {

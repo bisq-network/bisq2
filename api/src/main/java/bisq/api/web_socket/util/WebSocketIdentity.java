@@ -17,7 +17,7 @@
 
 package bisq.api.web_socket.util;
 
-import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.Attributes;
 import bisq.common.util.StringUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
@@ -26,22 +26,25 @@ import org.glassfish.grizzly.websockets.WebSocket;
 import java.util.Optional;
 
 /**
- * Reads the client identity a WebSocket connection claims.
+ * Reads the identity of a WebSocket connection: the client and the session which the filter chain recorded on
+ * its upgrade request.
  * <p>
- * It lives on the upgrade request and not on the messages, because the handshake is the one point
- * where the connection could have been authenticated, and a client can put anything in a frame
- * afterwards. Shared because two callers need it for opposite reasons: the REST proxy forwards it
- * to the REST server so its filters can authorise the call, and the subscription service authorises
- * the topic itself.
- * <p>
- * How much this is worth depends on the deployment, and today it is worth less than the name
- * suggests. {@code WebSocketFilterAddOn} registers the session authentication filter only when
- * {@code supportSessionHandling} is set, and every shipped app config runs with it off, so in
- * practice the handshake authenticates nothing and {@code Bisq-Client-Id} is an unvalidated header
- * that any caller can set. That is not a gap this class introduces — {@code RestApiAuthorizationFilter}
- * reads the same raw header, and reading the enriched request attribute instead would not help,
- * since it is filled from that header too. Treat what this returns as a claim that is exactly as
- * trustworthy as the handshake was, and do not build anything on it that assumes more.
+ * The identity lives on the upgrade request and not on the messages, because the handshake is the one point
+ * where the connection is authenticated, and a client can put anything in a frame afterwards. It is read from
+ * request attributes, never from a header: a client cannot set an attribute, and the filters set them once,
+ * before Grizzly opens the WebSocket. No code may write them later. Other threads read them without a lock, and they
+ * see the values only because they reach the WebSocket after it opened.
+ * <ul>
+ *     <li>With session handling, {@code WebSocketSessionAuthenticationFilter} records the client and the session
+ *     of the session which authenticated the upgrade request. The {@code Bisq-Client-Id} header must name the
+ *     same client, or the upgrade is rejected.</li>
+ *     <li>Without session handling, {@code WebSocketHandshakeMetaDataEnrichment} records the
+ *     {@code Bisq-Client-Id} header as the client which the connection claims, and there is no session. That
+ *     claim is exactly as trustworthy as the same header on the REST API, which is to say not at all.</li>
+ * </ul>
+ * Every decision about an open WebSocket reads it here: the authorization of a subscription, the revocation of a
+ * client, the list of connected clients, the identity which the REST proxy forwards, and the check whether the
+ * session of the WebSocket still holds.
  */
 public final class WebSocketIdentity {
     private WebSocketIdentity() {
@@ -54,8 +57,18 @@ public final class WebSocketIdentity {
     }
 
     public static Optional<String> findClientId(WebSocket webSocket) {
+        return findAttribute(webSocket, Attributes.CLIENT_ID);
+    }
+
+    public static Optional<String> findSessionId(WebSocket webSocket) {
+        return findAttribute(webSocket, Attributes.SESSION_ID);
+    }
+
+    private static Optional<String> findAttribute(WebSocket webSocket, String name) {
         return findUpgradeRequest(webSocket)
-                .map(upgradeRequest -> upgradeRequest.getHeader(Headers.CLIENT_ID))
+                .map(upgradeRequest -> upgradeRequest.getAttribute(name))
+                .filter(String.class::isInstance)
+                .map(String.class::cast)
                 .filter(StringUtils::isNotEmpty);
     }
 }

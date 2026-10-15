@@ -93,7 +93,8 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
             maker = trader2;
             taker = trader1;
         }
-        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().equals(maker.userProfile);
+        // By ID, as a trader may have edited the profile since the request.
+        isMakerRequester = bisqEasyMediationCase.getBisqEasyMediationRequest().getRequester().getId().equals(maker.userProfile.getId());
 
         tradeId = channel.getTradeId();
         shortTradeId = tradeId.substring(0, 8);
@@ -172,7 +173,8 @@ public class BisqEasyMediationCaseListItem implements ActivatableTableItem, Date
     private long getNumNotifications(UserProfile userProfile) {
         return chatNotificationService.getNotConsumedNotifications(channel)
                 .filter(notification -> notification.getSenderUserProfile().isPresent())
-                .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
+                // By ID, the hash of the key: the terms, statement and addresses of a profile can change
+                .filter(notification -> notification.getSenderUserProfile().get().getId().equals(userProfile.getId()))
                 .count();
     }
 

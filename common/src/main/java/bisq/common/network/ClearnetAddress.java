@@ -25,13 +25,15 @@ import lombok.EqualsAndHashCode;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
-public class ClearnetAddress extends Address {
+public final class ClearnetAddress extends Address {
     private static final int MIN_HOST_LENGTH = 2;
     // IPv4: 7-15 characters, IPv6: 2-39 characters, FQDNs can be up to 253
     private static final int MAX_HOST_LENGTH = 253;
 
     public ClearnetAddress(String host, int port) {
         super(maybeConvertLocalHost(host), port);
+
+        verify();
     }
 
     @Override

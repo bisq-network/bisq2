@@ -31,7 +31,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode(callSuper = true)
-public class I2PAddress extends Address {
+public final class I2PAddress extends Address {
     private static final int MIN_DESTINATION_LENGTH = 60;
     private static final int MAX_DESTINATION_LENGTH = 700;
 
@@ -60,6 +60,8 @@ public class I2PAddress extends Address {
         super(host, port);
         destinationBase32 = Optional.empty();
 
+        verify();
+
         if (!isBase64Destination(host)) {
             throw new IllegalArgumentException("I2P host must be in base 64 destination format. " + host);
         }
@@ -69,6 +71,8 @@ public class I2PAddress extends Address {
         super(destinationBase64, port);
         checkArgument(isBase32Destination(destinationBase32), "destinationBase32: " + destinationBase32);
         this.destinationBase32 = Optional.of(destinationBase32);
+
+        verify();
     }
 
     @Override

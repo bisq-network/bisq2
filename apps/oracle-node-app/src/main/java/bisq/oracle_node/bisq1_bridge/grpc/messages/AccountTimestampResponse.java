@@ -18,6 +18,7 @@
 package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 
@@ -45,7 +46,12 @@ public final class AccountTimestampResponse implements NetworkProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountTimestampResponse fromProto(bisq.bridge.protobuf.AccountTimestampDateResponse proto) {
-        return new AccountTimestampResponse(proto.getDate());
+    public static AccountTimestampResponse fromProto(bisq.bridge.protobuf.AccountTimestampDateResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AccountTimestampResponse(proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

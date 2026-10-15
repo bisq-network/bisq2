@@ -37,6 +37,7 @@ import bisq.user.profile.UserProfileService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +46,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -71,8 +73,18 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     @Getter
     protected final Observable<Pair<String, Long>> userProfileIdScorePair = new Observable<>();
     private final Map<ByteArray, Set<T>> pendingDataSetByHash = new ConcurrentHashMap<>();
+    // The user profiles by the key of this source: the profiles which the profile store holds, and the profiles which
+    // have a data set. A score stays while its data exists, also when the shorter-lived profile store does not hold the
+    // profile, and removing the score with the data needs the profile ID.
     private final Map<ByteArray, UserProfile> userProfileByUserProfileKey = new ConcurrentHashMap<>();
+    // Guarded by this. The stored publications of the relevant data, by data key, for the sources which use
+    // onAuthorizedDataAdded and onAuthorizedDataRemoved of this class. Equal data can have several publications, for
+    // example one of each oracle node. Data stays in the derived state while one of its publications is stored.
+    private final Map<ByteArray, Set<Publication<T>>> publicationsByDataKey = new HashMap<>();
     private Pin userProfileByIdPin;
+
+    private record Publication<D>(ByteArray authorizedPublicKey, D data) {
+    }
 
 
     public SourceReputationService(NetworkService networkService,
@@ -106,10 +118,14 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
             @Override
             public void remove(Object key) {
+                if (key instanceof String userProfileId) {
+                    handleRemovedUserProfile(userProfileId);
+                }
             }
 
             @Override
             public void clear() {
+                handleClearedUserProfiles();
             }
         });
         return CompletableFuture.completedFuture(true);
@@ -131,11 +147,25 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     /* --------------------------------------------------------------------- */
 
     @Override
-    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
+    public synchronized void onAuthorizedDataAdded(AuthorizedData authorizedData) {
         findRelevantData(authorizedData.getAuthorizedDistributedData())
                 .ifPresent(data -> {
                     if (isAuthorized(authorizedData) && isDataValid(data)) {
+                        addPublication(authorizedData, data);
                         handleAddedAuthorizedDistributedData(data);
+                    }
+                });
+    }
+
+    // The store removed a publication, because its owner removed it or because it expired. Only a publication which
+    // onAuthorizedDataAdded added counts, so a publication of an unauthorized key does not remove equal data of an
+    // oracle node.
+    @Override
+    public synchronized void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
+        findRelevantData(authorizedData.getAuthorizedDistributedData())
+                .ifPresent(data -> {
+                    if (removePublication(authorizedData, data) && !hasPublication(data)) {
+                        handleRemovedAuthorizedDistributedData(data);
                     }
                 });
     }
@@ -155,6 +185,9 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
 
     protected abstract ByteArray getUserProfileKey(UserProfile userProfile);
 
+    // The same key as getUserProfileKey(UserProfile) of the profile with this ID
+    protected abstract ByteArray getUserProfileKey(String userProfileId);
+
     protected void removeFromPendingDataSet(T data) {
         ByteArray dataKey = getDataKey(data);
         pendingDataSetByHash.computeIfPresent(dataKey, (ignored, dataSet) -> {
@@ -166,6 +199,23 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
     protected void putScore(String userProfileId, Set<T> dataSet) {
         long score = dataSet.stream().mapToLong(this::calculateScore).sum();
         scoreByUserProfileId.put(userProfileId, score);
+        notifyScoreChanged(userProfileId, score);
+    }
+
+    // Removes the data set and the score of a profile for which this source has no data anymore
+    protected void removeDataSetAndScore(ByteArray userProfileKey, String userProfileId) {
+        dataSetByHash.remove(userProfileKey);
+        if (userProfileService.findUserProfile(userProfileId).isEmpty()) {
+            userProfileByUserProfileKey.remove(userProfileKey);
+        }
+        scoreByUserProfileId.remove(userProfileId);
+        notifyScoreChanged(userProfileId, 0);
+    }
+
+    // Observable.set notifies the observers only of a new value. They must also get a pair which equals the last one,
+    // for example when a score of 0 is removed right after it was set. The observers ignore null.
+    protected void notifyScoreChanged(String userProfileId, long score) {
+        userProfileIdScorePair.set(null);
         userProfileIdScorePair.set(new Pair<>(userProfileId, score));
     }
 
@@ -179,8 +229,15 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return true;
     }
 
+    // One read: the map loses the score of a removed profile while other threads read it (see
+    // docs/specifications/security/derived-state.md)
     public long getScore(String userProfileId) {
-        return scoreByUserProfileId.containsKey(userProfileId) ? scoreByUserProfileId.get(userProfileId) : 0;
+        return scoreByUserProfileId.getOrDefault(userProfileId, 0L);
+    }
+
+    // Whether this source has data, and thus a score, for the profile. The score can be 0.
+    public boolean hasScore(String userProfileId) {
+        return scoreByUserProfileId.containsKey(userProfileId);
     }
 
     public abstract long calculateScore(T data);
@@ -196,7 +253,7 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         return 1 + ageFactor;
     }
 
-    private void handleAddedUserProfile(UserProfile userProfile) {
+    private synchronized void handleAddedUserProfile(UserProfile userProfile) {
         ByteArray userProfileKey = getUserProfileKey(userProfile);
         userProfileByUserProfileKey.putIfAbsent(userProfileKey, userProfile);
         Set<T> dataSet = pendingDataSetByHash.get(userProfileKey);
@@ -217,7 +274,71 @@ public abstract class SourceReputationService<T extends AuthorizedDistributedDat
         }
     }
 
-    private void handleAddedAuthorizedDistributedData(T data) {
+    private synchronized void handleRemovedUserProfile(String userProfileId) {
+        ByteArray userProfileKey = getUserProfileKey(userProfileId);
+        if (!dataSetByHash.containsKey(userProfileKey)) {
+            userProfileByUserProfileKey.remove(userProfileKey);
+        }
+    }
+
+    private synchronized void handleClearedUserProfiles() {
+        userProfileByUserProfileKey.keySet().removeIf(userProfileKey -> !dataSetByHash.containsKey(userProfileKey));
+    }
+
+    private void addPublication(AuthorizedData authorizedData, T data) {
+        publicationsByDataKey.computeIfAbsent(getDataKey(data), dataKey -> new HashSet<>())
+                .add(new Publication<>(new ByteArray(authorizedData.getAuthorizedPublicKeyBytes()), data));
+    }
+
+    // Whether the publication was added before
+    private boolean removePublication(AuthorizedData authorizedData, T data) {
+        ByteArray dataKey = getDataKey(data);
+        Set<Publication<T>> publications = publicationsByDataKey.get(dataKey);
+        if (publications == null ||
+                !publications.remove(new Publication<>(new ByteArray(authorizedData.getAuthorizedPublicKeyBytes()), data))) {
+            return false;
+        }
+        if (publications.isEmpty()) {
+            publicationsByDataKey.remove(dataKey);
+        }
+        return true;
+    }
+
+    private boolean hasPublication(T data) {
+        return getPublishedData(getDataKey(data)).anyMatch(data::equals);
+    }
+
+    private Stream<T> getPublishedData(ByteArray dataKey) {
+        return publicationsByDataKey.getOrDefault(dataKey, Set.of()).stream()
+                .map(Publication::data)
+                .distinct();
+    }
+
+    // The data has no stored publication anymore
+    private void handleRemovedAuthorizedDistributedData(T data) {
+        removeFromPendingDataSet(data);
+        ByteArray dataKey = getDataKey(data);
+        if (!dataSetByHash.containsKey(dataKey)) {
+            return;
+        }
+        // addToDataSet can have dropped other data because of the removed data, for example a newer profile age
+        // because of an older one. So we build the data set again from all data of the key which is still published,
+        // as a node which starts with this data would. While a key has a data set, its profile is known and none of
+        // its data is pending.
+        Set<T> dataSet = new CopyOnWriteArraySet<>();
+        getPublishedData(dataKey).forEach(publishedData -> addToDataSet(dataSet, publishedData));
+        String userProfileId = userProfileByUserProfileKey.get(dataKey).getId();
+        if (dataSet.isEmpty()) {
+            removeDataSetAndScore(dataKey, userProfileId);
+        } else {
+            dataSetByHash.put(dataKey, dataSet);
+            putScore(userProfileId, dataSet);
+        }
+    }
+
+    // AccountAgeService and SignedWitnessService keep their own state of the publications, and call this method
+    // instead of onAuthorizedDataAdded of this class.
+    protected void handleAddedAuthorizedDistributedData(T data) {
         ByteArray providedHash = getDataKey(data);
         Optional.ofNullable(userProfileByUserProfileKey.get(providedHash))
                 .ifPresentOrElse(userProfile -> {

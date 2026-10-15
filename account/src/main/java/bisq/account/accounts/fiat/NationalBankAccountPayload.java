@@ -21,6 +21,7 @@ import bisq.account.accounts.SelectableCurrencyAccountPayload;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -100,22 +101,27 @@ public final class NationalBankAccountPayload extends BankAccountPayload impleme
         return bisq.account.protobuf.NationalBankAccountPayload.newBuilder();
     }
 
-    public static NationalBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
-        var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
-        return new NationalBankAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                countryBasedPaymentAccountPayload.getCountryCode(),
-                bankAccountPayload.getSelectedCurrencyCode(),
-                bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),
-                bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
-                bankAccountPayload.hasBankName() ? Optional.of(bankAccountPayload.getBankName()) : Optional.empty(),
-                bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
-                bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
-                bankAccountPayload.getAccountNr(),
-                bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
-                bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty());
+    public static NationalBankAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var countryBasedPaymentAccountPayload = proto.getCountryBasedAccountPayload();
+            var bankAccountPayload = countryBasedPaymentAccountPayload.getBankAccountPayload();
+            return new NationalBankAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    countryBasedPaymentAccountPayload.getCountryCode(),
+                    bankAccountPayload.getSelectedCurrencyCode(),
+                    bankAccountPayload.hasHolderName() ? Optional.of(bankAccountPayload.getHolderName()) : Optional.empty(),
+                    bankAccountPayload.hasHolderId() ? Optional.of(bankAccountPayload.getHolderId()) : Optional.empty(),
+                    bankAccountPayload.hasBankName() ? Optional.of(bankAccountPayload.getBankName()) : Optional.empty(),
+                    bankAccountPayload.hasBankId() ? Optional.of(bankAccountPayload.getBankId()) : Optional.empty(),
+                    bankAccountPayload.hasBranchId() ? Optional.of(bankAccountPayload.getBranchId()) : Optional.empty(),
+                    bankAccountPayload.getAccountNr(),
+                    bankAccountPayload.hasBankAccountType() ? Optional.of(BankAccountType.fromProto(bankAccountPayload.getBankAccountType())) : Optional.empty(),
+                    bankAccountPayload.hasNationalAccountId() ? Optional.of(bankAccountPayload.getNationalAccountId()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

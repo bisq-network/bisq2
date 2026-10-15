@@ -66,3 +66,6 @@ docker/data_dirs
 
 # Directory for temp files
 /temp
+
+# Python bytecode of the scripts and their tests
+__pycache__/

@@ -19,6 +19,7 @@ package bisq.account.payment_method;
 
 import bisq.common.asset.Asset;
 import bisq.common.asset.CryptoAssetRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,7 +30,7 @@ import java.util.List;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
+public final class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
     public static BitcoinPaymentMethod fromPaymentRail(BitcoinPaymentRail bitcoinPaymentRail) {
         return new BitcoinPaymentMethod(bitcoinPaymentRail);
     }
@@ -60,8 +61,13 @@ public class BitcoinPaymentMethod extends PaymentMethod<BitcoinPaymentRail> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+    public static BitcoinPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
+        try {
+            return BitcoinPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

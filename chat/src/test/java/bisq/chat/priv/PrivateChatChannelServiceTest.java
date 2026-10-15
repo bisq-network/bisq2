@@ -159,7 +159,8 @@ public class PrivateChatChannelServiceTest {
             peer = mock(UserProfile.class);
             when(peer.getId()).thenReturn(PEER_PROFILE_ID);
             when(peer.getUserName()).thenReturn("Bob");
-            when(peer.getNetworkId()).thenReturn(mock(NetworkId.class));
+            NetworkId peerNetworkId = networkIdOf(PEER_PROFILE_ID);
+            when(peer.getNetworkId()).thenReturn(peerNetworkId);
 
             service = new TwoPartyPrivateChatChannelService(persistenceService,
                     mock(NetworkService.class),
@@ -221,7 +222,7 @@ public class PrivateChatChannelServiceTest {
                     channel.getId(),
                     peer,
                     MY_PROFILE_ID,
-                    mock(NetworkId.class),
+                    networkIdOf(MY_PROFILE_ID),
                     "hi",
                     Optional.empty(),
                     System.currentTimeMillis(),
@@ -247,6 +248,11 @@ public class PrivateChatChannelServiceTest {
         }
 
         @Override
+        public boolean hasSupportedChatMessageType() {
+            return true;
+        }
+
+        @Override
         public <R extends ChatMessageReaction> ObservableSet<R> getChatMessageReactions() {
             return null;
         }
@@ -260,5 +266,12 @@ public class PrivateChatChannelServiceTest {
         public Message.Builder getBuilder(boolean serializeForHash) {
             return null;
         }
+    }
+
+    // The receiver profile is the profile of the key of the receiver's network ID
+    private static NetworkId networkIdOf(String userProfileId) {
+        NetworkId networkId = mock(NetworkId.class);
+        when(networkId.getId()).thenReturn(userProfileId);
+        return networkId;
     }
 }

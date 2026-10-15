@@ -23,6 +23,7 @@ import bisq.account.accounts.util.AccountDataDisplayStringBuilder;
 import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.ByteArrayUtils;
 import bisq.common.validation.EmailValidation;
 import bisq.common.validation.PaymentAccountValidation;
@@ -97,15 +98,20 @@ public final class WiseAccountPayload extends AccountPayload<FiatPaymentMethod> 
                 .setEmail(email);
     }
 
-    public static WiseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getWiseAccountPayload();
-        return new WiseAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCodesList(),
-                payload.getHolderName(),
-                payload.getEmail()
-        );
+    public static WiseAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var payload = proto.getWiseAccountPayload();
+            return new WiseAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCodesList(),
+                    payload.getHolderName(),
+                    payload.getEmail()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

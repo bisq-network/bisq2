@@ -21,6 +21,7 @@ import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -58,15 +59,19 @@ public final class SatispayAccount extends Account<FiatPaymentMethod, SatispayAc
         return bisq.account.protobuf.SatispayAccount.newBuilder();
     }
 
-    public static SatispayAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new SatispayAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                SatispayAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+    public static SatispayAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new SatispayAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    SatispayAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

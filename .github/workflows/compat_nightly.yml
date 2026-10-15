@@ -1,0 +1,179 @@
+name: Compatibility with the last release
+
+# Runs the compatibility chain of tools/compat between the last release and the checked out branch, and checks the key
+# files of the branch with the updater code of the last release. Developers can start it by hand for any branch.
+on:
+  schedule:
+    - cron: '23 2 * * *'
+  workflow_dispatch:
+    inputs:
+      baseline:
+        description: 'Release tag of the baseline. Empty selects the newest one in tools/compat/baselines.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  compat_chain:
+    name: Compatibility chain with the last release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      # The runner context is not available in the env of a job, so a step sets the directory.
+      - name: Set the baseline directory
+        shell: bash
+        run: echo "BISQ_BASELINE_ROOT=$RUNNER_TEMP/bisq2-baselines" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify Gradle wrapper checksums
+        shell: bash
+        run: sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+
+      - name: Select and fetch the baseline tag
+        id: baseline
+        shell: bash
+        env:
+          REQUESTED_BASELINE: ${{ inputs.baseline }}
+        run: |
+          if [ -n "$REQUESTED_BASELINE" ]; then
+            tag=$REQUESTED_BASELINE
+          else
+            tag=$(ls tools/compat/baselines | sort -t. -k1,1 -k2,2n -k3,3n | tail -n 1)
+          fi
+          if [ ! -d "tools/compat/baselines/$tag" ]; then
+            echo "::error::No overlay for the baseline $tag in tools/compat/baselines"
+            exit 1
+          fi
+          git fetch --no-tags --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: '21.0.11'
+          distribution: 'zulu'
+          check-latest: false
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+
+      - name: Run the compatibility chain
+        shell: bash
+        env:
+          BASELINE_TAG: ${{ steps.baseline.outputs.tag }}
+        run: tools/compat/run-chain.sh "$BASELINE_TAG"
+
+      - name: Check the key files with the updater of the last release
+        shell: bash
+        env:
+          COMPAT_BASELINE: ${{ steps.baseline.outputs.tag }}
+        run: tools/compat/old-updater-replay.sh keys
+
+      - name: Show the failed tests
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'EOF'
+          import glob, html, os, re
+          root = os.environ.get("BISQ_BASELINE_ROOT", "")
+          patterns = ["application/build/test-results/compatTest/*.xml",
+                      root + "/*/application/build/test-results/test/TEST-bisq.application.compat.*.xml",
+                      root + "/*/evolution/build/test-results/test/TEST-bisq.evolution.updater.OldUpdaterReplayTest.xml"]
+          for pattern in patterns:
+              for path in glob.glob(pattern):
+                  text = open(path, encoding="utf-8").read()
+                  for match in re.finditer(r'<testcase name="([^"]+)" classname="([^"]+)".*?(?:<failure message="([^"]*)"|/>)', text, re.S):
+                      if match.group(3):
+                          print(f"::error title={match.group(2)}::{match.group(1)}: {html.unescape(match.group(3))[:1500]}")
+          EOF
+
+  mixed_network:
+    name: Network with nodes of the last release and of the branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    steps:
+      # The runner context is not available in the env of a job, so a step sets the directory.
+      - name: Set the baseline directory
+        shell: bash
+        run: echo "BISQ_BASELINE_ROOT=$RUNNER_TEMP/bisq2-baselines" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify Gradle wrapper checksums
+        shell: bash
+        run: sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+
+      - name: Select and fetch the baseline tag
+        id: baseline
+        shell: bash
+        env:
+          REQUESTED_BASELINE: ${{ inputs.baseline }}
+        run: |
+          if [ -n "$REQUESTED_BASELINE" ]; then
+            tag=$REQUESTED_BASELINE
+          else
+            tag=$(ls tools/compat/baselines | sort -t. -k1,1 -k2,2n -k3,3n | tail -n 1)
+          fi
+          if [ ! -d "tools/compat/baselines/$tag" ]; then
+            echo "::error::No overlay for the baseline $tag in tools/compat/baselines"
+            exit 1
+          fi
+          git fetch --no-tags --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+
+      - name: Setup Java JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: '21.0.11'
+          distribution: 'zulu'
+          check-latest: false
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+
+      # CutoffAcrossVersionsTest gives the nodes a fake clock with libfaketime. Without the library, the test is skipped.
+      - name: Install libfaketime
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libfaketime
+          library=$(dpkg -L libfaketime | grep '/libfaketimeMT\.so\.1$')
+          echo "BISQ_E2E_LIBFAKETIME=$library" >> "$GITHUB_ENV"
+
+      - name: Run the tests with nodes of both versions
+        shell: bash
+        env:
+          BASELINE_TAG: ${{ steps.baseline.outputs.tag }}
+        run: tools/compat/run-mixed-network.sh "$BASELINE_TAG"
+
+      - name: Show the failed tests and the log reports
+        if: failure()
+        shell: bash
+        run: |
+          python3 - <<'PYTHON'
+          import glob, html, re
+          for path in glob.glob("apps/e2e-tests/build/test-results/integrationTest/*.xml"):
+              text = open(path, encoding="utf-8").read()
+              for match in re.finditer(r'<testcase name="([^"]+)" classname="([^"]+)"[^>]*>\s*<failure message="([^"]*)"', text):
+                  print(f"::error title={match.group(2)}::{match.group(1)}: {html.unescape(match.group(3))[:1500]}")
+          PYTHON
+          for report in build/e2e/*/*/log-anomaly-report.txt; do
+            [ -f "$report" ] || continue
+            echo "=== $report"
+            cat "$report"
+          done

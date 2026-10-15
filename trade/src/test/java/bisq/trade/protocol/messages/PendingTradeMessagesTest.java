@@ -1,0 +1,119 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.trade.protocol.messages;
+
+import bisq.common.network.Address;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.network.identity.NetworkId;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.IntStream;
+
+import static bisq.trade.protocol.messages.PendingTradeMessages.MAX_PENDING_MESSAGES;
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * The pending trade messages are bounded. Anybody can send trade messages with made-up trade IDs, and such a message
+ * never gets a protocol. When the bound is reached, the oldest message is dropped.
+ */
+class PendingTradeMessagesTest {
+    private final NetworkId sender = networkId("sender", 1001);
+    private final NetworkId receiver = networkId("receiver", 1002);
+    private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
+
+    @Test
+    void messagesAreKeptInArrivalOrderUpToTheBound() {
+        List<BisqEasyTradeMessage> messages = messages(MAX_PENDING_MESSAGES);
+
+        messages.forEach(pendingMessages::add);
+
+        assertThat(pendingMessages.getMessagesInArrivalOrder()).containsExactlyElementsOf(messages);
+    }
+
+    @Test
+    void oldestMessageIsDroppedWhenTheBoundIsExceeded() {
+        List<BisqEasyTradeMessage> messages = messages(MAX_PENDING_MESSAGES + 2);
+
+        messages.forEach(pendingMessages::add);
+
+        assertThat(pendingMessages.getMessagesInArrivalOrder())
+                .hasSize(MAX_PENDING_MESSAGES)
+                .containsExactlyElementsOf(messages.subList(2, messages.size()));
+    }
+
+    @Test
+    void addingAKeptMessageAgainChangesNeitherTheOrderNorTheSize() {
+        List<BisqEasyTradeMessage> messages = messages(MAX_PENDING_MESSAGES);
+        messages.forEach(pendingMessages::add);
+
+        pendingMessages.add(messages.get(0));
+
+        assertThat(pendingMessages.getMessagesInArrivalOrder()).containsExactlyElementsOf(messages);
+    }
+
+    @Test
+    void removeReportsWhetherTheMessageWasPending() {
+        BisqEasyTradeMessage message = message(1);
+        pendingMessages.add(message);
+
+        assertThat(pendingMessages.remove(message)).isTrue();
+        assertThat(pendingMessages.remove(message)).isFalse();
+        assertThat(pendingMessages.isEmpty()).isTrue();
+    }
+
+    @Test
+    void snapshotIsNotChangedByLaterModifications() {
+        BisqEasyTradeMessage message = message(1);
+        pendingMessages.add(message);
+        List<BisqEasyTradeMessage> snapshot = pendingMessages.getMessagesInArrivalOrder();
+
+        pendingMessages.clear();
+
+        assertThat(snapshot).containsExactly(message);
+        assertThat(pendingMessages.isEmpty()).isTrue();
+    }
+
+    private List<BisqEasyTradeMessage> messages(int count) {
+        return new ArrayList<>(IntStream.range(0, count).mapToObj(this::message).toList());
+    }
+
+    private BisqEasyTradeMessage message(int index) {
+        return new BisqEasyReportErrorMessage("message-" + index,
+                "trade-" + index,
+                "1.0.0",
+                sender,
+                receiver,
+                "error",
+                "",
+                TradeProtocolFailure.UNKNOWN);
+    }
+
+    private static NetworkId networkId(String keyId, int port) {
+        Address address = Address.from("127.0.0.1", port);
+        return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),
+                new PubKey(KeyGeneration.generateDefaultEcKeyPair().getPublic(), keyId));
+    }
+}

@@ -17,10 +17,12 @@
 
 package bisq.trade.mu_sig.events.seller;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.handler.MuSigTradeEventHandler;
 import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.CloseTradeRequest;
 
 public final class SellersCloseTradeTimeoutEventHandler extends MuSigTradeEventHandler<MuSigTrade, SellersCloseTradeTimeoutEvent> {
@@ -32,14 +34,18 @@ public final class SellersCloseTradeTimeoutEventHandler extends MuSigTradeEventH
 
     @Override
     public void process(SellersCloseTradeTimeoutEvent event) {
-        tradeService.stopCloseTradeTimeout(trade);
+        try {
+            tradeService.stopCloseTradeTimeout(trade);
 
-        // ClosureType.UNCOOPERATIVE
-        // *** SELLER FORCE-CLOSES TRADE ***
-        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+            // ClosureType.UNCOOPERATIVE
+            // *** SELLER FORCE-CLOSES TRADE ***
+            CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .build();
+            myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

@@ -33,16 +33,22 @@ class BitcoinAmountDisplayTest {
 
     private BitcoinAmountDisplay bitcoinAmountDisplay;
     private char decimalSeparator;
+    private Locale localeRepositoryDefaultLocale;
 
     @BeforeEach
     void setUp() {
         Locale.setDefault(Locale.US);
+        // The display reads the decimal separator of LocaleRepository. A test which ran before in the same JVM can have
+        // initialized it with the locale of the system.
+        localeRepositoryDefaultLocale = LocaleRepository.getDefaultLocale();
+        LocaleRepository.setDefaultLocale(Locale.US);
         decimalSeparator = StringUtils.getDecimalSeparator(Locale.getDefault());
         bitcoinAmountDisplay = new BitcoinAmountDisplay("0.12345678");
     }
 
     @AfterEach
     void tearDown() {
+        LocaleRepository.setDefaultLocale(localeRepositoryDefaultLocale);
         bitcoinAmountDisplay = null;
     }
 

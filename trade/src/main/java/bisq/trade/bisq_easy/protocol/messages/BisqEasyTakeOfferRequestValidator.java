@@ -1,0 +1,284 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.trade.bisq_easy.protocol.messages;
+
+import bisq.bonded_roles.market_price.MarketPrice;
+import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.common.market.Market;
+import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
+import bisq.common.util.StringUtils;
+import bisq.contract.ContractService;
+import bisq.contract.ContractSignatureData;
+import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.identity.Identity;
+import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.PriceUtil;
+import bisq.offer.price.spec.FixPriceSpec;
+import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.validation.BisqEasyPriceSpecValidator;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
+import lombok.extern.slf4j.Slf4j;
+
+import java.math.BigDecimal;
+import java.security.GeneralSecurityException;
+import java.security.PublicKey;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
+import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.validateSellersReputationForTradeAmount;
+import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+/**
+ * The checks of a take offer request at the maker (docs/specifications/trade/take-offer-request-validation.md).
+ */
+@Slf4j
+public final class BisqEasyTakeOfferRequestValidator {
+    private BisqEasyTakeOfferRequestValidator() {
+    }
+
+    public static void validate(ServiceProvider serviceProvider,
+                                Identity myIdentity,
+                                BisqEasyTakeOfferRequest message) {
+        BisqEasyContract takersContract = checkNotNull(message.getBisqEasyContract(), "Takers contract must not be null");
+        BisqEasyOffer takersOffer = checkNotNull(takersContract.getOffer(), "Offer from takers contract must not be null");
+
+        // We reject a taker whom we have ignored with the same exception, from the same line, as a request for an offer
+        // which we do not have. The rejection, including its stack trace, goes to the taker, and must not tell them
+        // that they are ignored.
+        boolean isTakerIgnored = serviceProvider.getUserService().getUserProfileService()
+                .isChatUserIgnored(message.getSender().getId());
+        if (isTakerIgnored) {
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker. takersOffer={}", takersOffer);
+        }
+
+        // The author of an offerbook message is the maker of its offer (BisqEasyOfferbookMessage.verify())
+        List<BisqEasyOffer> myOffers = serviceProvider.getChatService().getBisqEasyOfferbookChannelService().getChannels().stream()
+                .flatMap(channel -> channel.getChatMessages().stream())
+                .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
+                .map(chatMessage -> chatMessage.getBisqEasyOffer().get())
+                // By key: the address map of our NetworkId can change after we published the offer
+                .filter(offer -> offer.getMakerNetworkId().getId().equals(myIdentity.getNetworkId().getId()))
+                .collect(Collectors.toList());
+        Optional<BisqEasyOffer> matchingOfferInChannel = myOffers.stream()
+                .filter(offer -> offer.equals(takersOffer))
+                .findAny();
+        // An offer which is no longer in our offerbook is not takeable, also not when we have a trade with it
+        // (docs/specifications/trade/take-offer-request-validation.md)
+        if (isTakerIgnored || matchingOfferInChannel.isEmpty()) {
+            boolean closeMyOfferWhenTaken = serviceProvider.getSettingsService().getCloseMyOfferWhenTaken().get();
+            String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
+                    "closeMyOfferWhenTaken=%s; takersOffer=%s", closeMyOfferWhenTaken, takersOffer);
+            log.error(errorMessage);
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
+        }
+
+        // After the check above the offer is our own offer, so this binds the contract price to our offer
+        BisqEasyPriceSpecValidator.validatePriceSpec(takersOffer, takersContract.getPriceSpec());
+
+        checkArgument(message.getSender().equals(takersContract.getTaker().getNetworkId()),
+                "Senders networkId must be same as takers networkId from takers contract");
+        ContractService contractService = serviceProvider.getContractService();
+        PublicKey takerPublicKey = takersContract.getTaker().getNetworkId().getPubKey().getPublicKey();
+        checkArgument(contractService.arePublicKeysMatching(message.getSenderPublicKey(), takerPublicKey),
+                "Takers message sender public key must match takers network id public key");
+
+        validateOfferAmount(takersOffer,
+                takersContract.getBaseSideAmount(),
+                takersContract.getQuoteSideAmount());
+        validateAmount(serviceProvider, takersOffer, takersContract);
+
+        checkArgument(takersOffer.getBaseSidePaymentMethodSpecs().contains(takersContract.getBaseSidePaymentMethodSpec()),
+                "BaseSidePaymentMethodSpec from takers contract must be present in the offers baseSidePaymentMethodSpecs");
+        checkArgument(takersOffer.getQuoteSidePaymentMethodSpecs().contains(takersContract.getQuoteSidePaymentMethodSpec()),
+                "QuoteSidePaymentMethodSpec from takers contract must be present in the offers quoteSidePaymentMethodSpecs");
+
+        Optional<UserProfile> mediator = serviceProvider.getSupportService().getBisqEasyMediationRequestService()
+                .selectMediator(takersOffer.getMakersUserProfileId(),
+                        message.getSender().getId(),
+                        takersOffer.getId());
+        // The whole network ID, including the addresses: we send our mediation request and our chat messages for the
+        // mediator to the addresses of the copies which the taker supplies. This check binds them to the profile which
+        // the mediator published (docs/specifications/user/identity-by-key.md, rule 4).
+        if (!mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId))) {
+            String errorMessage = String.format("Mediators do not match.\n" +
+                    "Maker's mediator: %s\n" +
+                    "Taker's mediator: %s", mediator, takersContract.getMediator());
+            log.warn(errorMessage);
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.MEDIATORS_NOT_MATCHING);
+        }
+
+        log.info("Selected mediator for trade {}: {}", StringUtils.sanitizeForLog(message.getTradeId()),
+                mediator.map(UserProfile::getUserName).orElse("N/A"));
+
+        ContractSignatureData takersContractSignatureData = message.getContractSignatureData();
+        checkArgument(contractService.arePublicKeysMatching(takersContractSignatureData,
+                        takerPublicKey),
+                "Takers contract signature public key must match takers network id public key");
+        try {
+            checkArgument(contractService.verifyContractSignature(takersContract, takersContractSignatureData),
+                    "Verifying takers contract signature failed");
+        } catch (GeneralSecurityException e) {
+            throw new RuntimeException(e);
+        }
+
+        validateTakersReputation(serviceProvider, takersOffer, takersContract);
+    }
+
+    // As buyer we send the fiat first, so the seller's reputation is our only security. The taker's client
+    // applies the reputation limit in its take offer UI, but a modified client can skip that check.
+    @VisibleForTesting
+    static void validateTakersReputation(ServiceProvider serviceProvider,
+                                         BisqEasyOffer takersOffer,
+                                         BisqEasyContract takersContract) {
+        if (takersOffer.getTakersDirection().isBuy()) {
+            return;
+        }
+        // The taker's user profile ID is the ID of the taker's network ID
+        String takersUserProfileId = takersContract.getTaker().getNetworkId().getId();
+        validateSellersReputationForTradeAmount(serviceProvider.getBondedRolesService().getMarketPriceService(),
+                serviceProvider.getUserService().getReputationService(),
+                takersOffer.getMarket(),
+                takersContract.getQuoteSideMonetary(),
+                takersUserProfileId);
+    }
+
+    private static void validateAmount(ServiceProvider serviceProvider,
+                                       BisqEasyOffer takersOffer,
+                                       BisqEasyContract takersContract) {
+        MarketPriceService marketPriceService = serviceProvider.getBondedRolesService().getMarketPriceService();
+        Market market = takersOffer.getMarket();
+        MarketPrice marketPrice = marketPriceService.getMarketPriceByCurrencyMap().get(market);
+        Optional<PriceQuote> priceQuote = PriceUtil.findQuote(marketPriceService,
+                takersOffer.getPriceSpec(), market);
+        checkArgument(priceQuote.isPresent(),
+                "PriceQuote is empty. Might be that no market price is available. marketPrice=" + marketPrice);
+        Optional<Monetary> amount;
+        try {
+            amount = priceQuote.map(quote -> quote.toBaseSideMonetary(Monetary.from(takersContract.getQuoteSideAmount(),
+                    market.getQuoteCurrencyCode())));
+        } catch (ArithmeticException e) {
+            // The contract amounts and, for a fixed price spec, the price quote come from the
+            // peer's request: a conversion that overflows or divides by zero marks a malformed
+            // request, rejected like any other failed amount validation.
+            throw new IllegalArgumentException("Converting the take offer request's quote side amount " +
+                    takersContract.getQuoteSideAmount() + " at the contract price failed: " + e.getMessage());
+        }
+
+        long takersAmount = takersContract.getBaseSideAmount();
+        long myAmount = amount.get().getValue(); // I am maker
+
+        boolean isMakerBuyer = takersOffer.getMakersDirection().isBuy();
+        double warnThreshold, errorThreshold;
+        String reason;
+        if (takersOffer.getPriceSpec() instanceof FixPriceSpec) {
+            // Both traders convert at the same price, so the amounts differ only by rounding. The maximum trade price
+            // deviation of the maker covers different market prices of the traders, which a fixed price does not
+            // have; it would only give the taker the difference.
+            long maxRoundingDifference = getMaxRoundingDifference(priceQuote.get());
+            errorThreshold = isMakerBuyer ? myAmount - maxRoundingDifference : myAmount + maxRoundingDifference;
+            warnThreshold = errorThreshold;
+            reason = "The amounts do not match the fixed price of the offer.";
+        } else {
+            double maxTradePriceDeviation = serviceProvider.getSettingsService().getMaxTradePriceDeviation().get();
+            double warnDeviation = maxTradePriceDeviation / 2;
+            warnThreshold = isMakerBuyer ? myAmount * (1 - warnDeviation) : myAmount * (1 + warnDeviation);
+            errorThreshold = isMakerBuyer
+                    ? myAmount * (1 - maxTradePriceDeviation)
+                    : myAmount * (1 + maxTradePriceDeviation);
+            reason = "This can be caused by differences in the 2 traders market price or by an attempt by the taker " +
+                    "to manipulate the price.";
+        }
+
+        boolean showWarning = false;
+        boolean throwException = false;
+        String message = "";
+        TradeProtocolFailure tradeProtocolFailure = TradeProtocolFailure.UNKNOWN;
+        if (isMakerBuyer) {
+            // If I am buyer I accept if takers amount is larger than my expected amount (good for me as I receive more BTC).
+            // If takers amount is below the error threshold the trade fails.
+            if (takersAmount < errorThreshold) {
+                throwException = true;
+                message = "Takers (sellers) Bitcoin amount is too low. " + reason;
+                tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
+            } else if (takersAmount < warnThreshold) {
+                showWarning = true;
+                message = "Takers (sellers) Bitcoin amount is lower than expected. " + reason +
+                        " We still tolerate that deviation.";
+            }
+        } else {
+            // If I am seller I accept if takers amount is smaller than my expected amount (good for me as I need to send less BTC).
+            // If takers amount is above the error threshold the trade fails.
+            if (takersAmount > errorThreshold) {
+                throwException = true;
+                message = "Takers (buyers) Bitcoin amount is too high. " + reason;
+                tradeProtocolFailure = TradeProtocolFailure.PRICE_DEVIATION;
+            } else if (takersAmount > warnThreshold) {
+                showWarning = true;
+                message = "Takers (buyers) Bitcoin amount is higher than expected. " + reason +
+                        " We still tolerate that deviation.";
+            }
+        }
+
+        // A fixed price offer needs no market price, so the maker can have none for the market
+        String details = "takersAmount=" + takersAmount + "\n" +
+                "myAmount=" + myAmount + "\n" +
+                "errorThreshold=" + errorThreshold + "\n" +
+                "marketPrice=" + Optional.ofNullable(marketPrice)
+                .map(price -> String.valueOf(price.getPriceQuote().getValue()))
+                .orElse("none") + "\n" +
+                "priceQuote=" + priceQuote.map(PriceQuote::getValue).orElse(0L) + "\n" +
+                "takersContract=" + takersContract;
+        if (throwException) {
+            log.error("message={}\ndetails={}", message, details);
+            throw new TradeProtocolException(message, tradeProtocolFailure);
+        } else if (showWarning) {
+            log.warn("message={}\ndetails={}", message, details);
+        } else if (myAmount != takersAmount) {
+            log.info("My amount and the amount set by the taker are not the same. This is expected from rounding, " +
+                    "and if the offer used a market based price and the taker had a different market price.\n" +
+                    "{}", details);
+        }
+    }
+
+    // For a fixed price the maker and the taker compute the amounts at the same price. A client computes the Bitcoin
+    // amount from the fiat amount, or the fiat amount from the Bitcoin amount, and it can round the fiat amount to its
+    // display precision (2 decimals). So the maker accepts a difference of up to the Bitcoin value of one unit of that
+    // precision, plus one satoshi for its own rounding. A taker who uses this difference gains at most one such unit of
+    // the fiat amount, for example one cent.
+    // Bisq Easy has only markets with Bitcoin as base and a fiat currency as quote. In an altcoin market base and quote
+    // are inverted: the quote is Bitcoin, whose display precision is 4 decimals, so the method would accept the altcoin
+    // value of 0.0001 BTC. It therefore requires a Bitcoin/fiat market.
+    @VisibleForTesting
+    static long getMaxRoundingDifference(PriceQuote fixedPrice) {
+        checkArgument(fixedPrice.getMarket().isBtcFiatMarket(),
+                "The rounding difference is defined for Bitcoin/fiat markets. market=" + fixedPrice.getMarket());
+        long smallestDisplayedQuoteUnit = BigDecimal.ONE
+                .movePointRight(fixedPrice.getPrecision() - fixedPrice.getLowPrecision())
+                .longValueExact();
+        Monetary quoteUnit = Monetary.from(smallestDisplayedQuoteUnit, fixedPrice.getQuoteSideMonetary().getCode());
+        return fixedPrice.toBaseSideMonetary(quoteUnit).getValue() + 1;
+    }
+}

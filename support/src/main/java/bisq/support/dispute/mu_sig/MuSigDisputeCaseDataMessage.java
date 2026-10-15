@@ -19,6 +19,8 @@ package bisq.support.dispute.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -49,7 +51,7 @@ import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCaseDataMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCaseDataMessage.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
     private final byte[] contractHash;
@@ -89,15 +91,23 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
                         .collect(Collectors.toList()));
     }
 
-    public static MuSigDisputeCaseDataMessage fromProto(bisq.support.protobuf.MuSigDisputeCaseDataMessage proto) {
-        return new MuSigDisputeCaseDataMessage(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                proto.getContractHash().toByteArray(),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList())
-        );
+    public static MuSigDisputeCaseDataMessage fromProto(bisq.support.protobuf.MuSigDisputeCaseDataMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigDisputeCaseDataMessage(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    proto.getContractHash().toByteArray(),
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // message unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -112,11 +122,6 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
-    }
-
-    @Override
     public PublicKey getSenderPublicKey() {
         return senderNetworkId.getPubKey().getPublicKey();
     }
@@ -125,4 +130,8 @@ public final class MuSigDisputeCaseDataMessage implements MailboxMessage, Extern
         return contractHash.clone();
     }
 
+    @Override
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
 }

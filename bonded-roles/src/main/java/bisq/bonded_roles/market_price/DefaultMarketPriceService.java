@@ -132,7 +132,10 @@ public class DefaultMarketPriceService extends RateLimitedPersistenceClient<Mark
                         .map(BondedRole::getAuthorizedBondedRole)
                         .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey))
                         .findAny();
+                // The oracle data keeps the prices of markets which this node does not know, as its signature covers
+                // all entries. The node uses only the prices of the markets which it knows.
                 Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
+                        .filter(e -> MarketRepository.findAnyMarketByMarketCodes(e.getKey().getMarketCodes()).isPresent())
                         .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
                 applyNewMap(map);
@@ -196,17 +199,33 @@ public class DefaultMarketPriceService extends RateLimitedPersistenceClient<Mark
         return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
     }
 
+    // All market prices of the price node and of the oracle data enter the market prices of this node here
     private void applyNewMap(Map<Market, MarketPrice> newMap) {
         if (newMap.isEmpty()) {
             return;
         }
 
-        Map<Market, MarketPrice> mapOfNewEntries = getMapOfNewEntries(newMap);
+        Map<Market, MarketPrice> mapOfNewEntries = getMapOfNewEntries(withPositivePrices(newMap));
         if (mapOfNewEntries.isEmpty()) {
             return;
         }
         getMarketPriceByCurrencyMap().putAll(mapOfNewEntries);
         persist();
+    }
+
+    // The oracle data can contain a price which is not positive, for example from an oracle node of an earlier version.
+    // We skip only that price and use the other prices. The oracle data itself stays unchanged: its signature covers
+    // all entries.
+    private static Map<Market, MarketPrice> withPositivePrices(Map<Market, MarketPrice> map) {
+        return map.entrySet().stream()
+                .filter(e -> {
+                    boolean hasPositivePrice = e.getValue().hasPositivePrice();
+                    if (!hasPositivePrice) {
+                        log.warn("We ignore a market price which is not positive. market={}", e.getKey());
+                    }
+                    return hasPositivePrice;
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     // Filters the new map for new entries or entries with a newer timestamp as the existing one.

@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -53,7 +54,12 @@ public final class TradeTermsOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto) {
-        return new TradeTermsOption(proto.getMakersTradeTerms());
+    public static TradeTermsOption fromProto(bisq.offer.protobuf.TradeTermsOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new TradeTermsOption(proto.getMakersTradeTerms());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

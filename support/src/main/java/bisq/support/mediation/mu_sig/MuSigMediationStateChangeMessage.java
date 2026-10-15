@@ -18,6 +18,7 @@
 package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.OptionalUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -45,7 +46,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString
 public final class MuSigMediationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigMediationStateChangeMessage.class.getSimpleName());
     private final String id;
     private final String tradeId;
     private final NetworkId senderNetworkId;
@@ -87,19 +88,24 @@ public final class MuSigMediationStateChangeMessage implements MailboxMessage, E
         return builder;
     }
 
-    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto) {
-        return new MuSigMediationStateChangeMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId()),
-                MediationCaseState.fromProto(proto.getMediationCaseState()),
-                proto.hasMuSigMediationResult()
-                        ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
-                        : Optional.empty(),
-                proto.hasMediationResultSignature()
-                        ? Optional.of(proto.getMediationResultSignature().toByteArray())
-                        : Optional.empty()
-        );
+    public static MuSigMediationStateChangeMessage fromProto(bisq.support.protobuf.MuSigMediationStateChangeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationStateChangeMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId()),
+                    MediationCaseState.fromProto(proto.getMediationCaseState()),
+                    proto.hasMuSigMediationResult()
+                            ? Optional.of(MuSigMediationResult.fromProto(proto.getMuSigMediationResult()))
+                            : Optional.empty(),
+                    proto.hasMediationResultSignature()
+                            ? Optional.of(proto.getMediationResultSignature().toByteArray())
+                            : Optional.empty()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -114,8 +120,8 @@ public final class MuSigMediationStateChangeMessage implements MailboxMessage, E
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

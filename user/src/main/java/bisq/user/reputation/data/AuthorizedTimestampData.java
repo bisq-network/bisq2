@@ -17,22 +17,20 @@
 
 package bisq.user.reputation.data;
 
-import bisq.bonded_roles.AuthorizedPubKeys;
+import bisq.bonded_roles.oracle.OracleNodeAuthorizedData;
 import bisq.common.annotation.ExcludeForHash;
-import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Date;
-import java.util.Set;
 
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
@@ -40,12 +38,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Slf4j
 @EqualsAndHashCode
 @Getter
-public final class AuthorizedTimestampData implements AuthorizedDistributedData {
+public final class AuthorizedTimestampData implements OracleNodeAuthorizedData {
     private static final int VERSION = 1;
     public static final long TTL = TTL_30_DAYS;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, AuthorizedTimestampData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -101,13 +98,18 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto) {
-        return new AuthorizedTimestampData(
-                proto.getVersion(),
-                proto.getProfileId(),
-                proto.getDate(),
-                proto.getStaticPublicKeysProvided()
-        );
+    public static AuthorizedTimestampData fromProto(bisq.user.protobuf.AuthorizedTimestampData proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizedTimestampData(
+                    proto.getVersion(),
+                    proto.getProfileId(),
+                    proto.getDate(),
+                    proto.getStaticPublicKeysProvided()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -121,22 +123,14 @@ public final class AuthorizedTimestampData implements AuthorizedDistributedData 
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // Oracle nodes of earlier versions published it with the key of their network ID
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
-    }
-
-    @Override
-    public Set<String> getAuthorizedPublicKeys() {
-        if (DevMode.isDevMode()) {
-            return AuthorizedPubKeys.DEV_PUB_KEYS;
-        } else {
-            return AuthorizedPubKeys.ORACLE_NODE_PUB_KEYS;
-        }
+    public boolean isLegacyOwnerAccepted() {
+        return true;
     }
 
     @Override

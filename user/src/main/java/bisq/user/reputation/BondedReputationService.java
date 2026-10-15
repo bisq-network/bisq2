@@ -108,6 +108,11 @@ public class BondedReputationService extends SourceReputationService<AuthorizedB
     }
 
     @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getBondedReputationKey(userProfileId);
+    }
+
+    @Override
     public long calculateScore(AuthorizedBondedReputationData data) {
         if (!data.isCurrentVersion() || data.getUnlockTxId().isPresent()) {
             // We store unlock bond data to be able to handle out of order cases, thus we need to handle it here.

@@ -17,19 +17,26 @@
 
 package bisq.api.access.filter;
 
+/**
+ * Names of the request attributes and properties which the filters of the API record after they authenticated a
+ * request.
+ * <p>
+ * Jersey keeps the properties of a REST request as attributes of the Grizzly request object, and Grizzly reuses
+ * request objects for later requests. So the identity of a WebSocket and the properties of the REST filter have
+ * different names, and each name has one writer. A value which the REST filter recorded can then never skip the
+ * authentication of an upgrade request or become the identity of a WebSocket, also if Grizzly stopped clearing the
+ * attributes of a reused request object.
+ */
 public final class Attributes {
-    // Authentication
-    public static final String IS_AUTHENTICATED = "bisq.authn.is_authenticated";
-    public static final String SESSION_ID = "bisq.authn.session_id";
+    // The identity of a WebSocket: attributes of its upgrade request. Only the WebSocket filters write them, while
+    // Grizzly handles the first content of the upgrade request (see WebSocketIdentity).
+    public static final String IS_AUTHENTICATED = "bisq.web_socket.authn.is_authenticated";
+    public static final String SESSION_ID = "bisq.web_socket.authn.session_id";
+    public static final String CLIENT_ID = "bisq.web_socket.authz.client_id";
 
-    // Authorization
-    public static final String CLIENT_ID = "bisq.authz.client_id";
-    public static final String CLIENT_SECRET = "bisq.authz.client_secret";
-    public static final String PERMISSIONS = "bisq.authz.permissions";
-
-    // Metadata
-    public static final String USER_AGENT = "bisq.meta.user_agent";
-    public static final String REMOTE_ADDRESS = "bisq.meta.remote_address";
-
+    // Properties of an authenticated REST request. Only RestApiSessionAuthenticationFilter writes them.
+    public static final String REST_IS_AUTHENTICATED = "bisq.rest_api.authn.is_authenticated";
+    public static final String REST_SESSION_ID = "bisq.rest_api.authn.session_id";
+    public static final String REST_CLIENT_ID = "bisq.rest_api.authz.client_id";
 }
 

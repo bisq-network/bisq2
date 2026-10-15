@@ -181,7 +181,11 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
                     MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
                             marketPriceProviderInfo);
-                    if (marketPrice.isValidDate()) {
+                    if (!marketPrice.hasPositivePrice()) {
+                        // An oracle node publishes these prices to the network, so we skip the price here
+                        log.warn("We got a market price which is not positive and ignore it. market={}, price={}",
+                                marketPrice.getMarket(), price);
+                    } else if (marketPrice.isValidDate()) {
                         marketPrice.setSource(MarketPrice.Source.REQUESTED_FROM_PRICE_NODE);
                         map.put(priceQuote.getMarket(), marketPrice);
                     } else {

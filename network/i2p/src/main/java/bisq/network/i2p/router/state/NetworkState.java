@@ -19,6 +19,7 @@ package bisq.network.i2p.router.state;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum NetworkState implements ProtoEnum {
     NEW,
@@ -34,7 +35,7 @@ public enum NetworkState implements ProtoEnum {
         return bisq.bi2p.protobuf.NetworkState.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static NetworkState fromProto(bisq.bi2p.protobuf.NetworkState proto) {
+    public static NetworkState fromProto(bisq.bi2p.protobuf.NetworkState proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(NetworkState.class, proto.name(), NEW);
     }
 }

@@ -110,9 +110,12 @@ NetworkMessageResolver.addResolver("trade.TradeMessage", TradeMessage.class, Tra
 The proto type name and the class are passed separately because they can differ. The proto type name is the wire
 contract and must never change, while the class may be renamed, which is why for example the message class
 `BisqEasyMediationRequest` is still registered under the proto type name `support.MediationRequest`. The class argument
-is what registers the type in `NetworkStorageWhiteList`, which the P2P storage checks before accepting a payload, so a
-type registered with the wrong class is silently rejected by every node. If the registered class is not final, its
-subclasses must be added to `NetworkStorageWhiteList` explicitly.
+is not used at runtime. `ResolverConfigTest` uses it to check that the proto type name, the class and the resolver name
+the same type.
+
+The P2P storage accepts only the types which `ResolverConfig` registers in `StorableTypesRegistry`, each with its
+`META_DATA` constant. Every node rejects a storable type which is missing there. If a class registered for a resolver is
+not final, each of its concrete subclasses must be registered in `StorableTypesRegistry` explicitly.
 
 Keeping the proto type name fixed is not on its own enough to make a java rename safe. The simple class name is also
 the `MetaData.className` sent on the wire, the store key `StorageService` checks before accepting a payload and uses to
@@ -169,6 +172,56 @@ public static Channel<? extends ChatMessage> fromProto(bisq.social.protobuf.Chan
             }
         }
     }
+```
+
+### Errors in fromProto
+
+Every `fromProto` and `fromAny` method declares the checked `UnresolvableProtobufException`. A protobuf message which
+a node receives from the network or reads from disk can describe an invalid object, so each caller has to decide how
+to handle this case.
+
+An object checks all its integrity rules in the `verify` method of its constructor, so parsing fails early for an
+invalid object. A new rule goes there also if earlier versions accept objects which break it. The rule is specified in
+[`../specifications/network/validation-at-parsing.md`](../specifications/network/validation-at-parsing.md).
+
+- `UnresolvableProtobufMessageException` (unknown message type or `Any` type) and `UnresolvableProtobufEnumException`
+  (unknown enum value without a fallback) are subclasses of `UnresolvableProtobufException`.
+- `UnresolvableProtobufException` clears partial protobuf messages attached to parse exceptions in its cause chain.
+  Futures and connection close reasons can retain exceptions after parsing ends. They must not retain the parsed
+  objects after the receive path releases its parse memory budget. Exception types, messages and causes are preserved.
+- A `fromProto` method converts every `RuntimeException` of its own code into `UnresolvableProtobufException`, for
+  example the `IllegalArgumentException` of the `verify` method of a constructor. So a caller does not need to catch
+  `RuntimeException`. The conversion is only needed where the method itself can fail, not in a method which only
+  selects another `fromProto` method or converts an enum with a fallback value.
+- The functional interfaces of `java.util.function` cannot throw checked exceptions. Use
+  `ProtobufUtils.fromProtoStream(list, Foo::fromProto)` instead of `list.stream().map(Foo::fromProto)`, and
+  `ProtobufUtils.fromProtoEntryStream(map, Foo::fromProto)` to convert the values of a protobuf map.
+
+A caller handles the exception or declares it:
+
+- A caller which converts a collection decides what fails: one entry or the whole collection. A store skips a
+  persisted entry which it cannot convert and keeps the other entries (rule 4 of
+  [`validation-at-parsing.md`](../specifications/network/validation-at-parsing.md)). The exception is a store which
+  must not lose an entry, for example the witness bindings of the oracle node
+  ([`account-age.md`](../specifications/reputation/account-age.md#persisted-request-compatibility)). A store uses
+  `ProtobufUtils.fromProtoStreamSkippingInvalid` or `fromProtoEntryStreamSkippingInvalid`, which log only the type and
+  the size of a skipped proto and the stack trace without messages, as protos can hold private data.
+- `ProtoResolverMap` propagates conversion failures without logging them. The caller owns recovery and reporting,
+  including any limit on diagnostics for a collection. Logging inside the resolver would bypass that limit.
+- A caller which cannot throw a checked exception, for example a gRPC `StreamObserver` or a `CompletableFuture`
+  stage, rethrows it as an unchecked exception. A caller which converts its own data, for example to copy an object,
+  does the same, as a failure is a bug.
+
+```
+public static PeerExchangeRequest fromProto(bisq.network.protobuf.PeerExchangeRequest proto)
+        throws UnresolvableProtobufException {
+    try {
+        return new PeerExchangeRequest(proto.getNonce(),
+                ProtobufUtils.fromProtoStream(proto.getPeersList(), Peer::fromProto).collect(Collectors.toList()));
+    } catch (RuntimeException e) {
+        throw new UnresolvableProtobufException(e);
+    }
+}
 ```
 
 ### Maps in protobuf

@@ -22,18 +22,28 @@ import bisq.common.util.StringUtils;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
+import bisq.persistence.PersistenceClient;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
-public class DeviceRegistrationService extends RateLimitedPersistenceClient<DeviceRegistrationStore> implements Service {
+/**
+ * Not rate limited on purpose: dropping a write here is not recoverable. A revocation removes a
+ * device's registration and then removes the client, so nothing afterwards knows the registration
+ * should be gone, and the device keeps receiving notifications if the write never reached disk. A
+ * revocation's removal can follow a registration within microseconds, which is what a rate limiter
+ * drops.
+ */
+public class DeviceRegistrationService implements PersistenceClient<DeviceRegistrationStore>, Service {
     @Getter
     private final DeviceRegistrationStore persistableStore = new DeviceRegistrationStore();
     @Getter
@@ -43,17 +53,38 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
     }
 
-    public void register(String deviceId,
-                         String deviceToken,
-                         String publicKeyBase64,
-                         String deviceDescriptor,
-                         MobileDevicePlatform platform,
-                         Optional<String> symmetricKeyBase64) {
+    /**
+     * Creates or updates the registration of a device on behalf of the given API client.
+     * <p>
+     * A device ID is chosen by the client, so without an owner check any client could register
+     * another client's device ID, take ownership of the entry and redirect that device's push
+     * notifications to its own token. Registrations without an owner predate the ownership link
+     * and are claimable, which is how they gain one.
+     * <p>
+     * The client's access is checked under the same monitor that a revocation's removal of its
+     * registrations takes. A revocation withdraws the access before it removes the registrations,
+     * so either this registration is stored first and the revocation removes it, or the revocation
+     * ran first and this check refuses. A registration therefore never outlives a completed
+     * revocation, and no compensating removal, which could itself fail to be written, is needed.
+     *
+     * @param clientAuthorizedCheck whether the client still has access, read from the access store
+     * @return the outcome of the request; see {@link DeviceRegistrationResult}
+     */
+    public DeviceRegistrationResult register(String deviceId,
+                            String deviceToken,
+                            String publicKeyBase64,
+                            String deviceDescriptor,
+                            MobileDevicePlatform platform,
+                            Optional<String> symmetricKeyBase64,
+                            String clientId,
+                            Predicate<String> clientAuthorizedCheck) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceToken), "deviceToken must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(publicKeyBase64), "publicKeyBase64 must not be null or empty");
         checkArgument(StringUtils.isNotEmpty(deviceDescriptor), "deviceDescriptor must not be null or empty");
         checkNotNull(platform, "platform must not be null");
+        checkNotNull(clientAuthorizedCheck, "clientAuthorizedCheck must not be null");
 
         // Log at DEBUG level to avoid exposing sensitive device identifiers
         log.debug("Registering device - deviceId: {}, deviceDescriptor: {}, platform: {}, hasSymmetricKey: {}",
@@ -67,25 +98,170 @@ public class DeviceRegistrationService extends RateLimitedPersistenceClient<Devi
                 publicKeyBase64,
                 deviceDescriptor,
                 platform,
-                symmetricKeyBase64);
-        MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
-        if (previous == null || !previous.equals(mobileDeviceProfile)) {
-            persist();
+                symmetricKeyBase64,
+                Optional.of(clientId));
+        // The owner check and the write have to be one step: otherwise two clients registering
+        // the same new device ID both pass the check and the later write silently takes the
+        // device, which is the takeover the check exists to prevent.
+        synchronized (persistableStore) {
+            if (!clientAuthorizedCheck.test(clientId)) {
+                log.warn("Refused a device registration of client {}, it no longer has access", clientId);
+                return DeviceRegistrationResult.CLIENT_NOT_AUTHORIZED;
+            }
+            MobileDeviceProfile existing = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (existing != null && existing.getClientId().filter(owner -> !owner.equals(clientId)).isPresent()) {
+                log.warn("Client {} tried to register a device ID owned by another client", clientId);
+                return DeviceRegistrationResult.DEVICE_OWNED_BY_ANOTHER_CLIENT;
+            }
+
+            persistableStore.getDeviceByDeviceId().put(deviceId, mobileDeviceProfile);
+            if (!mobileDeviceProfile.equals(existing)) {
+                persistOrRollback(() -> {
+                    if (existing == null) {
+                        persistableStore.getDeviceByDeviceId().remove(deviceId);
+                    } else {
+                        persistableStore.getDeviceByDeviceId().put(deviceId, existing);
+                    }
+                }, "a device registration");
+            }
+            return DeviceRegistrationResult.REGISTERED;
         }
     }
 
-    public boolean unregister(String deviceId) {
+    /**
+     * Removes a registration on behalf of the given API client. A client may only remove its own
+     * registrations, so a device ID alone is not enough to unregister someone else's device.
+     * <p>
+     * Registrations persisted before the ownership link existed have no owner and stay removable
+     * by any client; they lose that exemption as soon as the owning app registers again and claims
+     * them.
+     *
+     * @param deviceId The device to unregister
+     * @param clientId The API client requesting the removal
+     * @return {@code true} if a registration was removed; {@code false} if none was found or it is
+     * owned by another client
+     */
+    public boolean unregister(String deviceId, String clientId) {
         checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
 
-        MobileDeviceProfile previous = persistableStore.getDeviceByDeviceId().remove(deviceId);
-        boolean hadValue = previous != null;
-        if (hadValue) {
-            persist();
+        synchronized (persistableStore) {
+            MobileDeviceProfile profile = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (profile == null) {
+                return false;
+            }
+            Optional<String> owner = profile.getClientId();
+            if (owner.isPresent() && !owner.get().equals(clientId)) {
+                log.warn("Client {} tried to unregister a device owned by another client", clientId);
+                return false;
+            }
+
+            persistableStore.getDeviceByDeviceId().remove(deviceId);
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().put(deviceId, profile),
+                    "the removal of a device registration");
+            return true;
         }
-        return hadValue;
     }
 
+    /**
+     * Removes a registration the push gateway has reported as permanently dead (token
+     * unregistered — app uninstalled or token rotated). Node-initiated: no API client is acting
+     * here, so unlike {@link #unregister(String, String)} there is no ownership check — the
+     * gateway's verdict applies to the device token itself, regardless of which client
+     * registered it.
+     *
+     * @param deviceId            The device whose registration is invalid
+     * @param rejectedDeviceToken The token the gateway rejected — removal only applies while the
+     *                            store still holds this exact token for the device
+     * @return {@code true} if a registration was removed
+     */
+    public boolean pruneDeadRegistration(String deviceId, String rejectedDeviceToken) {
+        checkArgument(StringUtils.isNotEmpty(deviceId), "deviceId must not be null or empty");
+        checkArgument(StringUtils.isNotEmpty(rejectedDeviceToken), "rejectedDeviceToken must not be null or empty");
+
+        synchronized (persistableStore) {
+            MobileDeviceProfile current = persistableStore.getDeviceByDeviceId().get(deviceId);
+            if (current == null || !current.getDeviceToken().equals(rejectedDeviceToken)) {
+                // The gateway's verdict names the token from the dispatch snapshot; a device that
+                // re-registered with a fresh token in the meantime keeps its live registration.
+                return false;
+            }
+            persistableStore.getDeviceByDeviceId().remove(deviceId);
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().put(deviceId, current),
+                    "the removal of a dead device registration");
+            return true;
+        }
+    }
+
+    /**
+     * Removes all registrations owned by the given API client, and any registration that cannot be
+     * attributed to a client at all. Called when the client is revoked: a revoked client must stop
+     * receiving push notifications, not just lose API access.
+     * <p>
+     * Registrations persisted before the ownership link existed carry no client ID, so it cannot be
+     * ruled out that they are the revoked client's, and leaving them would make revocation report a
+     * completeness it does not have. Their owner cannot be recovered either: revocation removes a
+     * client without trace, so the clients paired today are not the clients that could have written
+     * these records.
+     * <p>
+     * They are dropped here rather than at startup on purpose. Deleting them on load would clear
+     * the store of every upgraded node and depend on each app registering again to recover, which
+     * is not guaranteed. Here it costs another client's legacy record only when someone
+     * deliberately revokes, and that device registers again on its next start.
+     *
+     * @param clientId The API client whose registrations should be removed
+     * @return The device IDs that were removed
+     */
+    public Set<String> unregisterByClientId(String clientId) {
+        checkArgument(StringUtils.isNotEmpty(clientId), "clientId must not be null or empty");
+
+        synchronized (persistableStore) {
+            Map<String, MobileDeviceProfile> removed = persistableStore.getDeviceByDeviceId().values().stream()
+                    .filter(profile -> profile.getClientId()
+                            .map(clientId::equals)
+                            // Unattributable: cannot be excluded from being the revoked client's.
+                            .orElse(true))
+                    .collect(Collectors.toMap(MobileDeviceProfile::getDeviceId, profile -> profile, (first, second) -> first));
+            if (removed.isEmpty()) {
+                return Set.of();
+            }
+            // Selecting and removing under the same monitor, so a registration claimed by another
+            // client in between is not removed on this client's behalf.
+            removed.keySet().forEach(persistableStore.getDeviceByDeviceId()::remove);
+            persistOrRollback(() -> persistableStore.getDeviceByDeviceId().putAll(removed),
+                    "the removal of the push registrations of a revoked client");
+            log.info("Removed {} push registration(s) of revoked client {}", removed.size(), clientId);
+            return removed.keySet();
+        }
+    }
+
+    /**
+     * Writes the store and reports a failed write instead of returning normally with a change that
+     * never reached the disk: the caller would otherwise confirm a registration or a revocation
+     * that the next start does not know about. The in-memory change is undone, so memory and disk
+     * keep agreeing and a retry repeats the work. Called under the store monitor; the write runs on
+     * the persistence executor from a clone, so waiting here holds up other mutators only for the
+     * duration of one small write.
+     */
+    private void persistOrRollback(Runnable rollback, String what) {
+        boolean persisted;
+        try {
+            persisted = persist().join();
+        } catch (RuntimeException e) {
+            // For example a rejected task at shutdown: the write never started.
+            rollback.run();
+            throw new IllegalStateException("Could not persist " + what, e);
+        }
+        if (!persisted) {
+            rollback.run();
+            throw new IllegalStateException("Could not persist " + what);
+        }
+    }
+
+    /** Snapshot taken under the same monitor as the mutators, so it never straddles a write. */
     public Set<MobileDeviceProfile> getMobileDeviceProfiles() {
-        return Set.copyOf(persistableStore.getDeviceByDeviceId().values());
+        synchronized (persistableStore) {
+            return Set.copyOf(persistableStore.getDeviceByDeviceId().values());
+        }
     }
 }

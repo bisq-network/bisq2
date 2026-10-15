@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.chat.notifications.ChatChannelNotificationType;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.common.market.Market;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.EqualsAndHashCode;
@@ -35,6 +36,9 @@ import java.util.stream.Stream;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOfferbookMessage> {
+    // The ID is part of the network data: an offerbook message with an offer is valid only in the channel with the ID
+    // of the market of its offer (BisqEasyOfferbookMessage.verify()). If the format of the ID changes, nodes reject
+    // the offers of the other versions.
     static String createId(Market market) {
         return ChatChannelDomain.BISQ_EASY_OFFERBOOK.name().toLowerCase(Locale.ROOT) + "." +
                 market.getBaseCurrencyCode() + "-" +
@@ -62,11 +66,16 @@ public final class BisqEasyOfferbookChannel extends PublicChatChannel<BisqEasyOf
     }
 
     public static BisqEasyOfferbookChannel fromProto(bisq.chat.protobuf.ChatChannel baseProto,
-                                                     bisq.chat.protobuf.BisqEasyOfferbookChannel proto) {
-        return new BisqEasyOfferbookChannel(
-                baseProto.getId(),
-                ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
-                Market.fromProto(proto.getMarket()));
+                                                     bisq.chat.protobuf.BisqEasyOfferbookChannel proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOfferbookChannel(
+                    baseProto.getId(),
+                    ChatChannelNotificationType.fromProto(baseProto.getChatChannelNotificationType()),
+                    Market.fromProto(proto.getMarket()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -73,6 +73,11 @@ class SignatureVerifier(
         }
 
         checkNotNull(pgpSignature) { "signature for key not found" }
+        // A detached signature of a binary has the type of a binary document. Other types, for example a key
+        // certification, do not sign the bytes of the file.
+        if (pgpSignature.signatureType != PGPSignature.BINARY_DOCUMENT) {
+            return false
+        }
 
         pgpSignature.init(
             JcaPGPContentVerifierBuilderProvider().setProvider("BC"),

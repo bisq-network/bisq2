@@ -319,16 +319,18 @@ public class DtoMappings {
     public static class BisqEasyOpenTradeChannelMapping {
         // toBisq2Model not provided as we don't have the mutable data in the dto
 
-        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
+        // Clients such as Bisq Connect read the offer and the mediator from the channel DTO, so it carries those of
+        // the trade contract rather than the channel's copies.
+        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
             return new BisqEasyOpenTradeChannelDto(
-                    value.getId(),
-                    value.getTradeId(),
-                    BisqEasyOfferMapping.fromBisq2Model(value.getBisqEasyOffer()),
-                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity()),
-                    value.getTraders().stream()
+                    channel.getId(),
+                    channel.getTradeId(),
+                    BisqEasyOfferMapping.fromBisq2Model(contract.getOffer()),
+                    UserIdentityMapping.fromBisq2Model(channel.getMyUserIdentity()),
+                    channel.getTraders().stream()
                             .map(UserProfileMapping::fromBisq2Model)
                             .collect(Collectors.toSet()),
-                    value.getMediator().map(UserProfileMapping::fromBisq2Model)
+                    contract.getMediator().map(UserProfileMapping::fromBisq2Model)
             );
         }
     }
@@ -1155,6 +1157,8 @@ public class DtoMappings {
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailure.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailure.MEDIATORS_NOT_MATCHING;
                 case OFFER_NOT_AVAILABLE -> TradeProtocolFailure.OFFER_NOT_AVAILABLE;
+                case CHANNEL_DATA_MISMATCH -> TradeProtocolFailure.CHANNEL_DATA_MISMATCH;
+                case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW;
             };
         }
 
@@ -1168,6 +1172,8 @@ public class DtoMappings {
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailureDto.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailureDto.MEDIATORS_NOT_MATCHING;
                 case OFFER_NOT_AVAILABLE -> TradeProtocolFailureDto.OFFER_NOT_AVAILABLE;
+                case CHANNEL_DATA_MISMATCH -> TradeProtocolFailureDto.CHANNEL_DATA_MISMATCH;
+                case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailureDto.SELLER_REPUTATION_TOO_LOW;
             };
         }
     }

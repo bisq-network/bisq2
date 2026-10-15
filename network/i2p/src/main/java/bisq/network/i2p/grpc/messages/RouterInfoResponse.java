@@ -18,6 +18,7 @@
 package bisq.network.i2p.grpc.messages;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.i2p.router.state.NetworkState;
 import bisq.network.i2p.router.state.ProcessState;
 import bisq.network.i2p.router.state.RouterState;
@@ -65,12 +66,17 @@ public final class RouterInfoResponse implements Proto {
                 .setTunnelInfo(tunnelInfo.toProto(serializeForHash));
     }
 
-    public static RouterInfoResponse fromProto(bisq.bi2p.protobuf.RouterInfoResponse proto) {
-        return new RouterInfoResponse(
-                ProcessState.fromProto(proto.getProcessState()),
-                NetworkState.fromProto(proto.getNetworkState()),
-                RouterState.fromProto(proto.getRouterState()),
-                TunnelInfo.fromProto(proto.getTunnelInfo())
-        );
+    public static RouterInfoResponse fromProto(bisq.bi2p.protobuf.RouterInfoResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new RouterInfoResponse(
+                    ProcessState.fromProto(proto.getProcessState()),
+                    NetworkState.fromProto(proto.getNetworkState()),
+                    RouterState.fromProto(proto.getRouterState()),
+                    TunnelInfo.fromProto(proto.getTunnelInfo())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

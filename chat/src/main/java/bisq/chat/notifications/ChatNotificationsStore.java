@@ -19,8 +19,11 @@ package bisq.chat.notifications;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.util.Collection;
@@ -52,11 +55,16 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
         return unsafeToProto(serializeForHash);
     }
 
-    public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto) {
-        return new ChatNotificationsStore(
-                proto.getChatNotificationsList().stream()
-                        .map(ChatNotification::fromProto)
-                        .collect(Collectors.toSet()));
+    public static PersistableStore<?> fromProto(bisq.chat.protobuf.ChatNotificationsStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ChatNotificationsStore(
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatNotificationsList(),
+                                    ChatNotification::fromProto)
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -68,6 +76,14 @@ public final class ChatNotificationsStore implements PersistableStore<ChatNotifi
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The notifications are derived from chat messages, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

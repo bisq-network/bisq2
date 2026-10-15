@@ -46,7 +46,6 @@ import bisq.common.util.StringUtils;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.AmountFormatter;
 import bisq.support.SupportService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
@@ -55,6 +54,7 @@ import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.exceptions.TradeProtocolException;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
@@ -195,7 +195,8 @@ public class TradeRestApi extends RestApiBase {
                     @ApiResponse(responseCode = "201", description = "",
                             content = @Content(schema = @Schema(example = ""))),
                     @ApiResponse(responseCode = "400", description = "Invalid input, or trading restricted by a security manager alert " +
-                            "(body carries errorCode and, for MIN_VERSION_REQUIRED, minRequiredVersion)"),
+                            "(body carries errorCode and, for MIN_VERSION_REQUIRED and MAKER_VERSION_BELOW_MIN_REQUIRED, " +
+                            "minRequiredVersion)"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
@@ -225,7 +226,6 @@ public class TradeRestApi extends RestApiBase {
             Optional<UserProfile> mediator = bisqEasyMediationRequestService.selectMediator(bisqEasyOffer.getMakersUserProfileId(),
                     takerIdentity.getId(),
                     bisqEasyOffer.getId());
-            PriceSpec makersPriceSpec = bisqEasyOffer.getPriceSpec();
             long marketPrice = marketPriceService.findMarketPrice(bisqEasyOffer.getMarket())
                     .map(e -> e.getPriceQuote().getValue())
                     .orElseThrow();
@@ -236,7 +236,6 @@ public class TradeRestApi extends RestApiBase {
                     bitcoinPaymentMethodSpec,
                     fiatPaymentMethodSpec,
                     mediator,
-                    makersPriceSpec,
                     marketPrice);
             BisqEasyTrade bisqEasyTrade = bisqEasyProtocol.getModel();
             log.info("Selected mediator for trade {}: {}", bisqEasyTrade.getShortId(), mediator.map(UserProfile::getUserName).orElse("N/A"));
@@ -281,6 +280,9 @@ public class TradeRestApi extends RestApiBase {
         } catch (TradeRestrictedException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
         } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+        } catch (TradeProtocolException e) {
+            // The seller's reputation does not cover the amount (docs/specifications/trade/bisq-easy-seller-reputation-limit.md)
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
@@ -357,6 +359,8 @@ public class TradeRestApi extends RestApiBase {
             asyncResponse.resume(buildNoContentResponse());
         } catch (TradeRestrictedException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
+        } catch (IllegalArgumentException e) {
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }

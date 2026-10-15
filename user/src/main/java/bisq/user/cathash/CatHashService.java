@@ -82,7 +82,8 @@ public abstract class CatHashService<T> {
         byte[] combined = ByteArrayUtils.concat(powSolution, pubKeyHash);
         BigInteger catHashInput = new BigInteger(combined);
         String userProfileId = Hex.encode(pubKeyHash);
-        Path iconsDirPath = getCatHashIconsDirPath().resolve("v" + avatarVersion);
+        int renderedAvatarVersion = toRenderedAvatarVersion(avatarVersion);
+        Path iconsDirPath = getCatHashIconsDirPath().resolve("v" + renderedAvatarVersion);
         Path iconFilePath = iconsDirPath.resolve(userProfileId + ".raw");
 
         // We create the images internally with 2x size for retina resolution
@@ -125,7 +126,7 @@ public abstract class CatHashService<T> {
         // cache and also not from persisted files. We create the image. This is an expensive operation taking
         // about 12 ms on a high-end laptop, and it needs to be done on the UI thread.
         long ts = System.currentTimeMillis();
-        BucketConfig bucketConfig = getBucketConfig(avatarVersion);
+        BucketConfig bucketConfig = getBucketConfig(renderedAvatarVersion);
         int[] buckets = BucketEncoder.encode(catHashInput, bucketConfig.getBucketSizes());
         String[] paths = BucketEncoder.toPaths(buckets, bucketConfig.getPathTemplates());
         T image = composeImage(paths, scaledSize);
@@ -184,7 +185,7 @@ public abstract class CatHashService<T> {
                     ));
 
             Map<Integer, List<UserProfile>> userProfilesByVersion = userProfiles.stream()
-                    .collect(Collectors.groupingBy(UserProfile::getAvatarVersion));
+                    .collect(Collectors.groupingBy(userProfile -> toRenderedAvatarVersion(userProfile.getAvatarVersion())));
             CompletableFuture.runAsync(() -> {
                 iconFilesPathByVersion.forEach((versionDir, iconFiles) -> {
                     try {
@@ -241,6 +242,12 @@ public abstract class CatHashService<T> {
                 .resolve("db")
                 .resolve("cache")
                 .resolve("cat_hash_icons");
+    }
+
+    // A profile can carry any avatarVersion, also one of a later version. A version which this version does not support
+    // is rendered like version 0 (docs/specifications/user/avatar-version.md).
+    static int toRenderedAvatarVersion(int avatarVersion) {
+        return BucketConfig.ALL_VERSIONS.contains(avatarVersion) ? avatarVersion : 0;
     }
 
     private BucketConfig getBucketConfig(int avatarVersion) {

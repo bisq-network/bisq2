@@ -22,7 +22,6 @@ import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketBasedAmountConversion;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -55,6 +54,7 @@ import bisq.offer.price.spec.PriceSpec;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
@@ -75,13 +75,13 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.Result;
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
-import static bisq.bisq_easy.BisqEasyTradeAmountLimits.withTolerance;
 import static bisq.presentation.formatters.AmountFormatter.formatQuoteAmountWithCode;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.Result;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.getLowestAndHighestAmountInAvailableOffers;
+import static bisq.trade.bisq_easy.BisqEasyTradeAmountLimits.isCoveredWithTolerance;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -518,11 +518,11 @@ public class TradeWizardAmountController implements Controller {
         long requiredReputationScoreForMinAmount = BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService, market, minQuoteSideAmount).orElse(0L);
         long numPotentialTakersForMaxOrFixedAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMaxOrFixedAmount)
+                .filter(e -> isCoveredWithTolerance(e.getValue(), requiredReputationScoreForMaxOrFixedAmount))
                 .count();
         long numPotentialTakersForMinAmount = reputationService.getScoreByUserProfileId().entrySet().stream()
                 .filter(e -> userIdentityService.findUserIdentity(e.getKey()).isEmpty())
-                .filter(e -> withTolerance(e.getValue()) >= requiredReputationScoreForMinAmount)
+                .filter(e -> isCoveredWithTolerance(e.getValue(), requiredReputationScoreForMinAmount))
                 .count();
         String formattedMaxOrFixedAmount = formatQuoteAmountWithCode(maxOrFixedQuoteSideAmount);
         model.getShouldShowWarningIcon().set(false);
@@ -585,7 +585,7 @@ public class TradeWizardAmountController implements Controller {
                 .orElseThrow().round(0);
         boolean isCreateOfferMode = model.isCreateOfferMode();
         boolean isBuyer = model.getDirection().isBuy();
-        Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount().round(0);
+        Monetary reputationBasedMaxAmount = model.getReputationBasedMaxAmount();
         amountSelectionController.setMaxAllowedLimitation(maxRangeValue);
         if (isCreateOfferMode) {
             model.getLearnMoreVisible().set(true);
@@ -643,7 +643,7 @@ public class TradeWizardAmountController implements Controller {
             model.setAmountLimitInfoLink(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.link"));
             Monetary reputationBasedQuoteSideAmount = model.getReputationBasedMaxAmount();
             long myReputationScore = model.getMyReputationScore();
-            String formattedAmount = formatQuoteAmountWithCode(reputationBasedQuoteSideAmount.round(0));
+            String formattedAmount = formatQuoteAmountWithCode(reputationBasedQuoteSideAmount);
             model.getAmountLimitInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo", formattedAmount));
             model.getAmountLimitInfoOverlayInfo().set(Res.get("bisqEasy.tradeWizard.amount.seller.limitInfo.overlay", myReputationScore, formattedAmount));
             if (isCreateOfferMode) {

@@ -24,6 +24,7 @@ import bisq.account.accounts.util.AccountUtils;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentRailUtil;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.common.validation.PaymentAccountValidation;
 import bisq.i18n.Res;
@@ -85,14 +86,19 @@ public final class PerfectMoneyAccountPayload extends AccountPayload<FiatPayment
                 .setAccountNr(accountNr);
     }
 
-    public static PerfectMoneyAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto) {
-        var payload = proto.getPerfectMoneyAccountPayload();
-        return new PerfectMoneyAccountPayload(
-                proto.getId(),
-                proto.getSalt().toByteArray(),
-                payload.getSelectedCurrencyCode(),
-                payload.getAccountNr()
-        );
+    public static PerfectMoneyAccountPayload fromProto(bisq.account.protobuf.AccountPayload proto)
+            throws UnresolvableProtobufException {
+        try {
+            var payload = proto.getPerfectMoneyAccountPayload();
+            return new PerfectMoneyAccountPayload(
+                    proto.getId(),
+                    proto.getSalt().toByteArray(),
+                    payload.getSelectedCurrencyCode(),
+                    payload.getAccountNr()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

@@ -35,6 +35,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MuSigContractTest {
     @Test
@@ -169,6 +170,24 @@ class MuSigContractTest {
         MuSigContract contract = createContract(createBtcFiatMarket(), 111L, 222L, baseSpec, quoteSpec, marketPriceSnapshot);
 
         assertEquals(marketPriceSnapshot, contract.getMarketPrice());
+    }
+
+    // A contract has a positive amount on each side, and its price can be computed from the two amounts
+    @Test
+    void contractWithoutAPriceCannotBeCreated() {
+        PaymentMethodSpec<?> baseSpec = PaymentMethodSpecUtil.createBitcoinMainChainPaymentMethodSpec().get(0);
+        PaymentMethodSpec<?> quoteSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER), "USD");
+        Market market = createBtcFiatMarket();
+
+        assertEquals(200_000_000L, createContract(market, 111L, 222L, baseSpec, quoteSpec).getPriceQuote().getValue());
+        assertThrows(IllegalArgumentException.class, () -> createContract(market, 0L, 222L, baseSpec, quoteSpec));
+        assertThrows(IllegalArgumentException.class, () -> createContract(market, 111L, 0L, baseSpec, quoteSpec));
+        assertThrows(IllegalArgumentException.class, () -> createContract(market, -111L, 222L, baseSpec, quoteSpec));
+        assertThrows(IllegalArgumentException.class, () -> createContract(market, 111L, -222L, baseSpec, quoteSpec));
+        // The price does not fit into a long
+        assertThrows(IllegalArgumentException.class,
+                () -> createContract(market, 1L, Long.MAX_VALUE, baseSpec, quoteSpec));
     }
 
     private MuSigContract createContract(Market market,

@@ -73,13 +73,17 @@ public class ReleaseNotificationsService implements Service, AuthorizedBondedRol
         }
     }
 
+    // Several release managers can publish the same release notification, each with its own key. The view of the
+    // release manager publishes every notification again with the key of the release manager who opens it. The node
+    // keeps a notification while the network storage holds a publication of it which a release manager authorized (see
+    // docs/specifications/bonded-roles/authorized-data.md).
     @Override
     public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof ReleaseNotification) {
-            if (isAuthorized(authorizedData)) {
-                ReleaseNotification releaseNotification = (ReleaseNotification) authorizedData.getAuthorizedDistributedData();
-                releaseNotifications.remove(releaseNotification);
-            }
+        if (authorizedData.getAuthorizedDistributedData() instanceof ReleaseNotification releaseNotification &&
+                releaseNotifications.contains(releaseNotification) &&
+                !authorizedBondedRolesService.hasAuthorizedPublication(releaseNotification,
+                        BondedRoleType.RELEASE_MANAGER)) {
+            releaseNotifications.remove(releaseNotification);
         }
     }
 

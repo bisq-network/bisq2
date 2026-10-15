@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.bisq_easy.trade_wizard.direction_and_market;
 
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.common.asset.FiatCurrency;
 import bisq.common.market.Market;
 import bisq.desktop.common.Transitions;
@@ -33,6 +32,7 @@ import bisq.desktop.components.table.BisqTableView;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.i18n.Res;
 import bisq.offer.Direction;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;

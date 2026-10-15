@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
@@ -42,8 +43,13 @@ public final class CloseTradeResponse implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto) {
-        return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
+    public static CloseTradeResponse fromProto(bisq.trade.protobuf.CloseTradeResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new CloseTradeResponse(proto.getPeerOutputPrvKeyShare().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

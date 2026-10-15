@@ -19,9 +19,10 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state.states;
 
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.common.encoding.BitcoinURIScheme;
 import bisq.common.observable.Pin;
 import bisq.common.util.ExceptionUtil;
+import bisq.common.validation.BitcoinAddressValidation;
+import bisq.common.validation.RequestedAmountValidation;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.ManagedDuration;
 import bisq.desktop.common.threading.UIScheduler;
@@ -70,7 +71,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
-import java.util.Locale;
 
 @Slf4j
 public class BuyerState1a extends BaseState {
@@ -159,6 +159,13 @@ public class BuyerState1a extends BaseState {
         }
 
         private void onSend() {
+            // The seller's node rejects data which requests another amount than the trade amount
+            // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
+            long tradeAmount = model.getTrade().getContract().getBaseSideAmount();
+            if (!RequestedAmountValidation.requestsOnlyAmount(model.getBitcoinPaymentData().get(), tradeAmount)) {
+                new Popup().warning(Res.get("bisqEasy.takeOffer.bitcoinPaymentData.otherAmount")).show();
+                return;
+            }
             if (model.getBitcoinPaymentValidator().validateAndGet()) {
                 doSend();
             } else {
@@ -190,14 +197,7 @@ public class BuyerState1a extends BaseState {
                 qrCodePin = webcamAppServiceModel.getQrCode().addObserver(qrCode -> UIThread.run(() -> {
                     model.getQrCodeDetectedFromWebcam().set(qrCode != null);
                     if (qrCode != null) {
-                        // QR code is more efficient with uppercase, thus many wallets provide it uppercase.
-                        // As lower case is the common display style and bitcoin addresses and LN invoices are
-                        // case-insensitive, we convert it to lowercase.
-                        String payload = qrCode.toLowerCase(Locale.ROOT);
-                        if (BitcoinURIScheme.isBitcoinUriScheme(payload)) {
-                            payload = BitcoinURIScheme.extractBitcoinAddress(payload);
-                        }
-                        model.getBitcoinPaymentData().set(payload);
+                        model.getBitcoinPaymentData().set(BitcoinAddressValidation.normalizeScannedPaymentData(qrCode));
                     }
                 }));
 

@@ -107,6 +107,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean wasOfferAlreadyTaken;
+    private final boolean unverifiedForwardedMessage;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
@@ -138,13 +139,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                UserIdentityService userIdentityService,
                                NetworkService networkService,
                                Optional<ResendMessageService> resendMessageService,
-                               AuthorizedBondedRolesService authorizedBondedRolesService) {
+                               AuthorizedBondedRolesService authorizedBondedRolesService,
+                               boolean unverifiedForwardedMessage) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.unverifiedForwardedMessage = unverifiedForwardedMessage;
 
         if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
@@ -248,8 +251,10 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
     }
 
+    // A message which reached us only in the request of another trader is not ours, also when one of our profiles is
+    // its author (docs/specifications/support/mediation-request-validation.md)
     public boolean isMyMessage() {
-        return chatMessage.isMyMessage(userIdentityService);
+        return !unverifiedForwardedMessage && chatMessage.isMyMessage(userIdentityService);
     }
 
     public boolean canEditMessage() {

@@ -24,6 +24,7 @@ import bisq.common.market.Market;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -59,7 +60,7 @@ class MuSigOfferWireTest {
     void validOfferSurvivesTheWireByteExact() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
 
-        Offer<?, ?> roundTripped = Offer.fromProto(serializeAndParse(offer.toProto(true)));
+        Offer<?, ?> roundTripped = Offer.fromProto(serializeAndParse(offer.toProto(false)));
 
         assertThat(roundTripped).isEqualTo(offer);
     }
@@ -89,30 +90,32 @@ class MuSigOfferWireTest {
     @Test
     void offerWithoutCollateralOptionIsRejectedAtTheWire() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         builder.removeOfferOptions(index);
 
         bisq.offer.protobuf.Offer parsed = serializeAndParse(builder.build());
         assertThatThrownBy(() -> Offer.fromProto(parsed))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
     void offerWithDuplicateCollateralOptionsIsRejectedAtTheWire() throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         builder.addOfferOptions(builder.getOfferOptions(index));
 
         bisq.offer.protobuf.Offer parsed = serializeAndParse(builder.build());
         assertThatThrownBy(() -> Offer.fromProto(parsed))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private void assertRejectedAfterMutation(UnaryOperator<bisq.offer.protobuf.CollateralOption> mutation) throws Exception {
         MuSigOffer offer = createOffer(new CollateralOption(0.25, 0.25));
-        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(true).toBuilder();
+        bisq.offer.protobuf.Offer.Builder builder = offer.toProto(false).toBuilder();
         int index = collateralOptionIndex(builder);
         bisq.offer.protobuf.OfferOption option = builder.getOfferOptions(index);
         builder.setOfferOptions(index, option.toBuilder()
@@ -121,7 +124,8 @@ class MuSigOfferWireTest {
 
         bisq.offer.protobuf.Offer parsed = serializeAndParse(builder.build());
         assertThatThrownBy(() -> Offer.fromProto(parsed))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 
     private static int collateralOptionIndex(bisq.offer.protobuf.Offer.Builder builder) {

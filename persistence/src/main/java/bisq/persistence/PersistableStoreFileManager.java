@@ -67,16 +67,18 @@ public class PersistableStoreFileManager {
         backupService.maybeMigrateLegacyBackupFile();
     }
 
-    public void renameTempFileToCurrentFile() throws IOException {
-        if (Files.exists(storeFilePath)) {
-            throw new IOException(storeFilePath + " does already exist.");
-        }
-
+    // Replaces the current file in one rename. Removing the current file first would leave no store file if the
+    // process stops or the rename fails before the new file is in place, and read() then starts with an empty store.
+    public void replaceCurrentFileWithTempFile() throws IOException {
         if (!Files.exists(tempFilePath)) {
             throw new NoSuchFileException(tempFilePath.toAbsolutePath() + " does not exist. Cannot rename not existing file.");
         }
 
-        FileMutatorUtils.renameFile(tempFilePath, storeFilePath);
+        try {
+            FileMutatorUtils.replaceFile(tempFilePath, storeFilePath);
+        } catch (IOException e) {
+            throw new IOException("Couldn't replace " + storeFilePath + " with " + tempFilePath, e);
+        }
     }
 
     public boolean maybeBackup() {
@@ -85,6 +87,10 @@ public class PersistableStoreFileManager {
 
     public void pruneBackups() {
         backupService.prune();
+    }
+
+    public void deleteBackups() {
+        backupService.deleteAll();
     }
 
     public List<BackupFileInfo> getBackups() {

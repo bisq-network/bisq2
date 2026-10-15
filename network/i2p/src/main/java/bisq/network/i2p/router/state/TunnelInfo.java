@@ -18,6 +18,7 @@
 package bisq.network.i2p.router.state;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -59,10 +60,14 @@ public final class TunnelInfo implements Proto {
     }
 
 
-    public static TunnelInfo fromProto(bisq.bi2p.protobuf.TunnelInfo proto) {
-        return new TunnelInfo(proto.getInboundClientTunnelCount(),
-                proto.getOutboundTunnelCount(),
-                proto.getOutboundClientTunnelCount());
+    public static TunnelInfo fromProto(bisq.bi2p.protobuf.TunnelInfo proto) throws UnresolvableProtobufException {
+        try {
+            return new TunnelInfo(proto.getInboundClientTunnelCount(),
+                    proto.getOutboundTunnelCount(),
+                    proto.getOutboundClientTunnelCount());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 

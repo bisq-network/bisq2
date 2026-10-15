@@ -21,7 +21,6 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
 import bisq.common.encoding.Hex;
-import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
@@ -59,7 +58,7 @@ class BondedRoleRegistrationServiceTest {
                 false);
         AuthorizedBondedRolesService authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
         when(authorizedBondedRolesService.getAuthorizedOracleNodes())
-                .thenReturn(new ObservableSet<>(java.util.Set.of(oracleNode)));
+                .thenReturn(java.util.Set.of(oracleNode));
         NetworkService networkService = mock(NetworkService.class);
         BondedRoleRegistrationService service = new BondedRoleRegistrationService(
                 networkService, authorizedBondedRolesService);

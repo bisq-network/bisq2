@@ -19,6 +19,7 @@ package bisq.security.keys;
 
 import bisq.common.encoding.Hex;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.security.DigestUtil;
 import com.google.protobuf.ByteString;
@@ -29,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.PublicKey;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @EqualsAndHashCode
@@ -55,7 +58,7 @@ public final class PubKey implements NetworkProto {
 
     @Override
     public void verify() {
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
         NetworkDataValidation.validateId(keyId);
     }
 
@@ -71,12 +74,12 @@ public final class PubKey implements NetworkProto {
                 .setKeyId(keyId);
     }
 
-    public static PubKey fromProto(bisq.security.protobuf.PubKey proto) {
+    public static PubKey fromProto(bisq.security.protobuf.PubKey proto) throws UnresolvableProtobufException {
         try {
             PublicKey publicKey = KeyGeneration.generatePublic(proto.getPublicKey().toByteArray());
             return new PubKey(publicKey, proto.getKeyId());
-        } catch (GeneralSecurityException e) {
-            throw new RuntimeException(e);
+        } catch (GeneralSecurityException | RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
     }
 
@@ -92,5 +95,23 @@ public final class PubKey implements NetworkProto {
             id = Hex.encode(getHash());
         }
         return id;
+    }
+
+    // Whether the string is an ID which getId() creates: the lower-case hex encoding of a hash, which has 20 bytes.
+    // Other strings, for example with upper-case letters, are no ID, so that a hash has only one ID.
+    public static boolean isId(String id) {
+        try {
+            byte[] hash = Hex.decode(id);
+            NetworkDataValidation.validateHash(hash);
+            return Hex.encode(hash).equals(id);
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
+    // The hash from an ID which getId() created
+    public static byte[] getHashFromId(String id) {
+        checkArgument(isId(id), "Not the ID of a public key. id=%s", id);
+        return Hex.decode(id);
     }
 }

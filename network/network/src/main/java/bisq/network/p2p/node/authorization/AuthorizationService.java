@@ -18,11 +18,13 @@
 package bisq.network.p2p.node.authorization;
 
 import bisq.network.p2p.message.EnvelopePayloadMessage;
+import bisq.network.p2p.message.MessageCostPolicy;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.token.equi_hash.EquiHashTokenService;
-import bisq.network.p2p.node.authorization.token.hash_cash.HashCashTokenService;
 import bisq.network.p2p.node.authorization.token.hash_cash_v2.HashCashV2TokenService;
+import bisq.network.p2p.node.handshake.ConnectionHandshake;
 import bisq.network.p2p.node.network_load.NetworkLoad;
+import bisq.security.pow.ProofOfWork;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
 import com.google.common.annotations.VisibleForTesting;
@@ -52,21 +54,19 @@ public class AuthorizationService {
     private final List<AuthorizationTokenType> myPreferredAuthorizationTokenTypes; // Lower list index means higher preference
     @Getter
     private final Map<AuthorizationTokenType, AuthorizationTokenService<? extends AuthorizationToken>> supportedServices = new HashMap<>();
+    private final HashCashProofOfWorkService hashCashProofOfWorkService;
 
     public AuthorizationService(Config config,
                                 HashCashProofOfWorkService hashCashProofOfWorkService,
                                 EquihashProofOfWorkService equihashProofOfWorkService,
                                 Set<Feature> features) {
         myPreferredAuthorizationTokenTypes = config.getMyPreferredAuthorizationTokenTypes();
+        this.hashCashProofOfWorkService = hashCashProofOfWorkService;
 
         features.stream()
                 .flatMap(feature -> AuthorizationTokenType.fromFeature(feature).stream())
                 .forEach(supportedFilterType -> {
                     switch (supportedFilterType) {
-                        case HASH_CASH:
-                            //noinspection deprecation
-                            supportedServices.put(supportedFilterType, new HashCashTokenService(hashCashProofOfWorkService));
-                            break;
                         case EQUI_HASH:
                             supportedServices.put(supportedFilterType, new EquiHashTokenService(equihashProofOfWorkService));
                             break;
@@ -85,6 +85,8 @@ public class AuthorizationService {
                                           int messageCounter,
                                           Collection<Feature> peersFeatures) {
         AuthorizationTokenType preferredAuthorizationTokenType = selectAuthorizationTokenType(peersFeatures);
+        checkArgument(supportedServices.containsKey(preferredAuthorizationTokenType),
+                "No locally supported authorization service for %s", preferredAuthorizationTokenType);
         return supportedServices.get(preferredAuthorizationTokenType).createToken(message,
                 networkLoad,
                 peerAddress,
@@ -94,13 +96,13 @@ public class AuthorizationService {
     public boolean isAuthorized(EnvelopePayloadMessage message,
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         return isAuthorized(message,
                 authorizationToken,
                 currentNetworkLoad,
                 Optional.empty(),
-                connectionId,
+                receivedMessageCounters,
                 myAddress);
     }
 
@@ -108,7 +110,7 @@ public class AuthorizationService {
                                 AuthorizationToken authorizationToken,
                                 NetworkLoad currentNetworkLoad,
                                 Optional<NetworkLoad> previousNetworkLoad,
-                                String connectionId,
+                                Set<Integer> receivedMessageCounters,
                                 String myAddress) {
         AuthorizationTokenType authorizationTokenType = authorizationToken.getAuthorizationTokenType();
         if (!supportedServices.containsKey(authorizationTokenType)) {
@@ -119,8 +121,45 @@ public class AuthorizationService {
                 authorizationToken,
                 currentNetworkLoad,
                 previousNetworkLoad,
-                connectionId,
+                receivedMessageCounters,
                 myAddress);
+    }
+
+    /**
+     * Authorizes the handshake request of a node of a version up to 2.1.13, which carries the legacy HASH_CASH token
+     * (see docs/specifications/network/authorization-tokens.md). The parameter type limits the legacy method to that
+     * message: no other message can be authorized with it.
+     * <p>
+     * The checks are those of the earlier versions, with two differences. The payload must be the request serialized
+     * for the hash: the earlier versions also accepted the complete serialization. The difficulty has no tolerance:
+     * the requester does not know our network load yet, so both sides use the fixed initial load. The proof of work
+     * then needs at least the work which those versions do for a handshake request.
+     * <p>
+     * As for the other methods, the challenge binds a proof of work to this node, but not to one connection. The
+     * date check of the handshake limits how long a request can be used again.
+     */
+    public boolean isLegacyHandshakeRequestAuthorized(ConnectionHandshake.Request request,
+                                                      LegacyHandshakeToken token,
+                                                      String myAddress) {
+        ProofOfWork proofOfWork = token.getProofOfWork();
+        // The log contains no received values
+        if (!Arrays.equals(request.serializeForHash(), proofOfWork.getPayload())) {
+            log.warn("The payload of the legacy handshake token does not match the handshake request");
+            return false;
+        }
+        byte[] challenge = HashCashV2TokenService.getChallenge(myAddress, token.getMessageCounter());
+        if (!Arrays.equals(challenge, proofOfWork.getChallenge())) {
+            log.warn("The challenge of the legacy handshake token is invalid");
+            return false;
+        }
+        double expectedDifficulty = HashCashV2TokenService.calculateDifficulty(MessageCostPolicy.getCostFactor(request),
+                NetworkLoad.INITIAL_NETWORK_LOAD);
+        // Not `difficulty < expectedDifficulty`, which is false for NaN
+        if (!(proofOfWork.getDifficulty() >= expectedDifficulty)) {
+            log.warn("The difficulty of the legacy handshake token is too low");
+            return false;
+        }
+        return hashCashProofOfWorkService.verify(proofOfWork);
     }
 
     // Get first match with peers feature based on order of myPreferredFilterTypes
@@ -136,6 +175,7 @@ public class AuthorizationService {
             return myPreferredAuthorizationTokenTypes.get(0);
         }
         List<AuthorizationTokenType> peersAuthorizationTokenTypes = toAuthorizationTypes(peersFeatures);
+        checkArgument(!peersAuthorizationTokenTypes.isEmpty(), "Peer has no supported authorization token type");
         return myPreferredAuthorizationTokenTypes.stream()
                 .filter(peersAuthorizationTokenTypes::contains)
                 .findFirst()

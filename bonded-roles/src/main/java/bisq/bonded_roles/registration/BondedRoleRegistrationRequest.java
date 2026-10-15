@@ -19,6 +19,7 @@ package bisq.bonded_roles.registration;
 
 import bisq.bonded_roles.BondedRoleType;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import bisq.common.validation.NetworkDataValidation;
@@ -44,8 +45,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @ToString
 @EqualsAndHashCode
 public final class BondedRoleRegistrationRequest implements MailboxMessage, ExternalNetworkMessage {
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, BondedRoleRegistrationRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
     private final String authorizedPublicKey;
     private final BondedRoleType bondedRoleType;
@@ -120,21 +120,26 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
         return resolveValueProto(serializeForHash);
     }
 
-    public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto) {
-        return new BondedRoleRegistrationRequest(proto.getProfileId(),
-                proto.getAuthorizedPublicKey(),
-                BondedRoleType.fromProto(proto.getBondedRoleType()),
-                proto.getBondUserName(),
-                proto.getSignatureBase64(),
-                proto.hasAddressByTransportTypeMap() ?
-                        Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
-                        Optional.empty(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getIsCancellationRequest(),
-                BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
-                        proto.getRegistrationProtocolVersion()),
-                proto.getProposalTxId(),
-                proto.getLockupTxId());
+    public static BondedRoleRegistrationRequest fromProto(bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BondedRoleRegistrationRequest(proto.getProfileId(),
+                    proto.getAuthorizedPublicKey(),
+                    BondedRoleType.fromProto(proto.getBondedRoleType()),
+                    proto.getBondUserName(),
+                    proto.getSignatureBase64(),
+                    proto.hasAddressByTransportTypeMap() ?
+                            Optional.of(AddressByTransportTypeMap.fromProto(proto.getAddressByTransportTypeMap())) :
+                            Optional.empty(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getIsCancellationRequest(),
+                    BondedRoleRegistrationProtocol.versionFromProto(proto.hasRegistrationProtocolVersion(),
+                            proto.getRegistrationProtocolVersion()),
+                    proto.getProposalTxId(),
+                    proto.getLockupTxId());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -149,7 +154,7 @@ public final class BondedRoleRegistrationRequest implements MailboxMessage, Exte
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

@@ -18,6 +18,7 @@
 package bisq.network.p2p.services.data.inventory.filter.mini_sketch;
 
 import bisq.common.data.ByteArray;
+import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.inventory.filter.FilterService;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilter;
 import bisq.network.p2p.services.data.inventory.filter.InventoryFilterType;
@@ -27,6 +28,7 @@ import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Map;
 
 /**
@@ -40,6 +42,11 @@ public class MiniSketchFilterService extends FilterService<MiniSketchFilter> {
 
     public MiniSketchFilter getFilter() {
         return new MiniSketchFilter();
+    }
+
+    @Override
+    public boolean isAnyRequestInFilter(Collection<? extends DataRequest> dataRequests) {
+        return false;
     }
 
     @Override

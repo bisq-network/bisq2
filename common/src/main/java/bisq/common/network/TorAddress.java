@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
-public class TorAddress extends Address {
+public final class TorAddress extends Address {
     private static final Pattern ONION_V3 = Pattern.compile("^[a-z2-7]{56}\\.onion$", Pattern.CASE_INSENSITIVE);
 
     // We support only version 3 addresses
@@ -36,6 +36,8 @@ public class TorAddress extends Address {
 
     public TorAddress(String host, int port) {
         super(host, port);
+
+        verify();
     }
 
     @Override

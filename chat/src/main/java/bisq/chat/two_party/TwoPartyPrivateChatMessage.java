@@ -23,6 +23,8 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.TwoPartyPrivateChatMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -31,6 +33,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -42,9 +45,11 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
 public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPartyPrivateChatMessageReaction> {
+    private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE);
+
     // Metadata needs to be symmetric with TwoPartyPrivateChatMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_15_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_15_DAYS, TwoPartyPrivateChatMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     public TwoPartyPrivateChatMessage(String messageId,
                                       ChatChannelDomain chatChannelDomain,
@@ -70,6 +75,8 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                 wasEdited,
                 chatMessageType,
                 reactions);
+
+        verify();
     }
 
     @Override
@@ -92,27 +99,33 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
                         .collect(Collectors.toList()));
     }
 
-    public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation()
-                ? Optional.of(Citation.fromProto(baseProto.getCitation()))
-                : Optional.empty();
-        bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
-        return new TwoPartyPrivateChatMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(privateChatMessage.getSender()),
-                privateChatMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                privateChatMessage.getChatMessageReactionsList().stream()
-                        .map(TwoPartyPrivateChatMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+    public static TwoPartyPrivateChatMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation()
+                    ? Optional.of(Citation.fromProto(baseProto.getCitation()))
+                    : Optional.empty();
+            bisq.chat.protobuf.TwoPartyPrivateChatMessage privateChatMessage = baseProto.getTwoPartyPrivateChatMessage();
+            return new TwoPartyPrivateChatMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(privateChatMessage.getSender()),
+                    privateChatMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    // An invalid reaction must not remove its message
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(privateChatMessage.getChatMessageReactionsList(),
+                                    TwoPartyPrivateChatMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -120,14 +133,27 @@ public final class TwoPartyPrivateChatMessage extends PrivateChatMessage<TwoPart
         return chatChannelDomain.migrate();
     }
 
+    // The sender chooses the channel ID, and isValid ignores a message whose ID cannot be migrated (hasValidChannelId).
+    // The getter must still not throw for such an ID: the generated equals, hashCode and toString call it, also in the
+    // network layer before any check, for example when it copies its set of processed messages.
     @Override
     public String getChannelId() {
-        return TwoPartyPrivateChatChannel.Migration.migrateChannelId(channelId);
+        return TwoPartyPrivateChatChannel.Migration.findMigratedChannelId(channelId).orElse(channelId);
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
+    public boolean hasValidChannelId() {
+        return TwoPartyPrivateChatChannel.Migration.findMigratedChannelId(channelId).isPresent();
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
 
     @Override

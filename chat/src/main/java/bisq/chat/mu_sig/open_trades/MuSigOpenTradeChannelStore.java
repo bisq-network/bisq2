@@ -19,6 +19,8 @@ package bisq.chat.mu_sig.open_trades;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -52,11 +54,17 @@ public final class MuSigOpenTradeChannelStore implements PersistableStore<MuSigO
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigOpenTradeChannelStore fromProto(bisq.chat.protobuf.MuSigOpenTradeChannelStore proto) {
-        Set<MuSigOpenTradeChannel> privateTradeChannels = proto.getChannelsList().stream()
-                .map(e -> (MuSigOpenTradeChannel) MuSigOpenTradeChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new MuSigOpenTradeChannelStore(privateTradeChannels);
+    public static MuSigOpenTradeChannelStore fromProto(bisq.chat.protobuf.MuSigOpenTradeChannelStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<MuSigOpenTradeChannel> privateTradeChannels = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(),
+                            e -> (MuSigOpenTradeChannel) MuSigOpenTradeChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new MuSigOpenTradeChannelStore(privateTradeChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

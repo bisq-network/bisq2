@@ -17,8 +17,10 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigReportErrorMessage extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(MuSigReportErrorMessage.class);
+
     public static final int MAX_LENGTH_ERROR_MESSAGE = 500;
     public static final int MAX_LENGTH_STACKTRACE = 2000;
 
@@ -79,21 +83,26 @@ public final class MuSigReportErrorMessage extends MuSigTradeMessage {
                 .setTradeProtocolFailure(tradeProtocolFailure.toProtoEnum());
     }
 
-    public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
-        return new MuSigReportErrorMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                muSigReportErrorMessage.getErrorMessage(),
-                muSigReportErrorMessage.getStackTrace(),
-                TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+    public static MuSigReportErrorMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            var muSigReportErrorMessage = proto.getMuSigTradeMessage().getMuSigReportErrorMessage();
+            return new MuSigReportErrorMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    muSigReportErrorMessage.getErrorMessage(),
+                    muSigReportErrorMessage.getStackTrace(),
+                    TradeProtocolFailure.fromProto(muSigReportErrorMessage.getTradeProtocolFailure()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.3, 0.7);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

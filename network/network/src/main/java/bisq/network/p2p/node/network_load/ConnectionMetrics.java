@@ -95,12 +95,16 @@ public class ConnectionMetrics {
     }
 
     public void onReceived(NetworkEnvelope networkEnvelope, long deserializeTime) {
+        onReceived(networkEnvelope.getEnvelopePayloadMessage(), networkEnvelope.getSerializedSize(), deserializeTime);
+    }
+
+    public void onReceived(EnvelopePayloadMessage envelopePayloadMessage, int serializedSize, long deserializeTime) {
         long now = System.currentTimeMillis();
         lastUpdate.set(now);
 
         int ageInMinutes = getAgeInMinutes(now);
         receivedBytesPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
-                .addAndGet(networkEnvelope.getSerializedSize());
+                .addAndGet(serializedSize);
 
         numMessagesReceivedPerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
                 .incrementAndGet();
@@ -108,7 +112,6 @@ public class ConnectionMetrics {
         deserializeTimePerMinute.computeIfAbsent(ageInMinutes, key -> new AtomicLong())
                 .addAndGet(deserializeTime);
 
-        EnvelopePayloadMessage envelopePayloadMessage = networkEnvelope.getEnvelopePayloadMessage();
         String name = ClassUtils.getClassName(envelopePayloadMessage.getClass());
         numReceivedMessagesByClassName.computeIfAbsent(name, key -> new AtomicLong())
                 .incrementAndGet();
