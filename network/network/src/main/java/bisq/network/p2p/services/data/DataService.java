@@ -17,14 +17,22 @@
 
 package bisq.network.p2p.services.data;
 
+import bisq.common.data.ByteArray;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.broadcast.Broadcaster;
+import bisq.network.p2p.services.data.broadcast.ThrottledBroadcastQueue;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.StorageData;
 import bisq.network.p2p.services.data.storage.StorageService;
+import bisq.network.p2p.services.data.storage.StoreType;
 import bisq.network.p2p.services.data.storage.append.AddAppendOnlyDataRequest;
 import bisq.network.p2p.services.data.storage.append.AppendOnlyData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataRequest;
+import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
+import bisq.network.p2p.services.data.storage.auth.AuthorizedDataPublisherMigration;
 import bisq.network.p2p.services.data.storage.auth.RefreshAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.RemoveAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
@@ -32,15 +40,18 @@ import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import bisq.persistence.PersistenceService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PublicKey;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Stream;
 
@@ -79,17 +90,31 @@ public class DataService implements StorageService.Listener {
         }
     }
 
+    // A connection closes if more than about 100 messages wait for sending (see ThrottledBroadcastQueue)
+    private static final long MIGRATION_BROADCAST_INTERVAL_MS = 500;
+
     @Getter
     private final StorageService storageService;
     private final Set<DataService.Listener> listeners = new CopyOnWriteArraySet<>();
     private final Set<Broadcaster> broadcasters = new CopyOnWriteArraySet<>();
+    private final ThrottledBroadcastQueue migrationRequestsQueue = new ThrottledBroadcastQueue(broadcasters,
+            MIGRATION_BROADCAST_INTERVAL_MS);
+    // The storage keys of the requests of the publisher migration which are queued in this session
+    private final Set<ByteArray> queuedMigrationRequests = ConcurrentHashMap.newKeySet();
 
     public DataService(PersistenceService persistenceService) {
-        this.storageService = new StorageService(persistenceService);
+        this(persistenceService, new SystemClock());
+    }
+
+    // clock: the time of the node, for the stores (see DataStorageService)
+    @VisibleForTesting
+    public DataService(PersistenceService persistenceService, Clock clock) {
+        this.storageService = new StorageService(persistenceService, clock);
         storageService.addListener(this);
     }
 
     public void shutdown() {
+        migrationRequestsQueue.shutdown();
         storageService.removeListener(this);
         listeners.clear();
         broadcasters.clear();
@@ -292,6 +317,10 @@ public class DataService implements StorageService.Listener {
                         } else {
                             if (dataStorageResult.isSevereFailure()) {
                                 log.warn("refreshAuthenticatedData failed with severe error. Result={}", dataStorageResult);
+                            } else {
+                                // For example, the store holds no add request of the data. Then no node can apply the
+                                // refresh request, and the data must be published with an add request.
+                                log.info("refreshAuthenticatedData was not applied. Result={}", dataStorageResult);
                             }
                             return new BroadcastResult();
                         }
@@ -350,6 +379,38 @@ public class DataService implements StorageService.Listener {
 
 
     /* --------------------------------------------------------------------- */
+    // Migration
+    /* --------------------------------------------------------------------- */
+
+    // Only for oracle and seed nodes (see AuthorizedDataPublisherMigration). The node broadcasts the requests one at a
+    // time, because an oracle node can have thousands of them. At the first run after a start, it broadcasts the
+    // requests of the runs before the restart again, because it might not have sent all of them.
+    public void migratePublisherOfAuthorizedData(KeyPair earlierPublisherKeyPair, KeyPair authorizedKeyPair) {
+        storageService.getStoresByStoreType(StoreType.AUTHENTICATED_DATA_STORE)
+                .map(AuthenticatedDataStorageService.class::cast)
+                .forEach(store -> {
+                    // A failure in one store must not stop the migration of the other stores
+                    try {
+                        AuthorizedDataPublisherMigration.migrate(store, earlierPublisherKeyPair, authorizedKeyPair);
+                        List<AuthenticatedDataRequest> requests = AuthorizedDataPublisherMigration.findMigrationRequests(store,
+                                        earlierPublisherKeyPair.getPublic(),
+                                        authorizedKeyPair.getPublic())
+                                .stream()
+                                .filter(request -> queuedMigrationRequests.add(request.getStorageKey()))
+                                .toList();
+                        if (!requests.isEmpty()) {
+                            log.info("We broadcast {} requests to migrate the publisher of our data in store {}",
+                                    requests.size(), store.getStoreKey());
+                            migrationRequestsQueue.addAll(requests);
+                        }
+                    } catch (RuntimeException e) {
+                        log.error("Migrating the publisher of our data in store {} failed", store.getStoreKey(), e);
+                    }
+                });
+    }
+
+
+    /* --------------------------------------------------------------------- */
     // Listener
     /* --------------------------------------------------------------------- */
 
@@ -374,21 +435,42 @@ public class DataService implements StorageService.Listener {
     // Private
     /* --------------------------------------------------------------------- */
 
-    public void processAddDataRequest(AddDataRequest addDataRequest, boolean allowReBroadcast) {
-        storageService.onAddDataRequest(addDataRequest)
-                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
-                    if (allowReBroadcast) {
+    // The result tells whether the store accepted the request
+    public CompletableFuture<DataStorageResult> processAddDataRequest(AddDataRequest addDataRequest,
+                                                                      boolean allowReBroadcast) {
+        return storageService.onAddDataRequest(addDataRequest)
+                .thenApply(dataStorageResult -> {
+                    if (allowReBroadcast && dataStorageResult.isSuccess()) {
                         broadcasters.forEach(e -> e.reBroadcast(addDataRequest));
                     }
-                }));
+                    return dataStorageResult;
+                });
     }
 
-    public void processRemoveDataRequest(RemoveDataRequest removeDataRequest, boolean allowReBroadcast) {
-        storageService.onRemoveDataRequest(removeDataRequest)
-                .whenComplete((optionalData, throwable) -> optionalData.ifPresent(storageData -> {
-                    if (allowReBroadcast) {
+    // We relay every removal which the store accepted, also if it removed no data (see
+    // docs/specifications/network/storage-request-relay.md)
+    public CompletableFuture<DataStorageResult> processRemoveDataRequest(RemoveDataRequest removeDataRequest,
+                                                                         boolean allowReBroadcast) {
+        return storageService.onRemoveDataRequest(removeDataRequest)
+                .thenApply(dataStorageResult -> {
+                    if (allowReBroadcast && dataStorageResult.isSuccess()) {
                         broadcasters.forEach(e -> e.reBroadcast(removeDataRequest));
                     }
-                }));
+                    return dataStorageResult;
+                });
+    }
+
+    // A node relays a refresh request only if it applied it. A copy which arrives from another peer is not applied
+    // again, so the relaying ends. Refresh requests are not part of inventory responses: a node which missed one gets
+    // the refreshed add request with an inventory response (see
+    // docs/specifications/network/storage-refresh-requests.md).
+    public void processRefreshDataRequest(RefreshAuthenticatedDataRequest refreshRequest) {
+        try {
+            if (storageService.onRefreshDataRequest(refreshRequest)) {
+                broadcasters.forEach(e -> e.reBroadcast(refreshRequest));
+            }
+        } catch (Exception e) {
+            log.warn("Processing the RefreshAuthenticatedDataRequest failed", e);
+        }
     }
 }

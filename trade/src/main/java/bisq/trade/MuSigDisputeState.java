@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MuSigDisputeState implements ProtoEnum {
     NO_DISPUTE,
@@ -35,7 +36,8 @@ public enum MuSigDisputeState implements ProtoEnum {
         return bisq.trade.protobuf.MuSigDisputeState.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MuSigDisputeState fromProto(bisq.trade.protobuf.MuSigDisputeState proto) {
+    public static MuSigDisputeState fromProto(bisq.trade.protobuf.MuSigDisputeState proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MuSigDisputeState.class, proto.name(), NO_DISPUTE);
     }
 

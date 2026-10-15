@@ -61,7 +61,7 @@ LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
 # TOR_MIN_VERSION when a release must not ship without a given Tor fix. The apt
 # preference makes the Tor Project's package win over Ubuntu's whatever their versions,
 # and a failed index fetch fails the build instead of quietly falling back to Ubuntu's.
-ARG TOR_MIN_VERSION=0.4.9.13
+ARG TOR_MIN_VERSION=0.4.9.14
 ARG TOR_REPO_FINGERPRINT=A3C4F0F979CAA22CDBA8F512EE8CBC9E886DDD89
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates gnupg wget \

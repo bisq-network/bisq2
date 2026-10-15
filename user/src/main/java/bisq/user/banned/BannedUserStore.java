@@ -19,6 +19,8 @@ package bisq.user.banned;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -56,10 +58,16 @@ final class BannedUserStore implements PersistableStore<BannedUserStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto) {
-        return new BannedUserStore(proto.getBannedUserProfileDataSetList().stream()
-                .map(BannedUserProfileData::fromProto)
-                .collect(Collectors.toSet()));
+    public static BannedUserStore fromProto(bisq.user.protobuf.BannedUserStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BannedUserStore(ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getBannedUserProfileDataSetList(),
+                            BannedUserProfileData::fromProto)
+                    .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

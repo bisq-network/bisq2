@@ -18,9 +18,12 @@
 package bisq.offer.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.offer.price.spec.FixPriceSpec;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -33,8 +36,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_2_DAYS;
 @ToString
 @Getter
 @EqualsAndHashCode
-public final class MuSigOfferMessage implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_2_DAYS, getClass().getSimpleName());
+public final class MuSigOfferMessage implements OwnershipVerifiableData {
+    public static final MetaData META_DATA = new MetaData(TTL_2_DAYS, MuSigOfferMessage.class.getSimpleName());
     private final MuSigOffer offer;
 
     public MuSigOfferMessage(MuSigOffer offer) {
@@ -43,8 +46,13 @@ public final class MuSigOfferMessage implements DistributedData {
         verify();
     }
 
+    // An offer in the offerbook needs a canonical fixed price, so that every client shows the price which the trade
+    // uses (rule 5 of docs/specifications/offer/fixed-price.md)
     @Override
     public void verify() {
+        if (offer.getPriceSpec() instanceof FixPriceSpec fixPriceSpec) {
+            fixPriceSpec.verifyCanonical();
+        }
     }
 
     @Override
@@ -58,8 +66,13 @@ public final class MuSigOfferMessage implements DistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto) {
-        return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+    public static MuSigOfferMessage fromProto(bisq.offer.protobuf.MuSigOfferMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigOfferMessage(MuSigOffer.fromProto(proto.getOffer()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -73,12 +86,14 @@ public final class MuSigOfferMessage implements DistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // The maker owns the offer. Otherwise another user could publish a copy of the offer and remove it, and the
+    // offerbook would remove the offer of the maker (see docs/specifications/network/storage-ownership.md).
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
+    public byte[] getOwnerPubKeyHash() {
+        return offer.getMakerPubKeyHash();
     }
 }

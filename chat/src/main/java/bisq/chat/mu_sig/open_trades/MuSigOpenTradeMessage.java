@@ -23,6 +23,8 @@ import bisq.chat.Citation;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.ChatMessageReaction;
 import bisq.chat.reactions.MuSigOpenTradeMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -34,6 +36,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -49,10 +52,12 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @EqualsAndHashCode(callSuper = true)
 public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTradeMessageReaction> {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
+    private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE,
+            ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     // Metadata needs to be symmetric with MuSigOpenTradeMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
@@ -114,6 +119,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         this.mediator = mediator;
         this.arbitrator = arbitrator;
         this.muSigOffer = muSigOffer;
+
+        verify();
     }
 
     private MuSigOpenTradeMessage(String tradeId,
@@ -141,6 +148,8 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         this.mediator = mediator;
         this.arbitrator = arbitrator;
         this.muSigOffer = Optional.of(muSigOffer);
+
+        verify();
     }
 
     @Override
@@ -168,45 +177,56 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
         return builder;
     }
 
-    public static MuSigOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        bisq.chat.protobuf.MuSigOpenTradeMessage protoMessage = baseProto.getMuSigOpenTradeMessage();
-        Optional<UserProfile> mediator = protoMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
-                Optional.empty();
-        Optional<UserProfile> arbitrator = protoMessage.hasArbitrator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getArbitrator())) :
-                Optional.empty();
-        Optional<MuSigOffer> muSigOffer = protoMessage.hasMuSigOffer() ?
-                Optional.of(MuSigOffer.fromProto(protoMessage.getMuSigOffer())) :
-                Optional.empty();
-        return new MuSigOpenTradeMessage(
-                protoMessage.getTradeId(),
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(protoMessage.getSender()),
-                protoMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                mediator,
-                arbitrator,
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                muSigOffer,
-                protoMessage.getChatMessageReactionsList().stream()
-                        .map(MuSigOpenTradeMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+    public static MuSigOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            bisq.chat.protobuf.MuSigOpenTradeMessage protoMessage = baseProto.getMuSigOpenTradeMessage();
+            Optional<UserProfile> mediator = protoMessage.hasMediator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
+                    Optional.empty();
+            Optional<UserProfile> arbitrator = protoMessage.hasArbitrator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getArbitrator())) :
+                    Optional.empty();
+            Optional<MuSigOffer> muSigOffer = protoMessage.hasMuSigOffer() ?
+                    Optional.of(MuSigOffer.fromProto(protoMessage.getMuSigOffer())) :
+                    Optional.empty();
+            return new MuSigOpenTradeMessage(
+                    protoMessage.getTradeId(),
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(protoMessage.getSender()),
+                    protoMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    mediator,
+                    arbitrator,
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    muSigOffer,
+                    // An invalid reaction must not remove its message
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(protoMessage.getChatMessageReactionsList(),
+                                    MuSigOpenTradeMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
 
     @Override

@@ -29,7 +29,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.TextAlignment;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -44,11 +43,10 @@ public class TacLegalTermsView extends View<VBox, TacLegalTermsModel, TacLegalTe
         root.setFillWidth(true);
 
         Label headline = new Label(Res.get("tac.legal.headline"));
-        headline.getStyleClass().add("tac-headline");
+        headline.getStyleClass().add("tac-section-headline");
         headline.setWrapText(true);
-        headline.setAlignment(Pos.CENTER);
-        headline.setTextAlignment(TextAlignment.CENTER);
-        headline.setMaxWidth(Double.MAX_VALUE);
+
+        VBox headlineBox = new VBox(headline);
 
         VBox legalTextContent = new VBox(12,
                 createLegalSection("1.", Res.get("tac.legal.section1.title"), Res.get("tac.legal.section1.body")),
@@ -69,7 +67,7 @@ public class TacLegalTermsView extends View<VBox, TacLegalTermsModel, TacLegalTe
         legalTextScrollPane.setMaxWidth(Double.MAX_VALUE);
         legalTextScrollPane.setMaxHeight(Double.MAX_VALUE);
         VBox.setVgrow(legalTextScrollPane, Priority.ALWAYS);
-        VBox.setMargin(legalTextScrollPane, new Insets(8, 0, 8, 0));
+        VBox.setMargin(legalTextScrollPane, new Insets(0, 0, 8, 0));
 
         confirmCheckBox = new CheckBox(Res.get("tac.legal.confirm"));
         confirmCheckBox.getStyleClass().add("tac-legal-checkbox");
@@ -94,7 +92,7 @@ public class TacLegalTermsView extends View<VBox, TacLegalTermsModel, TacLegalTe
         buttons.setAlignment(Pos.CENTER_LEFT);
         buttons.setMaxWidth(Double.MAX_VALUE);
 
-        root.getChildren().addAll(headline,
+        root.getChildren().addAll(headlineBox,
                 legalTextScrollPane,
                 confirmCheckBox,
                 buttons);

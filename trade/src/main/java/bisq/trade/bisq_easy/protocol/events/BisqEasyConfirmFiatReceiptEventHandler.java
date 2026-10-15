@@ -23,9 +23,17 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 
+import static bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator.validateChatChannel;
+
 public class BisqEasyConfirmFiatReceiptEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyConfirmFiatReceiptEvent> {
     public BisqEasyConfirmFiatReceiptEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verifyIntegrity(BisqEasyConfirmFiatReceiptEvent event) {
+        validateChatChannel(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()
+                .findChannelByTradeId(trade.getId()), trade);
     }
 
     @Override
@@ -41,7 +49,7 @@ public class BisqEasyConfirmFiatReceiptEventHandler extends BisqEasyTradeEventHa
         send(new BisqEasyConfirmFiatReceiptMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId()));
     }
 }

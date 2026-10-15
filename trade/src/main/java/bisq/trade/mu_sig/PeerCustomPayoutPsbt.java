@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.BitcoinTransactionValidation;
 import com.google.protobuf.ByteString;
 
@@ -54,10 +55,15 @@ public final class PeerCustomPayoutPsbt implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PeerCustomPayoutPsbt fromProto(bisq.trade.protobuf.PeerCustomPayoutPsbt proto) {
-        return new PeerCustomPayoutPsbt(
-                proto.getTxId(),
-                proto.getPsbt().toByteArray());
+    public static PeerCustomPayoutPsbt fromProto(bisq.trade.protobuf.PeerCustomPayoutPsbt proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PeerCustomPayoutPsbt(
+                    proto.getTxId(),
+                    proto.getPsbt().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getTxId() {

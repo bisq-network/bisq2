@@ -70,6 +70,8 @@ public abstract class ConnectionChannel {
     private final ConnectionMetrics connectionMetrics;
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    @Getter
+    private final Set<Integer> receivedMessageCounters;
 
     @Getter
     private volatile boolean isStopped;
@@ -81,11 +83,13 @@ public abstract class ConnectionChannel {
     protected ConnectionChannel(Capability peersCapability,
                                 NetworkLoadSnapshot peersNetworkLoadSnapshot,
                                 NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                ConnectionMetrics connectionMetrics) {
+                                ConnectionMetrics connectionMetrics,
+                                Set<Integer> receivedMessageCounters) {
         this.peersCapability = peersCapability;
         this.peersNetworkLoadSnapshot = peersNetworkLoadSnapshot;
         this.networkEnvelopeSocketChannel = networkEnvelopeSocketChannel;
         this.connectionMetrics = connectionMetrics;
+        this.receivedMessageCounters = receivedMessageCounters;
     }
 
     ConnectionChannel send(EnvelopePayloadMessage envelopePayloadMessage, AuthorizationToken authorizationToken) {

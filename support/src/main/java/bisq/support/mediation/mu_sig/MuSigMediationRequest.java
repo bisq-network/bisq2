@@ -19,6 +19,8 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.contract.mu_sig.MuSigContract;
@@ -57,8 +59,7 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigMediationRequest.class.getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
 
@@ -121,15 +122,23 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return resolveBuilder(this.getValueBuilder(serializeForHash), serializeForHash).build();
     }
 
-    public static MuSigMediationRequest fromProto(bisq.support.protobuf.MuSigMediationRequest proto) {
-        return new MuSigMediationRequest(proto.getTradeId(),
-                MuSigContract.fromProto(proto.getContract()),
-                UserProfile.fromProto(proto.getRequester()),
-                UserProfile.fromProto(proto.getPeer()),
-                proto.getChatMessagesList().stream()
-                        .map(MuSigOpenTradeMessage::fromProto)
-                        .collect(Collectors.toList()),
-                NetworkId.fromProto(proto.getMediatorNetworkId()));
+    public static MuSigMediationRequest fromProto(bisq.support.protobuf.MuSigMediationRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationRequest(proto.getTradeId(),
+                    MuSigContract.fromProto(proto.getContract()),
+                    UserProfile.fromProto(proto.getRequester()),
+                    UserProfile.fromProto(proto.getPeer()),
+                    // The trade peers created the chat messages, and a node of an earlier version accepts a message which
+                    // breaks a rule of this version. Such a message is skipped, so that it does not make the whole
+                    // request unreadable.
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getChatMessagesList(),
+                                    MuSigOpenTradeMessage::fromProto)
+                            .collect(Collectors.toList()),
+                    NetworkId.fromProto(proto.getMediatorNetworkId()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
 
@@ -164,8 +173,8 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.25, 0.5);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

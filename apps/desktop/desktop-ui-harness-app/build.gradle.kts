@@ -1,5 +1,6 @@
 plugins {
     id("bisq.java-library")
+    id("bisq.javafx-tests")
     application
     alias(libs.plugins.openjfx)
 }
@@ -9,7 +10,7 @@ application {
 }
 
 javafx {
-    version = "21.0.6"
+    version = "21.0.11"
     modules = listOf("javafx.controls", "javafx.media", "javafx.swing")
 }
 

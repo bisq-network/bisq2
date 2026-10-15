@@ -150,8 +150,9 @@ public class BackupServiceTest {
         Path backupFilePath = backupService.getBackupFilePath();
         assertThat(backupFilePath).doesNotExist();
         backupService.backup(backupFilePath);
-        assertThat(backupFilePath).exists();
-        assertThat(storeFilePath).doesNotExist();
+        assertThat(backupFilePath).hasContent("test");
+        // The current file stays in place until a new version replaces it
+        assertThat(storeFilePath).hasContent("test");
     }
 
     @Test
@@ -477,6 +478,24 @@ public class BackupServiceTest {
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(16))));
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(23))));
         assertTrue(outdatedBackupFileInfos.contains(createBackupFileInfo(fileName, paths.get(27))));
+    }
+
+    @Test
+    void testDeleteAllRemovesOnlyThisStoresBackups(@TempDir Path tempDir) throws IOException {
+        Path storePath = tempDir.resolve("db").resolve("test_store.protobuf");
+        Path backupPathDir = tempDir.resolve("backups").resolve("test");
+        FileMutatorUtils.createDirectories(backupPathDir);
+        FileMutatorUtils.writeToPath("dummy text", backupPathDir.resolve("test_store.protobuf_2025-12-04_0901"));
+        FileMutatorUtils.writeToPath("dummy text", backupPathDir.resolve("test_store.protobuf_2024-01-01_0000"));
+        Path unrelated = backupPathDir.resolve("other.txt");
+        FileMutatorUtils.writeToPath("dummy text", unrelated);
+        BackupService bs = new BackupService(tempDir, storePath, MaxBackupSize.HUNDRED_MB);
+        assertEquals(2, bs.getBackups().size());
+
+        bs.deleteAll();
+
+        assertTrue(bs.getBackups().isEmpty());
+        assertThat(unrelated).exists();
     }
 
     @Test

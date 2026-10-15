@@ -17,7 +17,9 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import lombok.EqualsAndHashCode;
@@ -30,6 +32,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SetupTradeMessage_C extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_C.class);
+
     private final NonceShares nonceShares;
     private final PartialSignatures partialSignatures;
 
@@ -69,20 +73,25 @@ public final class SetupTradeMessage_C extends MuSigTradeMessage {
                 .setPartialSignatures(partialSignatures.toProto(serializeForHash));
     }
 
-    public static SetupTradeMessage_C fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.SetupTradeMessage_C muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageC();
-        return new SetupTradeMessage_C(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                NonceShares.fromProto(muSigMessageProto.getNonceShares()),
-                PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
+    public static SetupTradeMessage_C fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_C muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageC();
+            return new SetupTradeMessage_C(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    NonceShares.fromProto(muSigMessageProto.getNonceShares()),
+                    PartialSignatures.fromProto(muSigMessageProto.getPartialSignatures()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

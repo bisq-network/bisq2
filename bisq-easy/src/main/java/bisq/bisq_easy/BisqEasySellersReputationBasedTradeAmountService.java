@@ -24,6 +24,7 @@ import bisq.common.application.Service;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.HashMapObserver;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
@@ -160,7 +161,7 @@ public class BisqEasySellersReputationBasedTradeAmountService implements Service
                     .map(reputationService::getReputationScore)
                     .map(ReputationScore::getTotalScore)
                     .orElse(0L);
-            boolean hasInsufficientReputation = BisqEasyTradeAmountLimits.withTolerance(sellersScore) < requiredReputationScoreForMinOrFixed;
+            boolean hasInsufficientReputation = !BisqEasyTradeAmountLimits.isCoveredWithTolerance(sellersScore, requiredReputationScoreForMinOrFixed);
             if (hasInsufficientReputation) {
                 if (useCache) {
                     synchronized (cacheInvalidationLock) {

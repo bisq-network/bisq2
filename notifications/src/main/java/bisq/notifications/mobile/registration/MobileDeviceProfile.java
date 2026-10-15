@@ -18,6 +18,7 @@
 package bisq.notifications.mobile.registration;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,13 +35,19 @@ public final class MobileDeviceProfile implements PersistableProto {
     private final String deviceDescriptor;
     private final MobileDevicePlatform platform;
     private final Optional<String> symmetricKeyBase64;
+    /**
+     * The API client this registration belongs to, so revoking the client also removes its push
+     * registration. Empty for registrations persisted before the link existed.
+     */
+    private final Optional<String> clientId;
 
     public MobileDeviceProfile(String deviceId,
                                String deviceToken,
                                String publicKeyBase64,
                                String deviceDescriptor,
                                MobileDevicePlatform platform,
-                               Optional<String> symmetricKeyBase64
+                               Optional<String> symmetricKeyBase64,
+                               Optional<String> clientId
     ) {
         this.deviceId = deviceId;
         this.deviceToken = deviceToken;
@@ -48,6 +55,7 @@ public final class MobileDeviceProfile implements PersistableProto {
         this.deviceDescriptor = deviceDescriptor;
         this.platform = platform;
         this.symmetricKeyBase64 = symmetricKeyBase64;
+        this.clientId = clientId;
     }
 
     public boolean hasSymmetricKey() {
@@ -68,19 +76,28 @@ public final class MobileDeviceProfile implements PersistableProto {
                 .setDeviceDescriptor(deviceDescriptor)
                 .setPlatform(platform.toProtoEnum());
         symmetricKeyBase64.ifPresent(builder::setSymmetricKeyBase64);
+        clientId.ifPresent(builder::setClientId);
         return builder;
     }
 
-    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto) {
-        Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
-                ? Optional.of(proto.getSymmetricKeyBase64())
-                : Optional.empty();
-        return new MobileDeviceProfile(proto.getDeviceId(),
-                proto.getDeviceToken(),
-                proto.getPublicKeyBase64(),
-                proto.getDeviceDescriptor(),
-                MobileDevicePlatform.fromProto(proto.getPlatform()),
-                symmetricKey);
+    public static MobileDeviceProfile fromProto(bisq.notifications.protobuf.MobileDeviceProfile proto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<String> symmetricKey = proto.hasSymmetricKeyBase64()
+                    ? Optional.of(proto.getSymmetricKeyBase64())
+                    : Optional.empty();
+            return new MobileDeviceProfile(proto.getDeviceId(),
+                    proto.getDeviceToken(),
+                    proto.getPublicKeyBase64(),
+                    proto.getDeviceDescriptor(),
+                    MobileDevicePlatform.fromProto(proto.getPlatform()),
+                    symmetricKey,
+                    // An empty id would make the device owned by a client that does not exist: nobody
+                    // could register over it or remove it on revocation.
+                    Optional.of(proto.getClientId()).filter(clientId -> !clientId.isEmpty()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }
 

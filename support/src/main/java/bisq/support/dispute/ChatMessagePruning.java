@@ -23,9 +23,14 @@ import lombok.extern.slf4j.Slf4j;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * Selects the newest chat messages for a message to a dispute agent. The rules are specified in
+ * docs/specifications/support/dispute-chat-history-pruning.md.
+ */
 @Slf4j
 public final class ChatMessagePruning {
     private static final int MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES = 18_000;
@@ -33,14 +38,24 @@ public final class ChatMessagePruning {
     // confidential transport on top of the serialized payload, so that the
     // resulting ciphertext stays within the transport's 20_000-byte limit.
     public static final int MAX_SERIALIZED_SIZE = 20_000 - 16;
+    // The pruning keeps the newest messages, so it needs the chronological order. The callers pass the messages of a
+    // chat channel, which keeps them in a set without a defined order. Messages with the same date are sorted by ID,
+    // so that the selection does not depend on the order of the input.
+    private static final Comparator<ChatMessage> CHRONOLOGICAL_ORDER =
+            Comparator.comparingLong(ChatMessage::getDate).thenComparing(ChatMessage::getId);
 
     private ChatMessagePruning() {
     }
 
+    /**
+     * Creates the message with the newest chat messages which fit into the limits. The chat messages can be in any
+     * order. The message factory receives the kept chat messages in chronological order. It throws
+     * {@link SerializedSizeExceededException} if the message is too large.
+     */
     public static <M extends ChatMessage, R> R createWithMaybePrunedMessages(List<M> chatMessages,
                                                                              String tradeId,
                                                                              Function<List<M>, R> messageFactory) {
-        List<M> candidateMessages = pruneByTotalTextBytes(chatMessages);
+        List<M> candidateMessages = pruneByTotalTextBytes(sortChronologically(chatMessages));
         while (true) {
             try {
                 R message = messageFactory.apply(new ArrayList<>(candidateMessages));
@@ -50,16 +65,23 @@ public final class ChatMessagePruning {
                 if (candidateMessages.isEmpty()) {
                     throw e;
                 }
+                // Removes the oldest message
                 candidateMessages.remove(0);
             }
         }
     }
 
-    private static <M extends ChatMessage> List<M> pruneByTotalTextBytes(List<M> chatMessages) {
+    private static <M extends ChatMessage> List<M> sortChronologically(List<M> chatMessages) {
+        List<M> result = new ArrayList<>(chatMessages);
+        result.sort(CHRONOLOGICAL_ORDER);
+        return result;
+    }
+
+    private static <M extends ChatMessage> List<M> pruneByTotalTextBytes(List<M> chronologicalMessages) {
         int totalTextBytes = 0;
         List<M> result = new ArrayList<>();
-        for (int i = chatMessages.size() - 1; i >= 0; i--) {
-            M message = chatMessages.get(i);
+        for (int i = chronologicalMessages.size() - 1; i >= 0; i--) {
+            M message = chronologicalMessages.get(i);
             int messageTextBytes = message.getTextOrNA().getBytes(StandardCharsets.UTF_8).length;
             if (totalTextBytes + messageTextBytes >= MAX_TOTAL_CHAT_MESSAGES_TEXT_BYTES) {
                 break;

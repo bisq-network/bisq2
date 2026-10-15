@@ -20,6 +20,7 @@ package bisq.common.monetary;
 import bisq.common.asset.Asset;
 import bisq.common.market.Market;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -75,10 +76,14 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
                 .setQuoteSideMonetary(quoteSideMonetary.toProto(serializeForHash));
     }
 
-    public static PriceQuote fromProto(bisq.common.protobuf.PriceQuote proto) {
-        return new PriceQuote(proto.getValue(),
-                Monetary.fromProto(proto.getBaseSideMonetary()),
-                Monetary.fromProto(proto.getQuoteSideMonetary()));
+    public static PriceQuote fromProto(bisq.common.protobuf.PriceQuote proto) throws UnresolvableProtobufException {
+        try {
+            return new PriceQuote(proto.getValue(),
+                    Monetary.fromProto(proto.getBaseSideMonetary()),
+                    Monetary.fromProto(proto.getQuoteSideMonetary()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     /**

@@ -23,12 +23,12 @@ import bisq.bonded_roles.release.AppType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.application.DevMode;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -51,8 +51,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
     public final static int MAX_BANNED_ACCOUNT_DATA_LENGTH = 10_000;
 
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedAlertData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;
@@ -188,24 +187,29 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto) {
-        AlertType alertType = AlertType.fromProto(proto.getAlertType());
-        return new AuthorizedAlertData(
-                proto.getVersion(),
-                proto.getId(),
-                proto.getDate(),
-                alertType,
-                proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
-                proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
-                proto.getHaltTrading(),
-                proto.getRequireVersionForTrading(),
-                proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
-                proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
-                proto.getSecurityManagerProfileId(),
-                proto.getStaticPublicKeysProvided(),
-                proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty(),
-                AppType.fromProto(proto.getAppType())
-        );
+    public static AuthorizedAlertData fromProto(bisq.bonded_roles.protobuf.AuthorizedAlertData proto)
+            throws UnresolvableProtobufException {
+        try {
+            AlertType alertType = AlertType.fromProto(proto.getAlertType());
+            return new AuthorizedAlertData(
+                    proto.getVersion(),
+                    proto.getId(),
+                    proto.getDate(),
+                    alertType,
+                    proto.hasHeadline() ? Optional.of(proto.getHeadline()) : getDefaultHeadline(alertType),
+                    proto.hasMessage() ? Optional.of(proto.getMessage()) : Optional.empty(),
+                    proto.getHaltTrading(),
+                    proto.getRequireVersionForTrading(),
+                    proto.hasMinVersion() ? Optional.of(proto.getMinVersion()) : Optional.empty(),
+                    proto.hasBannedRole() ? Optional.of(AuthorizedBondedRole.fromProto(proto.getBannedRole())) : Optional.empty(),
+                    proto.getSecurityManagerProfileId(),
+                    proto.getStaticPublicKeysProvided(),
+                    proto.hasBannedAccountData() ? Optional.of(proto.getBannedAccountData()) : Optional.empty(),
+                    AppType.fromProto(proto.getAppType())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private static Optional<String> getDefaultHeadline(AlertType alertType) {
@@ -227,8 +231,8 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
@@ -243,20 +247,6 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     @Override
     public boolean staticPublicKeysProvided() {
         return staticPublicKeysProvided;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // Can be removed after I2P is activated
-        if (!AuthorizedData.IS_I2P_ACTIVATED) {
-            Boolean isBannedRoleInvalid = bannedRole.map(node -> node.isDataInvalid(pubKeyHash)).orElse(false);
-            if (isBannedRoleInvalid) {
-                log.warn("AuthorizedAlertData considered invalid as bannedRole is invalid.\n" +
-                        "bannedRole={}", bannedRole);
-                return true;
-            }
-        }
-        return message.orElse("").length() > MAX_MESSAGE_LENGTH;
     }
 
     public boolean isTradeRestrictingAlert() {

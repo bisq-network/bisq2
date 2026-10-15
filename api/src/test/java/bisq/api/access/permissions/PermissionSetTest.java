@@ -17,6 +17,7 @@
 
 package bisq.api.access.permissions;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -48,7 +49,7 @@ class PermissionSetTest {
     }
 
     @Test
-    void grantAllSurvivesProtoRoundTrip() {
+    void grantAllSurvivesProtoRoundTrip() throws UnresolvableProtobufException {
         bisq.api.protobuf.PermissionSet proto = PermissionSet.grantAll().toProto(false);
         PermissionSet fromProto = PermissionSet.fromProto(proto);
 
@@ -68,7 +69,7 @@ class PermissionSetTest {
     }
 
     @Test
-    void unknownEnumValuesInProtoAreDroppedNotEscalated() {
+    void unknownEnumValuesInProtoAreDroppedNotEscalated() throws UnresolvableProtobufException {
         // Version skew / corruption must shrink the effective grant, never expand it.
         bisq.api.protobuf.PermissionSet proto = bisq.api.protobuf.PermissionSet.newBuilder()
                 .addPermissions(Permission.OFFERBOOK.toProtoEnum())
@@ -82,7 +83,7 @@ class PermissionSetTest {
     }
 
     @Test
-    void emptyExplicitGrantSurvivesProtoRoundTrip() {
+    void emptyExplicitGrantSurvivesProtoRoundTrip() throws UnresolvableProtobufException {
         PermissionSet empty = new PermissionSet(Set.of());
         PermissionSet fromProto = PermissionSet.fromProto(empty.toProto(false));
 
@@ -91,7 +92,7 @@ class PermissionSetTest {
     }
 
     @Test
-    void explicitSetSurvivesProtoRoundTrip() {
+    void explicitSetSurvivesProtoRoundTrip() throws UnresolvableProtobufException {
         Set<Permission> explicit = Set.of(Permission.SETTINGS);
         bisq.api.protobuf.PermissionSet proto = new PermissionSet(explicit).toProto(false);
         PermissionSet fromProto = PermissionSet.fromProto(proto);
@@ -121,7 +122,7 @@ class PermissionSetTest {
     }
 
     @Test
-    void legacyProtoWithoutGrantAllFieldYieldsExplicitSet() {
+    void legacyProtoWithoutGrantAllFieldYieldsExplicitSet() throws UnresolvableProtobufException {
         // Simulates a store entry written before the grantAll field existed.
         bisq.api.protobuf.PermissionSet legacyProto = bisq.api.protobuf.PermissionSet.newBuilder()
                 .addAllPermissions(Set.of(Permission.OFFERBOOK).stream().map(Permission::toProtoEnum).toList())

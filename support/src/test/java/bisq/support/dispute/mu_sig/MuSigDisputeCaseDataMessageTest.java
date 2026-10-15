@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static bisq.support.dispute.ChatMessageTestFixtures.withTooLongCitationId;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.TRADE_ID;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.assertCanBeEncrypted;
 import static bisq.support.mu_sig.MuSigRequestSizeTestFixtures.createUserProfile;
@@ -66,6 +67,22 @@ class MuSigDisputeCaseDataMessageTest {
                         chatMessages));
         assertEquals("Serialized dispute case data size must not exceed " + MAX_SERIALIZED_SIZE + " bytes",
                 exception.getMessage());
+    }
+
+    @Test
+    void messageWithOneInvalidChatMessageKeepsTheValidChatMessages() throws Exception {
+        UserProfile sender = createUserProfile("sender");
+        UserProfile peer = createUserProfile("peer");
+        List<MuSigOpenTradeMessage> chatMessages = createBoundaryChatMessages(sender, peer, 3, 10);
+        bisq.support.protobuf.MuSigDisputeCaseDataMessage.Builder builder = new MuSigDisputeCaseDataMessage(TRADE_ID,
+                sender.getNetworkId(),
+                CONTRACT_HASH,
+                chatMessages).getValueBuilder(false);
+        builder.setChatMessages(1, withTooLongCitationId(builder.getChatMessages(1)));
+
+        MuSigDisputeCaseDataMessage message = MuSigDisputeCaseDataMessage.fromProto(builder.build());
+
+        assertEquals(List.of(chatMessages.get(0), chatMessages.get(2)), message.getChatMessages());
     }
 
     @Test

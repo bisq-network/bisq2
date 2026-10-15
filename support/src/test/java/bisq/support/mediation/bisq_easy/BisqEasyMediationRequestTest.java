@@ -28,6 +28,8 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.common.market.Market;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.proto.UnresolvableProtobufException;
+import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
@@ -52,11 +54,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
+import static bisq.support.dispute.ChatMessageTestFixtures.withTooLongCitationId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class BisqEasyMediationRequestTest {
+    // Trade ID of the chat messages. The trade ID of a request is derived from its contract.
     private static final String BOUNDARY_TRADE_ID = "trade-boundary";
     private static final String BOUNDARY_CHANNEL_ID = "channel-boundary";
 
@@ -73,7 +77,7 @@ class BisqEasyMediationRequestTest {
         assertTrue(innerProto.getSerializedSize() <= MAX_SERIALIZED_SIZE);
         assertTrue(wrappedEnvelopeSize(innerProto) > MAX_SERIALIZED_SIZE);
         SerializedSizeExceededException exception = assertThrows(SerializedSizeExceededException.class,
-                () -> new BisqEasyMediationRequest(BOUNDARY_TRADE_ID,
+                () -> new BisqEasyMediationRequest(TradeId.fromContract(contract),
                         contract,
                         requester,
                         peer,
@@ -90,7 +94,7 @@ class BisqEasyMediationRequestTest {
         BisqEasyContract contract = createContract(requester, peer, mediator);
         int textLength = findLargestAcceptedTextLength(contract, requester, peer, mediator.getNetworkId());
         List<BisqEasyOpenTradeMessage> chatMessages = createBoundaryChatMessages(requester, peer, textLength);
-        BisqEasyMediationRequest request = new BisqEasyMediationRequest(BOUNDARY_TRADE_ID,
+        BisqEasyMediationRequest request = new BisqEasyMediationRequest(TradeId.fromContract(contract),
                 contract,
                 requester,
                 peer,
@@ -102,6 +106,116 @@ class BisqEasyMediationRequestTest {
                 mediator.getNetworkId().getPubKey().getPublicKey(),
                 KeyGeneration.generateDefaultEcKeyPair());
         assertTrue(confidentialData.getCipherText().length <= 20_000);
+    }
+
+    // A trade peer can send a user of version 2.1.13 a chat message which only this version rejects. The node of
+    // that user puts all chat messages of the trade into its mediation request.
+    @Test
+    void requestWithOneInvalidChatMessageKeepsTheValidChatMessage() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        List<BisqEasyOpenTradeMessage> chatMessages = createBoundaryChatMessages(requester, peer, 10);
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer, chatMessages, mediator.getNetworkId());
+        bisq.chat.protobuf.ChatMessage invalidChatMessage = withTooLongCitationId(valid.getChatMessages(1));
+        bisq.support.protobuf.MediationRequest received = valid.toBuilder()
+                .setChatMessages(1, invalidChatMessage)
+                .build();
+
+        assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOpenTradeMessage.fromProto(invalidChatMessage));
+        assertEquals(chatMessages, BisqEasyMediationRequest.fromProto(valid).getChatMessages());
+        assertEquals(List.of(chatMessages.get(0)), BisqEasyMediationRequest.fromProto(received).getChatMessages());
+    }
+
+    @Test
+    void requestWithOnlyInvalidChatMessagesIsParsedWithoutChatMessages() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer,
+                createBoundaryChatMessages(requester, peer, 10), mediator.getNetworkId());
+        bisq.support.protobuf.MediationRequest received = valid.toBuilder()
+                .setChatMessages(0, withTooLongCitationId(valid.getChatMessages(0)))
+                .setChatMessages(1, withTooLongCitationId(valid.getChatMessages(1)))
+                .build();
+
+        BisqEasyMediationRequest request = BisqEasyMediationRequest.fromProto(received);
+
+        assertTrue(request.getChatMessages().isEmpty());
+        assertEquals(BisqEasyMediationRequest.fromProto(valid), request);
+        assertEquals(BisqEasyMediationRequest.fromProto(valid).getAckRequestingMessageId(),
+                request.getAckRequestingMessageId());
+    }
+
+    // The mediator shows the price of the contract in its case list. A contract without a price must not reach
+    // the mediator, because its case list builds all items in one step.
+    @Test
+    void requestWhoseContractHasNoPriceFailsAtParsing() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                createContract(requester, peer, mediator), requester, peer, List.of(), mediator.getNetworkId());
+
+        assertEquals(3_500_000_000L, BisqEasyMediationRequest.fromProto(valid).getContract().getPriceQuote().getValue());
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 0, 3_500_000)));
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 100_000, 0)));
+        // The price does not fit into a long
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(withContractAmounts(valid, 1, Long.MAX_VALUE)));
+    }
+
+    // The mediator files a request under its trade ID and adds its chat messages to the trade channel of this ID. A
+    // user who knows the trade ID of a mediation case of other users must not be able to send a request with this ID
+    // and a contract of its own.
+    @Test
+    void requestWhoseTradeIdIsNotTheIdOfItsContractFailsAtParsing() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        BisqEasyContract contract = createContract(requester, peer, mediator);
+        bisq.support.protobuf.MediationRequest valid = createMediationRequestProto(
+                contract, requester, peer, List.of(), mediator.getNetworkId());
+        String tradeIdOfOtherCase = TradeId.fromContract(
+                createContract(createUserProfile("other maker"), createUserProfile("other taker"), mediator));
+
+        assertEquals(TradeId.fromContract(contract), BisqEasyMediationRequest.fromProto(valid).getTradeId());
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyMediationRequest.fromProto(valid.toBuilder().setTradeId(tradeIdOfOtherCase).build()));
+        assertThrows(IllegalArgumentException.class,
+                () -> new BisqEasyMediationRequest(tradeIdOfOtherCase, contract, requester, peer, List.of(),
+                        mediator.getNetworkId()));
+    }
+
+    // Versions up to 2.1.6 created the trade ID without the take offer date, and a trade keeps its ID
+    @Test
+    void requestWithTheTradeIdWithoutTakeOfferDateParses() throws Exception {
+        UserProfile requester = createUserProfile("requester");
+        UserProfile peer = createUserProfile("peer");
+        UserProfile mediator = createUserProfile("mediator");
+        BisqEasyContract contract = createContract(requester, peer, mediator);
+        String tradeIdWithoutTakeOfferDate = TradeId.create(contract.getOffer().getId(),
+                contract.getTaker().getNetworkId().getId());
+        bisq.support.protobuf.MediationRequest request = createMediationRequestProto(
+                contract, requester, peer, List.of(), mediator.getNetworkId()).toBuilder()
+                .setTradeId(tradeIdWithoutTakeOfferDate)
+                .build();
+
+        assertEquals(tradeIdWithoutTakeOfferDate, BisqEasyMediationRequest.fromProto(request).getTradeId());
+    }
+
+    private static bisq.support.protobuf.MediationRequest withContractAmounts(bisq.support.protobuf.MediationRequest request,
+                                                                              long baseSideAmount,
+                                                                              long quoteSideAmount) {
+        bisq.support.protobuf.MediationRequest.Builder builder = request.toBuilder();
+        builder.getContractBuilder().getTwoPartyContractBuilder().getBisqEasyContractBuilder()
+                .setBaseSideAmount(baseSideAmount)
+                .setQuoteSideAmount(quoteSideAmount);
+        return builder.build();
     }
 
     private int findBoundaryTextLength(BisqEasyContract contract,
@@ -156,7 +270,7 @@ class BisqEasyMediationRequestTest {
                                                                                List<BisqEasyOpenTradeMessage> chatMessages,
                                                                                NetworkId mediatorNetworkId) {
         return bisq.support.protobuf.MediationRequest.newBuilder()
-                .setTradeId(BOUNDARY_TRADE_ID)
+                .setTradeId(TradeId.fromContract(contract))
                 .setContract(contract.toProto(false))
                 .setRequester(requester.toProto(false))
                 .setPeer(peer.toProto(false))
@@ -233,11 +347,12 @@ class BisqEasyMediationRequestTest {
     }
 
     private UserProfile createUserProfile(String nickName) {
+        NetworkId networkId = createNetworkId(nickName);
         return new UserProfile(0,
                 nickName,
-                new ProofOfWork(new byte[20], 0, null, 1, new byte[72], 0),
+                new ProofOfWork(networkId.getPubKeyHash(), 0, null, 1, new byte[72], 0),
                 0,
-                createNetworkId(nickName),
+                networkId,
                 "",
                 "",
                 "");

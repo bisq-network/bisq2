@@ -18,6 +18,7 @@
 package bisq.network.i2p.grpc.messages;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -54,7 +55,12 @@ public final class PeerAvailabilityResponse implements Proto {
                 .setIsEstablished(isEstablished);
     }
 
-    public static PeerAvailabilityResponse fromProto(bisq.bi2p.protobuf.PeerAvailabilityResponse proto) {
-        return new PeerAvailabilityResponse(proto.getWasUnreachable(), proto.getIsEstablished());
+    public static PeerAvailabilityResponse fromProto(bisq.bi2p.protobuf.PeerAvailabilityResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PeerAvailabilityResponse(proto.getWasUnreachable(), proto.getIsEstablished());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

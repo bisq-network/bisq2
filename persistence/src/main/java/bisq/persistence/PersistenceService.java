@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -47,9 +48,12 @@ public class PersistenceService {
     protected final List<Persistence<? extends PersistableProto>> persistenceInstances = new CopyOnWriteArrayList<>();
     @Getter
     private final RestoreService restoreService = new RestoreService();
+    @Getter
+    private final UnreadableStoreArchive unreadableStoreArchive;
 
     public PersistenceService(Path appDataDirPath) {
         this.appDataDirPath = appDataDirPath;
+        unreadableStoreArchive = new UnreadableStoreArchive(appDataDirPath.resolve(Paths.get("db", "unreadable")));
     }
 
     public <T extends PersistableStore<T>> Persistence<T> getOrCreatePersistence(PersistenceClient<T> client,
@@ -106,7 +110,14 @@ public class PersistenceService {
         if (normalizedPath.isAbsolute()) {
             throw new IllegalArgumentException("subDir must be relative to appDataDirPath");
         }
-        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize, restoreService);
+        UnreadableStoreFilePolicy unreadableStoreFilePolicy = isUserData(normalizedPath)
+                ? persistableStore.getUnreadableStoreFilePolicy()
+                : UnreadableStoreFilePolicy.NO_ARCHIVE;
+        Optional<UnreadableStoreArchive> archive = unreadableStoreFilePolicy == UnreadableStoreFilePolicy.ARCHIVE
+                ? Optional.of(unreadableStoreArchive)
+                : Optional.empty();
+        Persistence<T> persistence = new Persistence<>(appDataDirPath.resolve(normalizedPath), fileName, maxBackupSize,
+                restoreService, unreadableStoreFilePolicy, archive);
         persistenceInstances.add(persistence);
         return persistence;
     }
@@ -136,6 +147,7 @@ public class PersistenceService {
             log.debug("Read persisted data from:\n{}", Joiner.on("\n").join(storagePaths));
         }
         return CompletableFuture.supplyAsync(() -> {
+            unreadableStoreArchive.pruneExpired();
             // We read sequentially as we need to ensure that low level data is present before higher level data
             // potentially access it.
             long ts = System.currentTimeMillis();
@@ -159,6 +171,15 @@ public class PersistenceService {
         }, EXECUTOR);
     }
 
+    /**
+     * The stores in the private and the settings directories hold the user's own data, which the node cannot get back
+     * from the network. Network and cache stores are filled again from the network.
+     */
+    private static boolean isUserData(Path subDirPath) {
+        return subDirPath.startsWith(DbSubDirectory.PRIVATE.getDbPath()) ||
+                subDirPath.startsWith(DbSubDirectory.SETTINGS.getDbPath());
+    }
+
     public CompletableFuture<Boolean> persistAllClients() {
         return CompletableFutureUtils.allOf(clients.stream()
                         .map(persistenceClient -> persistenceClient.persist()
@@ -169,6 +190,6 @@ public class PersistenceService {
                                         log.warn("Failed to persist");
                                     }
                                 })))
-                .thenApply(list -> true);
+                .thenApply(list -> list.stream().allMatch(Boolean::booleanValue));
     }
 }

@@ -20,6 +20,9 @@ package bisq.desktop.main.content.chat.message_container.list.message_box.markdo
 import java.net.URI;
 import java.util.Locale;
 
+/**
+ * The rules for a safe link are specified in {@code docs/specifications/chat/safe-links.md}.
+ */
 public final class MarkdownSecurityUtils {
     private MarkdownSecurityUtils() {
     }
@@ -28,6 +31,10 @@ public final class MarkdownSecurityUtils {
         return isSafeHttpUrl(rawUrl);
     }
 
+    /**
+     * A URL is safe when it has no control or bidi control character, is a valid URI, has the scheme http or https,
+     * and has an authority of the form {@code host[:port]}: a host, and no user info in front of an {@code @}.
+     */
     public static boolean isSafeHttpUrl(String url) {
         if (url == null || url.isBlank()) {
             return false;
@@ -45,10 +52,23 @@ public final class MarkdownSecurityUtils {
             if (!normalizedScheme.equals("http") && !normalizedScheme.equals("https")) {
                 return false;
             }
-            return uri.getHost() != null;
+            if (uri.getHost() == null) {
+                return false;
+            }
+            return !hasUserInfo(uri);
         } catch (Exception ignored) {
             return false;
         }
+    }
+
+    /**
+     * java.net.URI parses {@code https://bisq.network@evil.example/} with the user info {@code bisq.network} and the
+     * host {@code evil.example}. The reader takes the text in front of the {@code @} for the host. A link to a web
+     * page needs no user info, so a URL with user info, or with any other {@code @} in its authority, is not safe.
+     * The authority is not null here, because the URI has a host.
+     */
+    private static boolean hasUserInfo(URI uri) {
+        return uri.getRawUserInfo() != null || uri.getRawAuthority().indexOf('@') >= 0;
     }
 
     public static boolean containsDangerousCharacters(String value) {

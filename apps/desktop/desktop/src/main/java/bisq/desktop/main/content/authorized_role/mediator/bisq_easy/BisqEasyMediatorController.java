@@ -37,6 +37,7 @@ import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.SortedList;
 import javafx.stage.Stage;
@@ -46,9 +47,9 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static bisq.chat.ChatChannelDomain.BISQ_EASY_OPEN_TRADES;
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class BisqEasyMediatorController implements Controller {
@@ -94,7 +95,7 @@ public class BisqEasyMediatorController implements Controller {
                 model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
                 updateEmptyState();
                 if (model.getListItems().getFilteredList().size() == 1) {
-                    selectionService.selectChannel(model.getListItems().getFilteredList().get(0).getChannel());
+                    selectItem(model.getListItems().getFilteredList().get(0));
                 }
             });
         };
@@ -122,13 +123,9 @@ public class BisqEasyMediatorController implements Controller {
                         // In case we found an existing channel at mediatorFindOrCreatesChannel the mediator field could be empty
                         return false;
                     }
-                    try {
-                        checkArgument(channel.getTraders().size() == 2);
-                        checkArgument(channel.getBisqEasyOffer().equals(contract.getOffer()));
-                        checkArgument(channel.getMediator().orElseThrow().equals(contract.getMediator().orElseThrow()));
-                    } catch (IllegalArgumentException e) {
+                    if (!isChannelMatchingContract(channel, contract)) {
                         log.error("Validation of channel properties and contract properties failed. " +
-                                "channel={}; contract={}", channel, contract, e);
+                                "channel={}; contract={}", channel, contract);
                         return false;
                     }
                     return true;
@@ -168,8 +165,8 @@ public class BisqEasyMediatorController implements Controller {
     void onSelectItem(BisqEasyMediationCaseListItem item) {
         if (item == null) {
             selectionService.selectChannel(null);
-        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
-            selectionService.selectChannel(item.getChannel());
+        } else {
+            selectItem(item);
         }
     }
 
@@ -215,16 +212,39 @@ public class BisqEasyMediatorController implements Controller {
                 maybeSelectFirst();
                 updateEmptyState();
             } else if (chatChannel instanceof BisqEasyOpenTradeChannel tradeChannel) {
-                model.getListItems().stream()
-                        .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
-                        .findAny()
-                        .ifPresent(item -> {
-                            model.getSelectedItem().set(item);
-                            bisqEasyMediationCaseHeader.setMediationCaseListItem(item);
-                            bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                        });
+                BisqEasyMediationCaseListItem selectedItem = model.getSelectedItem().get();
+                if (selectedItem != null && selectedItem.getChannel().getId().equals(tradeChannel.getId())) {
+                    showInHeader(selectedItem);
+                } else {
+                    findFirstItemOfChannel(tradeChannel).ifPresent(item -> {
+                        model.getSelectedItem().set(item);
+                        showInHeader(item);
+                    });
+                }
             }
         });
+    }
+
+    // All cases of a trade share the trade's channel, so the selected row, not the channel, decides which case
+    // the header shows and acts on.
+    private void selectItem(BisqEasyMediationCaseListItem item) {
+        model.getSelectedItem().set(item);
+        showInHeader(item);
+        if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
+            selectionService.selectChannel(item.getChannel());
+        }
+    }
+
+    private void showInHeader(BisqEasyMediationCaseListItem item) {
+        bisqEasyMediationCaseHeader.setMediationCaseListItem(item);
+        bisqEasyMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+    }
+
+    // A shown row in table order first, so that the choice among several cases of the channel is deterministic.
+    private Optional<BisqEasyMediationCaseListItem> findFirstItemOfChannel(BisqEasyOpenTradeChannel channel) {
+        return Stream.concat(model.getListItems().getSortedList().stream(), model.getListItems().stream())
+                .filter(item -> item.getChannel().getId().equals(channel.getId()))
+                .findFirst();
     }
 
     private void applyShowClosedCasesChange() {
@@ -265,9 +285,23 @@ public class BisqEasyMediatorController implements Controller {
     private void maybeSelectFirst() {
         UIThread.runOnNextRenderFrame(() -> {
             if (!model.getListItems().getFilteredList().isEmpty()) {
-                selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
+                selectItem(model.getListItems().getSortedList().get(0));
             }
         });
+    }
+
+    // The case list shows a mediation case only if the mediator's channel of the trade matches the contract of the
+    // mediation request. The caller has checked that both have a mediator. The mediator's node creates the channel with
+    // the mediator's current profile, while the contract holds the profile which the taker saw when it took the offer.
+    // A profile can change its terms, its statement and the addresses of its network ID, so the mediators are compared
+    // by their profile IDs, the hash of their key. See docs/specifications/user/identity-by-key.md.
+    // All cases of a trade share its channel, whose offer is a display copy from the first accepted request. Each case
+    // shows its own contract, so the offer is not compared, and a case whose contract has a differing offer is listed
+    // as well (docs/specifications/support/mediation-request-validation.md).
+    @VisibleForTesting
+    static boolean isChannelMatchingContract(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
+        return channel.getTraders().size() == 2 &&
+                channel.getMediator().map(UserProfile::getId).equals(contract.getMediator().map(UserProfile::getId));
     }
 
     private BisqEasyOpenTradeChannel findOrCreateChannel(BisqEasyMediationRequest bisqEasyMediationRequest,

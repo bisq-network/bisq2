@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.messages;
 
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -53,7 +54,12 @@ public final class BsqBlocksRequest implements NetworkProto {
         return toProto(false);
     }
 
-    public static BsqBlocksRequest fromProto(bisq.bridge.protobuf.BsqBlocksRequest proto) {
-        return new BsqBlocksRequest(proto.getStartBlockHeight());
+    public static BsqBlocksRequest fromProto(bisq.bridge.protobuf.BsqBlocksRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BsqBlocksRequest(proto.getStartBlockHeight());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

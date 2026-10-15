@@ -19,6 +19,7 @@ package bisq.account.accounts.crypto;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -55,20 +56,24 @@ public final class MoneroAccount extends CryptoAssetAccount<MoneroAccountPayload
         return bisq.account.protobuf.MoneroAccount.newBuilder();
     }
 
-    public static MoneroAccount fromProto(bisq.account.protobuf.Account proto) {
-        var cryptoAssetAccount = proto.getCryptoAssetAccount();
-        var monero = cryptoAssetAccount.getMoneroAccount();
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
-        return new MoneroAccount(
-                proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                MoneroAccountPayload.fromProto(proto.getAccountPayload()),
-                keyPair,
-                keyType,
-                accountOrigin
-        );
+    public static MoneroAccount fromProto(bisq.account.protobuf.Account proto) throws UnresolvableProtobufException {
+        try {
+            var cryptoAssetAccount = proto.getCryptoAssetAccount();
+            var monero = cryptoAssetAccount.getMoneroAccount();
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            KeyPair keyPair = KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm());
+            return new MoneroAccount(
+                    proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    MoneroAccountPayload.fromProto(proto.getAccountPayload()),
+                    keyPair,
+                    keyType,
+                    accountOrigin
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

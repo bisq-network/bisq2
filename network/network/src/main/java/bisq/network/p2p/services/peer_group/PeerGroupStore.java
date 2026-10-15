@@ -18,9 +18,12 @@
 package bisq.network.p2p.services.peer_group;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.network.Address;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -37,7 +40,7 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
     @Getter(AccessLevel.PACKAGE)
     private final Map<Address, Peer> persistedPeersByAddress = new ConcurrentHashMap<>();
 
-    private PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
+    PeerGroupStore(Map<Address, Peer> persistedPeersByAddress) {
         this.persistedPeersByAddress.putAll(persistedPeersByAddress);
     }
 
@@ -53,11 +56,17 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
                 .collect(Collectors.toSet()));
     }
 
-    public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto) {
-        Map<Address, Peer> persistedPeersById = proto.getPersistedPeersList().stream()
-                .map(Peer::fromProto)
-                .collect(Collectors.toMap(Peer::getAddress, e -> e));
-        return new PeerGroupStore(persistedPeersById);
+    public static PeerGroupStore fromProto(bisq.network.protobuf.PeerGroupStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<Address, Peer> persistedPeersById = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getPersistedPeersList(),
+                            Peer::fromProto)
+                    .collect(Collectors.toMap(Peer::getAddress, e -> e));
+            return new PeerGroupStore(persistedPeersById);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -69,6 +78,14 @@ final class PeerGroupStore implements PersistableStore<PeerGroupStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * The peers come from the network, so no copy is kept when the file cannot be read completely.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.NO_ARCHIVE;
     }
 
     @Override

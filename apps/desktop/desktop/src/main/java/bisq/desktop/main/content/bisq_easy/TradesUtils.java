@@ -34,6 +34,7 @@ import bisq.presentation.formatters.DateFormatter;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.user.banned.BannedUserService;
 import bisq.user.profile.UserProfile;
 import javafx.scene.Scene;
 import lombok.extern.slf4j.Slf4j;
@@ -125,17 +126,30 @@ public class TradesUtils {
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
                                          BisqEasyContract contract,
                                          BisqEasyMediationRequestService bisqEasyMediationRequestService,
-                                         BisqEasyOpenTradeChannelService channelService) {
-        Optional<UserProfile> mediator = channel.getMediator();
+                                         BisqEasyOpenTradeChannelService channelService,
+                                         BannedUserService bannedUserService) {
+        if (bannedUserService.isUserProfileBanned(channel.getMyUserIdentity().getUserProfile())) {
+            // A banned user cannot request mediation. As in the take offer flow, we don't show a popup.
+            return;
+        }
+        Optional<UserProfile> mediator = contract.getMediator();
         if (mediator.isPresent()) {
+            // The request is refused if the channel data differs from the contract. Trades in a final state are not
+            // checked against their channel, so a channel from an earlier version can differ. We check it before the
+            // trade log message is sent, so that a refused request leaves nothing in the chat.
+            Optional<String> channelMismatch = bisqEasyMediationRequestService.findChannelMismatch(channel, contract);
+            if (channelMismatch.isPresent()) {
+                log.warn("Mediation request for trade {} is refused. {}", channel.getTradeId(), channelMismatch.get());
+                new Popup().warning(Res.get("bisqEasy.mediation.request.feedback.channelDataMismatch")).show();
+                return;
+            }
             new Popup().headline(Res.get("bisqEasy.mediation.request.confirm.headline"))
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
+                        // The request carries the chat messages, so the trade log message is added before it.
                         String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
                         channelService.sendTradeLogMessage(encoded, channel);
-                        channel.setIsInMediation(true);
-                        channelService.persist();
                         bisqEasyMediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))

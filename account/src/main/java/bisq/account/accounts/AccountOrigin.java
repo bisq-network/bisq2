@@ -19,6 +19,7 @@ package bisq.account.accounts;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum AccountOrigin implements ProtoEnum {
     BISQ1_IMPORTED,
@@ -29,7 +30,8 @@ public enum AccountOrigin implements ProtoEnum {
         return bisq.account.protobuf.AccountOrigin.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static AccountOrigin fromProto(bisq.account.protobuf.AccountOrigin proto) {
+    public static AccountOrigin fromProto(bisq.account.protobuf.AccountOrigin proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(AccountOrigin.class, proto.name(), BISQ2_NEW);
     }
 }

@@ -17,6 +17,7 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,7 +66,7 @@ class CollateralOptionTest {
     }
 
     @Test
-    void protoRoundTripEnforcesVerification() {
+    void protoRoundTripEnforcesVerification() throws UnresolvableProtobufException {
         CollateralOption valid = new CollateralOption(0.25, 0.25);
         CollateralOption roundTripped = CollateralOption.fromProto(
                 valid.toProto(true).getCollateralOption());
@@ -76,6 +77,7 @@ class CollateralOptionTest {
                 .setSellerSecurityDeposit(0.25)
                 .build();
         assertThatThrownBy(() -> CollateralOption.fromProto(malformed))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(UnresolvableProtobufException.class)
+                .hasCauseInstanceOf(IllegalArgumentException.class);
     }
 }

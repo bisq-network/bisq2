@@ -19,6 +19,7 @@ package bisq.support.arbitration.mu_sig;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MuSigArbitrationIssueType implements ProtoEnum {
     UNSPECIFIED,
@@ -30,7 +31,8 @@ public enum MuSigArbitrationIssueType implements ProtoEnum {
         return bisq.support.protobuf.MuSigArbitrationIssueType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MuSigArbitrationIssueType fromProto(bisq.support.protobuf.MuSigArbitrationIssueType proto) {
+    public static MuSigArbitrationIssueType fromProto(bisq.support.protobuf.MuSigArbitrationIssueType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MuSigArbitrationIssueType.class, proto.name(), UNSPECIFIED);
     }
 }

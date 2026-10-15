@@ -17,6 +17,8 @@
 
 package bisq.wallet.vo;
 
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -41,17 +43,21 @@ public final class Transaction {
     private final long amount;
     private final boolean incoming;
 
-    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx) {
-        return new Transaction(
-                tx.getTxId(),
-                tx.getInputsList().stream().map(TransactionInput::fromProto).toList(),
-                tx.getOutputsList().stream().map(TransactionOutput::fromProto).toList(),
-                tx.getLockTime(),
-                tx.getBlockHeight(),
-                Date.from(Instant.ofEpochSecond(tx.getDate())),
-                tx.getNumConfirmations(),
-                tx.getAmount(),
-                tx.getIncoming()
-        );
+    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx) throws UnresolvableProtobufException {
+        try {
+            return new Transaction(
+                    tx.getTxId(),
+                    ProtobufUtils.fromProtoStream(tx.getInputsList(), TransactionInput::fromProto).toList(),
+                    ProtobufUtils.fromProtoStream(tx.getOutputsList(), TransactionOutput::fromProto).toList(),
+                    tx.getLockTime(),
+                    tx.getBlockHeight(),
+                    Date.from(Instant.ofEpochSecond(tx.getDate())),
+                    tx.getNumConfirmations(),
+                    tx.getAmount(),
+                    tx.getIncoming()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

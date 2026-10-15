@@ -21,14 +21,19 @@ import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
+import bisq.persistence.UnreadableStoreFilePolicy;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -89,6 +94,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
                     Permission.MOBILE_DEVICES));
 
     private transient boolean promotedEntriesDuringLoad;
+    private transient boolean hashedPlaintextSecretsDuringLoad;
+    private transient Set<String> clientIdsDroppedDuringLoad = Set.of();
 
     @Getter(AccessLevel.PACKAGE)
     private final Map<String, ClientProfile> clientProfileByIdMap = new ConcurrentHashMap<>();
@@ -122,21 +129,82 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto) {
-        Map<String, ClientProfile> clientProfileByIdMap = proto.getClientProfileByIdMapMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> ClientProfile.fromProto(e.getValue())));
-        Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
-        boolean anyPromoted = false;
-        for (Map.Entry<String, bisq.api.protobuf.PermissionSet> e : proto.getPermissionsByClientIdMap().entrySet()) {
-            PermissionSet loaded = PermissionSet.fromProto(e.getValue());
-            PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
-            anyPromoted |= effective != loaded;
-            permissionsByClientId.put(e.getKey(), effective);
+    public static ApiAccessStore fromProto(bisq.api.protobuf.ApiAccessStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Map<String, ClientProfile> clientProfileByIdMap = new HashMap<>();
+            Set<String> droppedClientIds = new HashSet<>();
+            boolean anyPlaintextHashed = false;
+            for (Map.Entry<String, bisq.api.protobuf.ClientProfile> e : proto.getClientProfileByIdMapMap().entrySet()) {
+                bisq.api.protobuf.ClientProfile profileProto = e.getValue();
+                if (!ClientProfile.hasUsableCredential(profileProto)) {
+                    // Either written by a version that predates hashed secrets after it loaded a hashed
+                    // store (it rebuilt the entry from its own model and dropped the hash), or a hash of
+                    // the wrong length. No secret can ever match, so the client has to pair again; kept,
+                    // the entry would only be a listing that cannot be revoked, because the management
+                    // ID is keyed by the missing hash. Dropped rather than failing the load, so one bad
+                    // entry does not take every other client's access with it.
+                    log.warn("Dropping paired client {} whose stored credential is unusable", e.getKey());
+                    droppedClientIds.add(e.getKey());
+                    continue;
+                }
+                ClientProfile clientProfile;
+                try {
+                    clientProfile = ClientProfile.fromProto(profileProto);
+                } catch (UnresolvableProtobufException | RuntimeException ex) {
+                    // Same outcome as an unusable credential: nothing can authenticate as this client.
+                    log.warn("Dropping paired client {} whose stored profile could not be read", e.getKey(), ex);
+                    droppedClientIds.add(e.getKey());
+                    continue;
+                }
+                // Any plaintext on disk is rewritten away, also next to a hash that takes precedence.
+                anyPlaintextHashed |= !profileProto.getClientSecret().isEmpty();
+                clientProfileByIdMap.put(e.getKey(), clientProfile);
+            }
+            Map<String, PermissionSet> permissionsByClientId = new HashMap<>();
+            boolean anyPromoted = false;
+            List<Map.Entry<String, PermissionSet>> loadedPermissions =
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getPermissionsByClientIdMap(),
+                            PermissionSet::fromProto).toList();
+            for (Map.Entry<String, PermissionSet> e : loadedPermissions) {
+                if (droppedClientIds.contains(e.getKey())) {
+                    continue;
+                }
+                PermissionSet loaded = e.getValue();
+                PermissionSet effective = promoteIfFullStandardGrant(e.getKey(), loaded);
+                anyPromoted |= effective != loaded;
+                permissionsByClientId.put(e.getKey(), effective);
+            }
+            ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
+            store.promotedEntriesDuringLoad = anyPromoted;
+            store.hashedPlaintextSecretsDuringLoad = anyPlaintextHashed;
+            store.clientIdsDroppedDuringLoad = Set.copyOf(droppedClientIds);
+            return store;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        ApiAccessStore store = new ApiAccessStore(clientProfileByIdMap, permissionsByClientId);
-        store.promotedEntriesDuringLoad = anyPromoted;
-        return store;
+    }
+
+    /**
+     * Whether this load replaced a plaintext secret with its hash. In memory only, like promotion;
+     * {@code ApiAccessStoreService#onPersistedApplied} persists so the plaintext leaves the disk on
+     * the first boot that could read it, and drops the backups that still carry it.
+     */
+    boolean hadPlaintextSecretsDuringLoad() {
+        return hashedPlaintextSecretsDuringLoad;
+    }
+
+    /**
+     * Clients this load dropped for an unusable credential. Their profile and grant are gone, but
+     * what a revocation cleans up outside this store, such as push registrations, is not; the
+     * revocation handlers still have to run for them.
+     */
+    Set<String> getClientIdsDroppedDuringLoad() {
+        return clientIdsDroppedDuringLoad;
+    }
+
+    boolean needsWriteBackAfterLoad() {
+        return promotedEntriesDuringLoad || hashedPlaintextSecretsDuringLoad || !clientIdsDroppedDuringLoad.isEmpty();
     }
 
     /**
@@ -185,8 +253,8 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
      * for the first, which is the one arriving in the same release as grantAll itself.
      * <p>
      * KNOWN RESIDUAL (not reachable today — no live path persists a genuinely restricted
-     * non-grantAll grant; every pairing grants the full standard set, folded to grantAll at
-     * write time by {@code PermissionService#putPermissions}). A deliberately restricted grant is
+     * non-grantAll grant; every pairing grants the full standard set, folded to grantAll by
+     * {@code PermissionService#toPermissionSet} before it is stored). A deliberately restricted grant is
      * indistinguishable from a full grant that happens to equal it, on either branch. Running-set
      * branch: read by an OLDER binary whose standard set equals the restriction, it is promoted
      * (and persisted) as grantAll, then re-expands on upgrade — regaining a standard permission it
@@ -225,6 +293,16 @@ final class ApiAccessStore implements PersistableStore<ApiAccessStore> {
                 throw new UnresolvableProtobufMessageException(e);
             }
         };
+    }
+
+    /**
+     * Nothing is kept of an unreadable store file: a store written before secrets were hashed holds plaintext client
+     * secrets, and {@code ApiAccessStoreService} deletes the backups so that the plaintext does not outlive its
+     * migration. A copy would keep it for months. A client whose entry cannot be read has to pair again anyway.
+     */
+    @Override
+    public UnreadableStoreFilePolicy getUnreadableStoreFilePolicy() {
+        return UnreadableStoreFilePolicy.DELETE;
     }
 
     @Override

@@ -19,6 +19,7 @@ package bisq.trade;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 
 @Getter
@@ -41,7 +42,7 @@ public enum TradeRole implements ProtoEnum {
         return bisq.trade.protobuf.TradeRole.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static TradeRole fromProto(bisq.trade.protobuf.TradeRole proto) {
+    public static TradeRole fromProto(bisq.trade.protobuf.TradeRole proto) throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(TradeRole.class, proto.name(), BUYER_AS_TAKER);
     }
 

@@ -26,6 +26,7 @@ import bisq.common.market.Market;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
@@ -100,7 +101,8 @@ class MediationResultAcceptedEventHandlerTest {
     }
 
     @Test
-    void givenValidSigningResponse_whenProcessingAcceptance_thenBuildsRequestAndCommitsResponse() {
+    void givenValidSigningResponse_whenProcessingAcceptance_thenBuildsRequestAndCommitsResponse()
+            throws UnresolvableProtobufException {
         CustomPayoutPsbt response = new CustomPayoutPsbt(
                 new byte[]{1, 2, 3},
                 TX_ID,

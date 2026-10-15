@@ -19,7 +19,6 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.timer.Delay;
 import bisq.common.timer.Scheduler;
@@ -37,6 +36,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.data.AuthorizedTimestampData;
 import bisq.user.reputation.requests.AuthorizeTimestampRequest;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -115,23 +115,6 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     }
 
     @Override
-    public void onAuthorizedDataRemoved(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedTimestampData timestampData = (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData();
-                String userProfileId = timestampData.getProfileId();
-                userProfileService.findUserProfile(userProfileId)
-                        .map(this::getUserProfileKey)
-                        .ifPresent(dataSetByHash::remove);
-                if (scoreByUserProfileId.containsKey(userProfileId)) {
-                    scoreByUserProfileId.remove(userProfileId);
-                    userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
-                }
-            }
-        }
-    }
-
-    @Override
     protected Optional<AuthorizedTimestampData> findRelevantData(AuthorizedDistributedData authorizedDistributedData) {
         return authorizedDistributedData instanceof AuthorizedTimestampData ?
                 Optional.of((AuthorizedTimestampData) authorizedDistributedData) :
@@ -162,6 +145,11 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
         return userProfile.getProfileAgeKey();
+    }
+
+    @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getProfileAgeKey(userProfileId);
     }
 
     @Override
@@ -244,10 +232,12 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         return System.currentTimeMillis() - lastRequested > AuthorizedTimestampData.TTL / 2;
     }
 
-    private Set<String> getTimeStampedProfileIds() {
+    @VisibleForTesting
+    Set<String> getTimeStampedProfileIds() {
         return networkService.getDataService()
                 .map(service -> service.getAuthorizedData()
                         .filter(authorizedData -> authorizedData.getAuthorizedDistributedData() instanceof AuthorizedTimestampData)
+                        .filter(this::isAuthorized)
                         .map(authorizedData -> (AuthorizedTimestampData) authorizedData.getAuthorizedDistributedData())
                         .map(AuthorizedTimestampData::getProfileId)
                         .collect(Collectors.toSet()))

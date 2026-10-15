@@ -19,6 +19,7 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
@@ -33,7 +34,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static java.lang.System.currentTimeMillis;
 
 @Getter
-public class MuSigMediationResult implements NetworkProto, PersistableProto {
+public final class MuSigMediationResult implements NetworkProto, PersistableProto {
     public static final int MAX_SUMMARY_NOTES_LENGTH = 1_000;
 
     private final long date;
@@ -119,16 +120,21 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto) {
-        return new MuSigMediationResult(
-                proto.getDate(),
-                proto.getContractHash().toByteArray(),
-                MediationResultReason.fromProto(proto.getMediationResultReason()),
-                MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
-                proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
-                proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
-                proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
-                proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationResult(
+                    proto.getDate(),
+                    proto.getContractHash().toByteArray(),
+                    MediationResultReason.fromProto(proto.getMediationResultReason()),
+                    MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
+                    proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
+                    proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
+                    proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
+                    proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public byte[] getContractHash() {

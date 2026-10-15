@@ -17,8 +17,10 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,6 +30,8 @@ import java.util.Arrays;
 @ToString(callSuper = true)
 @Getter
 public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(MuSigMediationResultRejectionMessage.class);
+
     private final byte[] mediationResultHash;
 
     public MuSigMediationResultRejectionMessage(String id,
@@ -63,21 +67,26 @@ public final class MuSigMediationResultRejectionMessage extends MuSigTradeMessag
         return resolveBuilder(builder, serializeForHash).build();
     }
 
-    public static MuSigMediationResultRejectionMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.MuSigMediationResultRejectionMessage message =
-                proto.getMuSigTradeMessage().getMuSigMediationResultRejectionMessage();
-        return new MuSigMediationResultRejectionMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                message.getMediationResultHash().toByteArray());
+    public static MuSigMediationResultRejectionMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.MuSigMediationResultRejectionMessage message =
+                    proto.getMuSigTradeMessage().getMuSigMediationResultRejectionMessage();
+            return new MuSigMediationResultRejectionMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    message.getMediationResultHash().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.2);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     public byte[] getMediationResultHash() {

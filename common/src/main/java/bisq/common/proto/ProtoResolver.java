@@ -20,7 +20,7 @@ package bisq.common.proto;
 import com.google.protobuf.Any;
 
 public interface ProtoResolver<T extends Proto> {
-    T fromAny(Any any);
+    T fromAny(Any any) throws UnresolvableProtobufException;
 
     /**
      * Derives the proto type name from the class which gets packed into the Any, matching the type URL suffix from

@@ -21,6 +21,7 @@ Help Bisq contributors make small, well-verified changes that respect Bisq's dec
 
 - For Bitcoin, wallet, key, fee, address, or transaction code, verify private-key handling, amount precision, dust/fee boundaries, and network selection.
 - For P2P or trade protocol changes, check message validation, state transitions, replay/idempotency behavior, and peer trust assumptions.
+- For `.proto` changes, keep compatibility with the last released version (the newest release tag). Unreleased development commits are not a constraint, also when development builds wrote data with them. Follow **Baseline for Backward Compatibility** in the project instructions and `docs/dev/backward-compatibility.md`.
 - For JavaFX UI changes, preserve the existing MVC structure, view/controller boundaries, resource usage, and responsive layout behavior.
 - For DAO governance changes, verify proposal/vote lifecycle assumptions and backwards compatibility with existing DAO state.
 - For docs and prompts, prefer contributor workflow clarity over marketing copy.

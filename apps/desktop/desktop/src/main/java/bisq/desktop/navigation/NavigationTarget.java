@@ -44,6 +44,7 @@ public enum NavigationTarget {
     UPDATER(OVERLAY, false),
 
     RESTORE_FROM_BACKUP(OVERLAY, false),
+    UNREADABLE_STORE_FILES(OVERLAY, false),
 
     ONBOARDING(OVERLAY, false),
     ONBOARDING_WELCOME(ONBOARDING, false),

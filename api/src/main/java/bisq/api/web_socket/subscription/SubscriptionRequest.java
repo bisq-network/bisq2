@@ -18,7 +18,6 @@
 package bisq.api.web_socket.subscription;
 
 import bisq.api.web_socket.WebSocketMessage;
-import bisq.api.web_socket.util.JsonUtil;
 import bisq.common.json.JsonMapperProvider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.EqualsAndHashCode;
@@ -43,7 +42,8 @@ public class SubscriptionRequest implements WebSocketMessage {
         try {
             return Optional.of(JsonMapperProvider.get().readValue(json, SubscriptionRequest.class));
         } catch (JsonProcessingException e) {
-            log.error("Json deserialization failed. Message={}", JsonUtil.redactCredentials(json), e);
+            // Only the length of the message is logged, like for every message which a client sends
+            log.error("Json deserialization of a SubscriptionRequest failed. Message length={}", json.length(), e);
         }
         return Optional.empty();
     }

@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
@@ -38,7 +39,7 @@ public class BondedRoleRegistrationRequestTest {
     private static final String LOCKUP_TX_ID = "b".repeat(64);
 
     @Test
-    void missingProtocolVersionIsReadAsLegacyVersionOne() {
+    void missingProtocolVersionIsReadAsLegacyVersionOne() throws UnresolvableProtobufException {
         bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest legacyProto =
                 bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest.newBuilder()
                         .setProfileId(PROFILE_ID)
@@ -58,7 +59,7 @@ public class BondedRoleRegistrationRequestTest {
     }
 
     @Test
-    void explicitVersionZeroRemainsUnsupported() {
+    void explicitVersionZeroRemainsUnsupported() throws UnresolvableProtobufException {
         bisq.bonded_roles.protobuf.BondedRoleRegistrationRequest proto =
                 createRequest(false, BondedRoleRegistrationProtocol.LEGACY_VERSION, "", "")
                         .toValueProto(false)
@@ -74,7 +75,7 @@ public class BondedRoleRegistrationRequestTest {
     }
 
     @Test
-    void versionTwoRequestRoundTripsItsTransactionBinding() {
+    void versionTwoRequestRoundTripsItsTransactionBinding() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createRequest(false,
                 BondedRoleRegistrationProtocol.CURRENT_VERSION,
                 PROPOSAL_TX_ID,
@@ -89,7 +90,7 @@ public class BondedRoleRegistrationRequestTest {
     }
 
     @Test
-    void unsupportedProtocolRemainsResolvableAtTheMessageBoundary() {
+    void unsupportedProtocolRemainsResolvableAtTheMessageBoundary() throws UnresolvableProtobufException {
         BondedRoleRegistrationRequest request = createRequest(false, 3, PROPOSAL_TX_ID, LOCKUP_TX_ID);
 
         assertThat(BondedRoleRegistrationRequest.fromProto(request.toValueProto(false))).isEqualTo(request);
@@ -133,8 +134,12 @@ public class BondedRoleRegistrationRequestTest {
 
     public static NetworkId createNetworkId() {
         var keyPair = KeyGeneration.generateDefaultEcKeyPair();
-        var addressMap = new AddressByTransportTypeMap(Map.of(
+        return new NetworkId(createAddressByTransportTypeMap(), new PubKey(keyPair.getPublic(), "test-key"));
+    }
+
+    // The addresses of the network IDs of createNetworkId. The role of a node contains the addresses of the node.
+    public static AddressByTransportTypeMap createAddressByTransportTypeMap() {
+        return new AddressByTransportTypeMap(Map.of(
                 TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(1234)));
-        return new NetworkId(addressMap, new PubKey(keyPair.getPublic(), "test-key"));
     }
 }

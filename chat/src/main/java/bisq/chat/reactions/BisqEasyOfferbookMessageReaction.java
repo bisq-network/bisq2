@@ -18,24 +18,25 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
-import bisq.common.encoding.Hex;
-import bisq.network.p2p.services.data.storage.DistributedData;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements DistributedData {
+public final class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public BisqEasyOfferbookMessageReaction(String id,
                                             String userProfileId,
@@ -52,6 +53,9 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
     @Override
     public void verify() {
         super.verify();
+        verifyPublicReactionId();
+        // The profile ID must be the ID of a public key, so that it names the reacting user (see getOwnerPubKeyHash())
+        checkArgument(PubKey.isId(userProfileId), "userProfileId is not the ID of a public key");
     }
 
     @Override
@@ -59,17 +63,15 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
         return unsafeToProto(serializeForHash);
     }
 
+    // The reacting user owns the reaction. The profile ID is the ID of the public key of the user (PubKey.getId()).
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        // AuthorId must be pubKeyHash. We get pubKeyHash passed from the data storage layer where the signature is
-        // verified as well, so we can be sure it's the sender of the message. This check prevents against
-        // impersonation attack.
-        return !userProfileId.equals(Hex.encode(pubKeyHash));
+    public byte[] getOwnerPubKeyHash() {
+        return PubKey.getHashFromId(userProfileId);
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
@@ -78,15 +80,20 @@ public class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implem
                 .setBisqEasyOfferbookMessageReaction(toBisqEasyOfferbookMessageReactionProto(serializeForHash));
     }
 
-    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-        return new BisqEasyOfferbookMessageReaction(
-                baseProto.getId(),
-                baseProto.getUserProfileId(),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate());
+    public static BisqEasyOfferbookMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyOfferbookMessageReaction(
+                    baseProto.getId(),
+                    baseProto.getUserProfileId(),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     private bisq.chat.protobuf.BisqEasyOfferbookMessageReaction toBisqEasyOfferbookMessageReactionProto(boolean serializeForHash) {

@@ -133,11 +133,23 @@ public class BackupService {
 
     @VisibleForTesting
     boolean backup(Path backupFilePath) throws IOException {
-        boolean success = FileMutatorUtils.renameFile(storeFilePath, backupFilePath);
-        if (!success) {
-            log.error("Could not rename {} to {}", storeFilePath, backupFilePath);
+        // Copy, not move: the current file must stay in place until the new version replaces it
+        FileMutatorUtils.copyFile(storeFilePath, backupFilePath);
+        return true;
+    }
+
+    /** Removes every backup of this store, for when the backups hold data the store must no longer keep. */
+    public void deleteAll() {
+        for (BackupFileInfo backupFileInfo : getBackups()) {
+            try {
+                Files.deleteIfExists(backupFileInfo.getPath());
+            } catch (IOException e) {
+                log.error("Failed to delete backup {}", backupFileInfo.getPath(), e);
+            }
         }
-        return success;
+        accumulatedFileSize = 0;
+        accumulatedFileSizeByStore.put(fileName, 0L);
+        fileSizeByBackupFileInfo.clear();
     }
 
     public void prune() {

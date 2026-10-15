@@ -22,6 +22,4 @@ import bisq.common.proto.NetworkProto;
 // Interface covering data for storage. Implemented by AppendOnlyData, AuthenticatedData
 public interface StorageData extends NetworkProto {
     MetaData getMetaData();
-
-    boolean isDataInvalid(byte[] ownerPubKeyHash);
 }

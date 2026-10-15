@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +67,20 @@ class BridgeSubscriptionGrpcServiceTest {
         service.initialize();
 
         assertThat(service.finishedRequestCount).hasValue(1);
+    }
+
+    // The bridge sends the same item again with every retry. An item which the node cannot process must not stop the
+    // catch-up (see docs/specifications/network/bisq1-bridge-block-continuity.md).
+    @Test
+    void itemWhichCannotBeProcessedIsSkippedAndTheCatchUpCompletes() {
+        TestService service = TestService.withItems(List.of(1, 2, 3), 2);
+
+        service.initialize();
+
+        assertThat(service.handledItems).containsExactly(1, 3);
+        assertThat(service.calls).endsWith("snapshot-complete");
+        assertThat(service.finishedRequestCount).hasValue(1);
+        service.shutdown();
     }
 
     @Test
@@ -116,8 +131,21 @@ class BridgeSubscriptionGrpcServiceTest {
 
         service.handleStreamObserverError(new StatusRuntimeException(Status.UNIMPLEMENTED));
 
-        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isFalse();
+        assertThat(service.subscriptionAttempted.await(200, TimeUnit.MILLISECONDS)).isFalse();
         assertThat(service.subscribeCount).hasValue(0);
+        assertThat(service.isBridgeVersionMismatch()).isTrue();
+    }
+
+    @Test
+    void anOrdinaryStreamErrorIsNotReportedAsAVersionMismatch() throws InterruptedException {
+        TestService service = new TestService();
+        service.subscribeRetryInterval.set(0);
+
+        service.handleStreamObserverError(new StatusRuntimeException(Status.UNAVAILABLE));
+
+        assertThat(service.subscriptionAttempted.await(1, TimeUnit.SECONDS)).isTrue();
+        assertThat(service.isBridgeVersionMismatch()).isFalse();
+        service.shutdown();
     }
 
     private static final class TestService extends BridgeSubscriptionGrpcService<Integer> {
@@ -132,6 +160,9 @@ class BridgeSubscriptionGrpcServiceTest {
         private final CountDownLatch secondRequest = new CountDownLatch(1);
         private final CountDownLatch subscriptionAttempted = new CountDownLatch(1);
         private final AtomicBoolean firstRequestExecution = new AtomicBoolean(true);
+        private final List<Integer> handledItems = new ArrayList<>();
+        private List<Integer> items = List.of(1);
+        private Optional<Integer> failingItem = Optional.empty();
         private final RuntimeException requestFailure;
         private final boolean blockFirstRequest;
         private final boolean blockFirstRequestExecutionAcquisition;
@@ -161,8 +192,17 @@ class BridgeSubscriptionGrpcServiceTest {
             return new TestService(null, false, true);
         }
 
+        private static TestService withItems(List<Integer> items, int failingItem) {
+            TestService service = new TestService();
+            service.items = items;
+            service.failingItem = Optional.of(failingItem);
+            return service;
+        }
+
+        // Runs directly after the state transition which acquires the execution, so blocking here reproduces the
+        // window in which another caller queues a trigger that must survive.
         @Override
-        void onRequestExecutionAcquired() {
+        protected int prepareHistoricalRequest() {
             if (blockFirstRequestExecutionAcquisition && firstRequestExecution.compareAndSet(true, false)) {
                 firstRequestExecutionAcquired.countDown();
                 try {
@@ -172,6 +212,7 @@ class BridgeSubscriptionGrpcServiceTest {
                     throw new RuntimeException(e);
                 }
             }
+            return super.prepareHistoricalRequest();
         }
 
         @Override
@@ -193,12 +234,16 @@ class BridgeSubscriptionGrpcServiceTest {
             if (currentRequestCount == 2) {
                 secondRequest.countDown();
             }
-            return List.of(1);
+            return items;
         }
 
         @Override
-        protected void handleResponse(Integer ignored) {
+        protected void handleResponse(Integer item) {
             calls.add("response");
+            if (failingItem.filter(item::equals).isPresent()) {
+                throw new IllegalArgumentException("The item breaks a rule of the published data");
+            }
+            handledItems.add(item);
         }
 
         @Override
@@ -216,6 +261,11 @@ class BridgeSubscriptionGrpcServiceTest {
             calls.add("subscribe");
             subscribeCount.incrementAndGet();
             subscriptionAttempted.countDown();
+        }
+
+        @Override
+        protected String getSubscriptionDescription() {
+            return "the test subscription";
         }
     }
 }

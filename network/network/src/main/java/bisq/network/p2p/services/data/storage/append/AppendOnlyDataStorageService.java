@@ -22,7 +22,6 @@ import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
@@ -62,19 +61,21 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
 
     public DataStorageResult add(AddAppendOnlyDataRequest addAppendOnlyDataRequest) {
         AppendOnlyData appendOnlyData = addAppendOnlyDataRequest.getAppendOnlyData();
+        if (isClassNameInvalid(appendOnlyData.getClass().getSimpleName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
         Map<ByteArray, AddAppendOnlyDataRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
+            ByteArray storageKey = addAppendOnlyDataRequest.getStorageKey();
+            if (map.containsKey(storageKey)) {
+                return DataStorageResult.failed().payloadAlreadyStored();
+            }
             if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            byte[] hash = DigestUtil.hash(appendOnlyData.serializeForHash());
-            ByteArray byteArray = new ByteArray(hash);
-            if (map.containsKey(byteArray)) {
-                return new DataStorageResult(false).payloadAlreadyStored();
-            }
-
-            map.put(byteArray, addAppendOnlyDataRequest);
+            map.put(storageKey, addAppendOnlyDataRequest);
         }
         persist();
         listeners.forEach(listener -> {
@@ -84,7 +85,7 @@ public class AppendOnlyDataStorageService extends DataStorageService<AddAppendOn
                 log.error("Calling onAppended at listener {} failed", listener, e);
             }
         });
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
     @Override

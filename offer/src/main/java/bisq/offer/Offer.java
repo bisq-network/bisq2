@@ -21,7 +21,9 @@ import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.market.Market;
+import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -31,6 +33,7 @@ import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.options.OfferOption;
+import bisq.offer.price.spec.FixPriceSpec;
 import bisq.offer.price.spec.PriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -118,6 +121,16 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         checkArgument(baseSidePaymentMethodSpecs.size() < 10);
         checkArgument(quoteSidePaymentMethodSpecs.size() < 10);
         checkArgument(offerOptions.size() < 10);
+
+        // A fixed price is a price of the market of the offer. The amount conversions take the price from the price
+        // spec and the currency codes of the amounts from the market. With a quote of another market they return an
+        // amount at the rate of that market, or they throw because the quote and the amount are of different kinds.
+        if (priceSpec instanceof FixPriceSpec fixPriceSpec) {
+            PriceQuote priceQuote = fixPriceSpec.getPriceQuote();
+            checkArgument(priceQuote.getBaseSideMonetary().getCode().equals(market.getBaseCurrencyCode()) &&
+                            priceQuote.getQuoteSideMonetary().getCode().equals(market.getQuoteCurrencyCode()),
+                    "The fixed price of an offer must be a price of the market of the offer");
+        }
     }
 
     @Override
@@ -150,7 +163,8 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     }
 
 
-    public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto) {
+    public static Offer<? extends PaymentMethodSpec<?>, ? extends PaymentMethodSpec<?>> fromProto(bisq.offer.protobuf.Offer proto)
+            throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BISQEASYOFFER -> BisqEasyOffer.fromProto(proto);
             case MUSIGOFFER -> MuSigOffer.fromProto(proto);
@@ -209,5 +223,9 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
     public String getDirectionalTitle() {
         return getDisplayDirection().isBuy() ? Res.get("bisqEasy.openTrades.table.direction.buyer") :
                 Res.get("bisqEasy.openTrades.table.direction.seller");
+    }
+
+    public byte[] getMakerPubKeyHash() {
+        return makerNetworkId.getPubKeyHash();
     }
 }

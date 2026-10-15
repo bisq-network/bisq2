@@ -17,8 +17,12 @@
 
 package bisq.api.access.persistence;
 
+import bisq.api.access.identity.ClientProfile;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionSet;
+import bisq.common.proto.UnresolvableProtobufException;
+import bisq.persistence.UnreadableStoreFilePolicy;
+import com.google.protobuf.ByteString;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
@@ -44,8 +48,122 @@ class ApiAccessStoreTest {
             Permission.USER_PROFILES,
             Permission.MOBILE_DEVICES);
 
+    private static bisq.api.protobuf.ClientProfile legacyProfile(String clientId, String clientSecret) {
+        return bisq.api.protobuf.ClientProfile.newBuilder()
+                .setClientId(clientId)
+                .setClientSecret(clientSecret)
+                .setClientName("Pixel 8")
+                .build();
+    }
+
     @Test
-    void fullPermissionSetIsPromotedToGrantAllOnLoad() {
+    void plaintextSecretIsReplacedByItsHashOnLoadAndWrittenBack() throws UnresolvableProtobufException {
+        // A store written before secrets were hashed still authenticates its clients, and the
+        // flag makes the service persist so the plaintext leaves the disk on this boot.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("legacy-client", legacyProfile("legacy-client", "secret"))
+                .putPermissionsByClientId("legacy-client", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        ClientProfile loaded = store.getClientProfileByIdMap().get("legacy-client");
+        assertTrue(loaded.matchesSecret("secret"));
+        assertTrue(store.hadPlaintextSecretsDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+        bisq.api.protobuf.ClientProfile written = store.toProto(false).getClientProfileByIdMapMap().get("legacy-client");
+        assertTrue(written.getClientSecret().isEmpty());
+        assertFalse(written.getClientSecretHash().isEmpty());
+        // And a second load of what was written is a no-op.
+        assertFalse(ApiAccessStore.fromProto(store.toProto(false)).needsWriteBackAfterLoad());
+    }
+
+    @Test
+    void hashOnlyStoreLoadsWithoutWriteBack() throws UnresolvableProtobufException {
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertTrue(store.getClientProfileByIdMap().get("client-1").matchesSecret("secret"));
+        assertFalse(store.needsWriteBackAfterLoad());
+    }
+
+    @Test
+    void hashTakesPrecedenceOverAStalePlaintextField() throws UnresolvableProtobufException {
+        // Both set cannot be written by any version, but if it ever is, the hash is the newer fact.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "current", "Pixel 8").toProto(false).toBuilder()
+                                .setClientSecret("stale")
+                                .build())
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        ClientProfile loaded = store.getClientProfileByIdMap().get("client-1");
+        assertTrue(loaded.matchesSecret("current"));
+        assertFalse(loaded.matchesSecret("stale"));
+        // The stale plaintext is still a secret on disk, so it is written away like a legacy one.
+        assertTrue(store.needsWriteBackAfterLoad());
+        assertTrue(store.toProto(false).getClientProfileByIdMapMap().get("client-1").getClientSecret().isEmpty());
+    }
+
+    @Test
+    void profileWithoutAnyCredentialIsDroppedTogetherWithItsGrant() throws UnresolvableProtobufException {
+        // What a downgraded node leaves behind after loading a hashed store: it rebuilt the entry
+        // from its own model and dropped the hash. Nothing can authenticate as that client and
+        // nothing could revoke it, as its management ID is keyed by the missing hash.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("dead-client", bisq.api.protobuf.ClientProfile.newBuilder()
+                        .setClientId("dead-client")
+                        .setClientName("Pixel 8")
+                        .build())
+                .putPermissionsByClientId("dead-client", PermissionSet.grantAll().toProto(false))
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertEquals(Set.of("client-1"), store.getClientProfileByIdMap().keySet());
+        assertEquals(Set.of("client-1"), store.getPermissionsByClientId().keySet());
+        assertEquals(Set.of("dead-client"), store.getClientIdsDroppedDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+        // Nothing was hashed, so the backups can stay: they never held a plaintext.
+        assertFalse(store.hadPlaintextSecretsDuringLoad());
+    }
+
+    @Test
+    void profileWithAMalformedHashIsDroppedInsteadOfFailingTheLoad() throws UnresolvableProtobufException {
+        // Not written by any version; a corrupted or hand-edited entry. Failing the whole load
+        // would take every other client's access with it.
+        bisq.api.protobuf.ApiAccessStore proto = bisq.api.protobuf.ApiAccessStore.newBuilder()
+                .putClientProfileByIdMap("corrupt-client", bisq.api.protobuf.ClientProfile.newBuilder()
+                        .setClientId("corrupt-client")
+                        .setClientName("Pixel 8")
+                        .setClientSecretHash(ByteString.copyFrom(new byte[]{1, 2, 3}))
+                        .build())
+                .putPermissionsByClientId("corrupt-client", PermissionSet.grantAll().toProto(false))
+                .putClientProfileByIdMap("client-1",
+                        ClientProfile.fromSecret("client-1", "secret", "Pixel 8").toProto(false))
+                .putPermissionsByClientId("client-1", PermissionSet.grantAll().toProto(false))
+                .build();
+
+        ApiAccessStore store = ApiAccessStore.fromProto(proto);
+
+        assertEquals(Set.of("client-1"), store.getClientProfileByIdMap().keySet());
+        assertEquals(Set.of("client-1"), store.getPermissionsByClientId().keySet());
+        assertEquals(Set.of("corrupt-client"), store.getClientIdsDroppedDuringLoad());
+        assertTrue(store.needsWriteBackAfterLoad());
+    }
+
+    @Test
+    void fullPermissionSetIsPromotedToGrantAllOnLoad() throws UnresolvableProtobufException {
         // An entry already covering every permission of the running version is promoted to
         // grantAll: promotion grants nothing extra at that moment, it only keeps the grant
         // covering permissions added later — which is what every full grant was issued to mean.
@@ -65,7 +183,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void releasedFullGrantIsPromotedAfterTheRunningVersionGainedPermissions() {
+    void releasedFullGrantIsPromotedAfterTheRunningVersionGainedPermissions() throws UnresolvableProtobufException {
         // The case the test above cannot reach: it builds its entry from the RUNNING enum, so it
         // keeps matching whatever gets added and stays green straight through the regression this
         // one pins. Here the list is hardcoded to what v2.1.12 actually wrote, which is the shape
@@ -99,7 +217,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void restrictedGrantEqualToAReleasedFullSetIsStillPromoted() {
+    void restrictedGrantEqualToAReleasedFullSetIsStillPromoted() throws UnresolvableProtobufException {
         // The released-set branch does not fade with versions, and this pins the cost of that as
         // current behaviour: a grant of exactly the v2.1.12 set is promoted whatever wrote it,
         // including this binary stamping the current schema version, which is what a deliberate
@@ -129,7 +247,8 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void legacyGrantStampedByABuildThatDidNotKnowTheReleasedShapesIsStillPromoted() {
+    void legacyGrantStampedByABuildThatDidNotKnowTheReleasedShapesIsStillPromoted()
+            throws UnresolvableProtobufException {
         // The builds between grantAll and the released-set rule (the base of this change) promote
         // only their own running set, yet stamp permissionsSchemaVersion on every persist. A client
         // paired on v2.1.9 whose node ran such a build has its 10-permission entry sitting under
@@ -154,7 +273,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void subsetEntryIsNeverPromotedRegardlessOfSchemaVersion() {
+    void subsetEntryIsNeverPromotedRegardlessOfSchemaVersion() throws UnresolvableProtobufException {
         // The schema version cannot gate promotion: a pre-grantAll node rewrites the store
         // from its own model and drops the version field, so it does not survive a downgrade.
         // A subset must stay a subset whatever version stamp the store carries.
@@ -175,7 +294,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void downgradeRewriteCycleDoesNotEscalateRestrictedEntries() {
+    void downgradeRewriteCycleDoesNotEscalateRestrictedEntries() throws UnresolvableProtobufException {
         // new -> old -> new: a store written by this version, then rewritten by a pre-grantAll
         // node (which rebuilds the proto from its own model: grantAll entries were loaded as
         // their expanded permission list, and the grantAll + schemaVersion fields are dropped),
@@ -205,7 +324,8 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void fullGrantRewrittenByAnOlderNodeThatKnowsFewerPermissionsIsStillPromoted() {
+    void fullGrantRewrittenByAnOlderNodeThatKnowsFewerPermissionsIsStillPromoted()
+            throws UnresolvableProtobufException {
         // The rewrite the test above does not model: an old node drops every enum value it cannot
         // resolve (ProtobufUtils#fromProtoEnumStream) before rebuilding the list, so what comes
         // back is that release's own full set, not this version's expansion. The same shape is on
@@ -222,7 +342,9 @@ class ApiAccessStoreTest {
         Map<String, Permission> lastPermissionKnownByRelease = Map.of(
                 "v2.1.9", Permission.USER_PROFILES,
                 "v2.1.12", Permission.MOBILE_DEVICES);
-        lastPermissionKnownByRelease.forEach((release, lastKnown) -> {
+        for (Map.Entry<String, Permission> releaseAndLastKnown : lastPermissionKnownByRelease.entrySet()) {
+            String release = releaseAndLastKnown.getKey();
+            Permission lastKnown = releaseAndLastKnown.getValue();
             bisq.api.protobuf.ApiAccessStore.Builder oldNodeRewrite = bisq.api.protobuf.ApiAccessStore.newBuilder();
             currentProto.getPermissionsByClientIdMap().forEach((clientId, entry) ->
                     oldNodeRewrite.putPermissionsByClientId(clientId,
@@ -238,7 +360,7 @@ class ApiAccessStoreTest {
                     "full grant rewritten by " + release + " must be promoted again");
             assertTrue(reloaded.hadPromotedEntriesDuringLoad(),
                     "and written back so the store stops depending on the rule");
-        });
+        }
     }
 
     @Test
@@ -256,7 +378,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void grantAllEntrySurvivesStoreRoundTrip() {
+    void grantAllEntrySurvivesStoreRoundTrip() throws UnresolvableProtobufException {
         ApiAccessStore store = new ApiAccessStore();
         store.getPermissionsByClientId().put("client-1", PermissionSet.grantAll());
 
@@ -270,7 +392,7 @@ class ApiAccessStoreTest {
     }
 
     @Test
-    void explicitSubsetSurvivesStoreRoundTrip() {
+    void explicitSubsetSurvivesStoreRoundTrip() throws UnresolvableProtobufException {
         ApiAccessStore store = new ApiAccessStore();
         store.getPermissionsByClientId().put("client-1", new PermissionSet(Set.of(Permission.MARKET_PRICE)));
 
@@ -279,5 +401,12 @@ class ApiAccessStoreTest {
         PermissionSet reloadedSet = reloaded.getPermissionsByClientId().get("client-1");
         assertFalse(reloadedSet.isGrantAll());
         assertEquals(Set.of(Permission.MARKET_PRICE), reloadedSet.getPermissions());
+    }
+
+    // A copy of an unreadable store file would keep plaintext client secrets of older stores, which the store service
+    // deletes on purpose (see docs/specifications/persistence/unreadable-store-files.md)
+    @Test
+    void anUnreadableStoreFileIsDeleted() {
+        assertEquals(UnreadableStoreFilePolicy.DELETE, new ApiAccessStore().getUnreadableStoreFilePolicy());
     }
 }

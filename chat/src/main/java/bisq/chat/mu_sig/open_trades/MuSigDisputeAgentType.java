@@ -19,6 +19,7 @@ package bisq.chat.mu_sig.open_trades;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MuSigDisputeAgentType implements ProtoEnum {
     NONE,
@@ -30,7 +31,8 @@ public enum MuSigDisputeAgentType implements ProtoEnum {
         return bisq.chat.protobuf.MuSigDisputeAgentType.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MuSigDisputeAgentType fromProto(bisq.chat.protobuf.MuSigDisputeAgentType proto) {
+    public static MuSigDisputeAgentType fromProto(bisq.chat.protobuf.MuSigDisputeAgentType proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MuSigDisputeAgentType.class, proto.name(), NONE);
     }
 }

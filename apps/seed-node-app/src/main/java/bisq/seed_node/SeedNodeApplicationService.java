@@ -77,7 +77,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                 networkService);
 
         Optional<SeedNodeService.Config> seedNodeConfig = hasConfig("seedNode") ? Optional.of(SeedNodeService.Config.from(getConfig("seedNode"))) : Optional.empty();
-        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService, securityService.getKeyBundleService());
+        seedNodeService = new SeedNodeService(seedNodeConfig, networkService, identityService);
     }
 
     @Override

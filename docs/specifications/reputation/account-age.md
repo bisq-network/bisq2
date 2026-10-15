@@ -20,8 +20,10 @@ contains:
 - the encoded Bisq 1 owner DSA public key; and
 - the owner's domain-separated signature over the complete proof.
 
-Network-message validation applies structural and resource bounds only. The Bisq 1 bridge performs
-the ownership decision: it recomputes the witness hash from the salted account input and owner key,
+Network-message validation applies structural and resource bounds for the declared protocol version;
+it does not establish ownership. Version-2 requests must contain nonempty salted account input and
+leave their obsolete requester-supplied date fields zero. The Bisq 1 bridge performs the ownership
+decision: it recomputes the witness hash from the salted account input and owner key,
 verifies the signature, resolves the witness, derives the nullifier and returns only the fixed
 one-day UTC bucket containing the authoritative date. The oracle must not accept a requester-supplied
 date, nullifier or bucket.
@@ -122,6 +124,32 @@ oracle permanently rejects a second profile for a witness it has already authori
 still fail closed on conflicts published by different oracles, and there is no implicit
 last-writer-wins transfer.
 
+## Persisted request compatibility
+
+Earlier oracles could accept and persist version-2 account-age and signed-witness requests with
+nonzero requester-supplied dates. Those fields are outside the ownership proof and were never
+authoritative. When loading persisted requests, an upgraded oracle must normalize only these
+version-2 date fields to zero before applying current validation. It must preserve the profile id,
+witness hash, salted account input, owner key and signature, and all other records in the store.
+Discarding such a request or falling back to older or empty binding state would violate the
+permanent one-witness/one-profile rule.
+
+This migration applies only to stored version-2 requests. It must preserve dates for legacy and
+unknown protocol versions, retain all other validation, and be safe to repeat after saving and
+reloading. New network requests with nonzero version-2 dates remain invalid.
+
+The oracle does not skip a persisted request which it cannot parse. Other stores skip such an entry
+(rule 4 of [`../network/validation-at-parsing.md`](../network/validation-at-parsing.md)), but here a
+skipped request would remove its binding from the conflict check, and the oracle could bind the
+witness to another profile. If one request cannot be parsed, the whole store fails to load.
+
+The oracle reads its binding store when its bridge service starts, before the service processes any
+request. The node reads all other stores once at its start, before the services start. The bridge
+service is created later, because it needs the identity of the node, so that general read does not
+cover its store. Without the read, the conflict check would see only the bindings of the current
+run, and the first write of the run would replace the stored bindings. Nodes up to version 2.1.13
+did not read this store at all.
+
 ## Shared account witness identity
 
 Account-age and signed-witness reputation are two claims on the same Bisq 1 account-age witness.
@@ -149,6 +177,10 @@ with a public domain or salt, does not prevent enumeration. Publishing the SHA-2
 the Bisq 1 HASH160 construction is also forbidden because applying RIPEMD-160 would recreate the
 public witness hash.
 
+The oracle logs authorization requests for account age and signed witness. A log entry may name the Bisq 2
+profile ID, but not the witness hash, the Bisq 1 public key or the signature, alone or together with the profile ID.
+Operators share logs, and these values would link the Bisq 2 profile to the Bisq 1 account.
+
 The one-day bucket removes exact timestamp equality but provides limited resistance to correlation,
 especially when a profile publishes both account-age and signed-witness dates. The nullifier
 prevents passive observers who know only public Bisq 1 data from performing the direct
@@ -171,3 +203,13 @@ is therefore part of the activation boundary. The ownership-response tag formerl
 exact date is reserved, while the bucket and nullifier use new tags. Thus an old bridge omits fields
 required by a new oracle, and an old oracle sees its exact-date field omitted by a new bridge; both
 mismatch directions fail closed.
+
+## Open points
+
+- **A binding store which fails to load.** When the store fails to load, the persistence layer moves
+  the file to `corruptedFilesAtRead` and tries the backups. If they fail too, the oracle starts with
+  an empty binding state and keeps issuing authorizations. This breaks the rule that a persistence
+  failure fails closed for new issuance, and the rule that a binding is permanent.
+  - What would remove it: the oracle issues no new authorizations while its binding store is not
+    loaded completely, until an operator restores the store.
+  - Who decides: the developers.

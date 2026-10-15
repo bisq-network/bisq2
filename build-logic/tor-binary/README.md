@@ -10,7 +10,7 @@ EF6E286DDA85EA2A4BA7DE684E2C6E8793298290
 
 Tor can introduce a signing subkey without changing that primary key. Updating
 `tor.version` can therefore require refreshing the bundled public key as well.
-For example, 15.0.24 uses subkey
+For example, 15.0.25 uses subkey
 `022DA248432D2A0E0F54E65E316C1FACD62D07D9`.
 
 ## Download and convert the official key

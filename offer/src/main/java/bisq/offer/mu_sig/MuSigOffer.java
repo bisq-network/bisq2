@@ -23,10 +23,13 @@ import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.protocol_type.TradeProtocolType;
 import bisq.common.application.BuildVersion;
 import bisq.common.market.Market;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.options.AccountOption;
 import bisq.offer.options.CollateralOption;
 import bisq.offer.options.OfferOption;
 import bisq.offer.price.spec.PriceSpec;
@@ -122,6 +125,10 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
     @Override
     public void verify() {
         super.verify();
+        // Rule 2 of docs/specifications/offer/offer-options.md
+        checkArgument(getOfferOptions().stream()
+                        .allMatch(option -> option instanceof AccountOption || option instanceof CollateralOption),
+                "A MuSig offer can contain only account and collateral options");
         // A MuSig offer carries exactly one CollateralOption with symmetric deposits; earlier
         // consumers than the take flow (offer details, mediation and arbitration sections)
         // resolve the single symmetric value, so the shape is enforced at deserialization.
@@ -150,35 +157,41 @@ public final class MuSigOffer extends Offer<PaymentMethodSpec<?>, PaymentMethodS
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) {
-        List<TradeProtocolType> protocolTypes = proto.getProtocolTypesList().stream()
-                .map(TradeProtocolType::fromProto)
-                .collect(Collectors.toList());
-        Market market = Market.fromProto(proto.getMarket());
-        Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
-        List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = proto.getBaseSidePaymentSpecsList().stream()
-                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
-                .collect(Collectors.toList());
-        Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
-        List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = proto.getQuoteSidePaymentSpecsList().stream()
-                .map(pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
-                .collect(Collectors.toList());
-        List<OfferOption> offerOptions = proto.getOfferOptionsList().stream()
-                .map(OfferOption::fromProto)
-                .collect(Collectors.toList());
-        return new MuSigOffer(proto.getId(),
-                proto.getDate(),
-                NetworkId.fromProto(proto.getMakerNetworkId()),
-                Direction.fromProto(proto.getDirection()),
-                market,
-                AmountSpec.fromProto(proto.getAmountSpec()),
-                PriceSpec.fromProto(proto.getPriceSpec()),
-                protocolTypes,
-                baseSidePaymentMethodSpecs,
-                quoteSidePaymentMethodSpecs,
-                offerOptions,
-                proto.getVersion(),
-                proto.getTradeProtocolVersion(),
-                proto.getAppVersion());
+    public static MuSigOffer fromProto(bisq.offer.protobuf.Offer proto) throws UnresolvableProtobufException {
+        try {
+            List<TradeProtocolType> protocolTypes = ProtobufUtils.fromProtoStream(proto.getProtocolTypesList(),
+                            TradeProtocolType::fromProto)
+                    .collect(Collectors.toList());
+            Market market = Market.fromProto(proto.getMarket());
+            Class<? extends PaymentMethodSpec<?>> clazzForBaseSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForBaseSide(market);
+            List<PaymentMethodSpec<?>> baseSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getBaseSidePaymentSpecsList(), 
+                            pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForBaseSide))
+                    .collect(Collectors.toList());
+            Class<? extends PaymentMethodSpec<?>> clazzForQuoteSide = PaymentMethodSpecUtil.getPaymentMethodSpecClassForQuoteSide(market);
+            List<PaymentMethodSpec<?>> quoteSidePaymentMethodSpecs = ProtobufUtils.fromProtoStream(
+                            proto.getQuoteSidePaymentSpecsList(), 
+                            pmProto -> PaymentMethodSpec.fromProto(pmProto, clazzForQuoteSide))
+                    .collect(Collectors.toList());
+            List<OfferOption> offerOptions = ProtobufUtils.fromProtoStream(proto.getOfferOptionsList(),
+                            OfferOption::fromProto)
+                    .collect(Collectors.toList());
+            return new MuSigOffer(proto.getId(),
+                    proto.getDate(),
+                    NetworkId.fromProto(proto.getMakerNetworkId()),
+                    Direction.fromProto(proto.getDirection()),
+                    market,
+                    AmountSpec.fromProto(proto.getAmountSpec()),
+                    PriceSpec.fromProto(proto.getPriceSpec()),
+                    protocolTypes,
+                    baseSidePaymentMethodSpecs,
+                    quoteSidePaymentMethodSpecs,
+                    offerOptions,
+                    proto.getVersion(),
+                    proto.getTradeProtocolVersion(),
+                    proto.getAppVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

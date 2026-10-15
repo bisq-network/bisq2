@@ -18,6 +18,7 @@
 package bisq.support.dispute.mu_sig;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
@@ -41,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCasePaymentDetailsRequest.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
 
@@ -64,11 +65,16 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
                 .setSenderNetworkId(senderNetworkId.toProto(serializeForHash));
     }
 
-    public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto) {
-        return new MuSigDisputeCasePaymentDetailsRequest(
-                proto.getTradeId(),
-                NetworkId.fromProto(proto.getSenderNetworkId())
-        );
+    public static MuSigDisputeCasePaymentDetailsRequest fromProto(bisq.support.protobuf.MuSigDisputeCasePaymentDetailsRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigDisputeCasePaymentDetailsRequest(
+                    proto.getTradeId(),
+                    NetworkId.fromProto(proto.getSenderNetworkId())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -83,8 +89,8 @@ public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessa
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

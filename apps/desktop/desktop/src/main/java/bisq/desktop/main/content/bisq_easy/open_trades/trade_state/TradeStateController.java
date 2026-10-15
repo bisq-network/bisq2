@@ -56,8 +56,6 @@ import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.confidential.ack.MessageDeliveryStatus;
 import bisq.network.p2p.services.confidential.resend.ResendMessageService;
-import bisq.offer.price.spec.PriceSpec;
-import bisq.offer.price.spec.PriceSpecFormatter;
 import bisq.settings.DontShowAgainService;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequest;
 import bisq.support.mediation.bisq_easy.BisqEasyMediationRequestService;
@@ -65,6 +63,7 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.user.banned.BannedUserService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -72,7 +71,6 @@ import org.fxmisc.easybind.Subscription;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -88,12 +86,13 @@ public class TradeStateController implements Controller {
     private final BisqEasyTradeService bisqEasyTradeService;
     private final BisqEasyOpenTradeChannelService channelService;
     private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
+    private final BannedUserService bannedUserService;
     private final DontShowAgainService dontShowAgainService;
     private final LeavePrivateChatManager leavePrivateChatManager;
     private final Optional<ResendMessageService> resendMessageService;
     private Pin bisqEasyTradeStatePin, errorMessagePin, peersErrorMessagePin, isInMediationPin,
             requestMediationDeliveryStatusPin, messageDeliveryStatusByMessageIdPin;
-    private Subscription channelPin, hasBuyerAcceptedPriceSpecPin;
+    private Subscription channelPin;
 
     public TradeStateController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -103,6 +102,7 @@ public class TradeStateController implements Controller {
         channelService = chatService.getBisqEasyOpenTradeChannelService();
         leavePrivateChatManager = chatService.getLeavePrivateChatManager();
         bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
+        bannedUserService = serviceProvider.getUserService().getBannedUserService();
         dontShowAgainService = serviceProvider.getDontShowAgainService();
         resendMessageService = serviceProvider.getNetworkService().getResendMessageService();
 
@@ -150,7 +150,6 @@ public class TradeStateController implements Controller {
             bisqEasyTradeStatePin = trade.tradeStateObservable().addObserver(state ->
                     UIThread.run(() -> {
                         applyStateInfoVBox(state);
-                        updateShouldShowSellerPriceApprovalOverlay();
                     }));
 
             errorMessagePin = trade.errorMessageObservable().addObserver(errorMessage -> {
@@ -207,16 +206,6 @@ public class TradeStateController implements Controller {
                     }
             );
 
-            hasBuyerAcceptedPriceSpecPin = EasyBind.subscribe(model.getHasBuyerAcceptedSellersPriceSpec(),
-                    hasAccepted -> updateShouldShowSellerPriceApprovalOverlay());
-
-            model.getBuyerPriceDescriptionApprovalOverlay().set(
-                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.buyersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(trade.getOffer().getPriceSpec())));
-            model.getSellerPriceDescriptionApprovalOverlay().set(
-                    Res.get("bisqEasy.tradeState.acceptOrRejectSellersPrice.description.sellersPrice",
-                            PriceSpecFormatter.getFormattedPriceSpec(trade.getContract().getPriceSpec())));
-
             messageDeliveryStatusByMessageIdPin = networkService.getMessageDeliveryStatusByMessageId().addObserver(new HashMapObserver<>() {
                 @Override
                 public void put(String messageId, Observable<MessageDeliveryStatus> value) {
@@ -268,11 +257,8 @@ public class TradeStateController implements Controller {
 
         BisqEasyTrade bisqEasyTrade = optionalBisqEasyTrade.get();
         Navigation.navigateTo(NavigationTarget.BISQ_EASY_TRADE_DETAILS,
-                new TradeDetailsController.InitData(bisqEasyTrade, channel.getMyUserIdentity().getUserProfile(), channel.getPeer(), channel.getMediator()));
-    }
-
-    void onRejectPrice() {
-        doInterruptTrade();
+                new TradeDetailsController.InitData(bisqEasyTrade, channel.getMyUserIdentity().getUserProfile(), channel.getPeer(),
+                        bisqEasyTrade.getContract().getMediator()));
     }
 
     private void doInterruptTrade() {
@@ -334,7 +320,7 @@ public class TradeStateController implements Controller {
     void onRequestMediation() {
         TradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
-                bisqEasyMediationRequestService, channelService);
+                bisqEasyMediationRequestService, channelService, bannedUserService);
     }
 
     public void onResendMediationRequest() {
@@ -347,10 +333,6 @@ public class TradeStateController implements Controller {
 
     public boolean canManuallyResendMessage(String messageId) {
         return resendMessageService.map(service -> service.canManuallyResendMessage(messageId)).orElse(false);
-    }
-
-    void onAcceptSellersPriceButton() {
-        model.getHasBuyerAcceptedSellersPriceSpec().set(true);
     }
 
     private void handleNewMessageDeliveryStatus(String messageId, Observable<MessageDeliveryStatus> observableStatus) {
@@ -607,32 +589,6 @@ public class TradeStateController implements Controller {
         }
     }
 
-    private void updateShouldShowSellerPriceApprovalOverlay() {
-        model.getShouldShowSellerPriceApprovalOverlay().set(
-                model.getBisqEasyTrade().get() != null
-                        && model.getBisqEasyTrade().get().isBuyer()
-                        && model.getBisqEasyTrade().get().isMaker()
-                        && tradePhaseBox.getPhaseIndex() == 0
-                        && requiresSellerPriceAcceptance()
-                        && !model.getHasBuyerAcceptedSellersPriceSpec().get()
-        );
-    }
-
-    private boolean requiresSellerPriceAcceptance() {
-        PriceSpec buyerPriceSpec = model.getBisqEasyTrade().get().getOffer().getPriceSpec();
-        PriceSpec sellerPriceSpec = model.getBisqEasyTrade().get().getContract().getPriceSpec();
-        boolean priceSpecChanged = !buyerPriceSpec.equals(sellerPriceSpec);
-
-        Set<BisqEasyTradeState> validStatesToRejectPrice = Set.of(
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
-                BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_
-        );
-        boolean isInValidStateToRejectPrice = validStatesToRejectPrice.contains(model.getBisqEasyTrade().get().tradeStateObservable().get());
-        return priceSpecChanged && isInValidStateToRejectPrice;
-    }
-
     private void removeChannelRelatedBindings() {
         if (bisqEasyTradeStatePin != null) {
             bisqEasyTradeStatePin.unbind();
@@ -649,10 +605,6 @@ public class TradeStateController implements Controller {
         if (isInMediationPin != null) {
             isInMediationPin.unbind();
             isInMediationPin = null;
-        }
-        if (hasBuyerAcceptedPriceSpecPin != null) {
-            hasBuyerAcceptedPriceSpecPin.unsubscribe();
-            hasBuyerAcceptedPriceSpecPin = null;
         }
         if (messageDeliveryStatusByMessageIdPin != null) {
             messageDeliveryStatusByMessageIdPin.unbind();

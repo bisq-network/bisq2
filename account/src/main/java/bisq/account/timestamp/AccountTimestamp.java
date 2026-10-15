@@ -20,6 +20,7 @@ package bisq.account.timestamp;
 import bisq.common.annotation.ExcludeForHash;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
@@ -37,7 +38,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 @Slf4j
 @Getter
 public final class AccountTimestamp implements DistributedData {
-    private transient final MetaData metaData = new MetaData(TTL_30_DAYS, getClass().getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, AccountTimestamp.class.getSimpleName());
 
     private final byte[] hash;
 
@@ -70,8 +71,13 @@ public final class AccountTimestamp implements DistributedData {
         return unsafeToProto(serializeForHash);
     }
 
-    public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto) {
-        return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+    public static AccountTimestamp fromProto(bisq.account.protobuf.AccountTimestamp proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AccountTimestamp(proto.getHash().toByteArray(), proto.getDate());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -85,13 +91,8 @@ public final class AccountTimestamp implements DistributedData {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.2;
-    }
-
-    @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return false;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

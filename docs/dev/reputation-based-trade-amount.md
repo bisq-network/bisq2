@@ -6,6 +6,9 @@ The basic formula is:
 
 `Max allowed trade amount for a seller = Sellers reputation score / 200`
 
+The rule, its tolerance and the maker-side check are specified in
+[Bisq Easy Seller Reputation Limit](../specifications/trade/bisq-easy-seller-reputation-limit.md).
+
 Here is an overview of all use cases where this is applied to:
 
 ## My offers
@@ -53,6 +56,10 @@ If not, we show that popup:
 
 <img src="img/reputation-based-amounts/take_buy_offer_no_reputation_popup.png" width="1200"/>
 
+The maker (buyer) checks the taker's reputation again when it receives the take offer request and rejects the
+request if the reputation does not cover the amount, see
+[Bisq Easy Seller Reputation Limit](../specifications/trade/bisq-easy-seller-reputation-limit.md).
+
 ### Take range amount BUY offer (taker is seller)
 
 We check if the taker has enough reputation for the min. amount of take that offer.
@@ -60,6 +67,9 @@ If so, we display the range capped by the takers max. allowed amount.
 E.g. If offer has a range of 6-600 USD and taker has reputation scopre of 10000 the range is 6-50 USD (50 USD is max allowed amount for that taker).
 
 <img src="img/reputation-based-amounts/take_buy_offer_with_range_amount.png" width="1200"/>
+
+The maker (buyer) checks the taker's reputation again for the selected amount when it receives the take offer
+request, see [Bisq Easy Seller Reputation Limit](../specifications/trade/bisq-easy-seller-reputation-limit.md).
 
 ### Take fixed amount SELL offer (taker is buyer)
 

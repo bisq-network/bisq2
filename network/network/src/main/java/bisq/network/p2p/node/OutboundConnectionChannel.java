@@ -24,6 +24,8 @@ import bisq.network.p2p.node.network_load.NetworkLoadSnapshot;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Set;
+
 @Slf4j
 public class OutboundConnectionChannel extends ConnectionChannel {
 
@@ -33,8 +35,9 @@ public class OutboundConnectionChannel extends ConnectionChannel {
     public OutboundConnectionChannel(Capability peersCapability,
                                      NetworkLoadSnapshot peersNetworkLoadSnapshot,
                                      NetworkEnvelopeSocketChannel networkEnvelopeSocketChannel,
-                                     ConnectionMetrics connectionMetrics) {
-        super(peersCapability, peersNetworkLoadSnapshot, networkEnvelopeSocketChannel, connectionMetrics);
+                                     ConnectionMetrics connectionMetrics,
+                                     Set<Integer> receivedMessageCounters) {
+        super(peersCapability, peersNetworkLoadSnapshot, networkEnvelopeSocketChannel, connectionMetrics, receivedMessageCounters);
 
         this.address = peersCapability.getAddress();
         log.debug("Create outboundConnection to {}", this.address);

@@ -19,7 +19,6 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Pair;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
@@ -151,7 +150,8 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
             return;
         }
         claimRegistry.add(authorizedData, data.getProfileId(), data.getWitnessNullifier());
-        super.onAuthorizedDataAdded(authorizedData);
+        // activeAuthorizations holds the publications, so the publication state of the base class is not used
+        handleAddedAuthorizedDistributedData(data);
     }
 
     @Override
@@ -176,6 +176,11 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
         return userProfile.getAccountAgeKey();
+    }
+
+    @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getAccountAgeKey(userProfileId);
     }
 
     @Override
@@ -245,12 +250,10 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
                 .filter(data -> data.getProfileId().equals(userProfileId))
                 .filter(data -> !claimRegistry.hasConflict(data.getWitnessNullifier()))
                 .min(java.util.Comparator.comparingLong(AuthorizedAccountAgeData::getDateBucket));
-        ByteArray userProfileKey = new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+        ByteArray userProfileKey = getUserProfileKey(userProfileId);
 
         if (bestData.isEmpty()) {
-            dataSetByHash.remove(userProfileKey);
-            scoreByUserProfileId.remove(userProfileId);
-            userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
+            removeDataSetAndScore(userProfileKey, userProfileId);
             return;
         }
 
@@ -267,6 +270,6 @@ public class AccountAgeService extends SourceReputationService<AuthorizedAccount
         long score = doCalculateScore(
                 WitnessReputationProtocol.getConservativeAgeInDays(bestData.get().getDateBucket()));
         scoreByUserProfileId.put(userProfileId, score);
-        userProfileIdScorePair.set(new Pair<>(userProfileId, score));
+        notifyScoreChanged(userProfileId, score);
     }
 }

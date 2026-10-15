@@ -18,8 +18,10 @@
 package bisq.network.p2p.message;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.services.confidential.ack.AckMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -41,6 +43,17 @@ public final class NetworkEnvelope implements NetworkProto {
     @Setter
     public static int networkVersion;
 
+    // Size limit of a serialized envelope, without its length prefix. It is a protocol constant: a node closes the
+    // connection when a peer announces a larger message, and it never sends one. The largest regular messages are
+    // inventory messages: a request with a full hash set filter has at most about 3.0 MB, and a response of the default
+    // size with a HASH_CASH_V2 token about 2 MB (see
+    // docs/specifications/network/message-framing.md).
+    public static final int MAX_SERIALIZED_SIZE = 4 * 1024 * 1024;
+    // Size limit of the envelopes of the handshake. The node parses the first message of a peer before it checks
+    // anything of the peer, and the parsed objects of a message can need about 20 times its size. The largest valid
+    // handshake message is below 1.8 KB (see docs/specifications/network/message-framing.md).
+    public static final int MAX_HANDSHAKE_SERIALIZED_SIZE = 64 * 1024;
+
     private final int version;
     private final AuthorizationToken authorizationToken;
     private final EnvelopePayloadMessage envelopePayloadMessage;
@@ -59,6 +72,22 @@ public final class NetworkEnvelope implements NetworkProto {
 
     @Override
     public void verify() {
+        // The receiver checks such a payload when it decrypts the ConfidentialMessage which carries it: the sender and
+        // the receiver which the payload names must own the keys of the ConfidentialMessage. As payload of an
+        // envelope, it would reach the chat, trade and support services without these checks (see
+        // docs/specifications/network/confidential-messages.md). The exception names only the type, as the payload
+        // comes from another node.
+        if (isValidOnlyInsideConfidentialMessage(envelopePayloadMessage)) {
+            throw new IllegalArgumentException("A NetworkEnvelope must not carry a " +
+                    envelopePayloadMessage.getClass().getSimpleName() +
+                    ". This type is valid only inside a ConfidentialMessage.");
+        }
+    }
+
+    // Messages of other modules (chat, trade, support, requests to oracle nodes) and AckMessage. Nodes send them only
+    // with confidentialSend.
+    private static boolean isValidOnlyInsideConfidentialMessage(EnvelopePayloadMessage envelopePayloadMessage) {
+        return envelopePayloadMessage instanceof ExternalNetworkMessage || envelopePayloadMessage instanceof AckMessage;
     }
 
     @Override
@@ -79,18 +108,36 @@ public final class NetworkEnvelope implements NetworkProto {
                 .setNetworkMessage(envelopePayloadMessage.toProto(serializeForHash));
     }
 
-    public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto) {
-        return new NetworkEnvelope(proto.getVersion(),
-                AuthorizationToken.fromProto(proto.getAuthorizationToken()),
-                EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+    public static NetworkEnvelope fromProto(bisq.network.protobuf.NetworkEnvelope proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new NetworkEnvelope(proto.getVersion(),
+                    AuthorizationToken.fromProto(proto.getAuthorizationToken()),
+                    EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public void verifyVersion() throws ConnectionException {
+        verifyVersion(version, envelopePayloadMessage.getClass().getSimpleName());
+    }
+
+    /**
+     * Checks the version of a received envelope before its payload is converted. A connection drops a message whose
+     * payload it cannot convert, but it closes for a message of another network version (rule 6 of
+     * docs/specifications/network/validation-at-parsing.md). The check must therefore not depend on the conversion.
+     */
+    public static void verifyVersion(bisq.network.protobuf.NetworkEnvelope proto) throws ConnectionException {
+        verifyVersion(proto.getVersion(), proto.getNetworkMessage().getMessageCase().name());
+    }
+
+    private static void verifyVersion(int version, String networkMessage) throws ConnectionException {
         if (version != networkVersion) {
             throw new ConnectionException(INVALID_NETWORK_VERSION, "Invalid networkEnvelopeVersion. " +
                     "version=" + version +
                     "; networkVersion=" + networkVersion +
-                    "; networkMessage=" + envelopePayloadMessage.getClass().getSimpleName());
+                    "; networkMessage=" + networkMessage);
         }
     }
 

@@ -18,11 +18,12 @@ message NetworkLoad {
 
 enum Feature {
   FEATURE_UNSPECIFIED = 0;
-  FEATURE_INVENTORY_HASH_SET = 1;
+  FEATURE_INVENTORY_HASH_SET = 1 [deprecated = true]; // Replaced by FEATURE_INVENTORY_HASH_SET_V2 in 2.1.14
   FEATURE_INVENTORY_MINI_SKETCH = 2;
-  FEATURE_AUTHORIZATION_HASH_CASH = 3;
+  FEATURE_AUTHORIZATION_HASH_CASH = 3 [deprecated = true];
   FEATURE_AUTHORIZATION_EQUI_HASH = 4;
   FEATURE_AUTHORIZATION_HASH_CASH_V2 = 5;
+  FEATURE_INVENTORY_HASH_SET_V2 = 6;
 }
 
 message Capability {
@@ -35,8 +36,9 @@ message Capability {
 
 enum InventoryFilterType{
   INVENTORYFILTERTYPE_UNSPECIFIED = 0;
-  INVENTORYFILTERTYPE_HASH_SET = 1;
+  INVENTORYFILTERTYPE_HASH_SET = 1 [deprecated = true]; // Replaced by INVENTORYFILTERTYPE_HASH_SET_V2 in 2.1.14
   INVENTORYFILTERTYPE_MINI_SKETCH = 2;
+  INVENTORYFILTERTYPE_HASH_SET_V2 = 3;
 }
 
 message HashSetFilterEntry {
@@ -73,11 +75,12 @@ message Peer {
 
 enum AuthorizationTokenType{
   AUTHORIZATIONTOKENTYPE_UNSPECIFIED = 0;
-  AUTHORIZATIONTOKENTYPE_HASH_CASH = 1;
+  AUTHORIZATIONTOKENTYPE_HASH_CASH = 1 [deprecated = true];
   AUTHORIZATIONTOKENTYPE_EQUI_HASH = 2;
   AUTHORIZATIONTOKENTYPE_HASH_CASH_V2 = 3;
 }
 
+// Retained wire identifiers for rejected legacy authorization; do not reuse them.
 message HashCashToken {
   security.ProofOfWork proofOfWork = 1;
   sint32 messageCounter = 2;
@@ -96,7 +99,7 @@ message AuthorizationToken {
   AuthorizationTokenType authorizationTokenType = 1;
 
   oneof message {
-    HashCashToken hashCashToken = 10;
+    HashCashToken hashCashToken = 10 [deprecated = true];
     EquiHashToken equiHashToken = 11;
     HashCashV2Token hashCashV2Token = 12;
   };
@@ -246,30 +249,54 @@ message AddAuthenticatedDataRequest {
   AuthenticatedSequentialData authenticatedSequentialData = 1;
   bytes signature = 2;
   bytes ownerPublicKeyBytes = 3;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 4;
+  // 0 in requests of nodes of earlier versions. Excluded from the hash, so it does not change the proof of work
+  // payload.
+  sint32 version = 5;
 }
 message RemoveAuthenticatedDataRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint64 created = 6;
   sint32 version = 7;
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // covers it.
+  string className = 8;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 9;
 }
 message RefreshAuthenticatedDataRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes ownerPublicKeyBytes = 3;
   sint32 sequenceNumber = 4;
   bytes signature = 5;
   sint32 version = 6;
   sint64 created = 7;
+  // Simple class name of the stored type. Excluded from the hash. No signature covers it: it only selects the store,
+  // and a store of another type has no entry with the hash.
+  string className = 8;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 9;
 }
 
 message MailboxData {
   ConfidentialMessage confidentialMessage = 1;
-  MetaData metaData = 2;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 2 [deprecated = true];
   sint32 version = 3;
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // of AddMailboxRequest covers it.
+  string className = 4;
 }
 message MailboxSequentialData {
   MailboxData mailboxData = 1;
@@ -283,14 +310,27 @@ message AddMailboxRequest {
   MailboxSequentialData mailboxSequentialData = 1;
   bytes signature = 2;
   bytes senderPublicKeyBytes = 3;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 4;
+  // 0 in requests of nodes of earlier versions. Excluded from the hash, so it does not change the proof of work
+  // payload.
+  sint32 version = 5;
 }
 message RemoveMailboxRequest {
-  MetaData metaData = 1;
+  // Deprecated, replaced by className. Still sent, because nodes of earlier versions use it.
+  MetaData metaData = 1 [deprecated = true];
   bytes hash = 2;
   bytes receiverPublicKeyBytes = 3;
   bytes signature = 4;
   sint64 created = 5;
   sint32 version = 6;
+  // Simple class name of the stored type. Excluded from the hash, so signature V1 does not cover it. Signature V2
+  // covers it.
+  string className = 7;
+  // Signature V2. Empty in requests of nodes of earlier versions. Excluded from the hash, so it does not change the
+  // proof of work payload.
+  bytes signatureV2 = 8;
 }
 
 message AddAppendOnlyDataRequest {
@@ -345,6 +385,11 @@ message DataStore {
   message MapEntry {
     .common.ByteArray key = 1; // The leading dot is needed to distinguish between common module and network.common
     DataRequest value = 2;
+    // Only for a stored removal: the sequence number of the add request which the removal replaced in this store,
+    // directly or through the removal which it replaced. 0 if it replaced none, and in the entries of nodes of earlier
+    // versions. Valid sequence numbers are positive. The store sets it. It is not part of the removal, and no peer gets
+    // it.
+    sint32 replacedAddSequenceNr = 3;
   }
   repeated MapEntry mapEntries = 1;
 }

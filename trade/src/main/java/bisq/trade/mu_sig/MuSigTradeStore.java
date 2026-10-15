@@ -19,6 +19,8 @@ package bisq.trade.mu_sig;
 
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -29,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -67,19 +68,16 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto) {
-        var tradeById = proto.getTradeByIdMap().entrySet().stream()
-                .map(entry -> {
-                    try {
-                        return Map.entry(entry.getKey(), MuSigTrade.fromProto(entry.getValue()));
-                    } catch (Exception e) {
-                        log.error("Could not create MuSigTrade from proto {}", entry.getValue(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        return new MuSigTradeStore(tradeById);
+    public static MuSigTradeStore fromProto(bisq.trade.protobuf.MuSigTradeStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            var tradeById = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getTradeByIdMap(),
+                            MuSigTrade::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+            return new MuSigTradeStore(tradeById);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

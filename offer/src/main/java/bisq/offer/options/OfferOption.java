@@ -18,6 +18,7 @@
 package bisq.offer.options;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 
 public interface OfferOption extends NetworkProto {
@@ -28,7 +29,7 @@ public interface OfferOption extends NetworkProto {
         return bisq.offer.protobuf.OfferOption.newBuilder();
     }
 
-    static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) {
+    static OfferOption fromProto(bisq.offer.protobuf.OfferOption proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TRADETERMSOPTION -> TradeTermsOption.fromProto(proto.getTradeTermsOption());
             case REPUTATIONOPTION -> ReputationOption.fromProto(proto.getReputationOption());

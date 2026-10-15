@@ -22,9 +22,11 @@ import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.pub.PublicChatMessage;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.FixPriceSpec;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -33,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 
 import static bisq.network.p2p.services.data.storage.MetaData.*;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -42,8 +45,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
 
     // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, BisqEasyOfferbookMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,
@@ -85,6 +87,29 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 wasEdited,
                 chatMessageType);
         this.bisqEasyOffer = bisqEasyOffer;
+
+        verify();
+    }
+
+    @Override
+    public void verify() {
+        super.verify();
+        // The network layer does not bind the offer to the author. Only the maker publishes its offer, so that nobody
+        // can show the offer of another user in the offerbook.
+        bisqEasyOffer.ifPresent(offer -> checkArgument(offer.getMakersUserProfileId().equals(authorUserProfileId),
+                "The author of an offerbook message must be the maker of its offer"));
+        // A node adds a message to the channel which the message names. The market of the offer decides the channel,
+        // so that nobody can show an offer in the offerbook of another market.
+        bisqEasyOffer.ifPresent(offer ->
+                checkArgument(channelId.equals(BisqEasyOfferbookChannel.createId(offer.getMarket())),
+                        "The channel of an offerbook message must be the channel of the market of its offer"));
+        // An offer in the offerbook needs a canonical fixed price, so that every client shows the price which the
+        // trade uses (rule 5 of docs/specifications/offer/fixed-price.md)
+        bisqEasyOffer.ifPresent(offer -> {
+            if (offer.getPriceSpec() instanceof FixPriceSpec fixPriceSpec) {
+                fixPriceSpec.verifyCanonical();
+            }
+        });
     }
 
     @Override
@@ -103,32 +128,37 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
         return builder;
     }
 
-    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        Optional<String> text = baseProto.hasText() ?
-                Optional.of(baseProto.getText()) :
-                Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOfferbookMessage(
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                baseProto.getAuthorUserProfileId(),
-                bisqEasyOffer,
-                text,
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                ChatMessageType.fromProto(baseProto.getChatMessageType()));
+    public static BisqEasyOfferbookMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            Optional<String> text = baseProto.hasText() ?
+                    Optional.of(baseProto.getText()) :
+                    Optional.empty();
+            Optional<BisqEasyOffer> bisqEasyOffer = baseProto.getBisqEasyOfferbookMessage().hasBisqEasyOffer() ?
+                    Optional.of(BisqEasyOffer.fromProto(baseProto.getBisqEasyOfferbookMessage().getBisqEasyOffer())) :
+                    Optional.empty();
+            return new BisqEasyOfferbookMessage(
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    baseProto.getAuthorUserProfileId(),
+                    bisqEasyOffer,
+                    text,
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

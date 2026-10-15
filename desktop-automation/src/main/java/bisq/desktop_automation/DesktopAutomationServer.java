@@ -808,7 +808,13 @@ public final class DesktopAutomationServer {
         }
         FutureTask<T> task = new FutureTask<>(callable);
         Platform.runLater(task);
-        return task.get(fxTimeoutMs, TimeUnit.MILLISECONDS);
+        try {
+            return task.get(fxTimeoutMs, TimeUnit.MILLISECONDS);
+        } finally {
+            // A timed-out or interrupted request must not leave an action queued for later execution.
+            // Do not interrupt the JavaFX thread if the action has already started.
+            task.cancel(false);
+        }
     }
 
 }
