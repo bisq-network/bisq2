@@ -29,6 +29,7 @@ import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
+import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.application.Service;
 import bisq.common.observable.Observable;
 import bisq.common.observable.Pin;
@@ -55,8 +56,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import com.google.common.annotations.VisibleForTesting;
+
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -94,9 +98,16 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
     private boolean isApplicationFocussed;
-    private final Set<String> prunedAndExpiredChatMessageIds = new HashSet<>();
+    // The IDs of the notifications of chat messages which a store pruned before initialize. The stores prune the
+    // persisted data when they read it at startup, and our persisted notifications may be read after that. So we
+    // remove these notifications at initialize. After initialize, a pruned message removes its notification at once and
+    // its ID is not kept, otherwise every pruned message would stay in this set until shutdown. Guarded by itself,
+    // together with initializeCalled.
+    @VisibleForTesting
+    final Set<String> notificationIdsPrunedBeforeInitialize = new HashSet<>();
+    private boolean initializeCalled;
     @Nullable
-    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin;
+    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, ignoredUserProfileIdsPin;
     private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
     private final Set<Pin> twoPartyPrivateChatChannelServicePins = new HashSet<>();
     private final Set<Pin> prunedAndExpiredDataRequestPins = new HashSet<>();
@@ -123,15 +134,11 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                                 @Override
                                 public void onAdded(DataRequest element) {
                                     if (element instanceof AddAuthenticatedDataRequest addAuthenticatedDataRequest) {
-                                        if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage) {
-                                            String id = ChatNotification.createId(chatMessage.getChannelId(), chatMessage.getId());
-                                            // As we get called at pruning persistence which happens before initializing the services,
-                                            // We store the ids to apply the remove at out initialize method.
-                                            // For the cases when we get expired data during runtime we call removeNotification.
-                                            // For the pre-initialize state that would fail as our persisted data might be filled after
-                                            // the network data store.
-                                            prunedAndExpiredChatMessageIds.add(id);
-                                            removeNotification(id);
+                                        // A message with an invalid channel ID was ignored and has no notification
+                                        if (addAuthenticatedDataRequest.getDistributedData() instanceof ChatMessage chatMessage
+                                                && chatMessage.hasValidChannelId()) {
+                                            onChatMessagePruned(ChatNotification.createId(chatMessage.getChannelId(),
+                                                    chatMessage.getId()));
                                         }
                                     }
                                 }
@@ -162,8 +169,13 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
-        prunedAndExpiredChatMessageIds.clear();
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            initializeCalled = true;
+        }
+        flushPrunedNotifications();
+
+        ignoredUserProfileIdsPin = userProfileService.getIgnoredUserProfileIds()
+                .addObserver(this::consumeNotificationsFromIgnoredUsers);
 
         BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService = chatService.getBisqEasyOpenTradeChannelService();
         bisqEasyOpenTradeChannelServicePin = bisqEasyOpenTradeChannelService.getChannels().addObserver(() ->
@@ -190,6 +202,10 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (ignoredUserProfileIdsPin != null) {
+            ignoredUserProfileIdsPin.unbind();
+            ignoredUserProfileIdsPin = null;
+        }
         if (bisqEasyOpenTradeChannelServicePin != null) {
             bisqEasyOpenTradeChannelServicePin.unbind();
             bisqEasyOpenTradeChannelServicePin = null;
@@ -208,8 +224,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         prunedAndExpiredDataRequestPins.clear();
 
         predicateByChatChannelDomain.clear();
-        prunedAndExpiredChatMessageIds.forEach(this::removeNotification);
-        prunedAndExpiredChatMessageIds.clear();
+        flushPrunedNotifications();
 
         changedNotification.set(null);
         return CompletableFuture.completedFuture(true);
@@ -330,6 +345,27 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         }
     }
 
+    private void onChatMessagePruned(String notificationId) {
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            if (!initializeCalled) {
+                notificationIdsPrunedBeforeInitialize.add(notificationId);
+            }
+        }
+        // Before initialize, our persisted notifications might not be read yet, so the removal can find nothing. The
+        // removal at initialize covers that case.
+        removeNotification(notificationId);
+    }
+
+    // Empties the buffer of notification IDs which were pruned before initialize, and removes these notifications
+    private void flushPrunedNotifications() {
+        Set<String> notificationIds;
+        synchronized (notificationIdsPrunedBeforeInitialize) {
+            notificationIds = Set.copyOf(notificationIdsPrunedBeforeInitialize);
+            notificationIdsPrunedBeforeInitialize.clear();
+        }
+        notificationIds.forEach(this::removeNotification);
+    }
+
     private void removeNotification(String id) {
         boolean wasRemoved;
         synchronized (persistableStore) {
@@ -347,6 +383,16 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (wasRemoved) {
             persist();
         }
+    }
+
+    @VisibleForTesting
+    void consumeNotificationsFromIgnoredUsers() {
+        List<ChatNotification> notificationsFromIgnoredUsers = getNotConsumedNotifications()
+                .filter(notification -> notification.getSenderUserProfile()
+                        .map(sender -> userProfileService.isChatUserIgnored(sender.getId()))
+                        .orElse(false))
+                .toList();
+        notificationsFromIgnoredUsers.forEach(this::consumeNotification);
     }
 
     private void consumeNotification(ChatNotification notification) {
@@ -499,7 +545,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
 
         if (shouldSendNotification) {
             addNotification(chatNotification);
-            maybeDispatchNotification(chatNotification);
+            maybeDispatchNotification(chatNotification, chatMessage);
         } else {
             consumeNotification(chatNotification);
         }
@@ -541,12 +587,14 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 senderUserProfile);
     }
 
-    private void maybeDispatchNotification(ChatNotification chatNotification) {
+    private void maybeDispatchNotification(ChatNotification chatNotification, ChatMessage chatMessage) {
         boolean afterStartUp = isReceivedAfterStartUp(chatNotification);
         boolean domainMatches = testChatChannelDomainPredicate(chatNotification);
         if (!isApplicationFocussed && afterStartUp && domainMatches) {
-            log.debug("Dispatching notification for channel '{}': {}", chatNotification.getChatChannelDomain(), chatNotification.getTitle());
-            notificationService.dispatchNotification(chatNotification);
+            boolean mobileEligible = isMobileEligible(chatMessage);
+            log.debug("Dispatching notification for channel '{}': {} (mobileEligible={})",
+                    chatNotification.getChatChannelDomain(), chatNotification.getTitle(), mobileEligible);
+            notificationService.dispatchNotification(chatNotification, mobileEligible);
         } else {
             log.debug("Skipping notification dispatch for '{}' (focused={}, afterStartUp={}, domainPredicate={})",
                     chatNotification.getTitle(),
@@ -554,6 +602,109 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                     afterStartUp,
                     domainMatches);
         }
+    }
+
+    private boolean isMobileEligible(ChatMessage chatMessage) {
+        if (chatMessage == null) {
+            // Fail-closed: an eligibility whitelist can't say "yes" without knowing
+            // what's being checked. In practice the caller (onMessageAdded → maybeDispatchNotification)
+            // always passes a non-null message, but if that contract is ever broken we'd rather
+            // skip the relay push than spam every registered device with a notification we
+            // can't classify.
+            return false;
+        }
+        return isMobileEligible(chatMessage.getChatMessageType(),
+                chatMessage.getChatChannelDomain(),
+                chatMessage instanceof TwoPartyPrivateChatMessage);
+    }
+
+    /**
+     * Adds the case the two single-axis whitelists below cannot express: a DM lives in
+     * {@link ChatChannelDomain#DISCUSSION} alongside the public discussion channels, so the
+     * domain alone cannot tell them apart. A DM is the directed, low-volume signal the mobile
+     * inbox is for, so it bypasses the domain whitelist — but not the type whitelist.
+     */
+    static boolean isMobileEligible(ChatMessageType type,
+                                    ChatChannelDomain domain,
+                                    boolean isTwoPartyPrivateChat) {
+        return isMobileEligible(type) && (isTwoPartyPrivateChat || isMobileEligible(domain));
+    }
+
+    /**
+     * Decides whether a chat message of the given type should reach the mobile relay
+     * (FCM / APNs) or be delivered only to the desktop (system) channel.
+     * <p>
+     * Mirrors {@code OpenTradesNotificationService} on Android nodeApp which has
+     * proven sound at scale: only {@code TEXT} (real peer chat) and
+     * {@code TAKE_BISQ_EASY_OFFER} (your offer was taken) are surfaced as pushes.
+     * <p>
+     * {@code PROTOCOL_LOG_MESSAGE} in particular is suppressed: the Bisq Easy trade
+     * protocol emits one per state transition (take-offer, account-info, btc-address,
+     * fiat-sent, fiat-receipt, btc-sent, completed, …) which produces 6–10+ push
+     * notifications per active trade — the noise pattern reported in
+     * {@code bisq-network/bisq-mobile#1450}.
+     * <p>
+     * Important trade-state transitions that the user does need pushed (e.g. "peer
+     * confirmed fiat receipt") will be re-introduced via a dedicated service that
+     * observes {@code BisqEasyTrade.tradeState} directly — see follow-up to #1450.
+     * <p>
+     * Package-private static so it can be unit-tested without instantiating the full
+     * {@link ChatNotificationService} (which has many constructor dependencies).
+     */
+    static boolean isMobileEligible(ChatMessageType type) {
+        return switch (type) {
+            case TEXT, TAKE_BISQ_EASY_OFFER -> true;
+            case PROTOCOL_LOG_MESSAGE, LEAVE, CHAT_RULES_WARNING, EXPIRED_MESSAGES_INDICATOR -> false;
+        };
+    }
+
+    /**
+     * Decides whether a chat message in the given channel domain should reach the
+     * mobile relay (FCM / APNs).
+     * <p>
+     * The mobile inbox is scoped to trade-relevant signals: a relayed-notifications
+     * opt-in means "tell me when something happens with my trades", not "stream the
+     * global Bisq community chat to my phone". The previous type-only filter
+     * (introduced in {@code bisq-network/bisq-mobile#1450}) suppressed protocol
+     * log noise but still pushed every TEXT message — including unrelated chatter
+     * in the global {@link ChatChannelDomain#DISCUSSION} / {@link
+     * ChatChannelDomain#SUPPORT} channels and any active
+     * {@link ChatChannelDomain#BISQ_EASY_OFFERBOOK} market — which surfaced as the
+     * "Bisq New Message" notifications continuing to arrive long after the user's
+     * trade had completed (reported in {@code bisq-network/bisq-mobile#1464}).
+     * <p>
+     * Only the user's private trade channels are eligible:
+     * <ul>
+     *   <li>{@link ChatChannelDomain#BISQ_EASY_OPEN_TRADES} — Bisq Easy trade chat
+     *       (1-on-1 with the peer, plus mediator when escalated).</li>
+     *   <li>{@link ChatChannelDomain#MU_SIG_OPEN_TRADES} — MuSig trade chat
+     *       (analogous to Bisq Easy). Currently not subscribed by
+     *       {@link #initialize()} but whitelisted here so the filter stays correct
+     *       if mobile relay is later wired up for MuSig.</li>
+     * </ul>
+     * <p>
+     * Public chat ({@link ChatChannelDomain#BISQ_EASY_OFFERBOOK},
+     * {@link ChatChannelDomain#DISCUSSION}, {@link ChatChannelDomain#SUPPORT}) is
+     * desktop-only — desktop users see those in the in-app chat view; mobile users
+     * who care about offerbook activity check the app.
+     * <p>
+     * Exhaustive switch by design: adding a new {@link ChatChannelDomain} value
+     * is a compile error here, forcing a deliberate push/no-push decision rather
+     * than silently inheriting the wrong default.
+     * <p>
+     * {@code DISCUSSION} also carries two-party private messages, which are eligible — see
+     * {@link #isMobileEligible(ChatMessageType, ChatChannelDomain, boolean)}.
+     */
+    static boolean isMobileEligible(ChatChannelDomain domain) {
+        return switch (domain) {
+            case BISQ_EASY_OPEN_TRADES, MU_SIG_OPEN_TRADES -> true;
+            case BISQ_EASY_OFFERBOOK,
+                 DISCUSSION,
+                 SUPPORT,
+                 BISQ_EASY_PRIVATE_CHAT, // deprecated, falls back to DISCUSSION
+                 EVENTS                  // deprecated, falls back to DISCUSSION
+                    -> false;
+        };
     }
 
     private boolean isReceivedAfterStartUp(ChatNotification chatNotification) {

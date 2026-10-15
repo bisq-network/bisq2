@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -52,10 +53,15 @@ public final class TxConfirmationStatus implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static TxConfirmationStatus fromProto(bisq.trade.protobuf.TxConfirmationStatus proto) {
-        return new TxConfirmationStatus(proto.getTx().toByteArray(),
-                proto.getCurrentBlockHeight(),
-                proto.getNumConfirmations());
+    public static TxConfirmationStatus fromProto(bisq.trade.protobuf.TxConfirmationStatus proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new TxConfirmationStatus(proto.getTx().toByteArray(),
+                    proto.getCurrentBlockHeight(),
+                    proto.getNumConfirmations());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

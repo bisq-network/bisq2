@@ -46,7 +46,7 @@ public class TradeItemPresentationDtoFactory {
         long date = contract.getTakeOfferDate();
 
         String directionalTitle = BisqEasyTradeFormatter.getDirectionalTitle(trade);
-        String offerId = channel.getBisqEasyOffer().getId();
+        String offerId = trade.getOffer().getId();
         String tradeId = trade.getId();
         String dateString = DateFormatter.formatDate(date);
         String timeString = DateFormatter.formatTime(date);
@@ -66,7 +66,7 @@ public class TradeItemPresentationDtoFactory {
 
         String formattedMyRole = BisqEasyTradeFormatter.getMakerTakerRole(trade);
 
-        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel);
+        BisqEasyOpenTradeChannelDto channelDto = DtoMappings.BisqEasyOpenTradeChannelMapping.fromBisq2Model(channel, contract);
         BisqEasyTradeDto tradeDto = DtoMappings.BisqEasyTradeMapping.fromBisq2Model(trade);
 
         UserProfileDto myUserProfileDto = DtoMappings.UserProfileMapping.fromBisq2Model(myUserProfile);

@@ -18,6 +18,7 @@
 package bisq.common.data;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -46,8 +47,13 @@ public final class ByteArrayMapEntry implements PersistableProto {
                 .setValue(value.toProto(serializeForHash));
     }
 
-    public static ByteArrayMapEntry fromProto(bisq.common.protobuf.ByteArrayMapEntry proto) {
-        return new ByteArrayMapEntry(ByteArray.fromProto(proto.getKey()),
-                ByteArray.fromProto(proto.getValue()));
+    public static ByteArrayMapEntry fromProto(bisq.common.protobuf.ByteArrayMapEntry proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ByteArrayMapEntry(ByteArray.fromProto(proto.getKey()),
+                    ByteArray.fromProto(proto.getValue()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -23,21 +23,49 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
+import javafx.util.StringConverter;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.List;
 
 @Slf4j
 @Getter
 public class LanguageSettingsModel implements Model {
     @Setter
-    private String selectedLanguageTag;
+    private String selectedCountryCode;
+    @Setter
+    private String selectedCurrencyCode;
+    private final StringConverter<String> languageStringConverter;
+    private final StringConverter<String> countryStringConverter;
+    private final StringConverter<String> currencyStringConverter;
     private final StringProperty selectedLSupportedLanguageTag = new SimpleStringProperty();
+    private final StringProperty selectedLanguageTag = new SimpleStringProperty();
+
     private final ObservableList<String> languageTags = FXCollections.observableArrayList();
+    private final ObservableList<String> countryCodes = FXCollections.observableArrayList();
+    private final ObservableList<String> currencyCodes = FXCollections.observableArrayList();
+
     private final ObservableList<String> supportedLanguageTags = FXCollections.observableArrayList();
     private final FilteredList<String> supportedLanguageTagsFilteredList = new FilteredList<>(supportedLanguageTags);
     private final ObservableList<String> selectedSupportedLanguageTags = FXCollections.observableArrayList();
 
-    public LanguageSettingsModel() {
+    public LanguageSettingsModel(String selectedLanguageTag,
+                                 String selectedCountryCode,
+                                 String selectedCurrencyCode,
+                                 List<String> countryCodes,
+                                 List<String> currencyCodes,
+                                 StringConverter<String> languageStringConverter,
+                                 StringConverter<String>  countryStringConverter,
+                                 StringConverter<String>   currencyStringConverter) {
+        this.selectedLanguageTag.set(selectedLanguageTag);
+        this.selectedCountryCode = selectedCountryCode;
+        this.selectedCurrencyCode = selectedCurrencyCode;
+        this.languageStringConverter = languageStringConverter;
+        this.countryStringConverter = countryStringConverter;
+        this.currencyStringConverter = currencyStringConverter;
+        this.countryCodes.addAll(countryCodes);
+        this.currencyCodes.addAll(currencyCodes);
     }
 }

@@ -408,14 +408,27 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .right()
                 .minWidth(75)
                 .setCellFactory(getPriceCellFactory())
-                .comparator((o1, o2) -> {
-                    if (o1.getBisqEasyOffer().getDirection().isSell()) {
-                        return Double.compare(o1.getPriceSpecAsPercent(), o2.getPriceSpecAsPercent());
-                    } else {
-                        return Double.compare(o2.getPriceSpecAsPercent(), o1.getPriceSpecAsPercent());
-                    }
-                })
                 .build();
+        priceColumn.setComparator((o1, o2) -> {
+            Optional<Double> p1 = o1.getPriceSpecAsPercent();
+            Optional<Double> p2 = o2.getPriceSpecAsPercent();
+            if (p1.isEmpty() || p2.isEmpty()) {
+                // An offer without a resolvable percentage sorts after known ones, in
+                // both sort directions. JavaFX reverses the comparator's result for a
+                // descending sort, so the empty ordering is pre-inverted there to keep
+                // empties last either way.
+                if (p1.isEmpty() == p2.isEmpty()) {
+                    return 0;
+                }
+                int emptyLast = p1.isEmpty() ? 1 : -1;
+                return isDescending(priceColumn) ? -emptyLast : emptyLast;
+            }
+            if (o1.getBisqEasyOffer().getDirection().isSell()) {
+                return Double.compare(p1.get(), p2.get());
+            } else {
+                return Double.compare(p2.get(), p1.get());
+            }
+        });
         tableView.getColumns().add(priceColumn);
         tableView.getSortOrder().add(priceColumn);
 
@@ -442,6 +455,10 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 .setCellFactory(getSettlementCellFactory())
                 .comparator(Comparator.comparing(OfferbookListItem::getBitcoinPaymentMethodsAsString))
                 .build());
+    }
+
+    private static boolean isDescending(TableColumn<?, ?> column) {
+        return column != null && column.getSortType() == TableColumn.SortType.DESCENDING;
     }
 
     private Callback<TableColumn<OfferbookListItem, OfferbookListItem>,
@@ -479,13 +496,17 @@ public class OfferbookListView extends bisq.desktop.common.view.View<VBox, Offer
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    // Bound, not copied: the item updates the properties when a market price
+                    // arrives or changes, and the visible cell has to follow.
+                    percentagePriceLabel.textProperty().bind(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setStyle(item.isFixPrice() ? "-fx-text-fill: -bisq2-green-lit-20" : "");
-                    tooltip.setText(item.getPriceTooltipText());
+                    tooltip.textProperty().bind(item.getPriceTooltipText());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {
+                    percentagePriceLabel.textProperty().unbind();
                     percentagePriceLabel.setText("");
+                    tooltip.textProperty().unbind();
                     percentagePriceLabel.setTooltip(null);
                     setGraphic(null);
                 }

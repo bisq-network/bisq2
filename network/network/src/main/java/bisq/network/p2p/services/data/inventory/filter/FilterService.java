@@ -33,11 +33,11 @@ import bisq.network.p2p.services.data.storage.mailbox.RemoveMailboxRequest;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Slf4j
 public abstract class FilterService<T extends InventoryFilter> {
@@ -51,6 +51,10 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract public T getFilter();
 
+    // Whether the filter which this node would create now lists at least one of the requests. A responder does not
+    // send a request which the filter of the requester lists.
+    abstract public boolean isAnyRequestInFilter(Collection<? extends DataRequest> dataRequests);
+
     abstract protected boolean isAuthenticatedDataRequestMissing(T filter,
                                                                  Map.Entry<ByteArray, AuthenticatedDataRequest> mapEntry);
 
@@ -58,6 +62,20 @@ public abstract class FilterService<T extends InventoryFilter> {
 
     abstract protected boolean isAddAppendOnlyDataRequestMissing(T filter,
                                                                  Map.Entry<ByteArray, AddAppendOnlyDataRequest> entry);
+
+    // The removals of authenticated data which the requester misses and which it can store. A filter type can exclude
+    // removals which the requester cannot store, because its filter never lists them and every response would contain
+    // them again.
+    protected List<RemoveAuthenticatedDataRequest> getStorableRemovals(
+            List<RemoveAuthenticatedDataRequest> missingRemovals) {
+        return missingRemovals;
+    }
+
+    // The removals of mailbox data which the requester misses and which it can store, as getStorableRemovals for
+    // authenticated data.
+    protected List<RemoveMailboxRequest> getStorableMailboxRemovals(List<RemoveMailboxRequest> missingRemovals) {
+        return missingRemovals;
+    }
 
     public Inventory createInventory(InventoryFilter inventoryFilter) {
         final AtomicInteger accumulatedSize = new AtomicInteger();
@@ -100,28 +118,11 @@ public abstract class FilterService<T extends InventoryFilter> {
                     }
                 });
 
-        List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getDistributedData().getMetaData().getPriority(),
-                        o1.getDistributedData().getMetaData().getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toList());
-
-
+        List<DataRequest> sortedAndFilteredRequests = selectWithinMaxSize(addRequests, accumulatedSize, maxSizeReached);
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(removeRequests.stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
-                    .filter(request -> {
-                        if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                        }
-                        return !maxSizeReached.get();
-                    })
-                    .toList());
+            sortedAndFilteredRequests.addAll(selectWithinMaxSize(getStorableRemovals(removeRequests),
+                    accumulatedSize,
+                    maxSizeReached));
         }
         return sortedAndFilteredRequests;
     }
@@ -143,27 +144,11 @@ public abstract class FilterService<T extends InventoryFilter> {
                         }
                     }
                 });
-        List<DataRequest> sortedAndFilteredRequests = addRequests.stream()
-                .sorted((o1, o2) -> Integer.compare(o2.getMailboxSequentialData().getMailboxData().getMetaData().getPriority(),
-                        o1.getMailboxSequentialData().getMailboxData().getMetaData().getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toList());
-
+        List<DataRequest> sortedAndFilteredRequests = selectWithinMaxSize(addRequests, accumulatedSize, maxSizeReached);
         if (!maxSizeReached.get()) {
-            sortedAndFilteredRequests.addAll(removeRequests.stream()
-                    .sorted((o1, o2) -> Integer.compare(o2.getMetaData().getPriority(), o1.getMetaData().getPriority()))
-                    .filter(request -> {
-                        if (!maxSizeReached.get()) {
-                            maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                        }
-                        return !maxSizeReached.get();
-                    })
-                    .toList());
+            sortedAndFilteredRequests.addAll(selectWithinMaxSize(getStorableMailboxRemovals(removeRequests),
+                    accumulatedSize,
+                    maxSizeReached));
         }
         return sortedAndFilteredRequests;
     }
@@ -171,18 +156,44 @@ public abstract class FilterService<T extends InventoryFilter> {
     private List<DataRequest> getAppendOnlyDataRequests(T filter,
                                                         AtomicInteger accumulatedSize,
                                                         AtomicBoolean maxSizeReached) {
-        return storageService.getAddAppendOnlyDataStoreMaps().flatMap(map -> map.entrySet().stream())
+        List<AddAppendOnlyDataRequest> missingRequests = storageService.getAddAppendOnlyDataStoreMaps()
+                .flatMap(map -> map.entrySet().stream())
                 .filter(entry -> isAddAppendOnlyDataRequestMissing(filter, entry))
-                //hashSetFilter.getFilterEntries().contains(toFilterEntry(mapEntry)))
                 .map(Map.Entry::getValue)
-                .sorted((o1, o2) -> Integer.compare(o2.getAppendOnlyData().getMetaData().getPriority(),
-                        o1.getAppendOnlyData().getMetaData().getPriority()))
-                .filter(request -> {
-                    if (!maxSizeReached.get()) {
-                        maxSizeReached.set(accumulatedSize.addAndGet(request.getSerializedSize()) > maxSize);
-                    }
-                    return !maxSizeReached.get();
-                })
-                .collect(Collectors.toList());
+                .toList();
+        return selectWithinMaxSize(missingRequests, accumulatedSize, maxSizeReached);
+    }
+
+    // Selects the requests with the highest priority first, as long as the response stays within maxSize. At the first
+    // request which does not fit, maxSizeReached is set, and no later request of any selection is added. A request which
+    // is larger than maxSize fits into no response. It is skipped, so that it does not end every response of this node
+    // before the requests after it (rule 13 of docs/specifications/network/inventory-hash-set-filter.md).
+    private List<DataRequest> selectWithinMaxSize(Collection<? extends DataRequest> requests,
+                                                  AtomicInteger accumulatedSize,
+                                                  AtomicBoolean maxSizeReached) {
+        List<? extends DataRequest> sortedRequests = requests.stream()
+                .sorted((o1, o2) -> Integer.compare(o2.getPriority(), o1.getPriority()))
+                .toList();
+        List<DataRequest> selectedRequests = new ArrayList<>();
+        int numRequestsLargerThanMaxSize = 0;
+        for (DataRequest request : sortedRequests) {
+            if (maxSizeReached.get()) {
+                break;
+            }
+            int serializedSize = request.getSerializedSize();
+            if (serializedSize > maxSize) {
+                numRequestsLargerThanMaxSize++;
+                continue;
+            }
+            maxSizeReached.set(accumulatedSize.addAndGet(serializedSize) > maxSize);
+            if (!maxSizeReached.get()) {
+                selectedRequests.add(request);
+            }
+        }
+        if (numRequestsLargerThanMaxSize > 0) {
+            log.warn("We skipped {} requests which are larger than the size limit of an inventory response ({} bytes)",
+                    numRequestsLargerThanMaxSize, maxSize);
+        }
+        return selectedRequests;
     }
 }

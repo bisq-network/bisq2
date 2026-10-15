@@ -54,7 +54,7 @@ public class BisqEasyTakeOfferEventHandler extends BisqEasyTradeEventHandlerAsMe
         send(new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 trade.getContract(),
                 contractSignatureData));

@@ -18,6 +18,8 @@
 package bisq.settings;
 
 import bisq.common.application.DevMode;
+import bisq.common.asset.FiatCurrencyRepository;
+import bisq.common.locale.CountryRepository;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
@@ -25,7 +27,10 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.StringUtils;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -34,12 +39,17 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 import static bisq.settings.SettingsService.DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+import static bisq.settings.SettingsService.DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
+import static bisq.settings.SettingsService.MAX_PRICE_DEVIATION_WARNING_THRESHOLD;
+import static bisq.settings.SettingsService.MIN_PRICE_DEVIATION_WARNING_THRESHOLD;
 import static bisq.settings.SettingsService.DEFAULT_MIN_REQUIRED_REPUTATION_SCORE;
 import static bisq.settings.SettingsService.DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
 import static bisq.settings.SettingsService.DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
@@ -64,10 +74,15 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Boolean> muSigTradeRulesConfirmed = new Observable<>();
     final Observable<ChatNotificationType> chatNotificationType = new Observable<>();
     final ObservableSet<String> consumedAlertIds = new ObservableSet<>();
+    @SuppressWarnings("DeprecatedIsStillUsed")
+    @Deprecated(since = "2.1.12")
     final Observable<Boolean> isTacAccepted = new Observable<>();
+    final List<TacAcceptance> tacAcceptances = new CopyOnWriteArrayList<>();
     final Observable<Boolean> closeMyOfferWhenTaken = new Observable<>();
     final Observable<Boolean> preventStandbyMode = new Observable<>();
     final Observable<String> languageTag = new Observable<>();
+    final Observable<String> countryCode = new Observable<>();
+    final Observable<String> currencyCode = new Observable<>();
     final ObservableSet<String> supportedLanguageTags = new ObservableSet<>();
     final Observable<Double> difficultyAdjustmentFactor = new Observable<>();
     final Observable<Boolean> ignoreDiffAdjustmentFromSecManager = new Observable<>();
@@ -86,8 +101,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     final Observable<Integer> numDaysAfterRedactingTradeData = new Observable<>();
     final Observable<Boolean> muSigActivated = new Observable<>();
     final Observable<Boolean> autoAddToContactsList = new Observable<>();
-    final Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap = new ConcurrentHashMap<>();
+    //todo should be done with cookies
+    final Observable<Market> muSigLastSelectedFiatMarket = new Observable<>();
+    final Observable<Market> muSigLastSelectedOtherMarket = new Observable<>();
     final Observable<Market> selectedWalletMarket = new Observable<>();
+    final Observable<Boolean> showLatestTxs = new Observable<>();
+    final Observable<Double> priceDeviationWarningThreshold = new Observable<>();
 
     SettingsStore() {
         this(new Cookie(),
@@ -100,14 +119,17 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 false,
                 ChatNotificationType.ALL,
                 false,
+                new ArrayList<>(),
                 new HashSet<>(),
                 true,
                 LanguageRepository.getDefaultLanguageTag(),
+                CountryRepository.getDefaultCountry().getCode(),
+                FiatCurrencyRepository.getDefaultCurrency().getCode(),
                 true,
                 Set.of(LanguageRepository.getDefaultLanguageTag()),
                 NetworkLoad.DEFAULT_DIFFICULTY_ADJUSTMENT,
                 false,
-                new HashSet<>(),
+                Set.of(MarketRepository.getDefaultCryptoBtcMarket()),
                 false,
                 DEFAULT_MAX_TRADE_PRICE_DEVIATION,
                 false,
@@ -120,8 +142,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA,
                 DevMode.isDevMode(),
                 true,
-                new HashMap<>(),
-                MarketRepository.getDefaultBtcFiatMarket());
+                MarketRepository.getDefaultBtcFiatMarket(),
+                MarketRepository.getDefaultCryptoBtcMarket(),
+                MarketRepository.getDefaultBtcFiatMarket(),
+                true,
+                DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD);
     }
 
     SettingsStore(Cookie cookie,
@@ -134,9 +159,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                   boolean muSigTradeRulesConfirmed,
                   ChatNotificationType chatNotificationType,
                   boolean isTacAccepted,
+                  List<TacAcceptance> tacAcceptances,
                   Set<String> consumedAlertIds,
                   boolean closeMyOfferWhenTaken,
                   String languageTag,
+                  String countryCode,
+                  String currencyCode,
                   boolean preventStandbyMode,
                   Set<String> supportedLanguageTags,
                   double difficultyAdjustmentFactor,
@@ -154,8 +182,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                   int numDaysAfterRedactingTradeData,
                   boolean muSigActivated,
                   boolean autoAddToContactsList,
-                  Map<String, Market> muSigLastSelectedMarketByBaseCurrencyMap,
-                  Market selectedWalletMarket) {
+                  Market muSigLastSelectedFiatMarket,
+                  Market muSigLastSelectedOtherMarket,
+                  Market selectedWalletMarket,
+                  boolean showLatestTxs,
+                  double priceDeviationWarningThreshold) {
         this.cookie = cookie;
         this.dontShowAgainMap.putAll(dontShowAgainMap);
         this.useAnimations.set(useAnimations);
@@ -166,9 +197,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.muSigTradeRulesConfirmed.set(muSigTradeRulesConfirmed);
         this.chatNotificationType.set(chatNotificationType);
         this.isTacAccepted.set(isTacAccepted);
+        this.tacAcceptances.addAll(tacAcceptances);
         this.consumedAlertIds.setAll(consumedAlertIds);
         this.closeMyOfferWhenTaken.set(closeMyOfferWhenTaken);
         this.languageTag.set(languageTag);
+        this.countryCode.set(countryCode);
+        this.currencyCode.set(currencyCode);
         this.preventStandbyMode.set(preventStandbyMode);
         this.supportedLanguageTags.setAll(supportedLanguageTags);
         this.difficultyAdjustmentFactor.set(difficultyAdjustmentFactor);
@@ -186,8 +220,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
         this.numDaysAfterRedactingTradeData.set(numDaysAfterRedactingTradeData);
         this.muSigActivated.set(muSigActivated);
         this.autoAddToContactsList.set(autoAddToContactsList);
-        this.muSigLastSelectedMarketByBaseCurrencyMap.putAll(muSigLastSelectedMarketByBaseCurrencyMap);
+        this.muSigLastSelectedFiatMarket.set(muSigLastSelectedFiatMarket);
+        this.muSigLastSelectedOtherMarket.set(muSigLastSelectedOtherMarket);
         this.selectedWalletMarket.set(selectedWalletMarket);
+        this.showLatestTxs.set(showLatestTxs);
+        this.priceDeviationWarningThreshold.set(priceDeviationWarningThreshold);
     }
 
     @SuppressWarnings("deprecation")
@@ -204,9 +241,14 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setMuSigTradeRulesConfirmed(muSigTradeRulesConfirmed.get())
                 .setChatNotificationType(chatNotificationType.get().toProtoEnum())
                 .setIsTacAccepted(isTacAccepted.get())
+                .addAllTacAcceptances(tacAcceptances.stream()
+                        .map(tacAcceptance -> tacAcceptance.toProto(serializeForHash))
+                        .collect(Collectors.toList()))
                 .addAllConsumedAlertIds(new ArrayList<>(consumedAlertIds))
                 .setCloseMyOfferWhenTaken(closeMyOfferWhenTaken.get())
                 .setLanguageTag(languageTag.get())
+                .setCountryCode(countryCode.get())
+                .setCurrencyCode(currencyCode.get())
                 .setPreventStandbyMode(preventStandbyMode.get())
                 .addAllSupportedLanguageTags(new ArrayList<>(supportedLanguageTags))
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor.get())
@@ -224,9 +266,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 .setNumDaysAfterRedactingTradeData(numDaysAfterRedactingTradeData.get())
                 .setMuSigActivated(muSigActivated.get())
                 .setAutoAddToContactsList(autoAddToContactsList.get())
-                .putAllMuSigLastSelectedMarketByBaseCurrencyMap(muSigLastSelectedMarketByBaseCurrencyMap.entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().toProto(serializeForHash))))
-                .setSelectedWalletMarket(selectedWalletMarket.get().toProto(serializeForHash));
+                .setMuSigLastSelectedFiatMarket(muSigLastSelectedFiatMarket.get().toProto(serializeForHash))
+                .setMuSigLastSelectedOtherMarket(muSigLastSelectedOtherMarket.get().toProto(serializeForHash))
+                .setSelectedWalletMarket(selectedWalletMarket.get().toProto(serializeForHash))
+                .setShowLatestTxs(showLatestTxs.get())
+                .setPriceDeviationWarningThreshold(priceDeviationWarningThreshold.get());
     }
 
     @Override
@@ -235,59 +279,97 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
     }
 
     @SuppressWarnings("deprecation")
-    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto) {
-        double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
-        if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
-                maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
-            maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
-        }
+    public static SettingsStore fromProto(bisq.settings.protobuf.SettingsStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            double maxTradePriceDeviation = proto.getMaxTradePriceDeviation();
+            if (maxTradePriceDeviation < MIN_TRADE_PRICE_DEVIATION ||
+                    maxTradePriceDeviation > MAX_TRADE_PRICE_DEVIATION) {
+                maxTradePriceDeviation = DEFAULT_MAX_TRADE_PRICE_DEVIATION;
+            }
 
-        double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
-        if (totalMaxBackupSizeInMB == 0) {
-            totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
-        }
+            // Absent proto3 doubles deserialize as 0; normalize to the default like maxTradePriceDeviation.
+            double priceDeviationWarningThreshold = proto.getPriceDeviationWarningThreshold();
+            // Negated inclusive-range form so NaN also normalizes to the default.
+            if (!(priceDeviationWarningThreshold >= MIN_PRICE_DEVIATION_WARNING_THRESHOLD &&
+                    priceDeviationWarningThreshold <= MAX_PRICE_DEVIATION_WARNING_THRESHOLD)) {
+                priceDeviationWarningThreshold = DEFAULT_PRICE_DEVIATION_WARNING_THRESHOLD;
+            }
 
-        int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
-        if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
-                numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
-            numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
-        }
+            double totalMaxBackupSizeInMB = proto.getTotalMaxBackupSizeInMB();
+            if (totalMaxBackupSizeInMB == 0) {
+                totalMaxBackupSizeInMB = DEFAULT_TOTAL_MAX_BACKUP_SIZE_IN_MB;
+            }
 
-        return new SettingsStore(Cookie.fromProto(proto.getCookie()),
-                proto.getDontShowAgainMapMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
-                proto.getUseAnimations(),
-                Market.fromProto(proto.getSelectedMuSigMarket()),
-                proto.getMinRequiredReputationScore(),
-                proto.getOffersOnly(),
-                proto.getBisqEasyTradeRulesConfirmed(),
-                proto.getMuSigTradeRulesConfirmed(),
-                ChatNotificationType.fromProto(proto.getChatNotificationType()),
-                proto.getIsTacAccepted(),
-                new HashSet<>(proto.getConsumedAlertIdsList()),
-                proto.getCloseMyOfferWhenTaken(),
-                proto.getLanguageTag(),
-                proto.getPreventStandbyMode(),
-                new HashSet<>(proto.getSupportedLanguageTagsList()),
-                proto.getDifficultyAdjustmentFactor(),
-                proto.getIgnoreDiffAdjustmentFromSecManager(),
-                new HashSet<>(proto.getFavouriteMarketsList().stream()
-                        .map(Market::fromProto).collect(Collectors.toSet())),
-                proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
-                maxTradePriceDeviation,
-                proto.getShowBuyOffers(),
-                proto.getShowOfferListExpanded(),
-                proto.getShowMarketSelectionListCollapsed(),
-                proto.getBackupLocation(),
-                proto.getShowMyOffersOnly(),
-                totalMaxBackupSizeInMB,
-                ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
-                numDaysAfterRedactingTradeData,
-                proto.getMuSigActivated(),
-                proto.getAutoAddToContactsList(),
-                proto.getMuSigLastSelectedMarketByBaseCurrencyMapMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> Market.fromProto(entry.getValue()))),
-                proto.hasSelectedWalletMarket() ? Market.fromProto(proto.getSelectedWalletMarket()) : MarketRepository.getDefaultBtcFiatMarket());
+            int numDaysAfterRedactingTradeData = proto.getNumDaysAfterRedactingTradeData();
+            if (numDaysAfterRedactingTradeData < MIN_NUM_DAYS_AFTER_REDACTING_TRADE_DATA ||
+                    numDaysAfterRedactingTradeData > MAX_NUM_DAYS_AFTER_REDACTING_TRADE_DATA) {
+                numDaysAfterRedactingTradeData = DEFAULT_NUM_DAYS_AFTER_REDACTING_TRADE_DATA;
+            }
+
+            String countryCode = proto.getCountryCode();
+            if (StringUtils.isEmpty(countryCode)) {
+                countryCode = CountryRepository.getDefaultCountry().getCode();
+            }
+
+            String currencyCode = proto.getCurrencyCode();
+            if (StringUtils.isEmpty(currencyCode)) {
+                currencyCode = FiatCurrencyRepository.getDefaultCurrency().getCode();
+            }
+    // ,
+            Market muSigLastSelectedFiatMarket = proto.hasMuSigLastSelectedFiatMarket()
+                    ? Market.fromProto(proto.getMuSigLastSelectedFiatMarket())
+                    : MarketRepository.getDefaultBtcFiatMarket();
+            Market muSigLastSelectedOtherMarket = proto.hasMuSigLastSelectedOtherMarket()
+                    ? Market.fromProto(proto.getMuSigLastSelectedOtherMarket())
+                    : MarketRepository.getDefaultCryptoBtcMarket();
+            return new SettingsStore(Cookie.fromProto(proto.getCookie()),
+                    proto.getDontShowAgainMapMap().entrySet().stream()
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
+                    proto.getUseAnimations(),
+                    Market.fromProto(proto.getSelectedMuSigMarket()),
+                    proto.getMinRequiredReputationScore(),
+                    proto.getOffersOnly(),
+                    proto.getBisqEasyTradeRulesConfirmed(),
+                    proto.getMuSigTradeRulesConfirmed(),
+                    ChatNotificationType.fromProto(proto.getChatNotificationType()),
+                    proto.getIsTacAccepted(),
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getTacAcceptancesList(),
+                                    TacAcceptance::fromProto)
+                            .collect(Collectors.toList()),
+                    new HashSet<>(proto.getConsumedAlertIdsList()),
+                    proto.getCloseMyOfferWhenTaken(),
+                    proto.getLanguageTag(),
+                    countryCode,
+                    currencyCode,
+                    proto.getPreventStandbyMode(),
+                    new HashSet<>(proto.getSupportedLanguageTagsList()),
+                    proto.getDifficultyAdjustmentFactor(),
+                    proto.getIgnoreDiffAdjustmentFromSecManager(),
+                    new HashSet<>(ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getFavouriteMarketsList(),
+                                    Market::fromProto).collect(Collectors.toSet())),
+                    proto.getIgnoreMinRequiredReputationScoreFromSecManager(),
+                    maxTradePriceDeviation,
+                    proto.getShowBuyOffers(),
+                    proto.getShowOfferListExpanded(),
+                    proto.getShowMarketSelectionListCollapsed(),
+                    proto.getBackupLocation(),
+                    proto.getShowMyOffersOnly(),
+                    totalMaxBackupSizeInMB,
+                    ChatMessageType.fromProto(proto.getBisqEasyOfferbookMessageTypeFilter()),
+                    numDaysAfterRedactingTradeData,
+                    proto.getMuSigActivated(),
+                    proto.getAutoAddToContactsList(),
+                    muSigLastSelectedFiatMarket,
+                    muSigLastSelectedOtherMarket,
+                    proto.hasSelectedWalletMarket()
+                            ? Market.fromProto(proto.getSelectedWalletMarket())
+                            : MarketRepository.getDefaultBtcFiatMarket(),
+                    proto.getShowLatestTxs(),
+                    priceDeviationWarningThreshold);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -313,9 +395,12 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 muSigTradeRulesConfirmed.get(),
                 chatNotificationType.get(),
                 isTacAccepted.get(),
+                List.copyOf(tacAcceptances),
                 Set.copyOf(consumedAlertIds),
                 closeMyOfferWhenTaken.get(),
                 languageTag.get(),
+                countryCode.get(),
+                currencyCode.get(),
                 preventStandbyMode.get(),
                 Set.copyOf(supportedLanguageTags),
                 difficultyAdjustmentFactor.get(),
@@ -333,8 +418,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
                 numDaysAfterRedactingTradeData.get(),
                 muSigActivated.get(),
                 autoAddToContactsList.get(),
-                Map.copyOf(muSigLastSelectedMarketByBaseCurrencyMap),
-                selectedWalletMarket.get());
+                muSigLastSelectedFiatMarket.get(),
+                muSigLastSelectedOtherMarket.get(),
+                selectedWalletMarket.get(),
+                showLatestTxs.get(),
+                priceDeviationWarningThreshold.get());
     }
 
     @Override
@@ -350,9 +438,13 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             muSigTradeRulesConfirmed.set(persisted.muSigTradeRulesConfirmed.get());
             chatNotificationType.set(persisted.chatNotificationType.get());
             isTacAccepted.set(persisted.isTacAccepted.get());
+            tacAcceptances.clear();
+            tacAcceptances.addAll(persisted.tacAcceptances);
             consumedAlertIds.setAll(persisted.consumedAlertIds);
             closeMyOfferWhenTaken.set(persisted.closeMyOfferWhenTaken.get());
             languageTag.set(persisted.languageTag.get());
+            countryCode.set(persisted.countryCode.get());
+            currencyCode.set(persisted.currencyCode.get());
             preventStandbyMode.set(persisted.preventStandbyMode.get());
             supportedLanguageTags.setAll(persisted.supportedLanguageTags);
             difficultyAdjustmentFactor.set(persisted.difficultyAdjustmentFactor.get());
@@ -370,8 +462,11 @@ public final class SettingsStore implements PersistableStore<SettingsStore> {
             numDaysAfterRedactingTradeData.set(persisted.numDaysAfterRedactingTradeData.get());
             muSigActivated.set(persisted.muSigActivated.get());
             autoAddToContactsList.set(persisted.autoAddToContactsList.get());
-            muSigLastSelectedMarketByBaseCurrencyMap.putAll(persisted.muSigLastSelectedMarketByBaseCurrencyMap);
+            muSigLastSelectedFiatMarket.set(persisted.muSigLastSelectedFiatMarket.get());
+            muSigLastSelectedOtherMarket.set(persisted.muSigLastSelectedOtherMarket.get());
             selectedWalletMarket.set(persisted.selectedWalletMarket.get());
+            showLatestTxs.set(persisted.showLatestTxs.get());
+            priceDeviationWarningThreshold.set(persisted.priceDeviationWarningThreshold.get());
         } catch (Exception e) {
             log.error("Exception at applyPersisted", e);
         }

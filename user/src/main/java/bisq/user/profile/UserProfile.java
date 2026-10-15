@@ -22,6 +22,7 @@ import bisq.common.application.ApplicationVersion;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.util.StringUtils;
 import bisq.common.validation.NetworkDataValidation;
@@ -29,8 +30,10 @@ import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
 import bisq.security.DigestUtil;
+import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
 import bisq.user.identity.NymIdGenerator;
 import com.google.common.base.Charsets;
@@ -48,6 +51,7 @@ import java.util.stream.Collectors;
 import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 /**
  * Publicly shared user profile (from other peers or mine).
@@ -56,7 +60,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Slf4j
 @Getter
-public final class UserProfile implements DistributedData, PublishDateAware {
+public final class UserProfile implements OwnershipVerifiableData, PublishDateAware {
     public static final long TTL = TTL_15_DAYS;
     public static final int VERSION = 1;
     public static final int MAX_LENGTH_NICK_NAME = 100;
@@ -83,8 +87,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL, DEFAULT_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, UserProfile.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     @EqualsAndHashCode.Include
     private final String nickName;
@@ -148,6 +151,10 @@ public final class UserProfile implements DistributedData, PublishDateAware {
 
     @Override
     public void verify() {
+        // All released versions create the payload as the hash of the profile key, and ignore profiles with another
+        // payload. ProofOfWork accepts a payload of up to 10 000 000 bytes, so without this rule a profile could make
+        // nodes store, relay, persist and log large data (see docs/specifications/user/user-profile-proof-of-work.md).
+        checkArgument(!isProofOfWorkInvalid(), "The payload of the proof of work must be the hash of the profile key");
         NetworkDataValidation.validateText(nickName, MAX_LENGTH_NICK_NAME);
         NetworkDataValidation.validateText(terms, MAX_LENGTH_TERMS);
         NetworkDataValidation.validateText(statement, MAX_LENGTH_STATEMENT);
@@ -174,15 +181,19 @@ public final class UserProfile implements DistributedData, PublishDateAware {
         return unsafeToProto(serializeForHash);
     }
 
-    public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) {
-        return new UserProfile(proto.getVersion(),
-                proto.getNickName(),
-                ProofOfWork.fromProto(proto.getProofOfWork()),
-                proto.getAvatarVersion(),
-                NetworkId.fromProto(proto.getNetworkId()),
-                proto.getTerms(),
-                proto.getStatement(),
-                proto.getApplicationVersion());
+    public static UserProfile fromProto(bisq.user.protobuf.UserProfile proto) throws UnresolvableProtobufException {
+        try {
+            return new UserProfile(proto.getVersion(),
+                    proto.getNickName(),
+                    ProofOfWork.fromProto(proto.getProofOfWork()),
+                    proto.getAvatarVersion(),
+                    NetworkId.fromProto(proto.getNetworkId()),
+                    proto.getTerms(),
+                    proto.getStatement(),
+                    proto.getApplicationVersion());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<DistributedData> getResolver() {
@@ -201,16 +212,17 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.3;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
+    // The profile is owned by the key of its network ID
     @Override
-    public boolean isDataInvalid(byte[] pubKeyHash) {
-        return !Arrays.equals(networkId.getPubKey().getHash(), pubKeyHash);
+    public byte[] getOwnerPubKeyHash() {
+        return getPubKeyHash();
     }
 
-    public boolean isDataInvalid() {
+    public boolean isProofOfWorkInvalid() {
         return !Arrays.equals(proofOfWork.getPayload(), getPubKeyHash());
     }
 
@@ -219,7 +231,7 @@ public final class UserProfile implements DistributedData, PublishDateAware {
     }
 
     public byte[] getPubKeyHash() {
-        return networkId.getPubKey().getHash();
+        return networkId.getPubKeyHash();
     }
 
     public String getPubKeyAsHex() {
@@ -239,29 +251,55 @@ public final class UserProfile implements DistributedData, PublishDateAware {
 
     public ByteArray getProofOfBurnKey() {
         if (proofOfBurnHash == null) {
-            // Must be compatible with Bisq 1 proofOfBurn input
-            proofOfBurnHash = new ByteArray(DigestUtil.hash(getId().getBytes(Charsets.UTF_8)));
+            proofOfBurnHash = getProofOfBurnKey(getId());
         }
         return proofOfBurnHash;
     }
 
     public ByteArray getBondedReputationKey() {
         if (bondedReputationHash == null) {
-            bondedReputationHash = new ByteArray(DigestUtil.hash(getPubKeyHash()));
+            bondedReputationHash = getBondedReputationKey(getPubKeyHash());
         }
         return bondedReputationHash;
     }
 
     public ByteArray getAccountAgeKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getAccountAgeKey(getId());
     }
 
     public ByteArray getProfileAgeKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getProfileAgeKey(getId());
     }
 
     public ByteArray getSignedWitnessKey() {
-        return new ByteArray(getId().getBytes(StandardCharsets.UTF_8));
+        return getSignedWitnessKey(getId());
+    }
+
+    // The following methods return the same keys as the methods above, for a service which knows only the ID of a
+    // profile, for example after the profile was removed.
+    public static ByteArray getProofOfBurnKey(String userProfileId) {
+        // Must be compatible with Bisq 1 proofOfBurn input
+        return new ByteArray(DigestUtil.hash(userProfileId.getBytes(Charsets.UTF_8)));
+    }
+
+    public static ByteArray getBondedReputationKey(String userProfileId) {
+        return getBondedReputationKey(PubKey.getHashFromId(userProfileId));
+    }
+
+    public static ByteArray getAccountAgeKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static ByteArray getProfileAgeKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    public static ByteArray getSignedWitnessKey(String userProfileId) {
+        return new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private static ByteArray getBondedReputationKey(byte[] pubKeyHash) {
+        return new ByteArray(DigestUtil.hash(pubKeyHash));
     }
 
     public String getTooltipString() {

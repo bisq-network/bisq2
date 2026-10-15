@@ -19,7 +19,6 @@ package bisq.user.reputation;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.common.data.ByteArray;
-import bisq.common.data.Pair;
 import bisq.common.timer.Scheduler;
 import bisq.common.util.MathUtils;
 import bisq.network.NetworkService;
@@ -161,7 +160,8 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
             return;
         }
         claimRegistry.add(authorizedData, data.getProfileId(), data.getWitnessNullifier());
-        super.onAuthorizedDataAdded(authorizedData);
+        // activeAuthorizations holds the publications, so the publication state of the base class is not used
+        handleAddedAuthorizedDistributedData(data);
     }
 
     @Override
@@ -186,6 +186,11 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
     @Override
     protected ByteArray getUserProfileKey(UserProfile userProfile) {
         return userProfile.getSignedWitnessKey();
+    }
+
+    @Override
+    protected ByteArray getUserProfileKey(String userProfileId) {
+        return UserProfile.getSignedWitnessKey(userProfileId);
     }
 
     @Override
@@ -247,12 +252,10 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
                 .filter(data -> data.getProfileId().equals(userProfileId))
                 .filter(data -> !claimRegistry.hasConflict(data.getWitnessNullifier()))
                 .min(java.util.Comparator.comparingLong(AuthorizedSignedWitnessData::getDateBucket));
-        ByteArray userProfileKey = new ByteArray(userProfileId.getBytes(StandardCharsets.UTF_8));
+        ByteArray userProfileKey = getUserProfileKey(userProfileId);
 
         if (bestData.isEmpty()) {
-            dataSetByHash.remove(userProfileKey);
-            scoreByUserProfileId.remove(userProfileId);
-            userProfileIdScorePair.set(new Pair<>(userProfileId, 0L));
+            removeDataSetAndScore(userProfileKey, userProfileId);
             return;
         }
 
@@ -269,6 +272,6 @@ public class SignedWitnessService extends SourceReputationService<AuthorizedSign
         long score = doCalculateScore(
                 WitnessReputationProtocol.getConservativeAgeInDays(bestData.get().getDateBucket()));
         scoreByUserProfileId.put(userProfileId, score);
-        userProfileIdScorePair.set(new Pair<>(userProfileId, score));
+        notifyScoreChanged(userProfileId, score);
     }
 }

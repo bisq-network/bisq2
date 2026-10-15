@@ -105,6 +105,90 @@ public class FsmTest {
     }
 
     @Test
+    void testInternalTransition() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .stay();
+
+        fsm.handle(new MockEvent1(model, "test1"));
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals("test1", model.data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+
+        fsm.handle(new MockEvent1(model, "test2"));
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals("test2", model.data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(0, model.processedEvents.size());
+    }
+
+    @Test
+    void testOutOfOrderInternalTransition() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .stay();
+
+        fsm.handle(new MockEvent2(model, "internal"));
+        assertEquals(MockState.INIT, model.getState());
+        assertNull(model.data);
+        assertEquals(1, model.eventQueue.size());
+
+        fsm.handle(new MockEvent1(model, "forward"));
+        assertEquals(MockState.S1, model.getState());
+        assertEquals("internal", model.data);
+        assertEquals(0, model.eventQueue.size());
+        assertEquals(1, model.processedEvents.size());
+    }
+
+    @Test
+    void testInternalTransitionDoesNotRetryPendingEvents() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .stay();
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent3.class)
+                .to(MockState.S1);
+
+        fsm.handle(new MockEvent2(model, "pending"));
+        fsm.handle(new MockEvent1(model, "internal"));
+
+        assertEquals(MockState.INIT, model.getState());
+        assertEquals("internal", model.data);
+        assertEquals(1, model.eventQueue.size());
+
+        fsm.handle(new MockEvent3(model, "forward"));
+        assertEquals(MockState.S2, model.getState());
+        assertEquals("pending", model.data);
+        assertEquals(0, model.eventQueue.size());
+    }
+
+    @Test
     void testOutOfOrderEvents() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);

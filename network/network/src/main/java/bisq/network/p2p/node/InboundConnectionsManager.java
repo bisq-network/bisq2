@@ -201,7 +201,8 @@ public class InboundConnectionsManager {
                             handshakeRequest.getCapability(),
                             peersNetworkLoadSnapshot,
                             networkEnvelopeSocketChannel,
-                            new ConnectionMetrics()
+                            new ConnectionMetrics(),
+                            handshakeResponder.getReceivedMessageCounters()
                     )
             );
         } catch (ConnectionException e) {

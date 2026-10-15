@@ -19,8 +19,10 @@ package bisq.bonded_roles;
 
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.bonded_roles.explorer.ExplorerService;
+import bisq.bonded_roles.market_price.DefaultMarketPriceService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.bonded_roles.mobile_notification_relay.MobileNotificationRelayClient;
+import bisq.bonded_roles.oracle.OnlyStaticOracleNodes;
 import bisq.bonded_roles.registration.BondedRoleRegistrationService;
 import bisq.bonded_roles.release.ReleaseNotificationsService;
 import bisq.bonded_roles.security_manager.alert.AlertService;
@@ -43,28 +45,34 @@ public class BondedRolesService implements Service {
         private final com.typesafe.config.Config blockchainExplorer;
         private final com.typesafe.config.Config mobileNotifications;
         private final boolean ignoreSecurityManager;
+        // See OnlyStaticOracleNodes
+        private final boolean onlyStaticOracleNodes;
 
         public Config(com.typesafe.config.Config marketPrice,
                       com.typesafe.config.Config blockchainExplorer,
                       com.typesafe.config.Config mobileNotifications,
-                      boolean ignoreSecurityManager) {
+                      boolean ignoreSecurityManager,
+                      boolean onlyStaticOracleNodes) {
             this.marketPrice = marketPrice;
             this.blockchainExplorer = blockchainExplorer;
             this.mobileNotifications = mobileNotifications;
             this.ignoreSecurityManager = ignoreSecurityManager;
+            this.onlyStaticOracleNodes = onlyStaticOracleNodes;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(config.getConfig("marketPrice"),
                     config.getConfig("blockchainExplorer"),
                     config.getConfig("mobileNotifications"),
-                    config.getBoolean("ignoreSecurityManager"));
+                    config.getBoolean("ignoreSecurityManager"),
+                    // A node without the key uses true (docs/specifications/bonded-roles/authorized-data.md)
+                    !config.hasPath("onlyStaticOracleNodes") || config.getBoolean("onlyStaticOracleNodes"));
         }
     }
 
     private final BondedRoleRegistrationService bondedRoleRegistrationService;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    private final MarketPriceService marketPriceService;
+    private final DefaultMarketPriceService marketPriceService;
     private final ExplorerService explorerService;
     private final AlertService alertService;
     private final DifficultyAdjustmentService difficultyAdjustmentService;
@@ -74,9 +82,16 @@ public class BondedRolesService implements Service {
     public BondedRolesService(Config config,
                               PersistenceService persistenceService,
                               NetworkService networkService) {
+        // The network storage reads the restriction through the types of the data, so it is set for the whole node.
+        // The services are created before the stores load their data (see Executable).
+        OnlyStaticOracleNodes.setEnabled(config.isOnlyStaticOracleNodes());
+        if (!config.isOnlyStaticOracleNodes()) {
+            log.warn("Oracle nodes with a non-static key are allowed (onlyStaticOracleNodes=false). Nodes with the " +
+                    "default configuration do not accept their data.");
+        }
         authorizedBondedRolesService = new AuthorizedBondedRolesService(networkService, config.isIgnoreSecurityManager());
         bondedRoleRegistrationService = new BondedRoleRegistrationService(networkService, authorizedBondedRolesService);
-        marketPriceService = new MarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
+        marketPriceService = new DefaultMarketPriceService(config.getMarketPrice(), persistenceService, networkService, authorizedBondedRolesService);
         explorerService = new ExplorerService(ExplorerService.Config.from(config.getBlockchainExplorer()), networkService);
         alertService = new AlertService(authorizedBondedRolesService);
         difficultyAdjustmentService = new DifficultyAdjustmentService(authorizedBondedRolesService);
@@ -110,5 +125,9 @@ public class BondedRolesService implements Service {
                 .thenCompose(result -> explorerService.shutdown())
                 .thenCompose(result -> mobileNotificationRelayClient.shutdown())
                 .thenCompose(result -> releaseNotificationsService.shutdown());
+    }
+
+    public MarketPriceService getMarketPriceService() {
+        return marketPriceService;
     }
 }

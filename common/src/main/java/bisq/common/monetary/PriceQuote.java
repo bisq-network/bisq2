@@ -17,9 +17,10 @@
 
 package bisq.common.monetary;
 
-import bisq.common.market.Market;
 import bisq.common.asset.Asset;
+import bisq.common.market.Market;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +31,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 import static com.google.common.base.Preconditions.checkArgument;
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * A price quote is using the concept of base currency and quote currency. Base currency is left and quote currency
@@ -74,10 +76,14 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
                 .setQuoteSideMonetary(quoteSideMonetary.toProto(serializeForHash));
     }
 
-    public static PriceQuote fromProto(bisq.common.protobuf.PriceQuote proto) {
-        return new PriceQuote(proto.getValue(),
-                Monetary.fromProto(proto.getBaseSideMonetary()),
-                Monetary.fromProto(proto.getQuoteSideMonetary()));
+    public static PriceQuote fromProto(bisq.common.protobuf.PriceQuote proto) throws UnresolvableProtobufException {
+        try {
+            return new PriceQuote(proto.getValue(),
+                    Monetary.fromProto(proto.getBaseSideMonetary()),
+                    Monetary.fromProto(proto.getQuoteSideMonetary()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     /**
@@ -139,10 +145,12 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      */
     public static PriceQuote from(Monetary baseSideMonetary, Monetary quoteSideMonetary) {
         checkArgument(baseSideMonetary.value != 0, "baseSideMonetary.value must not be 0");
+        // longValueExact: a price value that does not fit into a long must fail instead of
+        // silently wrapping into a plausible-looking wrong price.
         long value = BigDecimal.valueOf(quoteSideMonetary.value)
                 .movePointRight(baseSideMonetary.precision)
                 .divide(BigDecimal.valueOf(baseSideMonetary.value), RoundingMode.HALF_UP)
-                .longValue();
+                .longValueExact();
         return new PriceQuote(value, baseSideMonetary, quoteSideMonetary);
     }
 
@@ -154,10 +162,15 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
      */
     public Monetary toQuoteSideMonetary(Monetary baseSideMonetary) {
         checkArgument(baseSideMonetary.getClass() == this.baseSideMonetary.getClass(),
-                "baseSideMonetary must be the same type as the quote.baseSideMonetary");
+                "baseSideMonetary must be the same type as the quote.baseSideMonetary.\n" +
+                        "parameter baseSideMonetary=" + baseSideMonetary + "\n" +
+                        "this.baseSideMonetary" + this.baseSideMonetary);
+        // setScale(DOWN) preserves the truncation toward zero longValue() applied;
+        // longValueExact makes an overflowing conversion fail instead of silently wrapping.
         long value = BigDecimal.valueOf(baseSideMonetary.value).multiply(BigDecimal.valueOf(this.value))
                 .movePointLeft(baseSideMonetary.precision)
-                .longValue();
+                .setScale(0, RoundingMode.DOWN)
+                .longValueExact();
         if (quoteSideMonetary instanceof Fiat) {
             return new Fiat(value,
                     quoteSideMonetary.code,
@@ -171,11 +184,15 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
 
     public Monetary toBaseSideMonetary(Monetary quoteSideMonetary) {
         checkArgument(quoteSideMonetary.getClass() == this.quoteSideMonetary.getClass(),
-                "quoteSideMonetary must be the same type as the quote.quoteSideMonetary");
+                "quoteSideMonetary must be the same type as the quote.quoteSideMonetary.\n" +
+                        "parameter quoteSideMonetary=" + quoteSideMonetary + "\n" +
+                        "this.quoteSideMonetary" + this.quoteSideMonetary);
+        // Explicit scale 0 keeps the HALF_UP rounding the plain divide applied;
+        // longValueExact makes an overflowing conversion fail instead of silently wrapping.
         long value = BigDecimal.valueOf(quoteSideMonetary.value)
                 .movePointRight(baseSideMonetary.precision)
-                .divide(BigDecimal.valueOf(this.value), RoundingMode.HALF_UP)
-                .longValue();
+                .divide(BigDecimal.valueOf(this.value), 0, RoundingMode.HALF_UP)
+                .longValueExact();
         if (baseSideMonetary instanceof Fiat) {
             return new Fiat(value,
                     baseSideMonetary.code,
@@ -193,6 +210,37 @@ public final class PriceQuote implements Comparable<PriceQuote>, PersistableProt
 
     public double asDouble(int precision) {
         return MathUtils.roundDouble(BigDecimal.valueOf(value).movePointLeft(precision).doubleValue(), precision);
+    }
+
+    public PriceQuote clamp(PriceQuoteRange limits) {
+        checkNotNull(limits, "limits must not be null");
+        return clamp(limits.getMin(), limits.getMax());
+    }
+
+    public PriceQuote clamp(PriceQuote min, PriceQuote max) {
+        checkNotNull(min, "min must not be null");
+        checkNotNull(max, "max must not be null");
+
+        checkArgument(this.getBaseSideMonetary().getCode().equals(max.getBaseSideMonetary().getCode()),
+                "this and max base side codes must match. this.base=%s; max.base=%s",
+                this.getBaseSideMonetary().getCode(), max.getBaseSideMonetary().getCode());
+        checkArgument(this.getQuoteSideMonetary().getCode().equals(max.getQuoteSideMonetary().getCode()),
+                "this and max quote side codes must match. this.quote=%s; max.quote=%s",
+                this.getQuoteSideMonetary().getCode(), max.getQuoteSideMonetary().getCode());
+        checkArgument(min.getBaseSideMonetary().getCode().equals(max.getBaseSideMonetary().getCode()),
+                "min and max base side codes must match. min.base=%s; max.base=%s",
+                min.getBaseSideMonetary().getCode(), max.getBaseSideMonetary().getCode());
+        checkArgument(min.getQuoteSideMonetary().getCode().equals(max.getQuoteSideMonetary().getCode()),
+                "min and max quote side codes must match. min.quote=%s; max.quote=%s",
+                min.getQuoteSideMonetary().getCode(), max.getQuoteSideMonetary().getCode());
+
+        if (value < min.getValue()) {
+            return PriceQuote.from(min.getBaseSideMonetary(), min.getQuoteSideMonetary());
+        } else if (value > max.getValue()) {
+            return PriceQuote.from(max.getBaseSideMonetary(), max.getQuoteSideMonetary());
+        } else {
+            return this;
+        }
     }
 
     @Override

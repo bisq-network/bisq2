@@ -1,0 +1,171 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bisq.network.p2p.services.data.storage.auth;
+
+import bisq.common.data.ByteArray;
+import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
+import lombok.extern.slf4j.Slf4j;
+
+import java.security.GeneralSecurityException;
+import java.security.KeyPair;
+import java.security.PublicKey;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Oracle and seed nodes of earlier versions published their authorized data with the key pair of their network
+ * identity instead of their authorized key pair, which owns the data. For the entries of the transition types
+ * (AuthorizedDistributedData.isLegacyOwnerAccepted) which the earlier key pair published and the authorized key pair
+ * authorized, this publishes the data again with the authorized key pair and removes the entries of the earlier key
+ * pair (see docs/specifications/network/storage-ownership.md). It removes an entry only if the store accepted the new
+ * entry, or if the owner removed the data.
+ * <p>
+ * Only oracle and seed nodes use it. It can be removed when no entry of an earlier publisher is valid anymore:
+ * AuthorizedData.LEGACY_OWNER_CUTOFF_DATE plus the time to live of the transition types.
+ */
+@Slf4j
+public final class AuthorizedDataPublisherMigration {
+    private AuthorizedDataPublisherMigration() {
+    }
+
+    // Applies the requests to the store and returns those which it accepted, for broadcasting. If the migration of an
+    // entry fails, the entry stays, and a later run migrates it.
+    public static List<AuthenticatedDataRequest> migrate(AuthenticatedDataStorageService store,
+                                                         KeyPair earlierPublisherKeyPair,
+                                                         KeyPair authorizedKeyPair) {
+        byte[] earlierPublicKeyBytes = earlierPublisherKeyPair.getPublic().getEncoded();
+        byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
+        if (isSameKey(earlierPublicKeyBytes, authorizedPublicKeyBytes)) {
+            log.info("The authorized key pair is the key pair of the network identity, so no data needs a new publisher");
+            return List.of();
+        }
+        // Only the transition types. AuthorizedOracleNode names the key of the network identity as its owner, and
+        // nodes of earlier versions accept it only from that key, so its entry must stay.
+        List<AddAuthenticatedDataRequest> entriesOfEarlierPublisher = store.getPersistableStore().getMap().values()
+                .stream()
+                .filter(AddAuthenticatedDataRequest.class::isInstance)
+                .map(AddAuthenticatedDataRequest.class::cast)
+                .filter(request -> !request.isExpired())
+                .filter(request -> Arrays.equals(request.getSignaturePubKeyEncoded(), earlierPublicKeyBytes))
+                .filter(request -> request.getAuthenticatedSequentialData().getAuthenticatedData()
+                        instanceof AuthorizedData authorizedData &&
+                        Arrays.equals(authorizedData.getAuthorizedPublicKeyBytes(), authorizedPublicKeyBytes) &&
+                        authorizedData.getAuthorizedDistributedData().isLegacyOwnerAccepted())
+                .toList();
+
+        List<AuthenticatedDataRequest> acceptedRequests = new ArrayList<>();
+        for (AddAuthenticatedDataRequest entry : entriesOfEarlierPublisher) {
+            try {
+                acceptedRequests.addAll(migrate(store, entry, earlierPublisherKeyPair, authorizedKeyPair));
+            } catch (GeneralSecurityException | RuntimeException e) {
+                log.error("Migrating the publisher of entry {} failed", entry.getStorageKey(), e);
+            }
+        }
+        return acceptedRequests;
+    }
+
+    private static List<AuthenticatedDataRequest> migrate(AuthenticatedDataStorageService store,
+                                                          AddAuthenticatedDataRequest entry,
+                                                          KeyPair earlierPublisherKeyPair,
+                                                          KeyPair authorizedKeyPair) throws GeneralSecurityException {
+        byte[] authorizedPublicKeyBytes = authorizedKeyPair.getPublic().getEncoded();
+        AuthorizedData authorizedData = (AuthorizedData) entry.getAuthenticatedSequentialData().getAuthenticatedData();
+        List<AuthenticatedDataRequest> acceptedRequests = new ArrayList<>();
+        if (!isRemovedByOwner(store, authorizedData, authorizedPublicKeyBytes)) {
+            // Nodes of earlier versions store the entries of both key pairs under one storage key (V1), and they
+            // accept a request only with a higher sequence number than the stored one. With a sequence number above
+            // the one of the remove request below, they replace the entry of the earlier key pair in any order.
+            // Then they also apply later remove requests of the authorized key pair.
+            AddAuthenticatedDataRequest addRequest = AddAuthenticatedDataRequest.from(store,
+                    authorizedData,
+                    authorizedKeyPair,
+                    entry.getSequenceNumber() + 2);
+            if (!store.add(addRequest).isSuccess()) {
+                // For example, the store is full. The entry of the earlier key pair is the source of the data, so
+                // it stays, and a later run migrates it.
+                return acceptedRequests;
+            }
+            acceptedRequests.add(addRequest);
+        }
+        RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(store,
+                authorizedData,
+                earlierPublisherKeyPair);
+        if (store.remove(removeRequest).isSuccess()) {
+            acceptedRequests.add(removeRequest);
+        }
+        return acceptedRequests;
+    }
+
+    /**
+     * The requests which the runs of the migration applied to the store, also before a restart: the removals of the
+     * earlier key pair with signature V2, and the entries of the authorized key pair for the same data. Nodes of
+     * earlier versions create only signature V1, so their removals are not included. The entries come first, so that
+     * nodes of earlier versions receive the entry of the authorized key pair before the removal (see
+     * docs/specifications/network/storage-ownership.md).
+     */
+    public static List<AuthenticatedDataRequest> findMigrationRequests(AuthenticatedDataStorageService store,
+                                                                       PublicKey earlierPublisherKey,
+                                                                       PublicKey authorizedKey) {
+        byte[] earlierPublicKeyBytes = earlierPublisherKey.getEncoded();
+        byte[] authorizedPublicKeyBytes = authorizedKey.getEncoded();
+        if (isSameKey(earlierPublicKeyBytes, authorizedPublicKeyBytes)) {
+            return List.of();
+        }
+        Map<ByteArray, AuthenticatedDataRequest> map = store.getPersistableStore().getMap();
+        List<RemoveAuthenticatedDataRequest> removals = map.values().stream()
+                .filter(RemoveAuthenticatedDataRequest.class::isInstance)
+                .map(RemoveAuthenticatedDataRequest.class::cast)
+                .filter(RemoveAuthenticatedDataRequest::isSignatureV2Present)
+                .filter(removal -> Arrays.equals(removal.getSignaturePubKeyEncoded(), earlierPublicKeyBytes))
+                .filter(removal -> !removal.isExpired())
+                .toList();
+        List<AuthenticatedDataRequest> requests = new ArrayList<>();
+        removals.forEach(removal -> {
+            // The storage key V1 of a removal is the hash of the data
+            ByteArray storageKeyOfOwner = AddAuthenticatedDataRequest.getStorageKey(
+                    removal.getStorageKeyV1().getBytes(),
+                    authorizedPublicKeyBytes);
+            if (map.get(storageKeyOfOwner) instanceof AddAuthenticatedDataRequest entryOfOwner &&
+                    !entryOfOwner.isExpired()) {
+                requests.add(entryOfOwner);
+            }
+        });
+        requests.addAll(removals);
+        return requests;
+    }
+
+    // With the same key pair, the data already has its owner as publisher. The new entry would get the storage key of
+    // the entry and replace it, and the remove request would then remove the new entry: the node would remove its own
+    // data from the network (rule 14 of docs/specifications/network/storage-ownership.md).
+    private static boolean isSameKey(byte[] earlierPublicKeyBytes, byte[] authorizedPublicKeyBytes) {
+        return Arrays.equals(earlierPublicKeyBytes, authorizedPublicKeyBytes);
+    }
+
+    // Data which the owner removed is not published again, also if the entry of the earlier key pair is still stored.
+    // For example, an oracle node can remove a bonded role with its authorized key pair before the migration runs.
+    private static boolean isRemovedByOwner(AuthenticatedDataStorageService store,
+                                            AuthorizedData authorizedData,
+                                            byte[] authorizedPublicKeyBytes) {
+        ByteArray storageKeyOfOwner = AddAuthenticatedDataRequest.getStorageKey(
+                AddAuthenticatedDataRequest.getAuthenticatedDataHash(authorizedData),
+                authorizedPublicKeyBytes);
+        return store.getPersistableStore().getMap().get(storageKeyOfOwner) instanceof RemoveAuthenticatedDataRequest;
+    }
+}

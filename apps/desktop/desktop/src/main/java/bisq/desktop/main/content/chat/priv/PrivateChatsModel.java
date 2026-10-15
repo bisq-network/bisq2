@@ -42,6 +42,7 @@ public abstract class PrivateChatsModel extends ChatModel {
     private final SortedList<PrivateChatsView.ListItem> sortedList = new SortedList<>(filteredList);
     private final ObjectProperty<PrivateChatsView.ListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<UserProfile> peersUserProfile = new SimpleObjectProperty<>();
+    private final BooleanProperty peersUserProfileIgnored = new SimpleBooleanProperty();
     @Setter
     private ReputationScore peersReputationScore;
 

@@ -19,18 +19,12 @@ package bisq.desktop.main.content.reputation.build_reputation.bond.tab2;
 
 import bisq.common.util.MathUtils;
 import bisq.desktop.components.controls.MaterialTextField;
-import bisq.desktop.main.content.reputation.build_reputation.components.AgeSlider;
-import bisq.i18n.Res;
+import bisq.desktop.main.content.reputation.build_reputation.ScoreSimulation;
 import bisq.presentation.parser.DoubleParser;
 import bisq.user.reputation.BondedReputationService;
 import bisq.user.reputation.ProofOfBurnService;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.geometry.Insets;
-import javafx.scene.control.Label;
-import javafx.scene.layout.VBox;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.fxmisc.easybind.EasyBind;
@@ -38,132 +32,99 @@ import org.fxmisc.easybind.Subscription;
 
 import java.util.concurrent.TimeUnit;
 
-public class BondScoreSimulation {
-
-    private final Controller controller;
-
+public class BondScoreSimulation extends ScoreSimulation {
     public BondScoreSimulation() {
-        controller = new Controller();
+        super();
     }
 
-    public VBox getViewRoot() {
-        return controller.getView().getRoot();
+    @Override
+    protected Controller createController() {
+        return new Controller();
     }
 
     @Slf4j
-    public static class Controller implements bisq.desktop.common.view.Controller {
-        @Getter
-        private final View view;
-        private final Model model;
-        private Subscription agePin, ageAsStringPin, amountPin;
+    public static class Controller extends ScoreSimulation.Controller<Model, View> {
+        private Subscription amountPin;
 
-        private Controller() {
-            model = new Model();
-            view = new View(model, this);
+        protected Controller() {
+            super(0,
+                    0,
+                    ProofOfBurnService.MAX_AGE_BOOST_DAYS);
 
             model.getAmount().set("100");
-            model.getAge().set(0);
-            model.getAgeAsString().set("0");
+        }
+
+        @Override
+        protected Model createModel(int defaultAge, int ageSliderMin, int ageSliderMax) {
+            return new Model(defaultAge, ageSliderMin, ageSliderMax);
+        }
+
+        @Override
+        protected View createView(Model model) {
+            return new View(model, this);
         }
 
         @Override
         public void onActivate() {
-            agePin = EasyBind.subscribe(model.getAge(), age -> model.getAgeAsString().set(String.valueOf(age)));
-            ageAsStringPin = EasyBind.subscribe(model.getAgeAsString(), ageAsString -> {
-                try {
-                    model.getAge().set(Integer.parseInt(ageAsString));
-                    calculateSimScore();
-                } catch (Exception e) {
-                }
-            });
-            amountPin = EasyBind.subscribe(model.getAmount(), amount -> calculateSimScore());
+            super.onActivate();
+
+            amountPin = EasyBind.subscribe(model.getAmount(), amount -> calculateScore());
         }
 
         @Override
         public void onDeactivate() {
-            agePin.unsubscribe();
-            ageAsStringPin.unsubscribe();
+            super.onDeactivate();
+
             amountPin.unsubscribe();
         }
 
-        private void calculateSimScore() {
+        @Override
+        protected void calculateScore() {
+            long ageInDays = model.getAge().get();
+            long age = TimeUnit.DAYS.toMillis(ageInDays);
+            long blockTime = System.currentTimeMillis() - age;
             try {
                 // amountAsLong is the smallest unit of BSQ (100 = 1 BSQ)
                 long amountAsLong = Math.max(0, MathUtils.roundDoubleToLong(DoubleParser.parse(model.getAmount().get()) * 100));
-                long ageInDays = Math.max(0, model.getAge().get());
-                long age = TimeUnit.DAYS.toMillis(ageInDays);
-                long blockTime = System.currentTimeMillis() - age;
-                long totalScore = BondedReputationService.doCalculateScore(amountAsLong, blockTime);
-                String score = String.valueOf(totalScore);
-                model.getScore().set(score);
+                long score = BondedReputationService.doCalculateScore(amountAsLong, blockTime);
+                applyScore(score);
             } catch (Exception e) {
-                log.error("Failed to calculate simScore", e);
+                log.error("Failed to calculate score", e);
             }
         }
     }
 
     @Getter
-    private static class Model implements bisq.desktop.common.view.Model {
+    protected static class Model extends ScoreSimulation.Model {
         private final StringProperty amount = new SimpleStringProperty();
-        private final IntegerProperty age = new SimpleIntegerProperty();
-        private final StringProperty ageAsString = new SimpleStringProperty();
-        private final StringProperty score = new SimpleStringProperty();
+
+        public Model(int defaultAge, int ageSliderMin, int ageSliderMax) {
+            super(defaultAge, ageSliderMin, ageSliderMax);
+        }
     }
 
-    private static class View extends bisq.desktop.common.view.View<VBox, Model, Controller> {
-        private static final double MATERIAL_FIELD_WIDTH = 260;
-
+    protected static class View extends ScoreSimulation.View<Model, Controller> {
         private final MaterialTextField amount;
-        private final MaterialTextField score;
-        private final AgeSlider simAgeSlider;
-        private final MaterialTextField ageField;
 
         private View(Model model, Controller controller) {
-            super(new VBox(10), model, controller);
+            super(model, controller);
 
-            Label simHeadline = new Label(Res.get("reputation.sim.headline"));
-            simHeadline.getStyleClass().addAll("bisq-text-1");
-            amount = getInputField("reputation.sim.burnAmount");
-            score = getField(Res.get("reputation.sim.score"));
-            ageField = getInputField("reputation.sim.age");
-            simAgeSlider = new AgeSlider(0, ProofOfBurnService.MAX_AGE_BOOST_DAYS, 0);
-            VBox.setMargin(simAgeSlider.getView().getRoot(), new Insets(15, 0, 0, 0));
-            root.getChildren().addAll(simHeadline,
-                    amount,
-                    ageField,
-                    simAgeSlider.getView().getRoot(),
-                    score);
+            amount = getInputField("reputation.sim.bsqAmount");
+            root.getChildren().add(1, amount);
         }
 
         @Override
         protected void onViewAttached() {
-            simAgeSlider.valueProperty().bindBidirectional(model.getAge());
-            ageField.textProperty().bindBidirectional(model.getAgeAsString());
+            super.onViewAttached();
+
             amount.textProperty().bindBidirectional(model.getAmount());
-            score.textProperty().bind(model.getScore());
         }
 
         @Override
         protected void onViewDetached() {
-            simAgeSlider.valueProperty().unbindBidirectional(model.getAge());
-            ageField.textProperty().unbindBidirectional(model.getAgeAsString());
+            super.onViewDetached();
+
             amount.textProperty().unbindBidirectional(model.getAmount());
-            score.textProperty().unbind();
-        }
-
-        private MaterialTextField getField(String description) {
-            MaterialTextField field = new MaterialTextField(description);
-            field.setEditable(false);
-            field.setMinWidth(MATERIAL_FIELD_WIDTH);
-            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
-            return field;
-        }
-
-        private MaterialTextField getInputField(String key) {
-            MaterialTextField field = new MaterialTextField(Res.get(key), Res.get(key + ".prompt"));
-            field.setMinWidth(MATERIAL_FIELD_WIDTH);
-            field.setMaxWidth(MATERIAL_FIELD_WIDTH);
-            return field;
         }
     }
 }

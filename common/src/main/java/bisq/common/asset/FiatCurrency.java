@@ -19,6 +19,7 @@ package bisq.common.asset;
 
 
 import bisq.common.locale.LocaleRepository;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,10 +30,11 @@ import java.util.Locale;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public final class FiatCurrency extends Asset {
+    public final static FiatCurrency USD = new FiatCurrency("USD");
+
     @Getter
     // transient fields are excluded by default for EqualsAndHashCode
     private transient final Currency currency;
-    private transient String displayName;
 
     public FiatCurrency(String code) {
         this(Currency.getInstance(code));
@@ -58,17 +60,17 @@ public final class FiatCurrency extends Asset {
         return getAssetBuilder().setFiatCurrency(bisq.common.protobuf.FiatCurrency.newBuilder());
     }
 
-    public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) {
-        return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+    public static FiatCurrency fromProto(bisq.common.protobuf.Asset baseProto) throws UnresolvableProtobufException {
+        try {
+            return new FiatCurrency(baseProto.getCode(), baseProto.getName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     // The name field is the displayName using the US locale. For display purpose we use the name based on the user's locale.
     @Override
     public String getDisplayName() {
-        if (displayName == null) {
-            Locale defaultLocale = LocaleRepository.getDefaultLocale();
-            displayName = currency.getDisplayName(defaultLocale);
-        }
-        return displayName;
+        return currency.getDisplayName(LocaleRepository.getDefaultLocale());
     }
 }

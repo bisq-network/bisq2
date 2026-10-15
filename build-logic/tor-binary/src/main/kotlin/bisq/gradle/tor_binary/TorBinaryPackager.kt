@@ -80,6 +80,10 @@ class TorBinaryPackager(private val project: Project, private val torBinaryDownl
                 archiveFileName.set("tor.zip")
                 destinationDirectory.set(project.layout.buildDirectory.dir("generated/src/main/resources"))
                 from(project.layout.buildDirectory.dir(PROCESSED_DIR))
+
+                // This archive ends up as a resource inside tor.jar, so it has to be reproducible too.
+                isPreserveFileTimestamps = false
+                isReproducibleFileOrder = true
             }
 
         if (getOS() == OS.LINUX) {

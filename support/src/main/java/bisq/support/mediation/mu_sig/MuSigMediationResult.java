@@ -19,57 +19,64 @@ package bisq.support.mediation.mu_sig;
 
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.support.mediation.MediationPayoutDistributionType;
 import bisq.support.mediation.MediationResultReason;
-import lombok.EqualsAndHashCode;
+import com.google.protobuf.ByteString;
 import lombok.Getter;
 
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
-import static java.lang.System.currentTimeMillis;
 import static com.google.common.base.Preconditions.checkArgument;
+import static java.lang.System.currentTimeMillis;
 
 @Getter
-@EqualsAndHashCode
-public class MuSigMediationResult implements NetworkProto, PersistableProto {
+public final class MuSigMediationResult implements NetworkProto, PersistableProto {
     public static final int MAX_SUMMARY_NOTES_LENGTH = 1_000;
 
     private final long date;
+    private final byte[] contractHash;
     private final MediationResultReason mediationResultReason;
-    private final long proposedBuyerPayoutAmount;
-    private final long proposedSellerPayoutAmount;
     private final MediationPayoutDistributionType mediationPayoutDistributionType;
+    private final Optional<Long> proposedBuyerPayoutAmount;
+    private final Optional<Long> proposedSellerPayoutAmount;
     private final Optional<Double> payoutAdjustmentPercentage;
     private final Optional<String> summaryNotes;
 
-    public MuSigMediationResult(MediationResultReason mediationResultReason,
-                                long proposedBuyerPayoutAmount,
-                                long proposedSellerPayoutAmount,
+    public MuSigMediationResult(byte[] contractHash,
+                                MediationResultReason mediationResultReason,
                                 MediationPayoutDistributionType mediationPayoutDistributionType,
+                                Optional<Long> proposedBuyerPayoutAmount,
+                                Optional<Long> proposedSellerPayoutAmount,
                                 Optional<Double> payoutAdjustmentPercentage,
                                 Optional<String> summaryNotes) {
         this(currentTimeMillis(),
+                contractHash,
                 mediationResultReason,
+                mediationPayoutDistributionType,
                 proposedBuyerPayoutAmount,
                 proposedSellerPayoutAmount,
-                mediationPayoutDistributionType,
                 payoutAdjustmentPercentage,
                 summaryNotes);
     }
 
     private MuSigMediationResult(long date,
+                                 byte[] contractHash,
                                  MediationResultReason mediationResultReason,
-                                 long proposedBuyerPayoutAmount,
-                                 long proposedSellerPayoutAmount,
                                  MediationPayoutDistributionType mediationPayoutDistributionType,
+                                 Optional<Long> proposedBuyerPayoutAmount,
+                                 Optional<Long> proposedSellerPayoutAmount,
                                  Optional<Double> payoutAdjustmentPercentage,
                                  Optional<String> summaryNotes) {
         this.date = date;
+        this.contractHash = contractHash.clone();
         this.mediationResultReason = mediationResultReason;
+        this.mediationPayoutDistributionType = mediationPayoutDistributionType;
         this.proposedBuyerPayoutAmount = proposedBuyerPayoutAmount;
         this.proposedSellerPayoutAmount = proposedSellerPayoutAmount;
-        this.mediationPayoutDistributionType = mediationPayoutDistributionType;
         this.payoutAdjustmentPercentage = payoutAdjustmentPercentage;
         this.summaryNotes = summaryNotes;
 
@@ -79,10 +86,18 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
     @Override
     public void verify() {
         NetworkDataValidation.validateDate(date);
+        NetworkDataValidation.validateHash(contractHash);
         checkArgument(mediationResultReason != null, "mediationResultReason must not be null");
         checkArgument(mediationPayoutDistributionType != null, "mediationPayoutDistributionType must not be null");
-        checkArgument(proposedBuyerPayoutAmount >= 0, "proposedBuyerPayoutAmount must not be negative");
-        checkArgument(proposedSellerPayoutAmount >= 0, "proposedSellerPayoutAmount must not be negative");
+        boolean noPayout = mediationPayoutDistributionType == MediationPayoutDistributionType.NO_PAYOUT;
+        checkArgument(noPayout
+                ? proposedBuyerPayoutAmount.isEmpty() && proposedSellerPayoutAmount.isEmpty()
+                : proposedBuyerPayoutAmount.isPresent() && proposedSellerPayoutAmount.isPresent(),
+                "payout amounts must be present for payout distributions and absent for NO_PAYOUT");
+        proposedBuyerPayoutAmount.ifPresent(value ->
+                checkArgument(value >= 0, "proposedBuyerPayoutAmount must not be negative"));
+        proposedSellerPayoutAmount.ifPresent(value ->
+                checkArgument(value >= 0, "proposedSellerPayoutAmount must not be negative"));
         NetworkDataValidation.validateText(summaryNotes, MAX_SUMMARY_NOTES_LENGTH);
     }
 
@@ -90,29 +105,67 @@ public class MuSigMediationResult implements NetworkProto, PersistableProto {
     public bisq.support.protobuf.MuSigMediationResult.Builder getBuilder(boolean serializeForHash) {
         var builder = bisq.support.protobuf.MuSigMediationResult.newBuilder()
                 .setDate(date)
+                .setContractHash(ByteString.copyFrom(contractHash))
                 .setMediationResultReason(mediationResultReason.toProtoEnum())
-                .setProposedBuyerPayoutAmount(proposedBuyerPayoutAmount)
-                .setProposedSellerPayoutAmount(proposedSellerPayoutAmount)
                 .setMediationPayoutDistributionType(mediationPayoutDistributionType.toProtoEnum());
+        proposedBuyerPayoutAmount.ifPresent(builder::setProposedBuyerPayoutAmount);
+        proposedSellerPayoutAmount.ifPresent(builder::setProposedSellerPayoutAmount);
         payoutAdjustmentPercentage.ifPresent(builder::setPayoutAdjustmentPercentage);
         summaryNotes.ifPresent(builder::setSummaryNotes);
         return builder;
     }
-
 
     @Override
     public bisq.support.protobuf.MuSigMediationResult toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
     }
 
-    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto) {
-        return new MuSigMediationResult(
-                proto.getDate(),
-                MediationResultReason.fromProto(proto.getMediationResultReason()),
-                proto.getProposedBuyerPayoutAmount(),
-                proto.getProposedSellerPayoutAmount(),
-                MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
-                proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
-                proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+    public static MuSigMediationResult fromProto(bisq.support.protobuf.MuSigMediationResult proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new MuSigMediationResult(
+                    proto.getDate(),
+                    proto.getContractHash().toByteArray(),
+                    MediationResultReason.fromProto(proto.getMediationResultReason()),
+                    MediationPayoutDistributionType.fromProto(proto.getMediationPayoutDistributionType()),
+                    proto.hasProposedBuyerPayoutAmount() ? Optional.of(proto.getProposedBuyerPayoutAmount()) : Optional.empty(),
+                    proto.hasProposedSellerPayoutAmount() ? Optional.of(proto.getProposedSellerPayoutAmount()) : Optional.empty(),
+                    proto.hasPayoutAdjustmentPercentage() ? Optional.of(proto.getPayoutAdjustmentPercentage()) : Optional.empty(),
+                    proto.hasSummaryNotes() ? Optional.of(proto.getSummaryNotes()) : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
+    }
+
+    public byte[] getContractHash() {
+        return contractHash.clone();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof MuSigMediationResult that)) {
+            return false;
+        }
+        return date == that.date &&
+                Arrays.equals(contractHash, that.contractHash) &&
+                mediationResultReason == that.mediationResultReason &&
+                mediationPayoutDistributionType == that.mediationPayoutDistributionType &&
+                Objects.equals(proposedBuyerPayoutAmount, that.proposedBuyerPayoutAmount) &&
+                Objects.equals(proposedSellerPayoutAmount, that.proposedSellerPayoutAmount) &&
+                Objects.equals(payoutAdjustmentPercentage, that.payoutAdjustmentPercentage) &&
+                Objects.equals(summaryNotes, that.summaryNotes);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(date,
+                mediationResultReason,
+                mediationPayoutDistributionType,
+                proposedBuyerPayoutAmount,
+                proposedSellerPayoutAmount,
+                payoutAdjustmentPercentage,
+                summaryNotes);
+        result = 31 * result + Arrays.hashCode(contractHash);
+        return result;
     }
 }

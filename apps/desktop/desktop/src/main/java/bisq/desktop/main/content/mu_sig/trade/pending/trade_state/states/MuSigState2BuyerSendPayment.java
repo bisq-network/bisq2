@@ -26,6 +26,7 @@ import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Icons;
 import bisq.desktop.common.utils.ClipboardUtil;
+import bisq.desktop.common.utils.TradeExceptionHandler;
 import bisq.desktop.components.controls.MaterialTextArea;
 import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.WrappingText;
@@ -147,9 +148,10 @@ public class MuSigState2BuyerSendPayment extends MuSigBaseState {
         }
 
         private void onConfirmFiatSent() {
-            sendTradeLogMessage(Res.encode("muSig.trade.state.phase2a.tradeLogMessage.buyer",
-                    model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
-            muSigTradeService.paymentInitiated(model.getTrade());
+            if (TradeExceptionHandler.run(() -> muSigTradeService.paymentInitiated(model.getTrade()))) {
+                sendTradeLogMessage(Res.encode("muSig.trade.state.phase2a.tradeLogMessage.buyer",
+                        model.getChannel().getMyUserIdentity().getUserName(), model.getQuoteCode()));
+            }
         }
     }
 

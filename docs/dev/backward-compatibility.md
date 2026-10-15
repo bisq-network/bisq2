@@ -16,6 +16,12 @@ the [protobuf documentation on default values](https://protobuf.dev/programming-
 Existing fields can be renamed, and certain other limited changes are allowed. For more information, refer to
 the [protobuf programming guide](https://protobuf.dev/programming-guides/proto3/).
 
+A field number which a released version has written must never get another type or another meaning. Persisted files
+and network messages of older versions contain the number, and the new code reads their bytes as the new field. If a
+field is no longer needed, remove it and mark its number and its name as `reserved` in the message. Give a new field a
+number which is higher than every number which a released version of the message has used, including the reserved
+numbers. The `SettingsStore` message in `settings.proto` is an example: it reserves the number 30.
+
 Since we use the serialized bytes of protobuf messages for several use cases, we need to ensure that changes in protobuf
 definitions do not break these use cases. We are aware that protobuf does not guarantee deterministic encoding and
 explicitly does not recommend it. Although developing our own serialization format was not feasible, we have never
@@ -123,3 +129,9 @@ Regardless of the chosen strategy, it's important to test well and make sure it 
 * A relative safe way is to copy the IDE project and run one node there and the other in the to-be-tested version.
    This avoids that changes are hotswapped to running apps. Also, it's best to run the seed on the old version to see if there are issues.
 * Another option is to disable hotswap.
+
+The compatibility chain in `tools/compat` runs the real code of the last release and of the current checkout without a
+network. Each version processes the requests and the persisted stores of the other version, before and after the
+cutoff date of signature V1. `tools/compat/old-updater-replay.sh` checks the keys and the assets of a new release with
+the updater code of the last release. See [tools/compat/README.md](../../tools/compat/README.md). A nightly workflow
+runs the chain.

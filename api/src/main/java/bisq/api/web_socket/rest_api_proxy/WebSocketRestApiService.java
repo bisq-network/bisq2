@@ -18,9 +18,14 @@
 package bisq.api.web_socket.rest_api_proxy;
 
 import bisq.api.ApiConfig;
+import bisq.api.access.filter.Headers;
+import bisq.api.access.filter.authz.AuthorizationException;
+import bisq.api.access.filter.authz.UriValidator;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.web_socket.util.JsonUtil;
+import bisq.api.web_socket.util.WebSocketIdentity;
 import bisq.common.application.Service;
+import bisq.common.util.StringUtils;
 import bisq.security.tls.TlsException;
 import bisq.security.tls.TlsTrustManager;
 import lombok.EqualsAndHashCode;
@@ -41,8 +46,8 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 
+import static com.google.common.base.Preconditions.checkArgument;
 import static java.net.http.HttpClient.Version.HTTP_1_1;
 
 @Slf4j
@@ -50,16 +55,28 @@ import static java.net.http.HttpClient.Version.HTTP_1_1;
 @EqualsAndHashCode
 @ToString
 public class WebSocketRestApiService implements Service {
+    private static final UriValidator URI_VALIDATOR = new UriValidator();
+
     private final ApiConfig apiConfig;
     private final String restServerUrl;
     private final TlsContextService tlsContextService;
     private Optional<HttpClient> httpClient = Optional.empty();
+
     private final Object httpClientLock = new Object();
 
     public WebSocketRestApiService(ApiConfig apiConfig, TlsContextService tlsContextService) {
         this.apiConfig = apiConfig;
-        this.restServerUrl = apiConfig.getRestProtocol() + "://" + apiConfig.getBindHost() + ":" + apiConfig.getBindPort();
+        this.restServerUrl = apiConfig.getRestProtocol() + "://" + toUriHost(apiConfig.getBindHost())
+                + ":" + apiConfig.getBindPort();
         this.tlsContextService = tlsContextService;
+    }
+
+    /**
+     * An IPv6 literal is only a valid URI host in brackets. Without them the authority does not parse
+     * and every forwarded request would fail on the host comparison in {@link #resolveRestApiUri}.
+     */
+    static String toUriHost(String bindHost) {
+        return bindHost.contains(":") && !bindHost.startsWith("[") ? "[" + bindHost + "]" : bindHost;
     }
 
     @Override
@@ -80,47 +97,55 @@ public class WebSocketRestApiService implements Service {
     }
 
     public void onMessage(String json, WebSocket webSocket) {
-        Optional<WebSocketRestApiRequest> webSocketRestApiRequest = WebSocketRestApiRequest.fromJson(json);
-        webSocketRestApiRequest
-                .map(this::sendToRestApiServer)
-                .ifPresent(future -> {
-                    future.whenComplete((response, throwable) -> {
-                        if (throwable == null) {
-                            response.toJson()
-                                    .ifPresentOrElse(webSocket::send,
-                                            () -> log.warn("Message was not sent to websocket." +
-                                                    "\nJson={}", json));
-                        } else {
-                            log.warn("REST API call failed for request: {}", json, throwable);
-                            String requestId = webSocketRestApiRequest.get().getRequestId();
-                            new WebSocketRestApiResponse(requestId, 500, throwable.getMessage()).toJson()
-                                    .ifPresent(webSocket::send);
-                        }
-                    });
-                });
+        WebSocketRestApiRequest.fromJson(json).ifPresent(request -> {
+            request.clearHeaders();
+            // Logged as an object and not as the JSON which the client sent: the JSON contains the body,
+            // and toString() of the request does not print the body.
+            sendToRestApiServer(request, webSocket).whenComplete((response, throwable) -> {
+                if (throwable == null) {
+                    response.toJson()
+                            .ifPresentOrElse(webSocket::send,
+                                    () -> log.warn("Message was not sent to websocket. Request: {}", request));
+                } else {
+                    // The message of the exception can name internal classes, hosts and ports. It stays in
+                    // the log of the node, and the client gets a generic message.
+                    log.warn("REST API call failed for request: {}", request, throwable);
+                    new WebSocketRestApiResponse(request.getRequestId(), 500, "Request failed").toJson()
+                            .ifPresent(webSocket::send);
+                }
+            });
+        });
     }
 
-    private CompletableFuture<WebSocketRestApiResponse> sendToRestApiServer(WebSocketRestApiRequest request) {
+    private CompletableFuture<WebSocketRestApiResponse> sendToRestApiServer(WebSocketRestApiRequest request,
+                                                                           WebSocket webSocket) {
         CompletableFuture<WebSocketRestApiResponse> future = new CompletableFuture<>();
-        String url = restServerUrl + request.getPath();
         String method = request.getMethod();
         String body = request.getBody();
+        URI uri;
+        try {
+            uri = resolveRestApiUri(restServerUrl, request.getPath());
+        } catch (AuthorizationException | IllegalArgumentException e) {
+            // The client sent a path we refuse to forward, which is a bad request and not a server error.
+            // The reason is not echoed back, so that the response cannot be used to probe the check.
+            log.warn("Rejected the path of a forwarded request: {}", e.getMessage());
+            return CompletableFuture.completedFuture(
+                    new WebSocketRestApiResponse(request.getRequestId(), 400, "Invalid path"));
+        }
+        String url = uri.toString();
         try {
             HttpRequest.Builder requestBuilder = HttpRequest.newBuilder()
-                    .uri(URI.create(url))
+                    .uri(uri)
                     .header("Content-Type", "application/json")
                     .header("Accept", "application/json")
                     .method(method, body == null
                             ? HttpRequest.BodyPublishers.noBody()
                             : HttpRequest.BodyPublishers.ofString(body));
 
-            // Forward client-provided headers (e.g., session/client identifiers) from request.headers.
-            String[] headers = request.getHeaders().entrySet().stream()
-                    .flatMap(e -> Stream.of(e.getKey(), e.getValue()))
-                    .toArray(String[]::new);
-            if (headers.length > 0) {
-                requestBuilder.headers(headers);
-            }
+            // The identity is taken from the authenticated upgrade request, never from the message
+            // payload: a client must not be able to act under an identity it did not authenticate with,
+            // and keeping credentials out of the frames keeps them out of the deflate window.
+            forwardAuthenticatedIdentity(webSocket, requestBuilder);
 
             HttpRequest httpRequest = requestBuilder.build();
             log.info("Forwarding {} request to {}", method, url);
@@ -143,6 +168,58 @@ public class WebSocketRestApiService implements Service {
             log.error(errorMessage, e);
             return CompletableFuture.failedFuture(e);
         }
+    }
+
+    /**
+     * The path comes from the message payload and therefore from the client, so it decides on its own
+     * what the forwarded request addresses. Appending it to the server URL unchecked lets a client
+     * redirect the call to a host of its choosing, because a path such as {@code @example.com/} turns
+     * the configured host into mere user info of the resulting URI, and the forwarded request carries
+     * the session credentials.
+     *
+     * <p>The checks run on the normalized URI, so that a traversal cannot pass them and still change
+     * where the request ends up.
+     */
+    static URI resolveRestApiUri(String restServerUrl, String path) throws AuthorizationException {
+        checkArgument(StringUtils.isNotEmpty(path), "Path must not be empty");
+        checkArgument(path.startsWith("/") && !path.startsWith("//"), "Path must be server absolute: %s", path);
+
+        URI uri = URI.create(restServerUrl + path).normalize();
+        URI restServerUri = URI.create(restServerUrl);
+        checkArgument(restServerUri.getScheme().equals(uri.getScheme())
+                        && restServerUri.getHost().equals(uri.getHost())
+                        && restServerUri.getPort() == uri.getPort()
+                        && uri.getRawUserInfo() == null,
+                "Path must not change the target of the request: %s", path);
+        // Checked after normalizing, so that a traversal cannot walk out of the REST API and reach
+        // another handler of the same server — the docs endpoint or a static file handler — with the
+        // credentials of the connection attached.
+        checkArgument(uri.getPath().equals(ApiConfig.REST_API_BASE_PATH)
+                        || uri.getPath().startsWith(ApiConfig.REST_API_BASE_PATH + "/"),
+                "Path must address the REST API: %s", path);
+
+        // The REST API applies this to incoming requests as well, but only when authorization is
+        // required, whereas a forwarded request has to be safe regardless of that setting.
+        URI_VALIDATOR.validate(uri);
+        return uri;
+    }
+
+    /**
+     * Copies the identity of the connection (see {@link WebSocketIdentity}) onto the forwarded request,
+     * so that the REST filters authenticate and authorize the call with the session and the client of
+     * the WebSocket. A connection whose upgrade request cannot be resolved at all is a state we do not
+     * expect and refuse to forward for. A connection without a recorded session forwards none: with
+     * session handling enabled the handshake filter has already rejected such a connection, and with it
+     * disabled the REST API asks for none.
+     */
+    private static void forwardAuthenticatedIdentity(WebSocket webSocket, HttpRequest.Builder requestBuilder) {
+        WebSocketIdentity.findUpgradeRequest(webSocket)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Could not resolve the upgrade request of the WebSocket connection"));
+        WebSocketIdentity.findSessionId(webSocket)
+                .ifPresent(sessionId -> requestBuilder.header(Headers.SESSION_ID, sessionId));
+        WebSocketIdentity.findClientId(webSocket)
+                .ifPresent(clientId -> requestBuilder.header(Headers.CLIENT_ID, clientId));
     }
 
     private HttpClient getOrCreateHttpClient() {

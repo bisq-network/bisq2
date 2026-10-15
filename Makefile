@@ -270,3 +270,94 @@ start-i2p-full-env: .init-screen-session .start-i2p-seeds .start-i2p-clients .re
 	screen -S new_screen -X screen -t test-title
 	screen -S new_screen -X stuff 'ls \n'
 	screen -r new_screen
+
+###############
+# LOCAL 3-NODE
+###############
+
+.PHONY: \
+	local-3node-status local-3node-stop local-3node-start local-3node-start-visible \
+	local-3node-start-fresh local-3node-start-persistent local-3node-restart \
+	local-3node-restart-visible local-3node-restart-fresh local-3node-restart-persistent \
+	local-3node-gui
+
+local-3node-status:
+	./scripts/local-3node.sh status
+
+local-3node-stop:
+	./scripts/local-3node.sh stop
+
+local-3node-start:
+	./scripts/local-3node.sh start
+
+local-3node-start-visible:
+	./scripts/local-3node.sh start-visible
+
+local-3node-start-fresh:
+	./scripts/local-3node.sh start-fresh
+
+local-3node-start-persistent:
+	./scripts/local-3node.sh start-persistent
+
+local-3node-restart:
+	./scripts/local-3node.sh restart
+
+local-3node-restart-visible:
+	./scripts/local-3node.sh restart-visible
+
+local-3node-restart-fresh:
+	./scripts/local-3node.sh restart-fresh
+
+local-3node-restart-persistent:
+	./scripts/local-3node.sh restart-persistent
+
+local-3node-gui:
+	./scripts/local-3node.sh gui
+
+####################
+# DESKTOP UI HARNESS
+####################
+
+.PHONY: \
+	desktop-ui-start desktop-ui-stop desktop-ui-restart desktop-ui-status desktop-ui-health \
+	desktop-ui-validate desktop-ui-nodes desktop-ui-screenshot desktop-ui-click \
+	desktop-ui-type desktop-ui-wait-node desktop-ui-press-key desktop-ui-scenario
+
+desktop-ui-start:
+	./scripts/desktop-ui-harness.bash start
+
+desktop-ui-stop:
+	./scripts/desktop-ui-harness.bash stop
+
+desktop-ui-restart:
+	./scripts/desktop-ui-harness.bash restart
+
+desktop-ui-status:
+	./scripts/desktop-ui-harness.bash status
+
+desktop-ui-health:
+	./scripts/desktop-ui-harness.bash health
+
+desktop-ui-validate:
+	./scripts/desktop-ui-harness.bash validate
+
+desktop-ui-nodes:
+	./scripts/desktop-ui-harness.bash nodes
+
+desktop-ui-screenshot:
+	./scripts/desktop-ui-harness.bash screenshot "$(name)"
+
+desktop-ui-click:
+	./scripts/desktop-ui-harness.bash click "$(selector)"
+
+desktop-ui-type:
+	./scripts/desktop-ui-harness.bash type "$(selector)" "$(text)"
+
+desktop-ui-wait-node:
+	./scripts/desktop-ui-harness.bash wait-node "$(selector)" "$(timeout_ms)" "$(visible)"
+
+desktop-ui-press-key:
+	./scripts/desktop-ui-harness.bash press-key "$(key)" "$(selector)"
+
+desktop-ui-scenario:
+	./scripts/desktop-ui-harness.bash scenario "$(file)"

@@ -20,6 +20,8 @@ package bisq.network.http;
 import bisq.common.data.Pair;
 import bisq.common.threading.ExecutorFactory;
 import bisq.common.util.StringUtils;
+import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
 import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -30,6 +32,8 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ClassicHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -51,8 +55,8 @@ public class TorHttpClient extends BaseHttpClient {
     private CloseableHttpClient closeableHttpClient;
     private volatile boolean shutdownStarted;
 
-    public TorHttpClient(String baseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
-        super(baseUrl, userAgent);
+    public TorHttpClient(String baseUrl, String logBaseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
+        super(baseUrl, logBaseUrl, userAgent);
         this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
@@ -97,7 +101,15 @@ public class TorHttpClient extends BaseHttpClient {
         Socks5Proxy socks5Proxy = socks5ProxyProvider.getSocks5Proxy();
 
         long ts = System.currentTimeMillis();
-        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", baseUrl, param, httpMethod);
+        // Safe-to-log representation of param. For POST 'param' is the request
+        // body (may contain plaintext payload), so log only its size. For GET
+        // 'param' is the path; current callers do not embed secrets there, but
+        // sensitive GET paths should be redacted by the caller via the
+        // descriptor's logPath before reaching this layer.
+        String safeParam = httpMethod == HttpMethod.POST
+                ? "[body " + param.length() + " chars]"
+                : param;
+        log.debug("doRequestWithProxy: baseUrl={}, param={}, httpMethod={}", logBaseUrl, safeParam, httpMethod);
 
         InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         // Use this to test with system-wide Tor proxy, or change port for another proxy.
@@ -137,28 +149,9 @@ public class TorHttpClient extends BaseHttpClient {
 
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
             var target = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
-            return closeableHttpClient.execute(target, request, response -> {
-                String responseString = inputStreamToString(response.getEntity().getContent());
-                int statusCode = response.getCode();
-                if (isSuccess(statusCode)) {
-                    log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
-                            baseUrl,
-                            System.currentTimeMillis() - ts,
-                            StringUtils.fromBytes(responseString.getBytes().length),
-                            StringUtils.truncate(response, 2000),
-                            param);
-                    return responseString;
-                }
-                log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
-                        responseString,
-                        statusCode,
-                        baseUrl,
-                        System.currentTimeMillis() - ts,
-                        param);
-                throw new RuntimeException(responseString);
-            });
+            return closeableHttpClient.execute(target, request, response -> processResponse(response, safeParam, ts));
         } catch (Throwable t) {
-            String message = "Error at doRequestWithProxy with url " + baseUrl + " and param " + param +
+            String message = "Error at doRequestWithProxy with url " + logBaseUrl + " and param " + safeParam +
                     ". Throwable=" + t.getMessage();
             throw new IOException(message, t);
         } finally {
@@ -168,5 +161,75 @@ public class TorHttpClient extends BaseHttpClient {
             }
             hasPendingRequest = false;
         }
+    }
+
+    /**
+     * See {@link HttpLogSanitizer}: the shared sanitizer for bodies headed into a log line.
+     * The raw body keeps flowing to callers through {@link HttpException#getBody()}.
+     */
+    static String loggableBody(String responseBody) {
+        return HttpLogSanitizer.loggableBody(responseBody);
+    }
+
+    /**
+     * The status code is read before the body so a failed body read cannot demote a server
+     * answer to a transport failure: a non-2xx whose body is unreadable still surfaces as an
+     * {@link HttpException} with its status, keeping its status-based classification and retry
+     * gate. Only a 2xx with an unreadable body stays an IOException — there is no result to
+     * return and the caller may treat it as transport-level.
+     */
+    String processResponse(ClassicHttpResponse response, String safeParam, long ts) throws IOException {
+        int statusCode = response.getCode();
+        String responseString;
+        try {
+            responseString = readBody(response);
+        } catch (IOException e) {
+            if (isSuccess(statusCode)) {
+                throw e;
+            }
+            log.info("Received unreadable body ({}) with statusCode {} from {}. param: {}",
+                    e.getClass().getSimpleName(),
+                    statusCode,
+                    logBaseUrl,
+                    safeParam);
+            throw httpResponseFailure(statusCode, "");
+        }
+        if (isSuccess(statusCode)) {
+            log.debug("Response from {} took {} ms. Data size:{}, response: {}, param: {}",
+                    logBaseUrl,
+                    System.currentTimeMillis() - ts,
+                    StringUtils.fromBytes(responseString.getBytes().length),
+                    loggableBody(responseString),
+                    safeParam);
+            return responseString;
+        }
+        log.info("Received errorMsg '{}' with statusCode {} from {}. Response took: {} ms. param: {}",
+                loggableBody(responseString),
+                statusCode,
+                logBaseUrl,
+                System.currentTimeMillis() - ts,
+                safeParam);
+        throw httpResponseFailure(statusCode, responseString);
+    }
+
+    /**
+     * Responses without a body (204, some error responses) carry a null entity — normalized
+     * to an empty body so the status code still reaches {@link #httpResponseFailure} instead
+     * of an NPE escaping the response handler.
+     */
+    String readBody(ClassicHttpResponse response) throws IOException {
+        HttpEntity entity = response.getEntity();
+        return entity == null ? "" : inputStreamToString(entity.getContent());
+    }
+
+    /**
+     * Non-2xx responses surface with their status code and body in an {@link HttpException},
+     * matching ClearNetHttpClient, so that {@link HttpRequestService} classifies them as
+     * server-level (by status code and request method, see its class Javadoc) rather than as a
+     * retriable transport failure. HttpException is checked and Apache's response handler only
+     * permits IOException, so it travels as the cause; root-cause extraction recovers it upstream.
+     */
+    static IOException httpResponseFailure(int statusCode, String responseBody) {
+        return new IOException(new HttpException(responseBody, statusCode));
     }
 }

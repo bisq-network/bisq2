@@ -17,8 +17,10 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,6 +31,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyTakeOfferResponse.class);
+
     private final ContractSignatureData contractSignatureData;
 
     public BisqEasyTakeOfferResponse(String id,
@@ -65,19 +69,24 @@ public final class BisqEasyTakeOfferResponse extends BisqEasyTradeMessage {
                 .setContractSignatureData(contractSignatureData.toProto(serializeForHash));
     }
 
-    public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.BisqEasyTakeOfferResponse response = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferResponse();
-        return new BisqEasyTakeOfferResponse(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                ContractSignatureData.fromProto(response.getContractSignatureData()));
+    public static BisqEasyTakeOfferResponse fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.BisqEasyTakeOfferResponse response = proto.getBisqEasyTradeMessage().getBisqEasyTakeOfferResponse();
+            return new BisqEasyTakeOfferResponse(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    ContractSignatureData.fromProto(response.getContractSignatureData()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

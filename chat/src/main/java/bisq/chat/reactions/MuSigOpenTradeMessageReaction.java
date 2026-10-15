@@ -18,6 +18,7 @@
 package bisq.chat.reactions;
 
 import bisq.chat.ChatChannelDomain;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.user.profile.UserProfile;
@@ -34,10 +35,9 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
+public final class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     public MuSigOpenTradeMessageReaction(String id,
                                          UserProfile senderUserProfile,
@@ -51,6 +51,8 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                                          boolean isRemoved) {
         super(id, senderUserProfile, receiverUserProfileId, receiverNetworkId, chatChannelId, chatChannelDomain,
                 chatMessageId, reactionId, date, isRemoved);
+
+        verify();
     }
 
     @Override
@@ -71,23 +73,28 @@ public class MuSigOpenTradeMessageReaction extends PrivateChatMessageReaction {
                 .setIsRemoved(isRemoved);
     }
 
-    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto) {
-        bisq.chat.protobuf.MuSigOpenTradeMessageReaction privateChatMessageReaction = baseProto.getMuSigOpenTradeMessageReaction();
-        return new MuSigOpenTradeMessageReaction(
-                baseProto.getId(),
-                UserProfile.fromProto(privateChatMessageReaction.getSender()),
-                privateChatMessageReaction.getReceiverUserProfileId(),
-                NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
-                baseProto.getChatChannelId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChatMessageId(),
-                baseProto.getReactionId(),
-                baseProto.getDate(),
-                privateChatMessageReaction.getIsRemoved());
+    public static MuSigOpenTradeMessageReaction fromProto(bisq.chat.protobuf.ChatMessageReaction baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.chat.protobuf.MuSigOpenTradeMessageReaction privateChatMessageReaction = baseProto.getMuSigOpenTradeMessageReaction();
+            return new MuSigOpenTradeMessageReaction(
+                    baseProto.getId(),
+                    UserProfile.fromProto(privateChatMessageReaction.getSender()),
+                    privateChatMessageReaction.getReceiverUserProfileId(),
+                    NetworkId.fromProto(privateChatMessageReaction.getReceiverNetworkId()),
+                    baseProto.getChatChannelId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChatMessageId(),
+                    baseProto.getReactionId(),
+                    baseProto.getDate(),
+                    privateChatMessageReaction.getIsRemoved());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return 0.5;
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

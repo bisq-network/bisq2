@@ -21,6 +21,7 @@ import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.application.Service;
 import bisq.common.encoding.Hex;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationRequest;
 import bisq.oracle_node.bisq1_bridge.grpc.messages.BondedRoleVerificationResponse;
@@ -30,6 +31,7 @@ import bisq.security.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.google.common.base.Preconditions.checkArgument;
@@ -51,6 +53,15 @@ public class BondedRoleGrpcService implements Service {
             // Verify if message sender is owner of the profileId
             String sendersProfileId = Hex.encode(DigestUtil.hash(senderPublicKey.getEncoded()));
             checkArgument(profileId.equals(sendersProfileId), "Senders pub key is not matching the profile ID");
+            // The role data contains the network ID of the request, and nodes reach the role at it. Only the owner of
+            // the network ID may name it (see docs/specifications/bonded-roles/registration.md).
+            checkArgument(Arrays.equals(request.getNetworkId().getPubKey().getPublicKey().getEncoded(),
+                            senderPublicKey.getEncoded()),
+                    "Senders pub key is not matching the key of the network ID");
+            // The role data contains the authorized key, which authorizes the data of the role, and the identity of a
+            // registration contains it. Only the key of the profile may be named, as for the network ID.
+            checkArgument(request.getAuthorizedPublicKey().equals(Hex.encode(senderPublicKey.getEncoded())),
+                    "Senders pub key is not matching the authorized public key");
 
             var protoRequest = toVerificationRequest(request).completeProto();
             var protoResponse = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
@@ -62,7 +73,8 @@ public class BondedRoleGrpcService implements Service {
         }
     }
 
-    public BondedRolesVerificationResponse requestBondedRoleBatchVerification(List<BondedRoleRegistrationRequest> requests) {
+    public BondedRolesVerificationResponse requestBondedRoleBatchVerification(List<BondedRoleRegistrationRequest> requests)
+            throws UnresolvableProtobufException {
         log.info("Request batch verification for {} bonded-role registrations", requests.size());
         var request = new BondedRolesVerificationRequest(requests.stream()
                 .map(BondedRoleGrpcService::toVerificationRequest)
@@ -70,6 +82,21 @@ public class BondedRoleGrpcService implements Service {
         var response = GrpcClient.withInteractiveRequestDeadline(grpcClient.getBondedRoleBlockingStub())
                 .requestBondedRoleBatchVerification(request.completeProto());
         return BondedRolesVerificationResponse.fromProto(response);
+    }
+
+    /**
+     * A persisted registration which cannot be expressed as a bridge message can never be verified. Callers use
+     * this to retain and report such a record instead of aborting a whole batch, which would leave every other
+     * registration unrevalidated for as long as that record exists.
+     */
+    public static boolean canBeVerifiedByBridge(BondedRoleRegistrationRequest request) {
+        try {
+            toVerificationRequest(request);
+            return true;
+        } catch (Exception e) {
+            log.warn("Bonded-role registration {} cannot be converted into a bridge verification message", request, e);
+            return false;
+        }
     }
 
     static BondedRoleVerificationRequest toVerificationRequest(BondedRoleRegistrationRequest request) {

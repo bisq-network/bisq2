@@ -56,7 +56,7 @@ public class TradeLimitsOverviewView extends View<VBox, TradeLimitsOverviewModel
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Reputation");
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/MuSig-tradelimits");
 
         HBox buttons = new HBox(20, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

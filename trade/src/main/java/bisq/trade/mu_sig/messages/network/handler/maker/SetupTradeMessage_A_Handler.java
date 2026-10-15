@@ -17,12 +17,15 @@
 
 package bisq.trade.mu_sig.messages.network.handler.maker;
 
-import bisq.common.encoding.Hex;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.MuSigTrade;
 import bisq.trade.mu_sig.MuSigTradeParty;
 import bisq.trade.mu_sig.handler.MuSigTradeMessageHandlerAsMessageSender;
@@ -30,6 +33,7 @@ import bisq.trade.mu_sig.messages.grpc.NonceSharesMessage;
 import bisq.trade.mu_sig.messages.grpc.PubKeySharesResponse;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_A;
 import bisq.trade.mu_sig.messages.network.SetupTradeMessage_B;
+import bisq.trade.mu_sig.messages.network.handler.MuSigContractVerifier;
 import bisq.trade.mu_sig.messages.network.handler.NonceSharesRequestUtil;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.NonceShares;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
@@ -37,13 +41,12 @@ import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.NonceSharesRequest;
 import bisq.trade.protobuf.PubKeySharesRequest;
 import bisq.trade.protobuf.Role;
+import bisq.user.identity.UserIdentity;
+import bisq.user.profile.UserProfile;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
-
-import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerAsMessageSender<MuSigTrade, SetupTradeMessage_A> {
@@ -52,6 +55,8 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
     private NonceSharesMessage myNonceSharesMessage;
     private ContractSignatureData peersContractSignatureData;
     private ContractSignatureData myContractSignatureData;
+    private UserIdentity myUserIdentity;
+    private UserProfile peersUserProfile;
 
     public SetupTradeMessage_A_Handler(ServiceProvider serviceProvider, MuSigTrade model) {
         super(serviceProvider, model);
@@ -59,14 +64,17 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
 
     @Override
     protected void verify(SetupTradeMessage_A message) {
+        if (serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(message.getSender().getId())) {
+            log.warn("We reject the take offer request because we have ignored the taker's user profile. " +
+                    "We do not disclose that to the taker but send a generic rejection reason. tradeId={}", trade.getId());
+            throw new TradeProtocolException("The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE);
+        }
+
         MuSigContract peersContract = message.getContract();
         peersContractSignatureData = message.getContractSignatureData();
         ContractService contractService = serviceProvider.getContractService();
         MuSigContract myContract = trade.getContract();
-        checkArgument(peersContract.equals(myContract),
-                "Peer's contract is not the same as my contract.\n" +
-                        "peersContract=" + peersContract + "\n" +
-                        "myContract=" + myContract);
         try {
             myContractSignatureData = contractService.signContract(myContract,
                     trade.getMyIdentity().getKeyBundle().getKeyPair());
@@ -74,35 +82,46 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
             log.error("Signing contract failed", e);
             throw new MuSigProtocolException(e);
         }
-        checkArgument(Arrays.equals(peersContractSignatureData.getContractHash(), myContractSignatureData.getContractHash()),
-                "Peer's contractHash at contract signature data is not the same as the contractHash at my contract signature data.\n" +
-                        "peersContractSignatureData.contractHash=" + Hex.encode(peersContractSignatureData.getContractHash()) + "\n" +
-                        "myContractSignatureData.contractHash=" + Hex.encode(myContractSignatureData.getContractHash()));
+        MuSigContractVerifier.verifyPeer(contractService,
+                myContract,
+                myContractSignatureData,
+                peersContract,
+                peersContractSignatureData);
     }
 
     @Override
     protected void process(SetupTradeMessage_A message) {
-        peersPubKeyShares = message.getPubKeyShares();
+        try {
+            peersPubKeyShares = message.getPubKeyShares();
 
-        Role role = trade.isBuyer() ? Role.BUYER_AS_MAKER : Role.SELLER_AS_MAKER;
-        PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setMyRole(role)
-                .build();
-        myPubKeySharesResponse = PubKeySharesResponse.fromProto(blockingStub.initTrade(pubKeySharesRequest));
+            myUserIdentity = serviceProvider.getUserService().getUserIdentityService().findUserIdentity(trade.getMyIdentity().getId())
+                    .orElseThrow();
+            peersUserProfile = serviceProvider.getUserService().getUserProfileService().findUserProfile(message.getSender().getId())
+                    .orElseThrow();
 
-        NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
-                .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
-                .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
-                .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
-                .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
-                .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
-                .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
-                .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
-                .build();
-        myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+            Role role = trade.isBuyer() ? Role.BUYER_AS_MAKER : Role.SELLER_AS_MAKER;
+            PubKeySharesRequest pubKeySharesRequest = PubKeySharesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setMyRole(role)
+                    .build();
+            myPubKeySharesResponse = PubKeySharesResponse.fromProto(blockingStub.initTrade(pubKeySharesRequest));
+
+            NonceSharesRequest nonceSharesRequest = NonceSharesRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setBuyerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getBuyerOutputPubKeyShare()))
+                    .setSellerOutputPeersPubKeyShare(ByteString.copyFrom(peersPubKeyShares.getSellerOutputPubKeyShare()))
+                    .setPeersMultisigScriptKey(ByteString.copyFrom(peersPubKeyShares.getMultisigScriptKey()))
+                    .setDepositTxFeeRate(NonceSharesRequestUtil.getDepositTxFeeRate())
+                    .setPreparedTxFeeRate(NonceSharesRequestUtil.getPreparedTxFeeRate())
+                    .setTradeAmount(NonceSharesRequestUtil.getTradeAmount(trade))
+                    .setBuyersSecurityDeposit(NonceSharesRequestUtil.getBuyerSecurityDeposit())
+                    .setSellersSecurityDeposit(NonceSharesRequestUtil.getSellersSecurityDeposit())
+                    .setTradeFeeReceiver(NonceSharesRequestUtil.getTradeFeeReceiver())
+                    .build();
+            myNonceSharesMessage = NonceSharesMessage.fromProto(blockingStub.getNonceShares(nonceSharesRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override
@@ -116,6 +135,23 @@ public final class SetupTradeMessage_A_Handler extends MuSigTradeMessageHandlerA
         peer.setPeersPubKeyShares(peersPubKeyShares);
         mySelf.setMyPubKeySharesResponse(myPubKeySharesResponse);
         mySelf.setMyNonceSharesMessage(myNonceSharesMessage);
+
+        MuSigOpenTradeChannelService openTradeChannelService = serviceProvider.getChatService().getMuSigOpenTradeChannelService();
+        openTradeChannelService.traderFindOrCreatesChannel(trade.getId(),
+                myUserIdentity,
+                peersUserProfile,
+                trade.getContract().getMediator(),
+                trade.getContract().getArbitrator());
+
+        // Best-effort and last, so this auxiliary action cannot turn an accepted trade into a failed one.
+        try {
+            serviceProvider.getMuSigTradeService().maybeAddPeerToContactList(
+                    trade.getPeer().getNetworkId().getId(),
+                    trade.getMyIdentity().getId());
+        } catch (RuntimeException e) {
+            log.warn("Adding the peer to the contact list failed for tradeId={}. The trade is unaffected.",
+                    StringUtils.sanitizeForLog(trade.getId()), e);
+        }
     }
 
     @Override

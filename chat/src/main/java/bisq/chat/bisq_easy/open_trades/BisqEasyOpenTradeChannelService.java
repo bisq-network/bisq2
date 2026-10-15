@@ -20,6 +20,7 @@ package bisq.chat.bisq_easy.open_trades;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessageType;
 import bisq.chat.Citation;
+import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.chat.priv.PrivateGroupChatChannelService;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.Reaction;
@@ -36,17 +37,16 @@ import bisq.persistence.PersistenceService;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,7 +60,12 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     private final BisqEasyOpenTradeChannelStore persistableStore = new BisqEasyOpenTradeChannelStore();
     @Getter
     private final Persistence<BisqEasyOpenTradeChannelStore> persistence;
-    private final Set<BisqEasyOpenTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeChatMessages<BisqEasyOpenTradeMessage> pendingMessages =
+            new PendingTradeChatMessages<>(BisqEasyOpenTradeMessage::getTradeId);
+    // Set by the trade service: whether we have a trade with the trade ID whose peer is the sender and whose own user
+    // profile is the receiver of a message. A received message creates a channel only for such a trade (see rule 6 of
+    // pending-trade-messages.md). Until it is set, received messages create no channel.
+    private volatile TradeWithPeerPredicate isTradeWithPeer = (tradeId, senderUserProfileId, receiverUserProfileId) -> false;
 
     public BisqEasyOpenTradeChannelService(PersistenceService persistenceService,
                                            NetworkService networkService,
@@ -81,7 +86,7 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
             processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
             if (!pendingMessages.isEmpty()) {
                 log.info("Processing pendingMessages messages");
-                pendingMessages.forEach(this::processMessage);
+                pendingMessages.getMessagesInArrivalOrder().forEach(this::processMessage);
             }
         } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
             processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
@@ -93,42 +98,38 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     // API
     /* --------------------------------------------------------------------- */
 
-    public BisqEasyOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
-                                                               BisqEasyOffer bisqEasyOffer,
-                                                               UserIdentity myUserIdentity,
-                                                               UserProfile peer,
-                                                               Optional<UserProfile> mediator) {
-        return findChannelByTradeId(tradeId)
-                .orElseGet(() -> traderCreatesChannel(tradeId, bisqEasyOffer, myUserIdentity, peer, mediator));
-    }
-
-    public BisqEasyOpenTradeChannel traderCreatesChannel(String tradeId,
-                                                         BisqEasyOffer bisqEasyOffer,
-                                                         UserIdentity myUserIdentity,
-                                                         UserProfile peer,
-                                                         Optional<UserProfile> mediator) {
-        BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByTrader(tradeId, bisqEasyOffer, myUserIdentity, peer, mediator);
-        getChannels().add(channel);
-        persist();
-        return channel;
-    }
-
+    // The verified mediation request is the authority for the mediator's channel. Anybody who knows the trade ID can
+    // send the mediator a chat message with an offer before the request, and that creates a channel with the sender as
+    // the only trader. Such a channel would hide the case and drop the messages of the other trader, so it is replaced.
+    // Its messages are dropped: honest traders send nothing to the mediator before the request, and the request
+    // carries the chat of the trade. Other channels of the trade are kept (see chat-channel-binding.md).
     public BisqEasyOpenTradeChannel mediatorFindOrCreatesChannel(String tradeId,
                                                                  BisqEasyOffer bisqEasyOffer,
                                                                  UserIdentity myUserIdentity,
                                                                  UserProfile requestingTrader,
                                                                  UserProfile nonRequestingTrader) {
-        return findChannelByTradeId(tradeId)
-                .orElseGet(() -> {
-                    BisqEasyOpenTradeChannel channel = BisqEasyOpenTradeChannel.createByMediator(tradeId,
-                            bisqEasyOffer,
-                            myUserIdentity,
-                            requestingTrader,
-                            nonRequestingTrader);
-                    getChannels().add(channel);
-                    persist();
-                    return channel;
-                });
+        BisqEasyOpenTradeChannel channel;
+        synchronized (this) {
+            Optional<BisqEasyOpenTradeChannel> existingChannel = findChannelByTradeId(tradeId);
+            if (existingChannel.isPresent()) {
+                if (!isCreatedByChatMessageToMediator(existingChannel.get(), myUserIdentity)) {
+                    return existingChannel.get();
+                }
+                log.warn("We replace the channel of trade {} which a chat message created before the mediation request",
+                        StringUtils.sanitizeForLog(tradeId));
+                getChannels().remove(existingChannel.get());
+            }
+            channel = BisqEasyOpenTradeChannel.create(tradeId,
+                    bisqEasyOffer,
+                    myUserIdentity,
+                    Set.of(requestingTrader, nonRequestingTrader),
+                    Optional.of(myUserIdentity.getUserProfile()),
+                    true);
+            getChannels().add(channel);
+        }
+        persist();
+        processPendingMessages(tradeId);
+        return channel;
     }
 
     public CompletableFuture<SendMessageResult> sendTakeOfferMessage(String tradeId,
@@ -329,36 +330,100 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
         // Check if there are any reactions that should be added to existing messages
         processQueuedReactions();
 
-        if (pendingMessages.contains(message)) {
-            log.info("Removing message from pendingMessages. message={}", message);
-            pendingMessages.remove(message);
+        if (pendingMessages.remove(message)) {
+            log.info("Removed message from pendingMessages. tradeId={}", StringUtils.sanitizeForLog(message.getTradeId()));
         }
+    }
+
+    // The sender chooses the trade ID of its message. A message with the trade ID of another trade does not belong to
+    // this trade, and the mediator ignores a mediation request which carries such a message (rule 5 of
+    // docs/specifications/chat/private-channel-membership.md).
+    @Override
+    protected boolean isMessageOfChannel(BisqEasyOpenTradeChannel channel, BisqEasyOpenTradeMessage message) {
+        boolean isMessageOfTrade = channel.getTradeId().equals(message.getTradeId());
+        if (!isMessageOfTrade) {
+            log.warn("Ignoring a trade chat message whose trade ID is not the trade ID of channel {}", channel.getId());
+        }
+        return isMessageOfTrade;
     }
 
     @Override
     protected Optional<BisqEasyOpenTradeChannel> createNewChannelFromReceivedMessage(BisqEasyOpenTradeMessage message) {
-        if (message.getBisqEasyOffer().isPresent()) {
-            return userIdentityService.findUserIdentity(message.getReceiverUserProfileId())
-                    .map(myUserIdentity -> traderCreatesChannel(message.getTradeId(),
-                            message.getBisqEasyOffer().get(),
-                            myUserIdentity,
-                            message.getSenderUserProfile(),
-                            message.getMediator()));
-        } else {
-            // It could be that taker sends quickly a message after take offer, and we receive them
-            // out of order. In that case the seconds message (which arrived first) would get dropped.
-            // This is a very unlikely case, so we ignore it.
-            // It also happens if we left a trade channel and receive a message again.
-            // We ignore that and do not re-open the channel.
-            log.warn("We received the first message for a new channel without an offer. " +
-                    "We add that message to pendingMessages for re-processing when we receive the next message. " +
-                    "Message={}", message);
-            pendingMessages.add(message);
+        Optional<UserIdentity> myUserIdentity = userIdentityService.findUserIdentity(message.getReceiverUserProfileId());
+        if (myUserIdentity.isEmpty() || message.isExpired()) {
+            log.warn("We received a message for a new channel which is not addressed to one of our identities or is " +
+                    "expired. We ignore it. tradeId={}, messageId={}", StringUtils.sanitizeForLog(message.getTradeId()),
+                    StringUtils.sanitizeForLog(message.getId()));
             return Optional.empty();
         }
+        if (message.getBisqEasyOffer().isPresent() &&
+                isTradeWithPeer.test(message.getTradeId(),
+                        message.getSenderUserProfile().getId(),
+                        message.getReceiverUserProfileId())) {
+            return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
+                    message.getBisqEasyOffer().get(),
+                    myUserIdentity.get(),
+                    message.getSenderUserProfile(),
+                    message.getMediator()));
+        }
+        // A message without offer, or for a trade which we do not have. The taker's first chat message can arrive
+        // before the take offer request which creates our trade; the trade service then processes the pending messages.
+        // If the trade is created after the check above, onMessage processes the pending messages again.
+        pendingMessages.add(message);
+        return Optional.empty();
+    }
+
+    public void setIsTradeWithPeer(TradeWithPeerPredicate isTradeWithPeer) {
+        this.isTradeWithPeer = isTradeWithPeer;
+    }
+
+    @FunctionalInterface
+    public interface TradeWithPeerPredicate {
+        boolean test(String tradeId, String senderUserProfileId, String receiverUserProfileId);
+    }
+
+    // The taker's UI and the received take offer message can both create the channel, on different threads.
+    @VisibleForTesting
+    BisqEasyOpenTradeChannel traderFindOrCreatesChannel(String tradeId,
+                                                        BisqEasyOffer bisqEasyOffer,
+                                                        UserIdentity myUserIdentity,
+                                                        UserProfile peer,
+                                                        Optional<UserProfile> mediator) {
+        BisqEasyOpenTradeChannel channel;
+        synchronized (this) {
+            Optional<BisqEasyOpenTradeChannel> existingChannel = findChannelByTradeId(tradeId);
+            if (existingChannel.isPresent()) {
+                return existingChannel.get();
+            }
+            channel = BisqEasyOpenTradeChannel.create(tradeId, bisqEasyOffer, myUserIdentity, Set.of(peer), mediator, false);
+            getChannels().add(channel);
+        }
+        persist();
+        processPendingMessages(tradeId);
+        return channel;
+    }
+
+    // Only a mediation request creates a channel with two traders, and the mediator profile never trades in a trade
+    // which it mediates, as the mediator selection excludes both traders. So a channel of the trade which has the
+    // mediator's identity as own identity, but not two traders, was created by a chat message of a user who knew the
+    // trade ID. A channel of another of our identities can be the channel of our own trade, and a channel with two
+    // traders holds a mediation case. Both are kept.
+    private static boolean isCreatedByChatMessageToMediator(BisqEasyOpenTradeChannel channel,
+                                                            UserIdentity mediatorUserIdentity) {
+        return channel.getMyUserIdentity().getId().equals(mediatorUserIdentity.getId()) &&
+                channel.getTraders().size() != 2;
     }
 
     private boolean allowSendLeaveMessage(BisqEasyOpenTradeChannel channel, UserProfile userProfile) {
         return channel.getUserProfileIdsOfSendingLeaveMessage().contains(userProfile.getId());
+    }
+
+    @VisibleForTesting
+    int getNumPendingMessages() {
+        return pendingMessages.size();
+    }
+
+    public void processPendingMessages(String tradeId) {
+        pendingMessages.getMessagesOfTrade(tradeId).forEach(this::processMessage);
     }
 }

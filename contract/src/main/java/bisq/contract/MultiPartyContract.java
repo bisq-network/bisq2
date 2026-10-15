@@ -1,6 +1,7 @@
 package bisq.contract;
 
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.offer.Offer;
 import lombok.EqualsAndHashCode;
@@ -42,14 +43,19 @@ public abstract class MultiPartyContract<T extends Offer<?, ?>> extends TwoParty
         return unsafeToProto(serializeForHash);
     }
 
-    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto) {
-        //noinspection SwitchStatementWithTooFewBranches
-        switch (proto.getTwoPartyContract().getMessageCase()) {
-            // no impl yet
-            case MESSAGE_NOT_SET: {
-                throw new UnresolvableProtobufMessageException(proto);
+    public static TwoPartyContract<?> fromProto(bisq.contract.protobuf.Contract proto)
+            throws UnresolvableProtobufException {
+        try {
+            //noinspection SwitchStatementWithTooFewBranches
+            switch (proto.getTwoPartyContract().getMessageCase()) {
+                // no impl yet
+                case MESSAGE_NOT_SET: {
+                    throw new UnresolvableProtobufMessageException(proto);
+                }
             }
+            throw new UnresolvableProtobufMessageException(proto);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        throw new UnresolvableProtobufMessageException(proto);
     }
 }

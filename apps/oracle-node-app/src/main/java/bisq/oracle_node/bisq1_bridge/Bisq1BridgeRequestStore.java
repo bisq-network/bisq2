@@ -21,6 +21,8 @@ import bisq.bonded_roles.registration.BondedRoleRegistrationRequest;
 import bisq.common.data.ByteArray;
 import bisq.common.encoding.Hex;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import bisq.user.reputation.requests.AuthorizeAccountAgeRequest;
@@ -46,6 +48,9 @@ import java.util.stream.Collectors;
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
 @Slf4j
 final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeRequestStore> {
+    // Pin the migration to version 2; a later protocol may give these date fields meaning again.
+    private static final int WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES = 2;
+
     @Getter(AccessLevel.PACKAGE)
     private final Set<AuthorizeAccountAgeRequest> accountAgeRequests = new CopyOnWriteArraySet<>();
     @Getter(AccessLevel.PACKAGE)
@@ -88,29 +93,56 @@ final class Bisq1BridgeRequestStore implements PersistableStore<Bisq1BridgeReque
         return unsafeToProto(serializeForHash);
     }
 
-    public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto) {
-        return new Bisq1BridgeRequestStore(
-                proto.getAccountAgeRequestsList().stream()
-                        .map(AuthorizeAccountAgeRequest::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.getSignedWitnessRequestsList().stream()
-                        .map(AuthorizeSignedWitnessRequest::fromProto)
-                        .collect(Collectors.toSet()),
-                proto.getAccountTimestampDateByHashMap().entrySet().stream()
-                        .collect(Collectors.toMap(
-                                e -> new ByteArray(Hex.decode(e.getKey())),
-                                Map.Entry::getValue
-                        )),
-                proto.getBondedRoleRegistrationRequestsList().stream()
-                        .map(BondedRoleRegistrationRequest::fromProto)
-                        .filter(request -> {
-                            if (request.isCancellationRequest()) {
-                                log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
-                                return false;
-                            }
-                            return true;
-                        })
-                        .collect(Collectors.toSet()));
+    // Unlike other stores, this store does not skip a persisted request which it cannot parse (rule 4 of
+    // docs/specifications/network/validation-at-parsing.md). The requests are permanent witness bindings. A skipped
+    // request would be missing from the conflict check of Bisq1BridgeRequestService, so the oracle could bind its
+    // witness to another profile (see docs/specifications/reputation/account-age.md).
+    public static Bisq1BridgeRequestStore fromProto(bisq.oracle_node.protobuf.Bisq1BridgeRequestStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new Bisq1BridgeRequestStore(
+                    ProtobufUtils.fromProtoStream(proto.getAccountAgeRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedAccountAgeRequest)
+                            .collect(Collectors.toSet()),
+                    ProtobufUtils.fromProtoStream(proto.getSignedWitnessRequestsList(),
+                                    Bisq1BridgeRequestStore::fromPersistedSignedWitnessRequest)
+                            .collect(Collectors.toSet()),
+                    proto.getAccountTimestampDateByHashMap().entrySet().stream()
+                            .collect(Collectors.toMap(
+                                    e -> new ByteArray(Hex.decode(e.getKey())),
+                                    Map.Entry::getValue
+                            )),
+                    ProtobufUtils.fromProtoStream(proto.getBondedRoleRegistrationRequestsList(),
+                                    BondedRoleRegistrationRequest::fromProto)
+                            .filter(request -> {
+                                if (request.isCancellationRequest()) {
+                                    log.warn("Ignoring cancellation request found in the persisted bonded-role registration set");
+                                    return false;
+                                }
+                                return true;
+                            })
+                            .collect(Collectors.toSet()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
+    }
+
+    // Earlier version-2 requests could persist unused dates. Normalize them only at this persistence boundary
+    // so their ownership bindings survive stricter network validation without changing the proof.
+    private static AuthorizeAccountAgeRequest fromPersistedAccountAgeRequest(bisq.user.protobuf.AuthorizeAccountAgeRequest proto)
+            throws UnresolvableProtobufException {
+        if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
+            proto = proto.toBuilder().clearDate().build();
+        }
+        return AuthorizeAccountAgeRequest.fromProto(proto);
+    }
+
+    private static AuthorizeSignedWitnessRequest fromPersistedSignedWitnessRequest(bisq.user.protobuf.AuthorizeSignedWitnessRequest proto)
+            throws UnresolvableProtobufException {
+        if (proto.getProtocolVersion() == WITNESS_REQUEST_VERSION_WITH_UNUSED_DATES) {
+            proto = proto.toBuilder().clearAccountAgeWitnessDate().clearWitnessSignDate().build();
+        }
+        return AuthorizeSignedWitnessRequest.fromProto(proto);
     }
 
     @Override

@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.authorization.token.equi_hash;
 
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
 import bisq.network.p2p.node.authorization.AuthorizationTokenType;
 import bisq.security.pow.ProofOfWork;
@@ -70,10 +71,15 @@ public final class EquiHashToken extends AuthorizationToken {
                         .setMessageCounter(messageCounter));
     }
 
-    public static EquiHashToken fromProto(bisq.network.protobuf.AuthorizationToken proto) {
-        bisq.network.protobuf.EquiHashToken equiHashTokenProto = proto.getEquiHashToken();
-        return new EquiHashToken(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
-                ProofOfWork.fromProto(equiHashTokenProto.getProofOfWork()),
-                equiHashTokenProto.getMessageCounter());
+    public static EquiHashToken fromProto(bisq.network.protobuf.AuthorizationToken proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.network.protobuf.EquiHashToken equiHashTokenProto = proto.getEquiHashToken();
+            return new EquiHashToken(AuthorizationTokenType.fromProto(proto.getAuthorizationTokenType()),
+                    ProofOfWork.fromProto(equiHashTokenProto.getProofOfWork()),
+                    equiHashTokenProto.getMessageCounter());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

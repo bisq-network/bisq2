@@ -18,8 +18,9 @@
 package bisq.account.timestamp;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
-import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.security.keys.EcPublicKeyValidation;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -27,15 +28,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 
-import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
-import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
-
 @Slf4j
 @Getter
 @ToString
 public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
-
     private final long date;
     private final byte[] hash;
     private final byte[] fingerprintHash; // 20 byte hash
@@ -62,7 +58,7 @@ public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
         NetworkDataValidation.validateHash(hash);
         NetworkDataValidation.validateHash(fingerprintHash); 
         NetworkDataValidation.validateHash(saltedFingerprintHash);
-        NetworkDataValidation.validateECPubKey(publicKey);
+        EcPublicKeyValidation.validate(publicKey);
     }
 
     @Override
@@ -75,14 +71,19 @@ public final class AuthorizeAccountTimestampV2Payload implements NetworkProto {
                 .setPublicKey(ByteString.copyFrom(publicKey));
     }
 
-    public static AuthorizeAccountTimestampV2Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Payload proto) {
-        return new AuthorizeAccountTimestampV2Payload(
-                proto.getDate(),
-                proto.getHash().toByteArray(),
-                proto.getFingerprintHash().toByteArray(),
-                proto.getSaltedFingerprintHash().toByteArray(),
-                proto.getPublicKey().toByteArray()
-        );
+    public static AuthorizeAccountTimestampV2Payload fromProto(bisq.account.protobuf.AuthorizeAccountTimestampV2Payload proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeAccountTimestampV2Payload(
+                    proto.getDate(),
+                    proto.getHash().toByteArray(),
+                    proto.getFingerprintHash().toByteArray(),
+                    proto.getSaltedFingerprintHash().toByteArray(),
+                    proto.getPublicKey().toByteArray()
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

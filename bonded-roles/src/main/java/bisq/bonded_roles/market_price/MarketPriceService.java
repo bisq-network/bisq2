@@ -17,192 +17,31 @@
 
 package bisq.bonded_roles.market_price;
 
-import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
-import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
-import bisq.bonded_roles.bonded_role.BondedRole;
-import bisq.common.application.DevMode;
 import bisq.common.application.Service;
-import bisq.common.encoding.Hex;
 import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
-import bisq.common.observable.Observable;
-import bisq.common.observable.Pin;
-import bisq.common.observable.map.ObservableHashMap;
-import bisq.network.NetworkService;
-import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
-import bisq.persistence.DbSubDirectory;
-import bisq.persistence.Persistence;
-import bisq.persistence.PersistenceService;
-import bisq.persistence.RateLimitedPersistenceClient;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import bisq.common.observable.ReadOnlyObservable;
+import bisq.common.observable.map.ReadOnlyObservableMap;
 
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-/**
- * Getting the market price data from either the marketPriceRequestService or as AuthorizedMarketPriceData
- * from the P2P network. We update the map in the store with the entries which have a more recent timestamp.
- * We persist the price data so after the first start they are available initially.
- * Client code need to ensure that the price data are not too old to be considered reliable.
- */
+public interface MarketPriceService extends Service {
+    void setSelectedMarket(Market market);
 
-@Slf4j
-public class MarketPriceService extends RateLimitedPersistenceClient<MarketPriceStore>
-        implements Service, AuthorizedBondedRolesService.Listener {
-    @Getter
-    private final MarketPriceStore persistableStore = new MarketPriceStore();
-    @Getter
-    private final Persistence<MarketPriceStore> persistence;
-    private final AuthorizedBondedRolesService authorizedBondedRolesService;
-    @Getter
-    private final Optional<MarketPriceRequestService> marketPriceRequestService;
-    private Pin marketPriceByCurrencyMapPin;
-    @Getter
-    private Optional<AuthorizedBondedRole> marketPriceProvidingOracle = Optional.empty();
+    ReadOnlyObservable<Market> getSelectedMarket();
 
-    public MarketPriceService(com.typesafe.config.Config marketPrice,
-                              PersistenceService persistenceService,
-                              NetworkService networkService,
-                              AuthorizedBondedRolesService authorizedBondedRolesService) {
-        boolean enabled = marketPrice.getBoolean("enabled");
-        this.authorizedBondedRolesService = authorizedBondedRolesService;
-        marketPriceRequestService = enabled
-                ? Optional.of(new MarketPriceRequestService(MarketPriceRequestService.Config.from(marketPrice), networkService))
-                : Optional.empty();
-        persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.SETTINGS, persistableStore);
-    }
+    Optional<MarketPrice> findMarketPrice(Market market);
 
+    Optional<PriceQuote> findMarketPriceQuote(Market market);
 
-    /* --------------------------------------------------------------------- */
-    // Service
-    /* --------------------------------------------------------------------- */
+    PriceQuote getMarketPriceQuoteOrThrow(Market market);
 
-    public CompletableFuture<Boolean> initialize() {
-        log.info("initialize");
+    ReadOnlyObservableMap<Market, MarketPrice> getMarketPriceByCurrencyMap();
 
-        authorizedBondedRolesService.addListener(this);
-        setSelectedMarket(MarketRepository.getDefaultBtcFiatMarket());
+    boolean hasMarketPrice(Market market);
 
-        return marketPriceRequestService
-                .map(service -> {
-                    marketPriceByCurrencyMapPin = service.getMarketPriceByCurrencyMap()
-                            .addObserver(() -> applyNewMap(service.getMarketPriceByCurrencyMap()));
+    Optional<MarketPriceRequestService> getMarketPriceRequestService();
 
-                    // Ensure we have at least some outdated price data in case the clearnet provider is offline and
-                    // no persisted data are present
-                    if (DevMode.isDevMode() && getMarketPriceByCurrencyMap().isEmpty()) {
-                        applyNewMap(service.loadStaticDevMarketPrice());
-                    }
-                    return service.initialize();
-                })
-                .orElseGet(() -> CompletableFuture.completedFuture(true));
-    }
-
-
-    public CompletableFuture<Boolean> shutdown() {
-        if (marketPriceByCurrencyMapPin != null) {
-            marketPriceByCurrencyMapPin.unbind();
-        }
-        authorizedBondedRolesService.removeListener(this);
-
-        return marketPriceRequestService
-                .map(MarketPriceRequestService::shutdown)
-                .orElseGet(() -> CompletableFuture.completedFuture(true));
-    }
-
-
-
-    /* --------------------------------------------------------------------- */
-    // AuthorizedBondedRolesService.Listener
-    /* --------------------------------------------------------------------- */
-
-    @Override
-    public void onAuthorizedDataAdded(AuthorizedData authorizedData) {
-        if (authorizedData.getAuthorizedDistributedData() instanceof AuthorizedMarketPriceData) {
-            if (isAuthorized(authorizedData)) {
-                AuthorizedMarketPriceData authorizedMarketPriceData = (AuthorizedMarketPriceData) authorizedData.getAuthorizedDistributedData();
-                String authorizedDataPubKey = Hex.encode(authorizedData.getAuthorizedPublicKeyBytes());
-                marketPriceProvidingOracle = authorizedBondedRolesService.getBondedRoles().stream()
-                        .map(BondedRole::getAuthorizedBondedRole)
-                        .filter(authorizedBondedRole -> authorizedBondedRole.getAuthorizedPublicKey().equals(authorizedDataPubKey))
-                        .findAny();
-                Map<Market, MarketPrice> map = authorizedMarketPriceData.getMarketPriceByCurrencyMap().entrySet().stream()
-                        .peek(e -> e.getValue().setSource(MarketPrice.Source.PROPAGATED_IN_NETWORK))
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-                applyNewMap(map);
-            }
-        }
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // API
-    /* --------------------------------------------------------------------- */
-
-    public void setSelectedMarket(Market market) {
-        if (getSelectedMarket().set(market)) {
-            persist();
-        }
-    }
-
-    public Optional<MarketPrice> findMarketPrice(Market market) {
-        return Optional.ofNullable(getMarketPriceByCurrencyMap().get(market));
-    }
-
-    public Optional<PriceQuote> findMarketPriceQuote(Market market) {
-        return findMarketPrice(market).stream().map(MarketPrice::getPriceQuote).findAny();
-    }
-
-    public ObservableHashMap<Market, MarketPrice> getMarketPriceByCurrencyMap() {
-        return persistableStore.getMarketPriceByCurrencyMap();
-    }
-
-    public Observable<Market> getSelectedMarket() {
-        return persistableStore.getSelectedMarket();
-    }
-
-
-    /* --------------------------------------------------------------------- */
-    // Private
-    /* --------------------------------------------------------------------- */
-
-    private boolean isAuthorized(AuthorizedData authorizedData) {
-        // The oracle node runs the MarketPricePropagationService. The BondedRoleType.MARKET_PRICE_NODE runs
-        // the market price node which is used for requests from user apps or the MarketPricePropagationService.
-        // AuthorizedMarketPriceData provide better resilience for market price data, specially at startup in case the
-        // request to the market price node fails.
-        return authorizedBondedRolesService.hasAuthorizedPubKey(authorizedData, BondedRoleType.ORACLE_NODE);
-    }
-
-    private void applyNewMap(Map<Market, MarketPrice> newMap) {
-        if (newMap.isEmpty()) {
-            return;
-        }
-
-        Map<Market, MarketPrice> mapOfNewEntries = getMapOfNewEntries(newMap);
-        if (mapOfNewEntries.isEmpty()) {
-            return;
-        }
-        getMarketPriceByCurrencyMap().putAll(mapOfNewEntries);
-        persist();
-    }
-
-    // Filters the new map for new entries or entries with a newer timestamp as the existing one.
-    private Map<Market, MarketPrice> getMapOfNewEntries(Map<Market, MarketPrice> newMap) {
-        Map<Market, MarketPrice> marketPriceByCurrencyMap = getMarketPriceByCurrencyMap();
-        return newMap.entrySet().stream()
-                .filter(e -> {
-                    MarketPrice marketPrice = marketPriceByCurrencyMap.get(e.getKey());
-                    if (marketPrice == null) {
-                        return true;
-                    }
-                    return e.getValue().getTimestamp() > marketPrice.getTimestamp();
-                })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
+    Optional<AuthorizedBondedRole> getMarketPriceProvidingOracle();
 }

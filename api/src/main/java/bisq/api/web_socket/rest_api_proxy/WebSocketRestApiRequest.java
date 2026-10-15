@@ -38,25 +38,42 @@ public class WebSocketRestApiRequest implements WebSocketMessage {
     private String requestId;
     private String path;
     private String method;
+    // The body can contain payment account data or a chat message. toString() prints only the length of
+    // the body, so that no log statement which prints this object writes the body to the log file.
+    @ToString.Exclude
     private String body;
+    // Accepted but ignored. Clients used to supply the session and client id here and we forwarded
+    // them to the REST API server, which let a client act under an identity it never authenticated
+    // with. The identity is now taken from the authenticated upgrade request instead. Both fields
+    // are kept so that already released clients, which still send them, keep working until they
+    // have rolled out a version that no longer does.
     private Map<String, String> headers;
     private String clientId;
-
-    public static boolean isExpectedJson(String message) {
-        return message.contains("requestId") &&
-                message.contains("path") &&
-                message.contains("method") &&
-                message.contains("body") &&
-                message.contains("headers") &&
-                message.contains("clientId");
-    }
 
     public static Optional<WebSocketRestApiRequest> fromJson(String json) {
         try {
             return Optional.of(JsonMapperProvider.get().readValue(json, WebSocketRestApiRequest.class));
         } catch (JsonProcessingException e) {
-            log.error("Json deserialization failed. Message={}", json, e);
+            // The message contains the body of the request, so only its length is logged
+            log.error("Json deserialization of a WebSocketRestApiRequest failed. Message length={}", json.length(), e);
         }
         return Optional.empty();
+    }
+
+    @ToString.Include(name = "bodyLength")
+    private int bodyLength() {
+        return body == null ? 0 : body.length();
+    }
+
+    /**
+     * Removes the client supplied headers, so that from here on the request cannot carry them any
+     * further — not into a forwarded request, and not into a log line via {@link #toString()}. The node
+     * takes the identity of the call from the authenticated upgrade request instead, so what the
+     * message carries is discarded. Called once, right after deserialization.
+     */
+    void clearHeaders() {
+        // Jackson deserializes into the field, so emptying it is what actually removes them. Emptied
+        // rather than nulled: the generated getter stays safe to call for anything added later.
+        headers = Map.of();
     }
 }

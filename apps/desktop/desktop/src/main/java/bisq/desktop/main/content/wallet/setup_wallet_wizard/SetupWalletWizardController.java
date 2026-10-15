@@ -118,8 +118,8 @@ public class SetupWalletWizardController extends NavigationController {
             backString = Res.get("action.back");
             nextString = Res.get("wallet.backupSeeds.button.verify");
         } else if (navigationTarget == NavigationTarget.SETUP_WALLET_VERIFY) {
+            // The verify step hides the navigation buttons. Selecting an answer checks it and moves to the next word.
             backString = Res.get("action.back");
-            nextString = Res.get("wallet.verifySeeds.button.question.nextWord");
         }
 
         model.getNextButtonText().set(nextString);

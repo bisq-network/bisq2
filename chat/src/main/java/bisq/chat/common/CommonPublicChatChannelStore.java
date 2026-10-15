@@ -19,6 +19,8 @@ package bisq.chat.common;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
+public final class CommonPublicChatChannelStore implements PersistableStore<CommonPublicChatChannelStore> {
     private final ObservableSet<CommonPublicChatChannel> channels = new ObservableSet<>();
 
     private CommonPublicChatChannelStore(Set<CommonPublicChatChannel> privateDiscussionChannels) {
@@ -51,11 +53,17 @@ public class CommonPublicChatChannelStore implements PersistableStore<CommonPubl
         return unsafeToProto(serializeForHash);
     }
 
-    public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto) {
-        Set<CommonPublicChatChannel> privateDiscussionChannels = proto.getChannelsList().stream()
-                .map(e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new CommonPublicChatChannelStore(privateDiscussionChannels);
+    public static CommonPublicChatChannelStore fromProto(bisq.chat.protobuf.CommonPublicChatChannelStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<CommonPublicChatChannel> privateDiscussionChannels = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(),
+                            e -> (CommonPublicChatChannel) CommonPublicChatChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new CommonPublicChatChannelStore(privateDiscussionChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

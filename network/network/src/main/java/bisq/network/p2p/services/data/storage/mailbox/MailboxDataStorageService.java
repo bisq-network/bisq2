@@ -20,17 +20,18 @@ package bisq.network.p2p.services.data.storage.mailbox;
 import bisq.common.application.DevMode;
 import bisq.common.data.ByteArray;
 import bisq.common.formatter.DataSizeFormatter;
+import bisq.common.timer.Clock;
+import bisq.common.timer.SystemClock;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.DataStore;
-import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
 import bisq.persistence.PersistenceService;
-import bisq.security.DigestUtil;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -54,13 +55,22 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                                      PruneExpiredEntriesService pruneExpiredEntriesService,
                                      String storeName,
                                      String storeKey) {
-        super(persistenceService, storeName, storeKey);
+        this(persistenceService, pruneExpiredEntriesService, storeName, storeKey, new SystemClock());
+    }
+
+    @VisibleForTesting
+    public MailboxDataStorageService(PersistenceService persistenceService,
+                                     PruneExpiredEntriesService pruneExpiredEntriesService,
+                                     String storeName,
+                                     String storeKey,
+                                     Clock clock) {
+        super(persistenceService, storeName, storeKey, clock);
         pruneExpiredEntriesService.addTask(this::pruneExpired);
     }
 
     @Override
     public void onPersistedApplied(DataStore<MailboxRequest> persisted) {
-        maybeLogMapState("onPersistedApplied", persisted);
+//        maybeLogMapState("onPersistedApplied", persisted);
     }
 
     @Override
@@ -72,43 +82,60 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
 
     public DataStorageResult add(AddMailboxRequest request) {
         maybeLogMapState("add", persistableStore);
+
+        // The message is encrypted, so the class name comes from MailboxData
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
+        // Most received add requests are copies of stored requests (a broadcast arrives from several peers).
+        // Detect them before the signature verification, which is the most expensive check. A copy without signature
+        // V2, which a node of an earlier version relayed, is not equal to the stored request, but its sequence number is
+        // not higher. The complete request of a stored copy without signature V2 has the same sequence number, and
+        // replaces the copy. The checks are repeated inside the lock because the map can change in between.
+        ByteArray storageKey = request.getStorageKey();
+        MailboxRequest storedRequest = persistableStore.getMap().get(storageKey);
+        if (request.equals(storedRequest)) {
+            return DataStorageResult.failed().requestAlreadyReceived();
+        }
+        if (isSequenceNrInvalid(request, storedRequest)) {
+            return DataStorageResult.failed().sequenceNrInvalid();
+        }
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+
         MailboxSequentialData mailboxSequentialData = request.getMailboxSequentialData();
         MailboxData mailboxData = mailboxSequentialData.getMailboxData();
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        ByteArray byteArray = new ByteArray(hash);
+
+        if (request.isSignatureInvalid(now)) {
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
         MailboxRequest requestFromMap;
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
         synchronized (mapAccessLock) {
-            if (isExceedingMapSize()) {
-                return new DataStorageResult(false).maxMapSizeReached();
+            requestFromMap = map.get(storageKey);
+            if (requestFromMap == null && isExceedingMapSize()) {
+                return DataStorageResult.failed().maxMapSizeReached();
             }
 
-            requestFromMap = map.get(byteArray);
             if (request.equals(requestFromMap)) {
-                return new DataStorageResult(false).requestAlreadyReceived();
+                return DataStorageResult.failed().requestAlreadyReceived();
             }
 
-            int sequenceNumberFromMap = requestFromMap != null ? requestFromMap.getSequenceNumber() : 0;
-            if (requestFromMap != null && mailboxSequentialData.isSequenceNrInvalid(sequenceNumberFromMap)) {
-                return new DataStorageResult(false).sequenceNrInvalid();
+            // Mailbox adds have sequence 1; removals always have MAX_VALUE, including V1 removals.
+            if (isSequenceNrInvalid(request, requestFromMap)) {
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (mailboxSequentialData.isExpired()) {
-                return new DataStorageResult(false).expired();
-            }
-
-            if (mailboxData.isDataInvalid(mailboxSequentialData.getSenderPublicKeyHash())) {
-                return new DataStorageResult(false).dataInvalid();
-            }
-
-            if (request.isPublicKeyInvalid()) {
-                return new DataStorageResult(false).publicKeyHashInvalid();
-            }
-
-            if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
-            }
-            map.put(byteArray, request);
+            map.put(storageKey, request);
         }
 
         persist();
@@ -120,34 +147,67 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                 log.error("Calling onAdded at listener {} failed", listener, e);
             }
         });
+
         maybeLogMapState("add success", persistableStore);
-        return new DataStorageResult(true);
+        return DataStorageResult.success();
     }
 
 
+    // The sequence number is checked first, because the check for the complete version compares the preimages of both
+    // requests, which serializes them
+    private static boolean isSequenceNrInvalid(AddMailboxRequest request, @Nullable MailboxRequest requestFromMap) {
+        return requestFromMap != null &&
+                request.isSequenceNrInvalid(requestFromMap.getSequenceNumber()) &&
+                !request.isCompleteVersionOf(requestFromMap);
+    }
+
     public DataStorageResult remove(RemoveMailboxRequest request) {
         maybeLogMapState("remove ", persistableStore);
-        ByteArray byteArray = new ByteArray(request.getHash());
+
+        if (isClassNameInvalid(request.getClassName())) {
+            return DataStorageResult.failed().classNameInvalid();
+        }
+
+        long now = clock.now();
+        if (request.isRequiredSignatureV2Missing(now)) {
+            return DataStorageResult.failed().signatureV2Missing();
+        }
+
+        if (request.isExpired()) {
+            return DataStorageResult.failed().expired();
+        }
+        if (request.isSignatureInvalid(now)) {
+            return DataStorageResult.failed().signatureInvalid();
+        }
+
+        ByteArray storageKey = request.getStorageKey();
         Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        MailboxRequest requestFromMap = map.get(byteArray);
         MailboxSequentialData sequentialDataFromMap;
         synchronized (mapAccessLock) {
+            MailboxRequest requestFromMap = map.get(storageKey);
             if (requestFromMap == null) {
+                if (isExceedingMapSize() || isExceedingRemovalsWithoutReplacedAdd()) {
+                    return DataStorageResult.failed().maxMapSizeReached();
+                }
+
                 // We don't have any entry, but it might be that we would receive later an add request, so we need to keep
                 // track of the sequence number
-                map.put(byteArray, request);
+                getReplacedAddSequenceNrs().remove(storageKey);
+                map.put(storageKey, request);
                 persist();
-                return new DataStorageResult(true).noEntry();
+                return DataStorageResult.success().noEntry();
             }
 
             if (requestFromMap instanceof RemoveMailboxRequest) {
-                // We have had the entry already removed.
-                if (!request.isSequenceNrInvalid(requestFromMap.getSequenceNumber())) {
-                    // We update the request, so we have the latest sequence number.
-                    map.put(byteArray, request);
+                // Signature V1 does not cover created, so a relay can shorten the lifetime of a V1 removal.
+                // A verified V2 removal replaces it. Otherwise the stored removal stays unchanged. The new removal keeps
+                // the sequence number of the add request which the stored removal replaced.
+                if (request.isSignatureV2Present() && !requestFromMap.isSignatureV2Present()) {
+                    map.put(storageKey, request);
                     persist();
+                    return DataStorageResult.success().alreadyRemoved();
                 }
-                return new DataStorageResult(true).alreadyRemoved();
+                return DataStorageResult.failed().alreadyRemoved();
             }
 
             // At that point we know requestFromMap is an AddMailboxRequest
@@ -156,45 +216,32 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
             sequentialDataFromMap = addRequest.getMailboxSequentialData();
             if (request.isSequenceNrInvalid(sequentialDataFromMap.getSequenceNumber())) {
                 // Sequence number has not increased
-                return new DataStorageResult(false).sequenceNrInvalid();
+                return DataStorageResult.failed().sequenceNrInvalid();
             }
 
-            if (request.isPublicKeyHashInvalid(sequentialDataFromMap)) {
+            if (request.isSignaturePubKeyHashInvalid(sequentialDataFromMap.getReceiversPublicKeyHash())) {
                 // Hash of pubKey of data does not match provided one
-                return new DataStorageResult(false).publicKeyHashInvalid();
+                return DataStorageResult.failed().publicKeyHashInvalid();
             }
 
-            if (request.isSignatureInvalid()) {
-                return new DataStorageResult(false).signatureInvalid();
-            }
-
-            // As metaData from mailboxData is taken from the users current code base but the one from RemoveMailboxRequest
-            // is from the senders version (taken from senders mailboxData) it could be different if both users had
-            // different versions and metaData has changed between those versions.
-            // If we detect such a difference we use our metaData version. This also protects against malicious manipulation.
-            MetaData metaDataFromMailboxData = sequentialDataFromMap.getMailboxData().getMetaData();
-            if (!request.getMetaDataFromProto().equals(metaDataFromMailboxData)) {
-                request.setMetaDataFromDistributedData(Optional.of(metaDataFromMailboxData));
-                log.warn("MetaData of remove request not matching the one from the addRequest from the map. We override " +
-                                "metadata with the one we have from the associated mailbox data." +
-                                "{} vs. {}",
-                        request.getMetaDataFromProto(),
-                        metaDataFromMailboxData);
-            }
-
-            map.put(byteArray, request);
-            listeners.forEach(listener -> {
-                try {
-                    listener.onRemoved(sequentialDataFromMap.getMailboxData());
-                } catch (Exception e) {
-                    log.error("Calling onRemoved at listener {} failed", listener, e);
-                }
-            });
+            // The store keeps the sequence number of the add request which the removal replaces. It sets the number
+            // before the removal, so that a reader which finds the removal also finds the number.
+            getReplacedAddSequenceNrs().put(storageKey, sequentialDataFromMap.getSequenceNumber());
+            map.put(storageKey, request);
         }
 
         persist();
+
+        listeners.forEach(listener -> {
+            try {
+                listener.onRemoved(sequentialDataFromMap.getMailboxData());
+            } catch (Exception e) {
+                log.error("Calling onRemoved at listener {} failed", listener, e);
+            }
+        });
+
         maybeLogMapState("remove success", persistableStore);
-        return new DataStorageResult(true).removedData(sequentialDataFromMap.getMailboxData());
+        return DataStorageResult.success();
     }
 
     public void addListener(Listener listener) {
@@ -210,44 +257,42 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
     // Private
     /* --------------------------------------------------------------------- */
 
-    int getSequenceNumber(byte[] hash) {
-        ByteArray byteArray = new ByteArray(hash);
-        int sequenceNumber = 0;
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            if (map.containsKey(byteArray)) {
-                sequenceNumber = map.get(byteArray).getSequenceNumber();
-            }
+    // A remove request contains no data. It only rejects the add request of the removed message until it expires. A
+    // remove request without signature V2, which the store accepted before the cutoff date, therefore stays until it
+    // expires. Without it, the store would accept the add request again, and the receiver would get a message again
+    // which it has removed.
+    @Override
+    protected boolean isToPrune(MailboxRequest request) {
+        if (request instanceof RemoveMailboxRequest) {
+            return request.isExpired();
         }
-        return sequenceNumber;
+        return super.isToPrune(request);
     }
 
-    boolean contains(byte[] hash) {
-        Map<ByteArray, MailboxRequest> map = persistableStore.getMap();
-        synchronized (mapAccessLock) {
-            return map.containsKey(new ByteArray(hash));
-        }
-    }
-
-    boolean canAddMailboxMessage(MailboxData mailboxData) {
-        byte[] hash = DigestUtil.hash(mailboxData.serializeForHash());
-        return getSequenceNumber(hash) < Integer.MAX_VALUE;
-    }
-
+    // Removes the entries which have expired, and the add requests without signature V2 when the node requires it (see
+    // isToPrune)
+    // A request can replace an entry after it was selected, so an entry is removed only if the map still holds it.
+    // The removal holds the lock which add and remove hold.
     private void pruneExpired() {
         Set<Map.Entry<ByteArray, MailboxRequest>> expiredEntries = persistableStore.getMap().entrySet().stream()
-                .filter(entry -> {
-                    MailboxRequest dataRequest = entry.getValue();
-                    boolean isExpired = dataRequest.isExpired();
-                    if (isExpired) {
-                        prunedAndExpiredDataRequests.add(dataRequest);
-                    }
-                    return isExpired;
-                })
+                .filter(entry -> isToPrune(entry.getValue()))
+                .map(entry -> Map.entry(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
         if (!expiredEntries.isEmpty()) {
-            log.info("We remove {} expired entries from our {} map", expiredEntries.size(), getStoreKey());
-            expiredEntries.forEach(entry -> persistableStore.getMap().remove(entry.getKey()));
+            log.info("We remove {} entries from our {} map which have expired or have no signature V2",
+                    expiredEntries.size(), getStoreKey());
+            expiredEntries.forEach(entry -> {
+                boolean wasRemoved;
+                synchronized (mapAccessLock) {
+                    wasRemoved = persistableStore.getMap().remove(entry.getKey(), entry.getValue());
+                    if (wasRemoved) {
+                        getReplacedAddSequenceNrs().remove(entry.getKey());
+                    }
+                }
+                if (wasRemoved) {
+                    addPrunedRequest(entry.getValue());
+                }
+            });
         }
     }
 
@@ -274,7 +319,7 @@ public class MailboxDataStorageService extends DataStorageService<MailboxRequest
                     removed.size(),
                     dataStore.getMap().size(),
                     DataSizeFormatter.format(dataSize),
-                    getMaxMapSize());
+                    MAX_MAP_SIZE);
 
             boolean showDetails = false;
             if (showDetails) {

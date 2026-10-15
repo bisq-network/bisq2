@@ -19,6 +19,7 @@ package bisq.bonded_roles.market_price;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import com.google.common.base.Enums;
 import lombok.Getter;
@@ -56,7 +57,8 @@ public enum MarketPriceProvider implements ProtoEnum {
         return bisq.bonded_roles.protobuf.MarketPriceProvider.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static MarketPriceProvider fromProto(bisq.bonded_roles.protobuf.MarketPriceProvider proto) {
+    public static MarketPriceProvider fromProto(bisq.bonded_roles.protobuf.MarketPriceProvider proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(MarketPriceProvider.class, proto.name(), OTHER);
     }
 }

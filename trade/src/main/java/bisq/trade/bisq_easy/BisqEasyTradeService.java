@@ -21,8 +21,9 @@ import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
-import bisq.bonded_roles.security_manager.alert.AlertType;
-import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
 import bisq.common.monetary.Monetary;
@@ -31,7 +32,9 @@ import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.platform.Version;
 import bisq.common.timer.Scheduler;
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
+import bisq.common.validation.RequestedAmountValidation;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.i18n.Res;
 import bisq.identity.Identity;
@@ -41,21 +44,24 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
-import bisq.offer.price.spec.PriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.TradeActionNotAppliedException;
+import bisq.trade.TradeRestrictedException;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyAccountDataEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyCancelTradeEvent;
+import bisq.trade.bisq_easy.protocol.events.BisqEasyChatChannelMismatchEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmBtcSentEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatReceiptEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyConfirmFiatSentEvent;
@@ -63,13 +69,22 @@ import bisq.trade.bisq_easy.protocol.events.BisqEasyRejectTradeEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasySendBtcAddressEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTakeOfferEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyTradeEvent;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator;
+import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.trade.protocol.handler.TradeMessageHandler;
+import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,9 +94,11 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_ERROR_MESSAGE;
+import static bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage.MAX_LENGTH_STACKTRACE;
 import static bisq.trade.bisq_easy.validation.BisqEasyOfferAmountValidator.validateOfferAmount;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -105,14 +122,19 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
-    private boolean haltTrading;
-    private boolean requireVersionForTrading;
-    private Optional<String> minRequiredVersionForTrading = Optional.empty();
+    private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
+    // Written from the alert-set observer thread, read from trade calls on other threads
+    private volatile boolean haltTrading;
+    private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
     @Nullable
-    private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
+    private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final Set<BisqEasyTradeMessage> pendingMessages = new CopyOnWriteArraySet<>();
+    private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
+    // The network layer delivers messages on several threads. The lock makes the check for an existing trade and the
+    // adding of a new trade of a take offer request one step.
+    @Getter(AccessLevel.NONE)
+    private final Object tradeCreationLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -123,6 +145,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         alertService = serviceProvider.getBondedRolesService().getAlertService();
         contactListService = serviceProvider.getUserService().getContactListService();
         userProfileService = serviceProvider.getUserService().getUserProfileService();
+        bisqEasyOpenTradeChannelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
 
         persistence = serviceProvider.getPersistenceService().getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
         this.appType = appType;
@@ -134,50 +157,38 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     public CompletableFuture<Boolean> initialize() {
+        // A message for one of our trades which the peer sent to another of our user profiles must not create a channel
+        // (rule 6 of docs/specifications/trade/pending-trade-messages.md).
+        bisqEasyOpenTradeChannelService.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
+                findTrade(tradeId)
+                        .filter(trade -> trade.getPeer().getNetworkId().getId().equals(senderUserProfileId) &&
+                                trade.getMyself().getNetworkId().getId().equals(receiverUserProfileId))
+                        .isPresent());
 
         persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
-        networkService.getConfidentialMessageServices().stream()
-                .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream())
-                .forEach(this::onMessage);
-        networkService.addConfidentialMessageListener(this);
-
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(new CollectionObserver<>() {
+        // Checks all existing channels against their trades, and later a channel which appears for an existing
+        // trade. A trade which appears for an existing channel is checked when its protocol gets created.
+        chatChannelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
-            public void onAdded(AuthorizedAlertData authorizedAlertData) {
-                if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                    if (authorizedAlertData.isHaltTrading()) {
-                        haltTrading = true;
-                    }
-                    if (authorizedAlertData.isRequireVersionForTrading()) {
-                        requireVersionForTrading = true;
-                        minRequiredVersionForTrading = authorizedAlertData.getMinVersion();
-                    }
-                }
+            public void onAdded(BisqEasyOpenTradeChannel channel) {
+                findTrade(channel.getTradeId()).ifPresent(trade -> failTradeOnChatChannelMismatch(trade, channel));
             }
 
             @Override
             public void onRemoved(Object element) {
-                if (element instanceof AuthorizedAlertData authorizedAlertData) {
-                    if (authorizedAlertData.getAlertType() == AlertType.EMERGENCY && authorizedAlertData.getAppType() == appType) {
-                        if (authorizedAlertData.isHaltTrading()) {
-                            haltTrading = false;
-                        }
-                        if (authorizedAlertData.isRequireVersionForTrading()) {
-                            requireVersionForTrading = false;
-                            minRequiredVersionForTrading = Optional.empty();
-                        }
-                    }
-                }
             }
 
             @Override
             public void onCleared() {
-                haltTrading = false;
-                requireVersionForTrading = false;
-                minRequiredVersionForTrading = Optional.empty();
             }
         });
+
+        // The subscription replays the processed messages of earlier sessions, so the trade restrictions of the stored
+        // alerts must be known before it (see docs/specifications/network/startup-replay.md).
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
+
+        networkService.subscribeToConfidentialMessages(this);
 
         numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
                 .host(this)
@@ -197,6 +208,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             numDaysAfterRedactingTradeDataPin.unbind();
             numDaysAfterRedactingTradeDataPin = null;
         }
+        if (chatChannelsPin != null) {
+            chatChannelsPin.unbind();
+            chatChannelsPin = null;
+        }
         if (numDaysAfterRedactingTradeDataScheduler != null) {
             numDaysAfterRedactingTradeDataScheduler.stop();
             numDaysAfterRedactingTradeDataScheduler = null;
@@ -214,8 +229,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @Override
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyTradeMessage bisqEasyTradeMessage) {
-            verifyTradingNotOnHalt();
-            verifyMinVersionForTrading();
+            try {
+                verifyTradingNotOnHalt();
+                verifyMinVersionForTrading();
+            } catch (TradeRestrictedException e) {
+                log.warn("Ignoring inbound trade message as trading is currently not allowed: {}", e.getMessage());
+                return;
+            }
 
             if (bannedUserService.isUserProfileBanned(bisqEasyTradeMessage.getSender())) {
                 log.warn("Message ignored as sender is banned");
@@ -236,32 +256,52 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     private void handleBisqEasyTakeOfferMessage(BisqEasyTakeOfferRequest message) {
-        BisqEasyContract bisqEasyContract = message.getBisqEasyContract();
-        BisqEasyProtocol protocol = makerCreatesProtocol(bisqEasyContract, message.getSender(), message.getReceiver());
-        handleBisqEasyTradeMessage(message, protocol);
+        makerCreatesProtocol(message).ifPresent(protocol -> handleBisqEasyTradeMessage(message, protocol));
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> handleBisqEasyTradeMessage(message, protocol),
+        findProtocol(tradeId).ifPresentOrElse(protocol -> {
+                    if (isMessageOfTradePeer(message, protocol)) {
+                        handleBisqEasyTradeMessage(message, protocol);
+                    } else {
+                        pendingMessages.remove(message);
+                    }
+                },
                 () -> {
-                    log.info("Protocol with tradeId {} not found. We add the message to pendingMessages for " +
-                            "re-processing when the next message arrives. message={}", tradeId, message);
+                    // Trade messages carry private data of the traders, so the log names only the message type.
+                    log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
+                                    "for re-processing when the next message arrives.",
+                            StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
                     pendingMessages.add(message);
                 });
+    }
+
+    // The state machine turns an exception of a message handler into a failure of the trade (Fsm.handle), and the
+    // handlers throw for a message which is not from the trade peer. So such a message must not reach the protocol:
+    // anybody who knows a trade ID could end the trade otherwise. The check runs when a message is processed, also for
+    // a message which was queued before the protocol existed. The take offer request creates the trade, so
+    // makerCreatesProtocol checks it against the trade before the trade is stored.
+    private static boolean isMessageOfTradePeer(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
+        boolean isMessageOfTradePeer = TradeMessageHandler.isMessageOfTradePeer(message, protocol.getModel());
+        if (!isMessageOfTradePeer) {
+            log.warn("We drop a trade message of type {} which the trade peer did not send.",
+                    message.getClass().getSimpleName());
+        }
+        return isMessageOfTradePeer;
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
         protocol.handle(message);
 
-        if (pendingMessages.contains(message)) {
-            log.info("We remove message {} from pendingMessages.", message);
-            pendingMessages.remove(message);
+        if (pendingMessages.remove(message)) {
+            log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
+                    message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
         }
 
         if (!pendingMessages.isEmpty()) {
             log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.forEach(this::handleBisqEasyTradeMessage);
+            pendingMessages.getMessagesInArrivalOrder().forEach(this::handleBisqEasyTradeMessage);
         }
     }
 
@@ -277,11 +317,22 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                                  BitcoinPaymentMethodSpec bitcoinPaymentMethodSpec,
                                                  FiatPaymentMethodSpec fiatPaymentMethodSpec,
                                                  Optional<UserProfile> mediator,
-                                                 PriceSpec priceSpec,
                                                  long marketPrice) {
         verifyTradingNotOnHalt();
         verifyMinVersionForTrading();
+        verifyMakerMeetsMinVersionForTrading(bisqEasyOffer);
         validateOfferAmount(bisqEasyOffer, baseSideAmount.getValue(), quoteSideAmount.getValue());
+        // As buyer the taker sends the fiat first, so the seller's reputation is its only security. The node of the
+        // buyer checks it for every client, also for the REST API and the mobile node, which do not use the take offer
+        // views of the desktop (see docs/specifications/trade/bisq-easy-seller-reputation-limit.md).
+        if (bisqEasyOffer.getTakersDirection().isBuy()) {
+            BisqEasySellerReputationValidator.validateSellersReputationForTradeAmount(
+                    serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    serviceProvider.getUserService().getReputationService(),
+                    bisqEasyOffer.getMarket(),
+                    quoteSideAmount,
+                    bisqEasyOffer.getMakersUserProfileId());
+        }
 
         NetworkId takerNetworkId = takerIdentity.getNetworkId();
         BisqEasyContract contract = new BisqEasyContract(
@@ -293,7 +344,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 bitcoinPaymentMethodSpec,
                 fiatPaymentMethodSpec,
                 mediator,
-                priceSpec,
+                // The contract keeps the price spec of the offer (docs/specifications/trade/bisq-easy-contract-price.md)
+                bisqEasyOffer.getPriceSpec(),
                 marketPrice);
         boolean isBuyer = bisqEasyOffer.getTakersDirection().isBuy();
         NetworkId makerNetworkId = contract.getMaker().getNetworkId();
@@ -316,23 +368,27 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     public void sellerSendsPaymentAccount(BisqEasyTrade trade, String paymentAccountData) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyAccountDataEvent(paymentAccountData));
+        applyUserTradeAction(trade, new BisqEasyAccountDataEvent(paymentAccountData));
     }
 
     public void buyerConfirmFiatSent(BisqEasyTrade trade) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatSentEvent());
+        applyUserTradeAction(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
+    // The seller's node fails the trade when the data requests another amount than the trade amount
+    // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
     public void buyerSendBitcoinPaymentData(BisqEasyTrade trade, String buyersBitcoinPaymentData) {
-        handleBisqEasyTradeEvent(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
+        long tradeAmount = trade.getContract().getBaseSideAmount();
+        RequestedAmountValidation.checkRequestsOnlyAmount(buyersBitcoinPaymentData, tradeAmount);
+        applyUserTradeAction(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));
     }
 
     public void sellerConfirmFiatReceipt(BisqEasyTrade trade) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmFiatReceiptEvent());
+        applyUserTradeAction(trade, new BisqEasyConfirmFiatReceiptEvent());
     }
 
     public void sellerConfirmBtcSent(BisqEasyTrade trade, Optional<String> paymentProof) {
-        handleBisqEasyTradeEvent(trade, new BisqEasyConfirmBtcSentEvent(paymentProof));
+        applyUserTradeAction(trade, new BisqEasyConfirmBtcSentEvent(paymentProof));
     }
 
     public void btcConfirmed(BisqEasyTrade trade) {
@@ -345,6 +401,27 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     public void cancelTrade(BisqEasyTrade trade) {
         handleBisqEasyTradeEvent(trade, new BisqEasyCancelTradeEvent());
+    }
+
+    // A user action whose data the caller also sends to the peer as trade log message, for example the payment account
+    // data. The protocol does not throw when it does not apply an event: Fsm ignores an event in a final state, and
+    // BisqEasyProtocol turns a failure into the FAILED state. So we report it here, and the caller sends the trade log
+    // message only if this method returns normally. Otherwise a peer which cancelled or failed the trade would still get
+    // the data.
+    private void applyUserTradeAction(BisqEasyTrade trade, BisqEasyTradeEvent event) {
+        verifyTradingNotOnHalt();
+        verifyMinVersionForTrading();
+        String tradeId = trade.getId();
+        BisqEasyProtocol protocol = findProtocol(tradeId).orElseThrow(() ->
+                new TradeActionNotAppliedException("The trade has no protocol anymore. tradeId=" + tradeId));
+        if (trade.getTradeState().isFinalState()) {
+            throw new TradeActionNotAppliedException("The trade is in the final state " + trade.getTradeState());
+        }
+        protocol.handle(event);
+        BisqEasyTradeState state = trade.getTradeState();
+        if (state == BisqEasyTradeState.FAILED || state == BisqEasyTradeState.FAILED_AT_PEER) {
+            throw new TradeActionNotAppliedException("The trade failed at handling " + event.getClass().getSimpleName());
+        }
     }
 
     private void handleBisqEasyTradeEvent(BisqEasyTrade trade, BisqEasyTradeEvent event) {
@@ -418,23 +495,84 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // TradeProtocol factory
     /* --------------------------------------------------------------------- */
 
-    private BisqEasyProtocol makerCreatesProtocol(BisqEasyContract contract, NetworkId sender, NetworkId receiver) {
-        // We only create the data required for the protocol creation.
-        // Verification will happen in the BisqEasyTakeOfferRequestHandler
+    // We verify the request before we create the trade (BisqEasyTakeOfferRequestValidator) and answer a rejection with
+    // an error report to the taker, so a rejected request leaves no trade and no contact. A request which cannot create
+    // a trade of ours is dropped here without an answer: the sender controls the conditions, so they must not throw.
+    private Optional<BisqEasyProtocol> makerCreatesProtocol(BisqEasyTakeOfferRequest message) {
+        BisqEasyContract contract = message.getBisqEasyContract();
         BisqEasyOffer offer = contract.getOffer();
-        boolean isBuyer = offer.getMakersDirection().isBuy();
-        Identity myIdentity = identityService.findAnyIdentityByNetworkId(offer.getMakerNetworkId()).orElseThrow();
-        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity, offer, sender, receiver);
-        String tradeId = bisqEasyTrade.getId();
-        checkArgument(findProtocol(tradeId).isEmpty(), "We received the BisqEasyTakeOfferRequest for an already existing protocol");
-        checkArgument(!tradeExists(tradeId), "A trade with that ID exists already");
+        NetworkId sender = message.getSender();
+        NetworkId receiver = message.getReceiver();
+        // A party is identified by its key. The addresses of our network ID can have changed since we published the
+        // offer, for example when we added a transport. The layer for confidential messages has bound the key of the
+        // receiver to the key with which we decrypted the request, so the request reached the key of the offer's maker.
+        String makerId = offer.getMakerNetworkId().getId();
+        if (!receiver.getId().equals(makerId)) {
+            logDroppedTakeOfferRequest(message, "it is not addressed to the maker of its offer", message.getTradeId());
+            return Optional.empty();
+        }
+        Optional<Identity> myIdentity = identityService.findAnyIdentityById(makerId);
+        if (myIdentity.isEmpty()) {
+            logDroppedTakeOfferRequest(message, "its offer is not one of our offers", message.getTradeId());
+            return Optional.empty();
+        }
 
-        persistableStore.addTrade(bisqEasyTrade);
+        boolean isBuyer = offer.getMakersDirection().isBuy();
+        BisqEasyTrade bisqEasyTrade = new BisqEasyTrade(contract, isBuyer, false, myIdentity.get(), offer, sender, receiver);
+        String tradeId = bisqEasyTrade.getId();
+        if (!TradeMessageHandler.isMessageOfTradePeer(message, bisqEasyTrade)) {
+            logDroppedTakeOfferRequest(message, "its trade ID is not the ID of the trade which it would create",
+                    message.getTradeId());
+            return Optional.empty();
+        }
+        synchronized (tradeCreationLock) {
+            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+                logDroppedTakeOfferRequest(message, "a trade with its trade ID exists already", tradeId);
+                return Optional.empty();
+            }
+            // Only after the check above: a rejection of a copy of a request which we have handled would fail the
+            // trade at the taker
+            try {
+                BisqEasyTakeOfferRequestValidator.validate(serviceProvider, myIdentity.get(), message);
+            } catch (RuntimeException e) {
+                log.warn("We reject the take offer request. tradeId={}", tradeId, e);
+                reportTakeOfferRejection(bisqEasyTrade, e);
+                return Optional.empty();
+            }
+            persistableStore.addTrade(bisqEasyTrade);
+        }
         persist();
 
-        maybeAddPeerToContactList(sender.getId(), myIdentity.getId());
+        maybeAddPeerToContactList(sender.getId(), myIdentity.get().getId());
 
-        return createAndAddTradeProtocol(bisqEasyTrade);
+        return Optional.of(createAndAddTradeProtocol(bisqEasyTrade));
+    }
+
+    // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We
+    // report it with the data which BisqEasyFsmErrorEventHandler reports for a failed trade. Like the trade messages,
+    // the report names us by the network ID to which the taker addressed the request, not by the current addresses of
+    // our identity (docs/specifications/user/identity-by-key.md, rule 3).
+    private void reportTakeOfferRejection(BisqEasyTrade bisqEasyTrade, RuntimeException exception) {
+        TradeProtocolFailure tradeProtocolFailure = exception instanceof TradeProtocolException tradeProtocolException ?
+                tradeProtocolException.getTradeProtocolFailure() :
+                TradeProtocolFailure.UNKNOWN;
+        Identity myIdentity = bisqEasyTrade.getMyIdentity();
+        NetworkId takerNetworkId = bisqEasyTrade.getPeer().getNetworkId();
+        BisqEasyReportErrorMessage report = new BisqEasyReportErrorMessage(StringUtils.createUid(),
+                bisqEasyTrade.getId(),
+                BisqEasyProtocol.VERSION,
+                bisqEasyTrade.getMyself().getNetworkId(),
+                takerNetworkId,
+                StringUtils.truncate(ExceptionUtil.getRootCauseMessage(exception), MAX_LENGTH_ERROR_MESSAGE),
+                StringUtils.truncate(ExceptionUtil.getSafeStackTraceAsString(exception), MAX_LENGTH_STACKTRACE),
+                tradeProtocolFailure);
+        networkService.confidentialSend(report, takerNetworkId, myIdentity.getNetworkIdWithKeyPair());
+    }
+
+    // The request is data of its sender, so the log names only the message type and the sanitized trade ID.
+    private static void logDroppedTakeOfferRequest(BisqEasyTakeOfferRequest message, String reason, String tradeId) {
+        log.warn("We drop a {} because {}. tradeId={}",
+                message.getClass().getSimpleName(), reason, StringUtils.sanitizeForLog(tradeId));
     }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
@@ -456,19 +594,75 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
         tradeProtocolById.put(id, tradeProtocol);
+
+        bisqEasyOpenTradeChannelService.findChannelByTradeId(id)
+                .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
+        // The taker's first chat message, which creates our trade chat channel, can be pending if it arrived first
+        bisqEasyOpenTradeChannelService.processPendingMessages(id);
         return tradeProtocol;
     }
 
+    // A trade may only progress while its chat channel data matches the trade and its signed contract. The event
+    // handlers enforce that at the user's actions, here we fail a mismatching trade as soon as both exist.
+    // Failing a mismatching trade must not wait for the halt or version checks of handleBisqEasyTradeEvent.
+    private void failTradeOnChatChannelMismatch(BisqEasyTrade trade, BisqEasyOpenTradeChannel channel) {
+        if (trade.getState().isFinalState()) {
+            return;
+        }
+        BisqEasyTradeChatChannelValidator.findMismatch(channel, trade).ifPresent(mismatch -> {
+            log.warn("Trade chat channel does not match the trade or its contract. We fail the trade. {}", mismatch);
+            findProtocol(trade.getId()).ifPresent(protocol -> protocol.handle(new BisqEasyChatChannelMismatchEvent(mismatch)));
+        });
+    }
+
+    private void updateTradeRestrictions() {
+        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                alertService.getAuthorizedAlertDataSet().stream(), appType);
+    }
+
     private void verifyTradingNotOnHalt() {
-        checkArgument(!haltTrading, "Trading is on halt for security reasons. " +
-                "The Bisq security manager has published an emergency alert with haltTrading set to true");
+        if (haltTrading) {
+            throw TradeRestrictedException.haltTrading();
+        }
     }
 
     private void verifyMinVersionForTrading() {
-        if (requireVersionForTrading && minRequiredVersionForTrading.isPresent()) {
-            checkArgument(ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersionForTrading.get())),
-                    "For trading you need to have version " + minRequiredVersionForTrading.get() + " installed. " +
-                            "The Bisq security manager has published an emergency alert with a min. version required for trading.");
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.minVersionRequired(minRequiredVersion.get());
+        }
+    }
+
+    // A node of a version which the alert restricts acknowledges a take offer request and drops it, so the take would
+    // hang without an error. The node of the taker refuses the take instead. The version of the maker is the higher of
+    // the version of its user profile, which the maker signed when it published the profile, and the version which
+    // created the offer. Before the cutoff date of signature V1, a relay can change the version of an offer without
+    // signature V2. A maker without a readable version is refused (see docs/specifications/trade/trade-restrictions.md).
+    private void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        if (minRequiredVersion.isPresent()
+                && !isMakerVersionAtLeast(bisqEasyOffer, new Version(minRequiredVersion.get()))) {
+            throw TradeRestrictedException.makerVersionBelowMinRequired(minRequiredVersion.get());
+        }
+    }
+
+    private boolean isMakerVersionAtLeast(BisqEasyOffer bisqEasyOffer, Version requiredVersion) {
+        Stream<String> versionOfProfile = userProfileService.findUserProfile(bisqEasyOffer.getMakersUserProfileId())
+                .map(UserProfile::getApplicationVersion)
+                .stream();
+        return Stream.concat(versionOfProfile, Stream.of(bisqEasyOffer.getAppVersion()))
+                .anyMatch(version -> isAtLeast(version, requiredVersion));
+    }
+
+    private static boolean isAtLeast(String version, Version requiredVersion) {
+        try {
+            return new Version(version).aboveOrEqual(requiredVersion);
+        } catch (RuntimeException e) {
+            // An empty or malformed version, or a part which does not fit into an int
+            return false;
         }
     }
 
@@ -487,15 +681,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         String redactedMarker = Res.get("data.redacted");
         long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (StringUtils.isEmpty(trade.getPaymentAccountData().get()) ||
-                            trade.getPaymentAccountData().get().equals(redactedMarker)) {
+                    if (trade.getPaymentAccountData().map(data -> StringUtils.isEmpty(data) || data.equals(redactedMarker)).orElse(true)) {
                         return false;
                     }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
                     if (doRedaction) {
 
-                        trade.getPaymentAccountData().set(redactedMarker);
+                        trade.setPaymentAccountData(Optional.of(redactedMarker));
                     }
                     return doRedaction;
                 })

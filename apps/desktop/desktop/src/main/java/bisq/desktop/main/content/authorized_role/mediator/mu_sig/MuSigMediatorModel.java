@@ -36,7 +36,10 @@ import java.util.function.Predicate;
 public class MuSigMediatorModel implements Model {
     private final BooleanProperty showClosedCases = new SimpleBooleanProperty();
     private final BooleanProperty noOpenCases = new SimpleBooleanProperty();
+    private final BooleanProperty chatAvailable = new SimpleBooleanProperty();
     private final StringProperty chatWindowTitle = new SimpleStringProperty();
+    private final StringProperty chatUnavailableTitle = new SimpleStringProperty();
+    private final StringProperty chatUnavailableDescription = new SimpleStringProperty();
     private final TableList<MuSigMediationCaseListItem> listItems = new TableList<>();
     private final ObjectProperty<MuSigMediationCaseListItem> selectedItem = new SimpleObjectProperty<>();
     private final ObjectProperty<Stage> chatWindow = new SimpleObjectProperty<>();
@@ -49,7 +52,10 @@ public class MuSigMediatorModel implements Model {
     public void reset() {
         // We dont reset showClosedCases
         noOpenCases.setValue(false);
+        chatAvailable.setValue(false);
         chatWindowTitle.setValue(null);
+        chatUnavailableTitle.setValue(null);
+        chatUnavailableDescription.setValue(null);
         listItems.clear();
         selectedItem.set(null);
         chatWindow.set(null);

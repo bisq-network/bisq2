@@ -21,6 +21,7 @@ import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.account.payment_method.PaymentMethod;
 import bisq.common.asset.Asset;
 import bisq.common.asset.Cbdc;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -34,7 +35,7 @@ import java.util.Optional;
 @ToString(callSuper = true)
 @Getter
 @EqualsAndHashCode(callSuper = true)
-public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> implements DigitalAssetPaymentMethod {
+public final class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> implements DigitalAssetPaymentMethod {
     public static CbdcPaymentMethod fromPaymentRail(CbdcPaymentRail paymentRail) {
         return new CbdcPaymentMethod(paymentRail);
     }
@@ -59,11 +60,16 @@ public class CbdcPaymentMethod extends PaymentMethod<CbdcPaymentRail> implements
         return unsafeToProto(serializeForHash);
     }
 
-    public static CbdcPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto) {
-        return Optional.ofNullable(
-                        CbdcPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Unknown payment method: " + proto.getPaymentRailName()));
+    public static CbdcPaymentMethod fromProto(bisq.account.protobuf.PaymentMethod proto)
+            throws UnresolvableProtobufException {
+        try {
+            return Optional.ofNullable(
+                            CbdcPaymentMethodUtil.getPaymentMethod(proto.getPaymentRailName()))
+                    .orElseThrow(() -> new IllegalArgumentException(
+                            "Unknown payment method: " + proto.getPaymentRailName()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

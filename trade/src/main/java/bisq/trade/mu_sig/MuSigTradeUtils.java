@@ -17,9 +17,16 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.account.accounts.AccountPayload;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
+import bisq.contract.Party;
 import bisq.contract.mu_sig.MuSigContract;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import static bisq.offer.options.OfferOptionUtil.createSaltedAccountPayloadHash;
 
 public final class MuSigTradeUtils {
     public static Monetary getBaseSideMonetary(MuSigTrade trade) {
@@ -60,5 +67,21 @@ public final class MuSigTradeUtils {
 
     public static PriceQuote getPriceQuote(MuSigContract contract) {
         return PriceQuote.from(getBaseSideMonetary(contract), getQuoteSideMonetary(contract));
+    }
+
+    public static boolean doesPeerAccountPayloadMatchContract(MuSigTrade trade, AccountPayload<?> accountPayload) {
+        return findPeersContractSaltedAccountPayloadHash(trade)
+                .map(expectedHash -> Arrays.equals(expectedHash,
+                        createSaltedAccountPayloadHash(accountPayload, trade.getOffer().getId())))
+                .orElse(false);
+    }
+
+    public static Optional<byte[]> findPeersContractSaltedAccountPayloadHash(MuSigTrade trade) {
+        return getPeersContractParty(trade).getSaltedAccountPayloadHash();
+    }
+
+    private static Party getPeersContractParty(MuSigTrade trade) {
+        MuSigContract contract = trade.getContract();
+        return trade.isTaker() ? contract.getMaker() : contract.getTaker();
     }
 }

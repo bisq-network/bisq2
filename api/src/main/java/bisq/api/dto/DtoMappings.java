@@ -17,23 +17,13 @@
 
 package bisq.api.dto;
 
-import bisq.account.accounts.Account;
-import bisq.account.accounts.AccountOrigin;
-import bisq.account.accounts.fiat.UserDefinedFiatAccount;
-import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
-import bisq.account.timestamp.KeyType;
 import bisq.account.payment_method.BitcoinPaymentMethod;
-import bisq.account.payment_method.PaymentMethod;
-import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.protocol_type.TradeProtocolType;
-import bisq.api.dto.account.UserDefinedFiatAccountDto;
-import bisq.api.dto.account.UserDefinedFiatAccountPayloadDto;
-import bisq.api.dto.account.fiat.FiatAccountDto;
 import bisq.api.dto.account.protocol_type.TradeProtocolTypeDto;
 import bisq.api.dto.chat.ChatChannelDomainDto;
 import bisq.api.dto.chat.ChatMessageTypeDto;
@@ -329,16 +319,18 @@ public class DtoMappings {
     public static class BisqEasyOpenTradeChannelMapping {
         // toBisq2Model not provided as we don't have the mutable data in the dto
 
-        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel value) {
+        // Clients such as Bisq Connect read the offer and the mediator from the channel DTO, so it carries those of
+        // the trade contract rather than the channel's copies.
+        public static BisqEasyOpenTradeChannelDto fromBisq2Model(BisqEasyOpenTradeChannel channel, BisqEasyContract contract) {
             return new BisqEasyOpenTradeChannelDto(
-                    value.getId(),
-                    value.getTradeId(),
-                    BisqEasyOfferMapping.fromBisq2Model(value.getBisqEasyOffer()),
-                    UserIdentityMapping.fromBisq2Model(value.getMyUserIdentity()),
-                    value.getTraders().stream()
+                    channel.getId(),
+                    channel.getTradeId(),
+                    BisqEasyOfferMapping.fromBisq2Model(contract.getOffer()),
+                    UserIdentityMapping.fromBisq2Model(channel.getMyUserIdentity()),
+                    channel.getTraders().stream()
                             .map(UserProfileMapping::fromBisq2Model)
                             .collect(Collectors.toSet()),
-                    value.getMediator().map(UserProfileMapping::fromBisq2Model)
+                    contract.getMediator().map(UserProfileMapping::fromBisq2Model)
             );
         }
     }
@@ -613,19 +605,14 @@ public class DtoMappings {
     // identity
 
     public static class IdentityMapping {
-        public static Identity toBisq2Model(IdentityDto value) {
-            return new Identity(
-                    value.tag(),
-                    NetworkIdMapping.toBisq2Model(value.networkId()),
-                    KeyBundleMapping.toBisq2Model(value.keyBundle())
-            );
-        }
+        // Note: toBisq2Model was removed alongside the keyBundle field of IdentityDto
+        // (bisq-network/bisq-mobile#1432). Reconstructing a full bisq2 Identity from the
+        // wire shape is no longer possible (and was already only called from dead code).
 
         public static IdentityDto fromBisq2Model(Identity value) {
             return new IdentityDto(
                     value.getTag(),
-                    NetworkIdMapping.fromBisq2Model(value.getNetworkId()),
-                    KeyBundleMapping.fromBisq2Model(value.getKeyBundle())
+                    NetworkIdMapping.fromBisq2Model(value.getNetworkId())
             );
         }
     }
@@ -644,8 +631,6 @@ public class DtoMappings {
                     PubKeyMapping.fromBisq2Model(value.getPubKey()));
         }
     }
-
-
     // offer
 
     public static class DirectionMapping {
@@ -1119,7 +1104,7 @@ public class DtoMappings {
         // toBisq2Model method not implemented as we do not have a settings value object in the domain
 
         public static SettingsDto fromBisq2Model(SettingsService settingsService) {
-            return new SettingsDto(settingsService.getIsTacAccepted().get(),
+            return new SettingsDto(settingsService.isCurrentTacAccepted(),
                     settingsService.getBisqEasyTradeRulesConfirmed().get(),
                     settingsService.getMuSigTradeRulesConfirmed().get(),
                     settingsService.getCloseMyOfferWhenTaken().get(),
@@ -1130,94 +1115,6 @@ public class DtoMappings {
                     settingsService.getNumDaysAfterRedactingTradeData().get(),
                     settingsService.getUseAnimations().get()
             );
-        }
-    }
-
-    // paymentaccount
-    public static class UserDefinedFiatAccountMapping {
-        // toBisq2Model method not implemented, as we get accountName, accountData props for account creation calls
-
-        public static UserDefinedFiatAccountDto fromBisq2Model(UserDefinedFiatAccount account) {
-            return new UserDefinedFiatAccountDto(
-                    account.getAccountName(),
-                    new UserDefinedFiatAccountPayloadDto(
-                            account.getAccountPayload().getAccountData()
-                    )
-            );
-        }
-    }
-
-    /**
-     * Mapping for polymorphic fiat accounts.
-     * Supports all FiatPaymentRail types through the FiatAccountDto interface.
-     */
-    public static class FiatAccountMapping {
-        /**
-         * Convert a FiatAccountDto to a Bisq2 Account model.
-         * Currently only supports CUSTOM (UserDefinedFiatAccount).
-         * TODO: Add support for other fiat account types (SEPA, Revolut, Zelle, etc.)
-         */
-        public static Account<? extends PaymentMethod<?>, ?> toBisq2Model(FiatAccountDto dto) {
-            if (dto == null) {
-                throw new IllegalArgumentException("FiatAccountDto cannot be null");
-            }
-
-            return switch (dto.paymentRail()) {
-                case CUSTOM -> {
-                    if (dto instanceof bisq.api.dto.account.fiat.UserDefinedFiatAccountDto userDefinedDto) {
-                        bisq.api.dto.account.fiat.UserDefinedFiatAccountPayloadDto payloadDto = userDefinedDto.accountPayload();
-                        UserDefinedFiatAccountPayload payload = new UserDefinedFiatAccountPayload(
-                                bisq.common.util.StringUtils.createUid(),
-                                payloadDto.accountData()
-                        );
-                        KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
-                        KeyType keyType = KeyType.EC;
-                        yield new UserDefinedFiatAccount(
-                                bisq.common.util.StringUtils.createUid(),
-                                System.currentTimeMillis(),
-                                userDefinedDto.accountName(),
-                                payload,
-                                keyPair,
-                                keyType,
-                                AccountOrigin.BISQ2_NEW
-                        );
-                    }
-                    throw new IllegalArgumentException("Expected UserDefinedFiatAccountDto for CUSTOM payment rail");
-                }
-                // TODO: Add cases for other payment rails when implemented:
-                // case SEPA -> { ... }
-                // case REVOLUT -> { ... }
-                // case ZELLE -> { ... }
-                default -> throw new IllegalArgumentException("Unsupported payment rail: " + dto.paymentRail());
-            };
-        }
-
-        /**
-         * Convert a Bisq2 Account model to a FiatAccountDto.
-         * Currently only supports UserDefinedFiatAccount.
-         * TODO: Add support for other fiat account types (SEPA, Revolut, Zelle, etc.)
-         */
-        public static FiatAccountDto fromBisq2Model(Account<? extends PaymentMethod<?>, ?> account) {
-            if (account == null) {
-                throw new IllegalArgumentException("Account cannot be null");
-            }
-
-            if (account instanceof UserDefinedFiatAccount userDefinedAccount) {
-                return new bisq.api.dto.account.fiat.UserDefinedFiatAccountDto(
-                        userDefinedAccount.getAccountName(),
-                        FiatPaymentRail.CUSTOM,
-                        new bisq.api.dto.account.fiat.UserDefinedFiatAccountPayloadDto(
-                                userDefinedAccount.getAccountPayload().getAccountData()
-                        )
-                );
-            }
-
-            // TODO: Add conversions for other account types when implemented:
-            // if (account instanceof SepaAccount sepaAccount) { ... }
-            // if (account instanceof RevolutAccount revolutAccount) { ... }
-            // if (account instanceof ZelleAccount zelleAccount) { ... }
-
-            throw new IllegalArgumentException("Unsupported account type: " + account.getClass().getSimpleName());
         }
     }
 
@@ -1259,6 +1156,9 @@ public class DtoMappings {
                 case PRICE_DEVIATION -> TradeProtocolFailure.PRICE_DEVIATION;
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailure.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailure.MEDIATORS_NOT_MATCHING;
+                case OFFER_NOT_AVAILABLE -> TradeProtocolFailure.OFFER_NOT_AVAILABLE;
+                case CHANNEL_DATA_MISMATCH -> TradeProtocolFailure.CHANNEL_DATA_MISMATCH;
+                case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW;
             };
         }
 
@@ -1271,6 +1171,9 @@ public class DtoMappings {
                 case PRICE_DEVIATION -> TradeProtocolFailureDto.PRICE_DEVIATION;
                 case NO_MATCHING_OFFER_FOUND -> TradeProtocolFailureDto.NO_MATCHING_OFFER_FOUND;
                 case MEDIATORS_NOT_MATCHING -> TradeProtocolFailureDto.MEDIATORS_NOT_MATCHING;
+                case OFFER_NOT_AVAILABLE -> TradeProtocolFailureDto.OFFER_NOT_AVAILABLE;
+                case CHANNEL_DATA_MISMATCH -> TradeProtocolFailureDto.CHANNEL_DATA_MISMATCH;
+                case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailureDto.SELLER_REPUTATION_TOO_LOW;
             };
         }
     }
@@ -1293,17 +1196,8 @@ public class DtoMappings {
     }
 
     public static class BisqEasyTradeMapping {
-        //todo we dont have the mutable data in the dto
-       /* public static BisqEasyTrade toBisq2Model(BisqEasyTradeDto value) {
-            return new BisqEasyTrade(
-                    BisqEasyTradeState.INIT,
-                    value.id(),
-                    TradeRoleMapping.toBisq2Model(value.tradeRole()),
-                    IdentityMapping.toBisq2Model(value.myIdentity()),
-                    BisqEasyTradePartyMapping.toBisq2Model(value.taker()),
-                    BisqEasyTradePartyMapping.toBisq2Model(value.maker())
-            );
-        }*/
+        // Only fromBisq2Model is provided: this DTO is wire output (server → client) and the
+        // mutable trade state is delivered via WebSocket updates, not reconstructed from the DTO.
 
         public static BisqEasyTradeDto fromBisq2Model(BisqEasyTrade value) {
             return new BisqEasyTradeDto(
@@ -1314,9 +1208,9 @@ public class DtoMappings {
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getTaker()),
                     BisqEasyTradePartyMapping.fromBisq2Model(value.getMaker()),
                     BisqEasyTradeStateMapping.fromBisq2Model(value.getTradeState()),
-                    value.getPaymentAccountData().get(),
-                    value.getBitcoinPaymentData().get(),
-                    value.getPaymentProof().get(),
+                    value.getPaymentAccountData().orElse(null),
+                    value.getBitcoinPaymentData().orElse(null),
+                    value.getPaymentProof().orElse(null),
                     RoleMapping.fromBisq2Model(value.getInterruptTradeInitiator().get()),
                     value.getErrorMessage(),
                     value.getErrorStackTrace(),
@@ -1482,12 +1376,9 @@ public class DtoMappings {
     // user.identity
 
     public static class UserIdentityMapping {
-        public static UserIdentity toBisq2Model(UserIdentityDto value) {
-            return new UserIdentity(
-                    IdentityMapping.toBisq2Model(value.identity()),
-                    UserProfileMapping.toBisq2Model(value.userProfile())
-            );
-        }
+        // Note: toBisq2Model was removed alongside IdentityMapping.toBisq2Model
+        // (bisq-network/bisq-mobile#1432). UserIdentity cannot be reconstructed from
+        // the wire shape now that private key material is no longer transmitted.
 
         public static UserIdentityDto fromBisq2Model(UserIdentity value) {
             return new UserIdentityDto(

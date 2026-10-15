@@ -18,6 +18,8 @@
 package bisq.network;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.network.identity.NetworkId;
@@ -65,16 +67,23 @@ public final class NetworkServiceStore implements PersistableStore<NetworkServic
                                 e -> e.getValue().toProto(serializeForHash))));
     }
 
-    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto) {
-        Set<AddressByTransportTypeMap> seeds = proto.getSeedNodesList().stream()
-                .map(AddressByTransportTypeMap::fromProto)
-                .collect(Collectors.toSet());
-        @SuppressWarnings("deprecation")
-        var networkIdByTag = proto.getNetworkIdByTagMap().entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey,
-                        e -> NetworkId.fromProto(e.getValue())));
-        return new NetworkServiceStore(seeds,
-                networkIdByTag);
+    public static PersistableStore<?> fromProto(bisq.network.protobuf.NetworkServiceStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<AddressByTransportTypeMap> seeds = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getSeedNodesList(),
+                            AddressByTransportTypeMap::fromProto)
+                    .collect(Collectors.toSet());
+            @SuppressWarnings("deprecation")
+            var networkIdByTag = ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getNetworkIdByTagMap(),
+                            NetworkId::fromProto)
+                    .collect(Collectors.toMap(Map.Entry::getKey,
+                            Map.Entry::getValue));
+            return new NetworkServiceStore(seeds,
+                    networkIdByTag);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

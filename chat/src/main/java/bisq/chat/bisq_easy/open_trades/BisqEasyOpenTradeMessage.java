@@ -24,6 +24,8 @@ import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.reactions.BisqEasyOpenTradeMessageReaction;
 import bisq.chat.reactions.ChatMessageReaction;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
@@ -35,6 +37,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
@@ -50,6 +53,10 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @EqualsAndHashCode(callSuper = true)
     public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
+    private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
+            ChatMessageType.LEAVE,
+            ChatMessageType.TAKE_BISQ_EASY_OFFER,
+            ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     public static BisqEasyOpenTradeMessage createTakeOfferMessage(String tradeId,
                                                                   String channelId,
@@ -68,8 +75,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
     }
 
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;
@@ -126,6 +132,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = bisqEasyOffer;
+
+        verify();
     }
 
     private BisqEasyOpenTradeMessage(String tradeId,
@@ -151,6 +159,8 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
         this.tradeId = tradeId;
         this.mediator = mediator;
         this.bisqEasyOffer = Optional.of(bisqEasyOffer);
+
+        verify();
     }
 
     @Override
@@ -177,46 +187,57 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
         return builder;
     }
 
-    public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto) {
-        Optional<Citation> citation = baseProto.hasCitation() ?
-                Optional.of(Citation.fromProto(baseProto.getCitation())) :
-                Optional.empty();
-        bisq.chat.protobuf.BisqEasyOpenTradeMessage protoMessage = baseProto.getBisqEasyOpenTradeMessage();
-        Optional<UserProfile> mediator = protoMessage.hasMediator() ?
-                Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
-                Optional.empty();
-        Optional<BisqEasyOffer> bisqEasyOffer = protoMessage.hasBisqEasyOffer() ?
-                Optional.of(BisqEasyOffer.fromProto(protoMessage.getBisqEasyOffer())) :
-                Optional.empty();
-        return new BisqEasyOpenTradeMessage(
-                protoMessage.getTradeId(),
-                baseProto.getId(),
-                ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
-                baseProto.getChannelId(),
-                UserProfile.fromProto(protoMessage.getSender()),
-                protoMessage.getReceiverUserProfileId(),
-                NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
-                baseProto.getText(),
-                citation,
-                baseProto.getDate(),
-                baseProto.getWasEdited(),
-                mediator,
-                ChatMessageType.fromProto(baseProto.getChatMessageType()),
-                bisqEasyOffer,
-                protoMessage.getChatMessageReactionsList().stream()
-                        .map(BisqEasyOpenTradeMessageReaction::fromProto)
-                        .collect(Collectors.toSet())
-        );
+    public static BisqEasyOpenTradeMessage fromProto(bisq.chat.protobuf.ChatMessage baseProto)
+            throws UnresolvableProtobufException {
+        try {
+            Optional<Citation> citation = baseProto.hasCitation() ?
+                    Optional.of(Citation.fromProto(baseProto.getCitation())) :
+                    Optional.empty();
+            bisq.chat.protobuf.BisqEasyOpenTradeMessage protoMessage = baseProto.getBisqEasyOpenTradeMessage();
+            Optional<UserProfile> mediator = protoMessage.hasMediator() ?
+                    Optional.of(UserProfile.fromProto(protoMessage.getMediator())) :
+                    Optional.empty();
+            Optional<BisqEasyOffer> bisqEasyOffer = protoMessage.hasBisqEasyOffer() ?
+                    Optional.of(BisqEasyOffer.fromProto(protoMessage.getBisqEasyOffer())) :
+                    Optional.empty();
+            return new BisqEasyOpenTradeMessage(
+                    protoMessage.getTradeId(),
+                    baseProto.getId(),
+                    ChatChannelDomain.fromProto(baseProto.getChatChannelDomain()),
+                    baseProto.getChannelId(),
+                    UserProfile.fromProto(protoMessage.getSender()),
+                    protoMessage.getReceiverUserProfileId(),
+                    NetworkId.fromProto(protoMessage.getReceiverNetworkId()),
+                    baseProto.getText(),
+                    citation,
+                    baseProto.getDate(),
+                    baseProto.getWasEdited(),
+                    mediator,
+                    ChatMessageType.fromProto(baseProto.getChatMessageType()),
+                    bisqEasyOffer,
+                    // An invalid reaction must not remove its message
+                    ProtobufUtils.fromProtoStreamSkippingInvalid(protoMessage.getChatMessageReactionsList(),
+                                    BisqEasyOpenTradeMessageReaction::fromProto)
+                            .collect(Collectors.toSet())
+            );
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override
     public boolean hasBisqEasyOffer() {
         return bisqEasyOffer.isPresent();
+    }
+
+    @Override
+    public boolean hasSupportedChatMessageType() {
+        return SUPPORTED_CHAT_MESSAGE_TYPES.contains(chatMessageType);
     }
 
     @Override

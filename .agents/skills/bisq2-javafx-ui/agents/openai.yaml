@@ -1,0 +1,8 @@
+interface:
+  display_name: "Bisq2 JavaFX UI"
+  short_description: "Build Bisq2 JavaFX screens with MVC and harness checks"
+  brand_color: "#2E8B57"
+  default_prompt: "Use $bisq2-javafx-ui to implement or review this Bisq2 JavaFX UI change."
+
+policy:
+  allow_implicit_invocation: true

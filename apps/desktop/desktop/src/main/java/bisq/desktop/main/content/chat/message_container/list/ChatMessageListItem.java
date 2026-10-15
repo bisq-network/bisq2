@@ -30,6 +30,7 @@ import bisq.chat.Citation;
 import bisq.chat.bisq_easy.BisqEasyOfferMessage;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeMessage;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.pub.PublicChatChannel;
 import bisq.chat.reactions.ChatMessageReaction;
@@ -71,6 +72,7 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import bisq.user.reputation.ReputationScore;
 import bisq.user.reputation.ReputationService;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Joiner;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -87,8 +89,6 @@ import java.util.stream.Collectors;
 
 import static bisq.chat.ChatMessageType.*;
 import static bisq.desktop.main.content.chat.message_container.ChatMessageContainerView.EDITED_POST_FIX;
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 @Getter
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
@@ -107,6 +107,7 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
     private final ReputationScore reputationScore;
     private final ReputationScoreDisplay reputationScoreDisplay = new ReputationScoreDisplay();
     private final boolean wasOfferAlreadyTaken;
+    private final boolean unverifiedForwardedMessage;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
     private final BooleanProperty showHighlighted = new SimpleBooleanProperty();
@@ -138,13 +139,15 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                                UserIdentityService userIdentityService,
                                NetworkService networkService,
                                Optional<ResendMessageService> resendMessageService,
-                               AuthorizedBondedRolesService authorizedBondedRolesService) {
+                               AuthorizedBondedRolesService authorizedBondedRolesService,
+                               boolean unverifiedForwardedMessage) {
         this.chatMessage = chatMessage;
         this.chatChannel = chatChannel;
         this.marketPriceService = marketPriceService;
         this.userIdentityService = userIdentityService;
         this.resendMessageService = resendMessageService;
         this.authorizedBondedRolesService = authorizedBondedRolesService;
+        this.unverifiedForwardedMessage = unverifiedForwardedMessage;
 
         if (chatMessage instanceof PrivateChatMessage<?> privateChatMessage) {
             senderUserProfile = Optional.of(userProfileService.getManagedUserProfile(privateChatMessage.getSenderUserProfile()));
@@ -248,8 +251,21 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         return result.isEmpty() ? "" : Res.get("chat.message.supportedLanguages") + "\n" + result;
     }
 
+    // A message which reached us only in the request of another trader is not ours, also when one of our profiles is
+    // its author (docs/specifications/support/mediation-request-validation.md)
     public boolean isMyMessage() {
-        return chatMessage.isMyMessage(userIdentityService);
+        return !unverifiedForwardedMessage && chatMessage.isMyMessage(userIdentityService);
+    }
+
+    public boolean canEditMessage() {
+        return canEditMessage(isMyMessage(), isPublicChannel(), isBisqEasyPublicChatMessageWithOffer());
+    }
+
+    @VisibleForTesting
+    static boolean canEditMessage(boolean isMyMessage,
+                                  boolean isPublicChannel,
+                                  boolean isBisqEasyPublicChatMessageWithOffer) {
+        return isMyMessage && isPublicChannel && !isBisqEasyPublicChatMessageWithOffer;
     }
 
     public boolean isPeerMessage() {
@@ -358,11 +374,12 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
                     String messageId = ackRequestingMessageId;
                     String chatMessageId = ackRequestingMessage.getAckRequestingMessageId();
                     String peersProfileId = null;
-                    String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
-                    if (chatMessage instanceof BisqEasyOpenTradeMessage bisqEasyOpenTradeMessage) {
-                        // In case of a bisqEasyOpenTradeMessage we use the message id and receiver id separated with a '_'.
+                    if (chatMessage instanceof BisqEasyOpenTradeMessage ||
+                            chatMessage instanceof MuSigOpenTradeMessage) {
+                        String separator = BisqEasyOpenTradeMessage.ACK_REQUESTING_MESSAGE_ID_SEPARATOR;
+                        // In case of open trade messages we use the message id and receiver id separated with a '_'.
                         // This allows us to handle the ACK messages separately to know when the message was received by
-                        // both the peer and the mediator (in case of mediation).
+                        // each receiver.
                         if (messageId.contains(separator)) {
                             String[] parts = messageId.split(separator);
                             messageId = parts[0];
@@ -416,26 +433,26 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         userReactionsPin = Optional.ofNullable(chatMessage.getChatMessageReactions().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(ChatMessageReaction element) {
-                Reaction reaction = getReactionFromOrdinal(element.getReactionId());
-                UIThread.run(() -> {
-                    if (userReactions.containsKey(reaction)) {
-                        userProfileService.findUserProfile(element.getUserProfileId())
-                                .filter(profile -> !userProfileService.isChatUserIgnored(profile))
-                                .ifPresent(profile -> userReactions.get(reaction).addUser(element, profile));
-                    }
-                });
+                resolveReactionFromOrdinal(element.getReactionId()).ifPresent(reaction ->
+                        UIThread.run(() -> {
+                            if (userReactions.containsKey(reaction)) {
+                                userProfileService.findUserProfile(element.getUserProfileId())
+                                        .filter(profile -> !userProfileService.isChatUserIgnored(profile))
+                                        .ifPresent(profile -> userReactions.get(reaction).addUser(element, profile));
+                            }
+                        }));
             }
 
             @Override
             public void onRemoved(Object element) {
                 ChatMessageReaction chatMessageReaction = (ChatMessageReaction) element;
-                Reaction reaction = getReactionFromOrdinal(chatMessageReaction.getReactionId());
-                UIThread.run(() -> {
-                    if (userReactions.containsKey(reaction)) {
-                        userProfileService.findUserProfile(chatMessageReaction.getUserProfileId())
-                                .ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
-                    }
-                });
+                resolveReactionFromOrdinal(chatMessageReaction.getReactionId()).ifPresent(reaction ->
+                        UIThread.run(() -> {
+                            if (userReactions.containsKey(reaction)) {
+                                userProfileService.findUserProfile(chatMessageReaction.getUserProfileId())
+                                        .ifPresent(profile -> userReactions.get(reaction).removeUser(profile));
+                            }
+                        }));
             }
 
             @Override
@@ -445,9 +462,9 @@ public final class ChatMessageListItem<M extends ChatMessage, C extends ChatChan
         }));
     }
 
-    private static Reaction getReactionFromOrdinal(int ordinal) {
-        checkArgument(ordinal >= 0 && ordinal < Reaction.values().length, "Invalid reaction id: " + ordinal);
-        return Reaction.values()[ordinal];
+    @VisibleForTesting
+    static Optional<Reaction> resolveReactionFromOrdinal(int ordinal) {
+        return Reaction.fromOrdinal(ordinal);
     }
 
     private void onUserIdentity() {

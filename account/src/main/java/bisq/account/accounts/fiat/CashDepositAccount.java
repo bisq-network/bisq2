@@ -19,6 +19,7 @@ package bisq.account.accounts.fiat;
 
 import bisq.account.accounts.AccountOrigin;
 import bisq.account.timestamp.KeyType;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.security.keys.KeyPairProtoUtil;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -56,15 +57,20 @@ public final class CashDepositAccount extends BankAccount<CashDepositAccountPayl
         return bisq.account.protobuf.CashDepositAccount.newBuilder();
     }
 
-    public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto) {
-        KeyType keyType = KeyType.fromProto(proto.getKeyType());
-        AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
-        return new CashDepositAccount(proto.getId(),
-                proto.getCreationDate(),
-                proto.getAccountName(),
-                CashDepositAccountPayload.fromProto(proto.getAccountPayload()),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
-                keyType,
-                accountOrigin);
+    public static CashDepositAccount fromProto(bisq.account.protobuf.Account proto)
+            throws UnresolvableProtobufException {
+        try {
+            KeyType keyType = KeyType.fromProto(proto.getKeyType());
+            AccountOrigin accountOrigin = AccountOrigin.fromProto(proto.getAccountOrigin());
+            return new CashDepositAccount(proto.getId(),
+                    proto.getCreationDate(),
+                    proto.getAccountName(),
+                    CashDepositAccountPayload.fromProto(proto.getAccountPayload()),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair(), keyType.getKeyAlgorithm()),
+                    keyType,
+                    accountOrigin);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

@@ -26,6 +26,7 @@ import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
@@ -103,7 +104,7 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
         return builder;
     }
 
-    public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) {
+    public static ChatMessage fromProto(bisq.chat.protobuf.ChatMessage proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case TWOPARTYPRIVATECHATMESSAGE -> TwoPartyPrivateChatMessage.fromProto(proto);
             case BISQEASYOFFERBOOKMESSAGE -> BisqEasyOfferbookMessage.fromProto(proto);
@@ -174,6 +175,14 @@ public abstract class ChatMessage implements NetworkProto, Comparable<ChatMessag
 
     public boolean isMyMessage(UserIdentityService userIdentityService) {
         return userIdentityService.isUserIdentityPresent(authorUserProfileId);
+    }
+
+    // Types a peer sends in this kind of chat. Notices which the client shows by itself are never sent.
+    public abstract boolean hasSupportedChatMessageType();
+
+    // The sender chooses the channel ID. Messages which migrate it in getChannelId check that it can be migrated.
+    public boolean hasValidChannelId() {
+        return true;
     }
 
     @Override

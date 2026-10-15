@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.reporting;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.Response;
 import lombok.EqualsAndHashCode;
@@ -59,13 +60,13 @@ public final class ReportResponse implements EnvelopePayloadMessage, Response {
                 .setReport(report.toProto(serializeForHash));
     }
 
-    public static ReportResponse fromProto(bisq.network.protobuf.ReportResponse proto) {
-        return new ReportResponse(proto.getRequestId(),
-                Report.fromProto(proto.getReport()));
-    }
-
-    @Override
-    public double getCostFactor() {
-        return 0.2;
+    public static ReportResponse fromProto(bisq.network.protobuf.ReportResponse proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new ReportResponse(proto.getRequestId(),
+                    Report.fromProto(proto.getReport()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

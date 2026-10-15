@@ -19,6 +19,8 @@ package bisq.chat.two_party;
 
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -31,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Getter(AccessLevel.PACKAGE)
 @NoArgsConstructor(access = AccessLevel.PACKAGE)
-public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPartyPrivateChatChannelStore> {
+public final class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPartyPrivateChatChannelStore> {
     private final ObservableSet<TwoPartyPrivateChatChannel> channels = new ObservableSet<>();
 
     TwoPartyPrivateChatChannelStore(Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels) {
@@ -51,11 +53,17 @@ public class TwoPartyPrivateChatChannelStore implements PersistableStore<TwoPart
         return unsafeToProto(serializeForHash);
     }
 
-    public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto) {
-        Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = proto.getChannelsList().stream()
-                .map(e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
-                .collect(Collectors.toSet());
-        return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
+    public static TwoPartyPrivateChatChannelStore fromProto(bisq.chat.protobuf.TwoPartyPrivateChatChannelStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            Set<TwoPartyPrivateChatChannel> twoPartyPrivateChatChannels = ProtobufUtils.fromProtoStreamSkippingInvalid(
+                            proto.getChannelsList(), 
+                            e -> (TwoPartyPrivateChatChannel) TwoPartyPrivateChatChannel.fromProto(e))
+                    .collect(Collectors.toSet());
+            return new TwoPartyPrivateChatChannelStore(twoPartyPrivateChatChannels);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

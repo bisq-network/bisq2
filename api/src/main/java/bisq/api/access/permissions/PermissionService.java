@@ -18,32 +18,43 @@
 package bisq.api.access.permissions;
 
 import bisq.api.access.persistence.ApiAccessStoreService;
-import lombok.Getter;
 
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 
-public class PermissionService<T extends PermissionMapping> {
+/**
+ * Reads the permissions granted to a paired client, and folds a grant into how it is stored.
+ * <p>
+ * It holds no mapping: which permission a given access requires is the business of the surface
+ * that serves it — REST paths for {@link RestPermissionMapping}, subscription topics for
+ * {@code SubscriptionPermissionMapping} — and those two questions have no common shape. Keeping a
+ * single path-shaped mapping here is what made the subscription surface easy to overlook.
+ */
+public class PermissionService {
     private final ApiAccessStoreService apiAccessStoreService;
-    @Getter
-    private final T permissionMapping;
 
-    public PermissionService(ApiAccessStoreService apiAccessStoreService, T permissionMapping) {
+    public PermissionService(ApiAccessStoreService apiAccessStoreService) {
         this.apiAccessStoreService = apiAccessStoreService;
-        this.permissionMapping = permissionMapping;
     }
 
     public boolean hasPermission(Set<Permission> granted, Permission required) {
         return granted.contains(required);
     }
 
-    public void putPermissions(String clientId, Set<Permission> permissions) {
-        apiAccessStoreService.putPermissions(clientId, permissions);
+    /** Folds a grant the way it is stored: a full standard set becomes grantAll. */
+    public PermissionSet toPermissionSet(Set<Permission> permissions) {
+        // A grant EXACTLY equal to this version's auto-grantable ("standard") set is stored as
+        // grantAll so it keeps covering standard permissions added by future versions. Strict
+        // equality on purpose: a grant that additionally carries a sensitive permission must
+        // stay explicit, as folding it into grantAll would drop the sensitive permission from the
+        // expansion (grantAll never covers sensitive ones; see PermissionSet).
+        return permissions.equals(Permission.autoGrantable())
+                ? PermissionSet.grantAll()
+                : new PermissionSet(permissions);
     }
 
     public Optional<Set<Permission>> findPermissions(String clientId) {
         return Optional.ofNullable(apiAccessStoreService.getPermissionsByClientId().get(clientId))
-                .map(Collections::unmodifiableSet);
+                .map(PermissionSet::getPermissions);
     }
 }

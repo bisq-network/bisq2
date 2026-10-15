@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig.messages.network.handler.buyer;
 
 import bisq.common.data.ByteArray;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.trade.ServiceProvider;
 import bisq.trade.mu_sig.MuSigTrade;
@@ -27,6 +28,7 @@ import bisq.trade.mu_sig.messages.grpc.CloseTradeResponse;
 import bisq.trade.mu_sig.messages.network.CooperativeClosureMessage_G;
 import bisq.trade.mu_sig.messages.network.PaymentReceivedMessage_F;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.SwapTxSignature;
+import bisq.trade.mu_sig.protocol.MuSigProtocolException;
 import bisq.trade.protobuf.CloseTradeRequest;
 import com.google.protobuf.ByteString;
 import lombok.extern.slf4j.Slf4j;
@@ -46,17 +48,21 @@ public final class PaymentReceivedMessage_F_Handler extends MuSigTradeMessageHan
 
     @Override
     protected void process(PaymentReceivedMessage_F message) {
-        peersSwapTxSignature = message.getSwapTxSignature();
+        try {
+            peersSwapTxSignature = message.getSwapTxSignature();
 
-        tradeService.stopCloseTradeTimeout(trade);
+            tradeService.stopCloseTradeTimeout(trade);
 
-        // ClosureType.COOPERATIVE
-        // *** BUYER CLOSES TRADE ***
-        CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
-                .setTradeId(trade.getId())
-                .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersSwapTxSignature.getPeerOutputPrvKeyShare()))
-                .build();
-        myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+            // ClosureType.COOPERATIVE
+            // *** BUYER CLOSES TRADE ***
+            CloseTradeRequest closeTradeRequest = CloseTradeRequest.newBuilder()
+                    .setTradeId(trade.getId())
+                    .setMyOutputPeersPrvKeyShare(ByteString.copyFrom(peersSwapTxSignature.getPeerOutputPrvKeyShare()))
+                    .build();
+            myCloseTradeResponse = CloseTradeResponse.fromProto(blockingStub.closeTrade(closeTradeRequest));
+        } catch (UnresolvableProtobufException e) {
+            throw new MuSigProtocolException(e);
+        }
     }
 
     @Override

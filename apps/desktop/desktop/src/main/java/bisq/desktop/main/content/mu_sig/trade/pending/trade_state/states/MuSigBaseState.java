@@ -136,7 +136,7 @@ public abstract class MuSigBaseState {
 
             market = trade.getContract().getOffer().getMarket();
             quoteCode = market.getQuoteCurrencyCode();
-            nonBtcCurrencyCode = market.getNonBtcCurrencyCode();
+            nonBtcCurrencyCode = market.getRelevantCurrencyCode();
         }
 
         protected MuSigOffer getMuSigOffer() {

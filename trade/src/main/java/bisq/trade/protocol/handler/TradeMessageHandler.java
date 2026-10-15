@@ -18,7 +18,6 @@
 package bisq.trade.protocol.handler;
 
 import bisq.common.fsm.EventHandler;
-import bisq.network.identity.NetworkId;
 import bisq.trade.ServiceProvider;
 import bisq.trade.Trade;
 import bisq.trade.protocol.messages.TradeMessage;
@@ -48,12 +47,39 @@ public abstract class TradeMessageHandler<T extends Trade<?, ?, ?>, M extends Tr
     protected abstract void commit();
 
     protected void verifyInternal(M message) {
-        checkArgument(message.getTradeId().equals(trade.getId()),
+        checkArgument(hasTradeId(message, trade),
                 "TradeId of message not matching the tradeId from the trade data");
-        NetworkId sender = message.getSender();
-        checkArgument(sender.equals(trade.getPeer().getNetworkId()),
+        checkArgument(isSentByTradePeer(message, trade),
                 "Message sender networkID not matching the peers networkId from the trade data");
         // We verify if the sender of the message is banned at the message handler in the service class.
         // As the message handler is optional we prefer to block banned messages at the level instead of handling it here.
+    }
+
+    /**
+     * Whether the message carries the ID of the trade, was sent by the trade peer, and was sent to our own network ID
+     * of the trade. The trade services pass a message to the protocol of a trade only if this holds. The first two
+     * conditions are those which {@link #verifyInternal} requires.
+     */
+    public static boolean isMessageOfTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
+        return hasTradeId(message, trade) && isSentByTradePeer(message, trade) && isSentToMyself(message, trade);
+    }
+
+    private static boolean hasTradeId(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getTradeId().equals(trade.getId());
+    }
+
+    // A party is identified by its key. The confidential message layer has checked that the sender signed the message
+    // with the key of the sender's network ID. The addresses of a network ID are routing data, which change when the
+    // peer adds a transport, so the network ID which we stored for the peer can have other addresses.
+    private static boolean isSentByTradePeer(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getSender().getId().equals(trade.getPeer().getNetworkId().getId());
+    }
+
+    // A node can host several identities. The confidential message layer has checked that the receiver of the message
+    // is the network ID whose key decrypted it. A message for this trade which the peer sent to another identity of our
+    // node must not reach this trade: the reaction of the trade would tell the peer that both identities are hosted on
+    // one node (rule 5 of docs/specifications/trade/trade-message-sender.md).
+    private static boolean isSentToMyself(TradeMessage message, Trade<?, ?, ?> trade) {
+        return message.getReceiver().getId().equals(trade.getMyself().getNetworkId().getId());
     }
 }

@@ -11,7 +11,7 @@ public class RateLimiterTest {
     public void testRateLimiter() {
         MockClock clock = new MockClock();
         clock.setTime(0);
-        RateLimiter rateLimiter = new RateLimiter(clock, 5, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        RateLimiter rateLimiter = new RateLimiter(clock, 5, Integer.MAX_VALUE, Integer.MAX_VALUE, Integer.MAX_VALUE, 1000);
         String userId = "user123";
         for (int i = 0; i < 5; i++) {
             clock.advanceTime(200);
@@ -31,7 +31,7 @@ public class RateLimiterTest {
 
         // Reset
         clock.setTime(0);
-        rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, 20, Integer.MAX_VALUE, Integer.MAX_VALUE);
+        rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, 20, Integer.MAX_VALUE, Integer.MAX_VALUE, 1000);
         // Simulate 20 messages in 1 minute
         for (int i = 0; i < 20; i++) {
             clock.advanceTime(3000);
@@ -43,7 +43,7 @@ public class RateLimiterTest {
 
         // Reset
         clock.setTime(0);
-        rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, Integer.MAX_VALUE, 100, Integer.MAX_VALUE);
+        rateLimiter = new RateLimiter(clock, Integer.MAX_VALUE, Integer.MAX_VALUE, 100, Integer.MAX_VALUE, 1000);
         for (int i = 0; i < 100; i++) {
             clock.advanceTime(36);
             assertFalse(rateLimiter.exceedsLimit(userId));
@@ -54,7 +54,7 @@ public class RateLimiterTest {
 
         // Reset
         clock.setTime(0);
-        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE);
+        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE, 1000);
         for (int i = 0; i < 100; i++) {
             clock.advanceTime(3000);
             if (i < 20) {
@@ -66,7 +66,7 @@ public class RateLimiterTest {
 
         // Different users or each message
         clock.setTime(0);
-        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE);
+        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE, 1000);
         for (int i = 0; i < 100; i++) {
             clock.advanceTime(3000);
             assertFalse(rateLimiter.exceedsLimit("user" + i));
@@ -74,17 +74,18 @@ public class RateLimiterTest {
 
         // One user with 20 messages, then diff. users
         clock.setTime(0);
-        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE);
+        rateLimiter = new RateLimiter(clock, 5, 20, 100, Integer.MAX_VALUE, 1000);
         for (int i = 0; i < 100; i++) {
             clock.advanceTime(3000);
             int userIndex = i < 20 ? 1 : i;
             assertFalse(rateLimiter.exceedsLimit("user" + i));
         }
 
-        // Using system clock, only the first 5 messages pass.
-        rateLimiter = new RateLimiter();
+        // Using system clock, only the first maxPerSecond messages pass.
+        int maxPerSecond = 3;
+        rateLimiter = new RateLimiter(maxPerSecond, 30, 120, 300, 1000);
         for (int i = 0; i < 100; i++) {
-            if (i < RateLimiter.DEFAULT_MAX_PER_SECOND) {
+            if (i < maxPerSecond) {
                 assertFalse(rateLimiter.exceedsLimit(userId));
             } else {
                 assertTrue(rateLimiter.exceedsLimit(userId));

@@ -18,12 +18,14 @@
 package bisq.trade.mu_sig.messages.grpc;
 
 import bisq.common.proto.Proto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.OptionalUtils;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PartialSignatures;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.Objects;
 import java.util.Optional;
 
 @Getter
@@ -35,7 +37,8 @@ public final class PartialSignaturesMessage implements Proto {
                 peersPartialSignatures.getPeersRedirectTxInputPartialSignature(),
                 peersPartialSignatures.getPeersClaimTxInputPartialSignature(),
                 peersPartialSignatures.getSwapTxInputPartialSignature(),
-                peersPartialSignatures.getSwapTxInputSighash()
+                peersPartialSignatures.getSwapTxInputSighash(),
+                Optional.empty()
         );
     }
 
@@ -45,19 +48,22 @@ public final class PartialSignaturesMessage implements Proto {
     private final byte[] peersClaimTxInputPartialSignature;
     private final Optional<byte[]> swapTxInputPartialSignature;
     private final Optional<byte[]> swapTxInputSighash;
+    private final Optional<ContractualTxIds> contractualTxIds;
 
     public PartialSignaturesMessage(byte[] peersWarningTxBuyerInputPartialSignature,
                                     byte[] peersWarningTxSellerInputPartialSignature,
                                     byte[] peersRedirectTxInputPartialSignature,
                                     byte[] peersClaimTxInputPartialSignature,
                                     Optional<byte[]> swapTxInputPartialSignature,
-                                    Optional<byte[]> swapTxInputSighash) {
+                                    Optional<byte[]> swapTxInputSighash,
+                                    Optional<ContractualTxIds> contractualTxIds) {
         this.peersWarningTxBuyerInputPartialSignature = peersWarningTxBuyerInputPartialSignature;
         this.peersWarningTxSellerInputPartialSignature = peersWarningTxSellerInputPartialSignature;
         this.peersRedirectTxInputPartialSignature = peersRedirectTxInputPartialSignature;
         this.peersClaimTxInputPartialSignature = peersClaimTxInputPartialSignature;
         this.swapTxInputPartialSignature = swapTxInputPartialSignature;
         this.swapTxInputSighash = swapTxInputSighash;
+        this.contractualTxIds = contractualTxIds;
     }
 
     @Override
@@ -69,6 +75,7 @@ public final class PartialSignaturesMessage implements Proto {
                 .setPeersClaimTxInputPartialSignature(ByteString.copyFrom(peersClaimTxInputPartialSignature));
         swapTxInputPartialSignature.ifPresent(e -> builder.setSwapTxInputPartialSignature(ByteString.copyFrom(e)));
         swapTxInputSighash.ifPresent(e -> builder.setSwapTxInputSighash(ByteString.copyFrom(e)));
+        contractualTxIds.ifPresent(e -> builder.setContractualTxIds(e.toProto(serializeForHash)));
         return builder;
     }
 
@@ -77,17 +84,25 @@ public final class PartialSignaturesMessage implements Proto {
         return unsafeToProto(serializeForHash);
     }
 
-    public static PartialSignaturesMessage fromProto(bisq.trade.protobuf.PartialSignaturesMessage proto) {
-        return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
-                proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
-                proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
-                proto.getPeersClaimTxInputPartialSignature().toByteArray(),
-                proto.hasSwapTxInputPartialSignature()
-                        ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
-                        : Optional.empty(),
-                proto.hasSwapTxInputSighash()
-                        ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
-                        : Optional.empty());
+    public static PartialSignaturesMessage fromProto(bisq.trade.protobuf.PartialSignaturesMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new PartialSignaturesMessage(proto.getPeersWarningTxBuyerInputPartialSignature().toByteArray(),
+                    proto.getPeersWarningTxSellerInputPartialSignature().toByteArray(),
+                    proto.getPeersRedirectTxInputPartialSignature().toByteArray(),
+                    proto.getPeersClaimTxInputPartialSignature().toByteArray(),
+                    proto.hasSwapTxInputPartialSignature()
+                            ? Optional.of(proto.getSwapTxInputPartialSignature().toByteArray())
+                            : Optional.empty(),
+                    proto.hasSwapTxInputSighash()
+                            ? Optional.of(proto.getSwapTxInputSighash().toByteArray())
+                            : Optional.empty(),
+                    proto.hasContractualTxIds()
+                            ? Optional.of(ContractualTxIds.fromProto(proto.getContractualTxIds()))
+                            : Optional.empty());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -100,7 +115,8 @@ public final class PartialSignaturesMessage implements Proto {
                 Arrays.equals(peersRedirectTxInputPartialSignature, that.peersRedirectTxInputPartialSignature) &&
                 Arrays.equals(peersClaimTxInputPartialSignature, that.peersClaimTxInputPartialSignature) &&
                 OptionalUtils.optionalByteArrayEquals(swapTxInputPartialSignature, that.swapTxInputPartialSignature) &&
-                OptionalUtils.optionalByteArrayEquals(swapTxInputSighash, that.swapTxInputSighash);
+                OptionalUtils.optionalByteArrayEquals(swapTxInputSighash, that.swapTxInputSighash) &&
+                Objects.equals(contractualTxIds, that.contractualTxIds);
     }
 
     @Override
@@ -111,6 +127,7 @@ public final class PartialSignaturesMessage implements Proto {
         result = 31 * result + Arrays.hashCode(peersClaimTxInputPartialSignature);
         result = 31 * result + swapTxInputPartialSignature.map(Arrays::hashCode).orElse(0);
         result = 31 * result + swapTxInputSighash.map(Arrays::hashCode).orElse(0);
+        result = 31 * result + Objects.hashCode(contractualTxIds);
         return result;
     }
 }

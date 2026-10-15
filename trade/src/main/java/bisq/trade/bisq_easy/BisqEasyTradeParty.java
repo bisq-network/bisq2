@@ -17,6 +17,7 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.network.identity.NetworkId;
 import bisq.trade.TradeParty;
@@ -39,11 +40,16 @@ public class BisqEasyTradeParty extends TradeParty {
         return getTradePartyBuilder(serializeForHash).setBisqEasyTradeParty(builder);
     }
 
-    public static BisqEasyTradeParty fromProto(bisq.trade.protobuf.TradeParty proto) {
-        BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
-        if (proto.hasContractSignatureData()) {
-            tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+    public static BisqEasyTradeParty fromProto(bisq.trade.protobuf.TradeParty proto)
+            throws UnresolvableProtobufException {
+        try {
+            BisqEasyTradeParty tradeParty = new BisqEasyTradeParty(NetworkId.fromProto(proto.getNetworkId()));
+            if (proto.hasContractSignatureData()) {
+                tradeParty.getContractSignatureData().set(ContractSignatureData.fromProto(proto.getContractSignatureData()));
+            }
+            return tradeParty;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
         }
-        return tradeParty;
     }
 }

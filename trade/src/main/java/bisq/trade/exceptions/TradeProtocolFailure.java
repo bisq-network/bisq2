@@ -19,13 +19,17 @@ package bisq.trade.exceptions;
 
 import bisq.common.proto.ProtoEnum;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 
 public enum TradeProtocolFailure implements ProtoEnum {
     UNKNOWN(true),
     PRICE_DEVIATION(false),
     NO_MATCHING_OFFER_FOUND(false),
-    MEDIATORS_NOT_MATCHING(false);
+    MEDIATORS_NOT_MATCHING(false),
+    OFFER_NOT_AVAILABLE(false),
+    CHANNEL_DATA_MISMATCH(false),
+    SELLER_REPUTATION_TOO_LOW(false);
 
     @Getter
     private final boolean isUnexpected;
@@ -39,7 +43,8 @@ public enum TradeProtocolFailure implements ProtoEnum {
         return bisq.trade.protobuf.TradeProtocolFailure.valueOf(getProtobufEnumPrefix() + name());
     }
 
-    public static TradeProtocolFailure fromProto(bisq.trade.protobuf.TradeProtocolFailure proto) {
+    public static TradeProtocolFailure fromProto(bisq.trade.protobuf.TradeProtocolFailure proto)
+            throws UnresolvableProtobufException {
         return ProtobufUtils.enumFromProto(TradeProtocolFailure.class, proto.name(), UNKNOWN);
     }
 }

@@ -19,6 +19,7 @@ package bisq.settings;
 
 import bisq.common.data.Pair;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.settings.protobuf.CookieMapEntry;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,7 +66,7 @@ public final class Cookie implements PersistableProto {
         return unsafeToProto(serializeForHash);
     }
 
-    static Cookie fromProto(bisq.settings.protobuf.Cookie proto) {
+    static Cookie fromProto(bisq.settings.protobuf.Cookie proto) throws UnresolvableProtobufException {
         try {
             return new Cookie(proto.getCookieMapEntriesList().stream()
                     .map(entry -> {

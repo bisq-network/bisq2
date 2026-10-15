@@ -62,7 +62,7 @@ public class MuSigMediationCaseDetailsController extends NavigationController im
         this.serviceProvider = serviceProvider;
 
         muSigMediationCaseOverviewSection = new MuSigMediationCaseOverviewSection(serviceProvider, false);
-        muSigMediationCaseDetailSection = new MuSigMediationCaseDetailSection(serviceProvider, false);
+        muSigMediationCaseDetailSection = new MuSigMediationCaseDetailSection(false);
 
         model = new MuSigMediationCaseDetailsModel();
         view = new MuSigMediationCaseDetailsView(
@@ -80,7 +80,7 @@ public class MuSigMediationCaseDetailsController extends NavigationController im
 
         boolean isClosed = initData.muSigMediationCaseListItem
                 .getMuSigMediationCase()
-                .getMediationCaseState()
+                .mediationCaseStateObservable()
                 .get() == MediationCaseState.CLOSED;
         if (isClosed) {
             MuSigMediationResultSection mediationResultSection = new MuSigMediationResultSection(serviceProvider);

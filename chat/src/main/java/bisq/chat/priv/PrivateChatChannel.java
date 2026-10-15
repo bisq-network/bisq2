@@ -53,6 +53,11 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extend
         chatMessages.forEach(this::addChatMessage);
     }
 
+    // Whether the user profile takes part in this channel besides our own identity. A sender chooses the channel ID of
+    // its message, so a received message or reaction is added to an existing channel only if its sender is a peer of
+    // that channel (see PrivateChatChannelService).
+    public abstract boolean isPeer(String userProfileId);
+
     @Override
     public boolean addChatMessage(M chatMessage) {
         boolean changed = super.addChatMessage(chatMessage);
@@ -72,6 +77,15 @@ public abstract class PrivateChatChannel<M extends PrivateChatMessage<?>> extend
             }
         }
         return changed;
+    }
+
+    // The client adds notices of its own as protocol log messages, e.g. that the peer is banned. A received message
+    // from an own identity is ignored (PrivateChatChannelService.isValid).
+    @Override
+    protected boolean holdsChatMessageType(M chatMessage) {
+        return super.holdsChatMessageType(chatMessage) ||
+                (chatMessage.getChatMessageType() == ChatMessageType.PROTOCOL_LOG_MESSAGE &&
+                        chatMessage.getAuthorUserProfileId().equals(myUserIdentity.getId()));
     }
 
     // Called when removing expired messages. We do not support deleting private messages

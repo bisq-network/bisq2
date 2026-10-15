@@ -22,7 +22,6 @@ import bisq.account.payment_method.PaymentMethodSpec;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
-import bisq.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -40,6 +39,7 @@ import bisq.offer.amount.spec.QuoteSideAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.PriceSpec;
+import bisq.trade.bisq_easy.BisqEasyTradeAmountLimits;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
@@ -163,11 +163,19 @@ public class TradeWizardSelectOfferController implements Controller {
             BisqEasyOfferbookChannel channel = optionalChannel.get();
             model.getMatchingOffers().setAll(channel.getChatMessages().stream()
                     .filter(chatMessage -> chatMessage.getBisqEasyOffer().isPresent())
-                    .map(chatMessage -> new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
-                            model,
-                            userProfileService,
-                            reputationService,
-                            marketPriceService))
+                    .flatMap(chatMessage -> {
+                        try {
+                            return java.util.stream.Stream.of(new TradeWizardSelectOfferView.ListItem(chatMessage.getBisqEasyOffer().get(),
+                                    model,
+                                    userProfileService,
+                                    reputationService,
+                                    marketPriceService));
+                        } catch (ArithmeticException e) {
+                            // The item formats the offer amounts at construction; an offer whose
+                            // amounts overflow at the current price is not listed.
+                            return java.util.stream.Stream.<TradeWizardSelectOfferView.ListItem>empty();
+                        }
+                    })
                     .collect(Collectors.toList()));
             model.getFilteredList().setPredicate(getPredicate());
         } else {

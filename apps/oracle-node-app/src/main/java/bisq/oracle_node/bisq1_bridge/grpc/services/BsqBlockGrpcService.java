@@ -19,6 +19,7 @@ package bisq.oracle_node.bisq1_bridge.grpc.services;
 
 import bisq.bridge.protobuf.BsqBlockSubscription;
 import bisq.bridge.protobuf.BsqBlockSubscriptionEvent;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.oracle_node.bisq1_bridge.grpc.GrpcClient;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BondedReputationDto;
 import bisq.oracle_node.bisq1_bridge.grpc.dto.BsqBlockDto;
@@ -89,7 +90,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
     }
 
     @Override
-    protected List<BsqBlockDto> doRequest(int startBlockHeight) {
+    protected List<BsqBlockDto> doRequest(int startBlockHeight) throws UnresolvableProtobufException {
         var protoRequest = new BsqBlocksRequest(startBlockHeight).completeProto();
         var protoResponse = GrpcClient.withBulkRequestDeadline(grpcClient.getBsqBlockBlockingStub())
                 .requestBsqBlocks(protoRequest);
@@ -105,14 +106,23 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         data.getTxDtoList()
                 .stream()
                 .filter(txDto -> markTransactionProcessed(data.getHeight(), txDto.getTxId()))
-                .forEach(txDto -> {
-                    txDto.getProofOfBurnDto()
-                            .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(data, txDto, proofOfBurnDto))
-                            .ifPresent(authorizedProofOfBurnDataQueue::offer);
-                    txDto.getBondedReputationDto()
-                            .map(bondedReputationDto -> toAuthorizedBondedReputationData(data, txDto, bondedReputationDto))
-                            .ifPresent(authorizedBondedReputationDataQueue::offer);
-                });
+                .forEach(txDto -> handleTransaction(data, txDto));
+    }
+
+    // The node skips a transaction whose data breaks a rule of the data which the oracle node publishes, and processes
+    // the other transactions of the block (see docs/specifications/network/bisq1-bridge-block-continuity.md)
+    private void handleTransaction(BsqBlockDto block, TxDto txDto) {
+        try {
+            txDto.getProofOfBurnDto()
+                    .map(proofOfBurnDto -> toAuthorizedProofOfBurnData(block, txDto, proofOfBurnDto))
+                    .ifPresent(authorizedProofOfBurnDataQueue::offer);
+            txDto.getBondedReputationDto()
+                    .map(bondedReputationDto -> toAuthorizedBondedReputationData(block, txDto, bondedReputationDto))
+                    .ifPresent(authorizedBondedReputationDataQueue::offer);
+        } catch (RuntimeException e) {
+            log.warn("Skipping the transaction {} at height {} from the Bisq 1 bridge, because its data is invalid",
+                    txDto.getTxId(), block.getHeight(), e);
+        }
     }
 
     @Override
@@ -161,7 +171,11 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         grpcClient.getBsqBlockStub().subscribeWithSnapshot(subscription, new StreamObserver<>() {
             @Override
             public void onNext(BsqBlockSubscriptionEvent event) {
-                handleSubscriptionEvent(event);
+                try {
+                    handleSubscriptionEvent(event);
+                } catch (UnresolvableProtobufException e) {
+                    throw new RuntimeException(e);
+                }
 
                 // reset
                 subscribeRetryInterval.set(1);
@@ -179,7 +193,12 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         });
     }
 
-    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) {
+    @Override
+    protected String getSubscriptionDescription() {
+        return "the continuity-aware BSQ block subscription (BsqBlockGrpcService.SubscribeWithSnapshot)";
+    }
+
+    void handleSubscriptionEvent(BsqBlockSubscriptionEvent event) throws UnresolvableProtobufException {
         switch (event.getPayloadCase()) {
             case SUBSCRIPTIONREADYHEIGHT -> {
                 log.info("BSQ block subscription established at height {}", event.getSubscriptionReadyHeight());
@@ -215,7 +234,7 @@ public class BsqBlockGrpcService extends BridgeSubscriptionGrpcService<BsqBlockD
         List<Integer> processedBlockHeights = new ArrayList<>();
         BsqBlockDto nextBlock;
         while ((nextBlock = bufferedLiveBlocks.remove(lastContiguousBlockHeight.get() + 1)) != null) {
-            handleResponse(nextBlock);
+            handleResponseOrSkip(nextBlock);
             lastContiguousBlockHeight.set(nextBlock.getHeight());
             processedBlockHeights.add(nextBlock.getHeight());
         }

@@ -17,14 +17,11 @@
 
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
-import bisq.chat.ChatChannel;
-import bisq.chat.ChatMessage;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeSelectionService;
 import bisq.common.observable.Pin;
-import bisq.contract.mu_sig.MuSigContract;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
@@ -34,9 +31,7 @@ import bisq.support.mediation.MediationCaseState;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
-import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
-import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import javafx.beans.InvalidationListener;
 import javafx.collections.transformation.SortedList;
@@ -49,7 +44,7 @@ import org.fxmisc.easybind.Subscription;
 import java.util.Optional;
 
 import static bisq.chat.ChatChannelDomain.MU_SIG_OPEN_TRADES;
-import static com.google.common.base.Preconditions.checkArgument;
+import static bisq.i18n.Res.get;
 
 @Slf4j
 public class MuSigMediatorController implements Controller {
@@ -68,8 +63,8 @@ public class MuSigMediatorController implements Controller {
     private final MuSigMediatorService muSigMediatorService;
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
     private final InvalidationListener itemListener;
-    private Pin mediationCaseListItemPin, selectedChannelPin;
-    private Subscription searchPredicatePin, closedCasesPredicatePin;
+    private Pin mediationCaseListItemPin;
+    private Subscription selectedItemPin, searchPredicatePin, closedCasesPredicatePin, selectedItemChannelPin;
 
     public MuSigMediatorController(ServiceProvider serviceProvider) {
         this.serviceProvider = serviceProvider;
@@ -95,7 +90,7 @@ public class MuSigMediatorController implements Controller {
                 model.getListItems().setPredicate(item -> model.getSearchPredicate().get().test(item) && model.getClosedCasesPredicate().get().test(item));
                 updateEmptyState();
                 if (model.getListItems().getFilteredList().size() == 1) {
-                    selectionService.selectChannel(model.getListItems().getFilteredList().get(0).getChannel());
+                    onSelectItem(model.getListItems().getFilteredList().getFirst());
                 }
             });
         };
@@ -106,44 +101,16 @@ public class MuSigMediatorController implements Controller {
         applyFilteredListPredicate(model.getShowClosedCases().get());
 
         mediationCaseListItemPin = FxBindings.<MuSigMediationCase, MuSigMediationCaseListItem>bind(model.getListItems())
-                .filter(mediationCase -> {
-                    MuSigMediationRequest muSigMediationRequest = mediationCase.getMuSigMediationRequest();
-                    MuSigContract contract = muSigMediationRequest.getContract();
-                    Optional<UserProfile> mediatorFromContract = contract.getMediator();
-                    if (mediatorFromContract.isEmpty()) {
-                        return false;
-                    }
-                    Optional<UserIdentity> myOptionalUserIdentity = muSigMediatorService.findMyMediatorUserIdentity(mediatorFromContract);
-                    if (myOptionalUserIdentity.isEmpty()) {
-                        return false;
-                    }
-
-                    MuSigOpenTradeChannel channel = findOrCreateChannel(muSigMediationRequest, myOptionalUserIdentity.get());
-                    if (channel.getMediator().isEmpty()) {
-                        // In case we found an existing channel at mediatorFindOrCreatesChannel the mediator field could be empty
-                        return false;
-                    }
-                    try {
-                        checkArgument(channel.getTraders().size() == 2);
-                        // TODO: check whether this is needed or not
-//                        checkArgument(channel.getMuSigOffer().equals(contract.getOffer()));
-                        checkArgument(channel.getMediator().orElseThrow().equals(contract.getMediator().orElseThrow()));
-                    } catch (IllegalArgumentException e) {
-                        log.error("Validation of channel properties and contract properties failed. " +
-                                "channel={}; contract={}", channel, contract, e);
-                        return false;
-                    }
-                    return true;
-                })
                 .map(mediationCase -> {
                     MuSigMediationRequest muSigMediationRequest = mediationCase.getMuSigMediationRequest();
-                    UserIdentity myUserIdentity = muSigMediatorService.findMyMediatorUserIdentity(muSigMediationRequest.getContract().getMediator()).orElseThrow();
-                    MuSigOpenTradeChannel channel = findOrCreateChannel(muSigMediationRequest, myUserIdentity);
+                    Optional<MuSigOpenTradeChannel> channel = mediationCase.hasMediatorLeftChat()
+                            ? Optional.empty()
+                            : muSigOpenTradeChannelService.findChannelByTradeId(muSigMediationRequest.getTradeId());
                     return new MuSigMediationCaseListItem(serviceProvider, mediationCase, channel);
                 })
                 .to(muSigMediatorService.getMediationCases());
 
-        selectedChannelPin = selectionService.getSelectedChannel().addObserver(this::selectedChannelChanged);
+        selectedItemPin = EasyBind.subscribe(model.getSelectedItem(), this::selectedItemChanged);
 
         searchPredicatePin = EasyBind.subscribe(model.getSearchPredicate(), searchPredicate -> updatePredicate());
         closedCasesPredicatePin = EasyBind.subscribe(model.getClosedCasesPredicate(), closedCasesPredicate -> updatePredicate());
@@ -162,17 +129,15 @@ public class MuSigMediatorController implements Controller {
         model.reset();
 
         mediationCaseListItemPin.unbind();
-        selectedChannelPin.unbind();
+        selectedItemPin.unsubscribe();
         searchPredicatePin.unsubscribe();
         closedCasesPredicatePin.unsubscribe();
+
+        clearSelectedItemChannelPin();
     }
 
     void onSelectItem(MuSigMediationCaseListItem item) {
-        if (item == null) {
-            selectionService.selectChannel(null);
-        } else if (!item.getChannel().equals(selectionService.getSelectedChannel().get())) {
-            selectionService.selectChannel(item.getChannel());
-        }
+        model.getSelectedItem().set(item);
     }
 
     void onToggleClosedCases() {
@@ -208,29 +173,52 @@ public class MuSigMediatorController implements Controller {
         applyShowClosedCasesChange();
     }
 
-    private void selectedChannelChanged(ChatChannel<? extends ChatMessage> chatChannel) {
-        UIThread.run(() -> {
-            if (chatChannel == null) {
-                model.getSelectedItem().set(null);
-                muSigMediationCaseHeader.setMediationCaseListItem(null);
-                muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
-                maybeSelectFirst();
-                updateEmptyState();
-            } else if (chatChannel instanceof MuSigOpenTradeChannel tradeChannel) {
-                model.getListItems().stream()
-                        .filter(item -> item.getChannel().getId().equals(tradeChannel.getId()))
-                        .findAny()
-                        .ifPresent(item -> {
-                            model.getSelectedItem().set(item);
-                            muSigMediationCaseHeader.setMediationCaseListItem(item);
-                            muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+    private void selectedItemChanged(MuSigMediationCaseListItem item) {
+        muSigMediationCaseHeader.setMediationCaseListItem(item);
+        clearSelectedItemChannelPin();
+        if (item == null) {
+            model.getChatAvailable().set(false);
+            model.getChatUnavailableTitle().set(null);
+            model.getChatUnavailableDescription().set(null);
+            selectionService.selectChannel(null);
+            maybeSelectFirst();
+            updateEmptyState();
+        } else {
+            selectedItemChannelPin = EasyBind.subscribe(item.channelProperty(), maybeChannel -> {
+                applyChatState(item, maybeChannel);
+                maybeChannel.ifPresentOrElse(
+                        channel -> {
+                            if (!channel.equals(selectionService.getSelectedChannel().get())) {
+                                selectionService.selectChannel(channel);
+                            }
+                        },
+                        () -> {
+                            if (selectionService.getSelectedChannel().get() != null) {
+                                selectionService.selectChannel(null);
+                            }
                         });
-            }
-        });
+            });
+        }
+    }
+
+    private void applyChatState(MuSigMediationCaseListItem item, Optional<MuSigOpenTradeChannel> maybeChannel) {
+        if (maybeChannel.isPresent()) {
+            model.getChatAvailable().set(true);
+            model.getChatUnavailableTitle().set(null);
+            model.getChatUnavailableDescription().set(null);
+        } else if (item.getMuSigMediationCase().hasMediatorLeftChat()) {
+            model.getChatAvailable().set(false);
+            model.getChatUnavailableTitle().set(get("authorizedRole.disputeActor.chat.unavailable.left.title"));
+            model.getChatUnavailableDescription().set(get("authorizedRole.mediator.chat.unavailable.left.description"));
+        } else {
+            model.getChatAvailable().set(false);
+            model.getChatUnavailableTitle().set(get("authorizedRole.disputeActor.chat.unavailable.pending.title"));
+            model.getChatUnavailableDescription().set(get("authorizedRole.mediator.chat.unavailable.pending.description"));
+        }
     }
 
     private void applyShowClosedCasesChange() {
-        muSigMediationCaseHeader.setShowClosedCases(model.getShowClosedCases().get());
+        model.getSelectedItem().set(null);
         // Need a predicate change to trigger a list update
         applyFilteredListPredicate(!model.getShowClosedCases().get());
         applyFilteredListPredicate(model.getShowClosedCases().get());
@@ -245,9 +233,9 @@ public class MuSigMediatorController implements Controller {
 
     private void applyFilteredListPredicate(boolean showClosedCases) {
         if (showClosedCases) {
-            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState().get() == MediationCaseState.CLOSED);
+            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState() == MediationCaseState.CLOSED);
         } else {
-            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState().get() != MediationCaseState.CLOSED);
+            model.getClosedCasesPredicate().set(item -> item.getMuSigMediationCase().getMediationCaseState() != MediationCaseState.CLOSED);
         }
     }
 
@@ -257,29 +245,22 @@ public class MuSigMediatorController implements Controller {
         boolean isEmpty = sortedList.isEmpty();
         model.getNoOpenCases().set(isEmpty);
         if (isEmpty) {
-            selectionService.getSelectedChannel().set(null);
-            muSigMediationCaseHeader.setMediationCaseListItem(null);
-        } else {
-            muSigMediationCaseHeader.setMediationCaseListItem(model.getSelectedItem().get());
+            model.getSelectedItem().set(null);
         }
     }
 
     private void maybeSelectFirst() {
         UIThread.runOnNextRenderFrame(() -> {
             if (!model.getListItems().getFilteredList().isEmpty()) {
-                selectionService.selectChannel(model.getListItems().getSortedList().get(0).getChannel());
+                onSelectItem(model.getListItems().getSortedList().getFirst());
             }
         });
     }
 
-    private MuSigOpenTradeChannel findOrCreateChannel(MuSigMediationRequest muSigMediationRequest,
-                                                      UserIdentity myUserIdentity) {
-        MuSigContract contract = muSigMediationRequest.getContract();
-        return muSigOpenTradeChannelService.mediatorFindOrCreatesChannel(
-                muSigMediationRequest.getTradeId(),
-//                contract.getOffer(),
-                myUserIdentity,
-                muSigMediationRequest.getRequester(),
-                muSigMediationRequest.getPeer());
+    private void clearSelectedItemChannelPin() {
+        if (selectedItemChannelPin != null) {
+            selectedItemChannelPin.unsubscribe();
+            selectedItemChannelPin = null;
+        }
     }
 }

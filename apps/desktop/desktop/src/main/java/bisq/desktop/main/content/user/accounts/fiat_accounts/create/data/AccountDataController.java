@@ -184,6 +184,9 @@ public class AccountDataController implements Controller {
             case STRIKE -> new StrikeFormController(serviceProvider);
             case SWIFT -> new SwiftFormController(serviceProvider);
             case SWISH -> new SwishFormController(serviceProvider);
+            // TELE_BIRR is a Bisq Easy-only rail; it has no classic account form and is
+            // excluded from the create-account list (see PaymentMethodSelectionController).
+            case TELE_BIRR -> throw new UnsupportedOperationException("Not implemented yet");
             case UPHOLD -> new UpholdFormController(serviceProvider);
             case UPI -> new UpiFormController(serviceProvider);
             case US_POSTAL_MONEY_ORDER -> new USPostalMoneyOrderFormController(serviceProvider);

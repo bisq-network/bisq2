@@ -22,6 +22,7 @@ import bisq.common.asset.FiatCurrencyRepository;
 import bisq.common.asset.StableCoin;
 import bisq.common.proto.NetworkProto;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.validation.NetworkDataValidation;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -80,11 +81,15 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return unsafeToProto(serializeForHash);
     }
 
-    public static Market fromProto(bisq.common.protobuf.Market proto) {
-        return new Market(proto.getBaseCurrencyCode(),
-                proto.getQuoteCurrencyCode(),
-                proto.getBaseCurrencyName(),
-                proto.getQuoteCurrencyName());
+    public static Market fromProto(bisq.common.protobuf.Market proto) throws UnresolvableProtobufException {
+        try {
+            return new Market(proto.getBaseCurrencyCode(),
+                    proto.getQuoteCurrencyCode(),
+                    proto.getBaseCurrencyName(),
+                    proto.getQuoteCurrencyName());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public String getQuoteCurrencyDisplayName() {
@@ -97,11 +102,6 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return FiatCurrency.isFiat(baseCurrencyCode)
                 ? FiatCurrencyRepository.findDisplayName(baseCurrencyCode).orElse(baseCurrencyName)
                 : baseCurrencyName;
-    }
-
-    // Returns display name of non-BTC side
-    public String getSignificantCurrencyName() {
-        return isBaseCurrencyBitcoin() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
     }
 
     public boolean isBtcFiatMarket() {
@@ -128,17 +128,13 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
     }
 
-    public static String createBitcoinFiatMarketCodes(String baseCurrencyCode, String quoteCurrencyCode) {
-        return baseCurrencyCode + QUOTE_SEPARATOR + quoteCurrencyCode;
-    }
-
     public String getMarketDisplayName() {
         return getBaseCurrencyDisplayName() + QUOTE_SEPARATOR + getQuoteCurrencyDisplayName();
     }
 
     @Override
     public String toString() {
-        return getSignificantCurrencyName() + " (" + getMarketCodes() + ")";
+        return getRelevantCurrencyDisplayName() + " (" + getMarketCodes() + ")";
     }
 
     @Override
@@ -146,15 +142,24 @@ public final class Market implements NetworkProto, PersistableProto, Comparable<
         return this.getMarketCodes().compareTo(o.getMarketCodes());
     }
 
-    /* --------------------------------------------------------------------- */
-    // Display context
-    /* --------------------------------------------------------------------- */
+    // todo rename to 'Relevant' to 'NonBitcoin'
+    // add Bitcoin side methods
 
-    public String getNonBtcCurrencyCode() {
+    // Use the relevant side, which is the non-Bitcoin side.
+    // For Fiat markets the quote side, for cytpo market the base side.
+    public String getRelevantCurrencyCode() {
         return isBaseCurrencyBitcoin() ? quoteCurrencyCode : baseCurrencyCode;
     }
 
-    public String getNonBtcCurrencyName() {
-        return isBaseCurrencyBitcoin() ? quoteCurrencyName : baseCurrencyName;
+    public String getRelevantCurrencyDisplayName() {
+        return isBaseCurrencyBitcoin() ? getQuoteCurrencyDisplayName() : getBaseCurrencyDisplayName();
+    }
+
+    public String getRelevantCodeAndDisplayName() {
+        return getRelevantCurrencyCode() + " (" + getRelevantCurrencyDisplayName() + ")";
+    }
+
+    public boolean isUsdMarket() {
+        return isBtcFiatMarket() && getQuoteCurrencyCode().equalsIgnoreCase("USD");
     }
 }

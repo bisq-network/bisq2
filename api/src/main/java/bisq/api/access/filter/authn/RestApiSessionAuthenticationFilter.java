@@ -50,9 +50,9 @@ public class RestApiSessionAuthenticationFilter extends RestApiFilter {
                     context.getHeaderString(Headers.SESSION_ID)
             );
 
-            context.setProperty(Attributes.IS_AUTHENTICATED, true);
-            context.setProperty(Attributes.SESSION_ID, session.getSessionId());
-            context.setProperty(Attributes.CLIENT_ID, session.getClientId());
+            context.setProperty(Attributes.REST_IS_AUTHENTICATED, true);
+            context.setProperty(Attributes.REST_SESSION_ID, session.getSessionId());
+            context.setProperty(Attributes.REST_CLIENT_ID, session.getClientId());
         } catch (Exception e) {
             log.warn("Authentication failed. requestUri={}", requestUri, e);
             throw new WebApplicationException(

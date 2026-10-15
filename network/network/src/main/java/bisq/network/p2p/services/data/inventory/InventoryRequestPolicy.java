@@ -17,6 +17,7 @@
 
 package bisq.network.p2p.services.data.inventory;
 
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.Address;
 import bisq.common.util.CollectionUtil;
 import bisq.network.p2p.node.Connection;
@@ -53,7 +54,8 @@ import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.Ne
  *       and supports a preferred filter type.</li>
  *   <li><b>Retry behavior:</b> After a request completes, this class decides whether to retry using the same
  *       connection, a different connection, start periodic requests, or do nothing based on success, error state,
- *       and data completeness.</li>
+ *       and data completeness. A peer whose response reached the size limit, but contains nothing which our filter
+ *       lists afterwards, is not used anymore: its next response would be the same.</li>
  *   <li><b>Periodic request scheduling:</b> Periodic requests repeat at a configurable interval if all data
  *       has been received; otherwise, retries happen quickly (every 1 second) until completion.</li>
  *   <li><b>Request concurrency limits:</b> Ensures the number of concurrent pending requests stays below configured limits.</li>
@@ -74,6 +76,7 @@ import static bisq.network.p2p.services.data.inventory.InventoryRequestPolicy.Ne
  *   <li>{@link #shouldRequestOnNewConnection(Connection)} - Determines if a request should be initiated on a new connection.</li>
  *   <li>{@link #getCandidatesForPeriodicRequests()} - Retrieves a filtered and shuffled list of connections suitable for periodic requests.</li>
  *   <li>{@link #getFreshCandidate(Connection)} - Finds a candidate connection excluding a given connection.</li>
+ *   <li>{@link #onInventoryProcessed(Connection, Inventory, int)} - Stops requests to a peer whose full response gave us nothing new.</li>
  *   <li>{@link #onRequestCompleted(Connection, Inventory, Throwable)} - Determines next action after a request completes based on outcome.</li>
  *   <li>{@link #getDelayForNextPeriodicRequests(List, Throwable, List)} - Computes delay before next periodic request based on completion status.</li>
  * </ul>
@@ -113,6 +116,7 @@ class InventoryRequestPolicy {
     }
 
     public void onAllConnectionsLost() {
+        ignoredAddresses.clear();
         log.warn("We have lost all connections. " +
                 "We reset initialInventoryRequestsCompleted to false so that we trigger " +
                 "a new inventory request once we are reconnected.");
@@ -132,11 +136,11 @@ class InventoryRequestPolicy {
                 .limit(config.getMaxSeedsForRequest())
                 .collect(Collectors.toCollection(ArrayList::new));
         if (!seeds.isEmpty()) {
-            Connection selectedSeed = seeds.removeFirst();
+            Connection selectedSeed = FacadeProvider.getJdkFacade().removeFirst(seeds);
             candidates.addAll(seeds);
 
             candidates = CollectionUtil.toShuffledList(candidates);
-            candidates.addFirst(selectedSeed); // ensure seed at front
+            FacadeProvider.getJdkFacade().addFirst(candidates, selectedSeed); // ensure seed at front
         }
 
         int limit = config.getMaxPendingRequestsAtPeriodicRequests();
@@ -149,6 +153,25 @@ class InventoryRequestPolicy {
         return getCandidatesForPeriodicRequests().stream()
                 .filter(connection -> !connection.getId().equals(excludedConnection.getId()))
                 .findAny();
+    }
+
+    // If our filter lists none of the requests of a response which reached the size limit, the peer would send the same
+    // response again, so we do not request inventory from it anymore (see
+    // docs/specifications/network/inventory-hash-set-filter.md).
+    // Our filter lists every request which the stores accepted. It can also list requests of which the stores accepted
+    // none from this response: several initial requests use the same filter, and the response of another peer or a
+    // broadcast can deliver the same requests first. Then the next response of the peer differs.
+    void onInventoryProcessed(Connection connection, Inventory inventory, int numStoredEntries) {
+        if (!inventory.isMaxSizeReached() || numStoredEntries > 0) {
+            return;
+        }
+        if (inventoryFilterFactory.isAnyEntryInFilterForRequest(connection, inventory)) {
+            return;
+        }
+        log.info("Our filter lists none of the {} entries of the inventory from {}, which reached the size limit. " +
+                        "We do not request inventory from that peer anymore.",
+                inventory.getEntries().size(), connection.getPeerAddress());
+        ignoredAddresses.add(connection.getPeerAddress());
     }
 
     NextTaskAfterRequestCompleted onRequestCompleted(Connection connection, Inventory inventory, Throwable throwable) {

@@ -17,9 +17,16 @@
 
 package bisq.offer.amount.spec;
 
+import bisq.common.market.Market;
 import bisq.common.monetary.Monetary;
+import bisq.common.monetary.PriceQuote;
+import bisq.common.monetary.TradeAmount;
+import bisq.common.monetary.TradeAmountFactory;
+import bisq.common.monetary.TradeAmountRange;
 
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 /**
  * Util for getting the AmountSpec implementation and amounts from the AmountSpec.
@@ -50,12 +57,14 @@ public class AmountSpecUtil {
                 .map(amount -> Monetary.from(amount, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findBaseSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+    public static Optional<Monetary> findBaseSideMinOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                          String baseCurrencyCode) {
         return findBaseSideMinAmountFromSpec(amountSpec, baseCurrencyCode)
                 .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
     }
 
-    public static Optional<Monetary> findBaseSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String baseCurrencyCode) {
+    public static Optional<Monetary> findBaseSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                          String baseCurrencyCode) {
         return findBaseSideMaxAmountFromSpec(amountSpec, baseCurrencyCode)
                 .or(() -> findBaseSideFixedAmountFromSpec(amountSpec, baseCurrencyCode));
     }
@@ -83,12 +92,14 @@ public class AmountSpecUtil {
                 .map(amount -> Monetary.from(amount, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findQuoteSideMinOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+    public static Optional<Monetary> findQuoteSideMinOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                           String quoteCurrencyCode) {
         return findQuoteSideMinAmountFromSpec(amountSpec, quoteCurrencyCode)
                 .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
     }
 
-    public static Optional<Monetary> findQuoteSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec, String quoteCurrencyCode) {
+    public static Optional<Monetary> findQuoteSideMaxOrFixedAmountFromSpec(AmountSpec amountSpec,
+                                                                           String quoteCurrencyCode) {
         return findQuoteSideMaxAmountFromSpec(amountSpec, quoteCurrencyCode)
                 .or(() -> findQuoteSideFixedAmountFromSpec(amountSpec, quoteCurrencyCode));
     }
@@ -120,5 +131,42 @@ public class AmountSpecUtil {
         return amountSpec instanceof QuoteSideRangeAmountSpec ?
                 Optional.of((QuoteSideRangeAmountSpec) amountSpec) :
                 Optional.empty();
+    }
+
+
+    public static TradeAmountRange toTradeAmountRange(RangeAmountSpec rangeAmountSpec, PriceQuote priceQuote) {
+        checkNotNull(rangeAmountSpec, "rangeAmountSpec must not be null");
+        checkNotNull(priceQuote, "priceQuote must not be null");
+
+        Market market = priceQuote.getMarket();
+        String baseCurrencyCode = market.getBaseCurrencyCode();
+        String quoteCurrencyCode = market.getQuoteCurrencyCode();
+        Monetary minBaseSideAmount, minQuoteSideAmount, maxBaseSideAmount, maxQuoteSideAmount;
+        long min = rangeAmountSpec.getMinAmount();
+        long max = rangeAmountSpec.getMaxAmount();
+        TradeAmount minTradeAmount, maxTradeAmount;
+        if (rangeAmountSpec instanceof BaseSideRangeAmountSpec baseSideRangeAmountSpec) {
+            minTradeAmount = TradeAmountFactory.fromBaseSideAmount(min, priceQuote);
+            maxTradeAmount = TradeAmountFactory.fromBaseSideAmount(max, priceQuote);
+        } else if (rangeAmountSpec instanceof QuoteSideRangeAmountSpec quoteSideRangeAmountSpec) {
+            minTradeAmount = TradeAmountFactory.fromQuoteSideAmount(min, priceQuote);
+            maxTradeAmount = TradeAmountFactory.fromQuoteSideAmount(max, priceQuote);
+        } else {
+            throw new IllegalArgumentException("Unsupported amount spec type: " + rangeAmountSpec.getClass().getSimpleName());
+        }
+        return new TradeAmountRange(minTradeAmount, maxTradeAmount);
+    }
+
+
+    public static TradeAmount toTradeAmount(FixedAmountSpec fixedAmountSpec,
+                                            PriceQuote priceQuote) {
+        long amount = fixedAmountSpec.getAmount();
+        if (fixedAmountSpec instanceof BaseSideFixedAmountSpec baseSideFixedAmountSpec) {
+            return TradeAmountFactory.fromBaseSideAmount(amount, priceQuote);
+        } else if (fixedAmountSpec instanceof QuoteSideFixedAmountSpec quoteSideFixedAmountSpec) {
+            return TradeAmountFactory.fromQuoteSideAmount(amount, priceQuote);
+        } else {
+            throw new IllegalArgumentException("Unsupported fixed amount spec type: " + fixedAmountSpec.getClass().getSimpleName());
+        }
     }
 }

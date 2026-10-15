@@ -51,7 +51,7 @@ public class MuSigTradeLimitsAlgorithmView extends View<VBox, MuSigTradeLimitsAl
         nextButton = new Button(Res.get("action.next"));
         nextButton.setDefaultButton(true);
 
-        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/Reputation");
+        learnMore = new BisqHyperlink(Res.get("action.learnMore"), "https://bisq.wiki/MuSig-tradelimits");
 
         HBox buttons = new HBox(20, backButton, nextButton, Spacer.fillHBox(), learnMore);
         buttons.setAlignment(Pos.BOTTOM_RIGHT);

@@ -56,6 +56,7 @@ public class OpenTradeItemsService implements Service {
     @Nullable
     private Pin channelsPin, tradesPin;
     private final Map<String, Pin> isInMediationPinMap = new HashMap<>();
+    private final Map<String, TradeItemPresentationDto> itemByTradeId = new HashMap<>();
 
     public OpenTradeItemsService(ChatService chatService,
                                  TradeService tradeService,
@@ -124,7 +125,7 @@ public class OpenTradeItemsService implements Service {
         }
         isInMediationPinMap.values().forEach(Pin::unbind);
         isInMediationPinMap.clear();
-        items.clear();
+        clearItems();
         return CompletableFuture.completedFuture(true);
     }
 
@@ -175,7 +176,7 @@ public class OpenTradeItemsService implements Service {
                                 log.warn("Channel with tradeId {} was removed but associated trade is not found but we still have the listItem with that trade. " +
                                         "We call handleTradeAndChannelRemoved.", tradeId);
 
-                                items.remove(listItem.get());
+                                removeItem(listItem.get());
                                 if (isInMediationPinMap.containsKey(tradeId)) {
                                     isInMediationPinMap.get(tradeId).unbind();
                                     isInMediationPinMap.remove(tradeId);
@@ -198,7 +199,7 @@ public class OpenTradeItemsService implements Service {
         }
 
         TradeItemPresentationDto item = TradeItemPresentationDtoFactory.create(trade, channel, userProfileService, reputationService);
-        items.add(item);
+        addItem(item);
 
         String tradeId = trade.getId();
         if (isInMediationPinMap.containsKey(tradeId)) {
@@ -221,7 +222,7 @@ public class OpenTradeItemsService implements Service {
         }
 
         TradeItemPresentationDto item = findListItem(trade).get();
-        items.remove(item);
+        removeItem(item);
 
         if (isInMediationPinMap.containsKey(tradeId)) {
             isInMediationPinMap.get(tradeId).unbind();
@@ -231,7 +232,7 @@ public class OpenTradeItemsService implements Service {
     }
 
     private void handleClearTradesAndChannels() {
-        items.clear();
+        clearItems();
 
         isInMediationPinMap.values().forEach(Pin::unbind);
         isInMediationPinMap.clear();
@@ -243,9 +244,23 @@ public class OpenTradeItemsService implements Service {
     }
 
     private Optional<TradeItemPresentationDto> findListItem(String tradeId) {
-        return items.stream()
-                .filter(item -> item.trade().id().equals(tradeId))
-                .findAny();
+        return Optional.ofNullable(itemByTradeId.get(tradeId));
+    }
+
+    // Keep the items list and the tradeId index in sync.
+    private void addItem(TradeItemPresentationDto item) {
+        items.add(item);
+        itemByTradeId.put(item.trade().id(), item);
+    }
+
+    private void removeItem(TradeItemPresentationDto item) {
+        items.remove(item);
+        itemByTradeId.remove(item.trade().id());
+    }
+
+    private void clearItems() {
+        items.clear();
+        itemByTradeId.clear();
     }
 
 

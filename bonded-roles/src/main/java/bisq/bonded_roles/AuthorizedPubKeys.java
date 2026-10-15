@@ -1,5 +1,7 @@
 package bisq.bonded_roles;
 
+import bisq.common.application.DevMode;
+
 import java.util.Set;
 
 // FIXME
@@ -21,6 +23,11 @@ public class AuthorizedPubKeys {
             // bond holder name: HenrikJannsen; profileId: 13f3c162bb13b84c6b8b40527ec1ea089b9337cd
             "3056301006072a8648ce3d020106052b8104000a034200044c383a7cb3aa24771a477dcb1217452abe382d73c7f9e48bfe424f673706079bb18c52cd6c6281202157e182685131e859aa15fdc32181a5328a5fece99bf92d"
     );
+
+    // Only these keys may authorize data as an oracle node (see docs/specifications/bonded-roles/authorized-data.md)
+    public static Set<String> getOracleNodePubKeys() {
+        return DevMode.isDevMode() ? DEV_PUB_KEYS : ORACLE_NODE_PUB_KEYS;
+    }
 
     // Not used yet, but maintain it for later usage
     public static final Set<String> SEED_NODE_PUB_KEYS = Set.of(

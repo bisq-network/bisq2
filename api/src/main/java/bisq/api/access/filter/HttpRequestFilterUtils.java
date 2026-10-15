@@ -17,11 +17,13 @@
 
 package bisq.api.access.filter;
 
-import org.glassfish.grizzly.attributes.AttributeHolder;
 import org.glassfish.grizzly.filterchain.FilterChainContext;
+import org.glassfish.grizzly.filterchain.NextAction;
 import org.glassfish.grizzly.http.HttpContent;
 import org.glassfish.grizzly.http.HttpRequestPacket;
-import org.glassfish.grizzly.http.Method;
+import org.glassfish.grizzly.http.HttpResponsePacket;
+import org.glassfish.grizzly.http.Protocol;
+import org.glassfish.grizzly.http.util.HttpStatus;
 
 import java.util.Optional;
 
@@ -46,27 +48,46 @@ public class HttpRequestFilterUtils {
     }
 
     /**
-     * Determines whether the given HTTP request represents a valid
-     * WebSocket handshake request.
+     * Determines whether Grizzly starts the WebSocket handshake for the given HTTP request.
+     *
+     * <p>
+     * {@code BaseWebSocketFilter.handleRead} of Grizzly 5.0.1 starts the handshake in two cases:
+     * </p>
+     * <ul>
+     *     <li>for every request whose {@code Upgrade} value equals {@code websocket}, ignoring case, on a connection
+     *     without a WebSocket. It does not check the HTTP method or the {@code Sec-WebSocket-Key} header before that.
+     *     This method reads the same value and compares it in the same way.</li>
+     *     <li>for any content of a connection which has a WebSocket that is not connected, whatever the
+     *     {@code Upgrade} value of its request is. {@link SingleHandshakeWebSocketFilter} closes the connection
+     *     instead of a second handshake, so this case never starts a handshake on the listener of the API.</li>
+     * </ul>
+     *
+     * <p>
+     * Every filter which must see each upgrade uses this method. With {@link SingleHandshakeWebSocketFilter} in the
+     * chain, this method and Grizzly agree on which requests start a handshake. A filter with a stricter definition
+     * does not see a request which Grizzly still upgrades.
+     * </p>
      *
      * @param request the HTTP request packet
-     * @return true if the request matches WebSocket handshake requirements
+     * @return true if Grizzly starts the handshake for the request on a connection without a WebSocket
      */
-    public static boolean isWebsocketHandshakeRequest(HttpRequestPacket request) {
-        return request.getMethod() == Method.GET
-                && HeaderValues.WEBSOCKET.equalsIgnoreCase(request.getHeader(Headers.UPGRADE))
-                && request.getHeader(Headers.SEC_WEBSOCKET_KEY) != null;
+    public static boolean isWebSocketUpgradeRequest(HttpRequestPacket request) {
+        return HeaderValues.WEBSOCKET.equalsIgnoreCase(request.getUpgrade());
     }
 
-    public static boolean hasConnectionAttribute(FilterChainContext ctx, String attribute) {
-        AttributeHolder holder = ctx.getConnection().getAttributes();
-        return holder != null && holder.getAttribute(attribute) != null;
-    }
-
-    public static void setConnectionAttribute(FilterChainContext ctx, String attribute, Object value) {
-        AttributeHolder holder = ctx.getConnection().getAttributes();
-        if (holder != null) {
-            holder.setAttribute(attribute, value);
-        }
+    /**
+     * Answers the request with the given status and an empty body, and closes the connection.
+     *
+     * @return the stop action, so that no later filter processes the request
+     */
+    public static NextAction rejectAndClose(FilterChainContext ctx, HttpRequestPacket request, HttpStatus status) {
+        HttpResponsePacket response = HttpResponsePacket.builder(request)
+                .status(status.getStatusCode())
+                .protocol(Protocol.HTTP_1_1)
+                .contentLength(0)
+                .build();
+        ctx.write(response);
+        ctx.getConnection().closeSilently();
+        return ctx.getStopAction();
     }
 }

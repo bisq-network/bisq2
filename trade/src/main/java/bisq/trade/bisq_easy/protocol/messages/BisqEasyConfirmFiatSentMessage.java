@@ -17,7 +17,9 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -28,6 +30,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
+    public static final MetaData META_DATA = createMetaData(BisqEasyConfirmFiatSentMessage.class);
+
     public BisqEasyConfirmFiatSentMessage(String id,
                                           String tradeId,
                                           String protocolVersion,
@@ -58,17 +62,22 @@ public final class BisqEasyConfirmFiatSentMessage extends BisqEasyTradeMessage {
         return bisq.trade.protobuf.BisqEasyConfirmFiatSentMessage.newBuilder();
     }
 
-    public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        return new BisqEasyConfirmFiatSentMessage(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()));
+    public static BisqEasyConfirmFiatSentMessage fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new BisqEasyConfirmFiatSentMessage(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

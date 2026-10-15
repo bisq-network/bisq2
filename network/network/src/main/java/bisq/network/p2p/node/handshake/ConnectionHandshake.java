@@ -21,6 +21,7 @@ import bisq.common.encoding.Hex;
 import bisq.common.network.Address;
 import bisq.common.network.DefaultPeerSocket;
 import bisq.common.network.PeerSocket;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.message.NetworkEnvelope;
@@ -29,12 +30,15 @@ import bisq.network.p2p.node.ConnectionException;
 import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.authorization.AuthorizationToken;
+import bisq.network.p2p.node.authorization.LegacyHandshakeToken;
 import bisq.network.p2p.node.envelope.NetworkEnvelopeSocket;
+import bisq.network.p2p.node.envelope.ParseMemoryBudget;
 import bisq.network.p2p.node.network_load.ConnectionMetrics;
 import bisq.network.p2p.node.network_load.NetworkLoad;
 import bisq.network.p2p.services.peer_group.BanList;
 import bisq.security.keys.KeyBundle;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -45,7 +49,7 @@ import java.net.Socket;
 import java.util.Date;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static bisq.network.p2p.node.ConnectionException.Reason.ADDRESS_BANNED;
 import static bisq.network.p2p.node.ConnectionException.Reason.AUTHORIZATION_FAILED;
@@ -60,8 +64,6 @@ import static com.google.common.base.Preconditions.checkArgument;
  */
 @Slf4j
 public final class ConnectionHandshake {
-    // We tolerate up to 2 hours difference in clocks to peer
-    private static final long MAX_CLOCK_OFFSET = TimeUnit.HOURS.toMillis(2);
     @Getter
     private final String id = StringUtils.createUid();
     private final BanList banList;
@@ -69,6 +71,7 @@ public final class ConnectionHandshake {
     private final AuthorizationService authorizationService;
     private final KeyBundle myKeyBundle;
     private final NetworkEnvelopeSocket networkEnvelopeSocket;
+    private final ParseMemoryBudget parseMemoryBudget;
 
     @Getter
     @ToString
@@ -120,16 +123,16 @@ public final class ConnectionHandshake {
             return builder;
         }
 
-        public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto) {
-            return new Request(Capability.fromProto(proto.getCapability()),
-                    proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()),
-                    proto.getSignatureDate());
-        }
-
-        @Override
-        public double getCostFactor() {
-            return 0.05;
+        public static Request fromProto(bisq.network.protobuf.ConnectionHandshake.Request proto)
+                throws UnresolvableProtobufException {
+            try {
+                return new Request(Capability.fromProto(proto.getCapability()),
+                        proto.hasAddressOwnershipProof() ? Optional.of(proto.getAddressOwnershipProof().toByteArray()) : Optional.empty(),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()),
+                        proto.getSignatureDate());
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 
@@ -168,14 +171,14 @@ public final class ConnectionHandshake {
                     .setNetworkLoad(networkLoad.toProto(serializeForHash));
         }
 
-        public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto) {
-            return new Response(Capability.fromProto(proto.getCapability()),
-                    NetworkLoad.fromProto(proto.getNetworkLoad()));
-        }
-
-        @Override
-        public double getCostFactor() {
-            return 0.05;
+        public static Response fromProto(bisq.network.protobuf.ConnectionHandshake.Response proto)
+                throws UnresolvableProtobufException {
+            try {
+                return new Response(Capability.fromProto(proto.getCapability()),
+                        NetworkLoad.fromProto(proto.getNetworkLoad()));
+            } catch (RuntimeException e) {
+                throw new UnresolvableProtobufException(e);
+            }
         }
     }
 
@@ -187,15 +190,18 @@ public final class ConnectionHandshake {
         private final NetworkLoad peersNetworkLoad;
         private final ConnectionMetrics connectionMetrics;
         private final String connectionId;
+        private final Set<Integer> receivedMessageCounters;
 
         Result(Capability peersCapability,
                NetworkLoad peersNetworkLoad,
                ConnectionMetrics connectionMetrics,
-               String connectionId) {
+               String connectionId,
+               Set<Integer> receivedMessageCounters) {
             this.peersCapability = peersCapability;
             this.peersNetworkLoad = peersNetworkLoad;
             this.connectionMetrics = connectionMetrics;
             this.connectionId = connectionId;
+            this.receivedMessageCounters = receivedMessageCounters;
         }
     }
 
@@ -203,14 +209,17 @@ public final class ConnectionHandshake {
                                BanList banList,
                                Capability capability,
                                AuthorizationService authorizationService,
-                               KeyBundle myKeyBundle) throws IOException {
+                               KeyBundle myKeyBundle,
+                               ParseMemoryBudget parseMemoryBudget) throws IOException {
         this.banList = banList;
         this.capability = capability;
         this.authorizationService = authorizationService;
         this.myKeyBundle = myKeyBundle;
+        this.parseMemoryBudget = parseMemoryBudget;
 
         PeerSocket peerSocket = new DefaultPeerSocket(socket);
-        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket);
+        this.networkEnvelopeSocket = new NetworkEnvelopeSocket(peerSocket,
+                NetworkEnvelope.MAX_HANDSHAKE_SERIALIZED_SIZE);
     }
 
     // Client side protocol
@@ -240,14 +249,15 @@ public final class ConnectionHandshake {
             networkEnvelopeSocket.send(requestNetworkEnvelope);
             connectionMetrics.onSent(requestNetworkEnvelope, System.currentTimeMillis() - ts);
 
-            bisq.network.protobuf.NetworkEnvelope responseProto = networkEnvelopeSocket.receiveNextEnvelope();
-            if (responseProto == null) {
+            byte[] responseMessage = networkEnvelopeSocket.receiveNextMessage();
+            if (responseMessage == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Response NetworkEnvelope protobuf is null. peerAddress=" + peerAddress);
             }
 
             long startDeserializeTs = System.currentTimeMillis();
-            NetworkEnvelope responseNetworkEnvelope = NetworkEnvelope.fromProto(responseProto);
+            NetworkEnvelope responseNetworkEnvelope = parseMemoryBudget.parse(responseMessage,
+                    bytes -> NetworkEnvelope.fromProto(NetworkEnvelopeSocket.parse(bytes)));
             long deserializeTime = System.currentTimeMillis() - startDeserializeTs;
 
             responseNetworkEnvelope.verifyVersion();
@@ -261,10 +271,11 @@ public final class ConnectionHandshake {
             }
 
             String connectionId = StringUtils.createUid();
+            Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
             boolean isAuthorized = authorizationService.isAuthorized(response,
                     responseNetworkEnvelope.getAuthorizationToken(),
                     myNetworkLoad,
-                    connectionId,
+                    receivedMessageCounters,
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
@@ -277,7 +288,7 @@ public final class ConnectionHandshake {
             connectionMetrics.addRtt(rrt);
 
             log.debug("Servers capability {}, load={}", response.getCapability(), response.getNetworkLoad());
-            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId);
+            return new Result(response.getCapability(), response.getNetworkLoad(), connectionMetrics, connectionId, receivedMessageCounters);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -297,20 +308,19 @@ public final class ConnectionHandshake {
         try {
             // We get called from the Server's socketHandler callback on the NetworkRead thread
             ConnectionMetrics connectionMetrics = new ConnectionMetrics();
-            bisq.network.protobuf.NetworkEnvelope requestProto = networkEnvelopeSocket.receiveNextEnvelope(); // Blocking
-            if (requestProto == null) {
+            byte[] requestMessage = networkEnvelopeSocket.receiveNextMessage(); // Blocking
+            if (requestMessage == null) {
                 throw new ConnectionException(PROTOBUF_IS_NULL,
                         "Request NetworkEnvelope protobuf is null");
             }
             long ts = System.currentTimeMillis();
-            NetworkEnvelope requestNetworkEnvelope = NetworkEnvelope.fromProto(requestProto);
+            ReceivedRequestEnvelope requestEnvelope = parseMemoryBudget.parse(requestMessage,
+                    ConnectionHandshake::parseRequestEnvelope);
             long deserializeTime = System.currentTimeMillis() - ts;
 
-            requestNetworkEnvelope.verifyVersion();
-
-            if (!(requestNetworkEnvelope.getEnvelopePayloadMessage() instanceof Request request)) {
-                throw new ConnectionException("RequestEnvelope.message() not type of Request. requestEnvelope=" +
-                        requestNetworkEnvelope);
+            if (!(requestEnvelope.payload() instanceof Request request)) {
+                throw new ConnectionException("RequestEnvelope.message() not type of Request. Type=" +
+                        requestEnvelope.payload().getClass().getSimpleName());
             }
             Capability requestersCapability = request.getCapability();
             Address peerAddress = requestersCapability.getAddress();
@@ -323,18 +333,30 @@ public final class ConnectionHandshake {
             Address myAddress = capability.getAddress();
             // As the request did not know our load at the initial request, they used the NetworkLoad.INITIAL_LOAD for the AuthorizationToken.
             String connectionId = StringUtils.createUid();
-            boolean isAuthorized = authorizationService.isAuthorized(request,
-                    requestNetworkEnvelope.getAuthorizationToken(),
-                    NetworkLoad.INITIAL_NETWORK_LOAD,
-                    connectionId,
-                    myAddress.getFullAddress());
-            if (!isAuthorized) {
-                throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestNetworkEnvelope.getAuthorizationToken());
+            Set<Integer> receivedMessageCounters = ConcurrentHashMap.newKeySet();
+            if (requestEnvelope.legacyToken().isPresent()) {
+                // The exception message does not contain the token: its payload is the serialized request
+                if (!authorizationService.isLegacyHandshakeRequestAuthorized(request,
+                        requestEnvelope.legacyToken().get(),
+                        myAddress.getFullAddress())) {
+                    throw new ConnectionException(AUTHORIZATION_FAILED,
+                            "Authorization of inbound connection request with a legacy token failed.");
+                }
+            } else {
+                AuthorizationToken requestToken = requestEnvelope.token().orElseThrow();
+                boolean isAuthorized = authorizationService.isAuthorized(request,
+                        requestToken,
+                        NetworkLoad.INITIAL_NETWORK_LOAD,
+                        receivedMessageCounters,
+                        myAddress.getFullAddress());
+                if (!isAuthorized) {
+                    throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestToken);
+                }
             }
 
             long signatureDate = request.getSignatureDate();
             long now = System.currentTimeMillis();
-            if (Math.abs(now - signatureDate) > MAX_CLOCK_OFFSET) {
+            if (!OnionAddressValidation.isDateWithinTolerance(signatureDate, now)) {
                 throw new ConnectionException(ONION_ADDRESS_VERIFICATION_FAILED, "Peer's signature date is more than 2 hours off from the current time of our clock: " + new Date(signatureDate));
             }
 
@@ -344,7 +366,7 @@ public final class ConnectionHandshake {
             }
 
             log.debug("Clients capability {}, load={}", requestersCapability, request.getNetworkLoad());
-            connectionMetrics.onReceived(requestNetworkEnvelope, deserializeTime);
+            connectionMetrics.onReceived(request, requestMessage.length, deserializeTime);
 
             // We reply with the same version as the peer has to avoid pow hash check failures
             Capability responseCapability = Capability.withVersion(capability, requestersCapability.getVersion());
@@ -359,7 +381,7 @@ public final class ConnectionHandshake {
             networkEnvelopeSocket.send(responseNetworkEnvelope); // Blocking
             connectionMetrics.onSent(responseNetworkEnvelope, System.currentTimeMillis() - startSendTs);
             connectionMetrics.addRtt(System.currentTimeMillis() - ts);
-            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId);
+            return new Result(requestersCapability, request.getNetworkLoad(), connectionMetrics, connectionId, receivedMessageCounters);
         } catch (Exception e) {
             try {
                 networkEnvelopeSocket.close();
@@ -375,5 +397,31 @@ public final class ConnectionHandshake {
 
     public void shutdown() {
         // todo (Critical) close pending requests but do not close sockets
+    }
+
+    // The parts of the envelope of a received handshake request. Exactly one of the two tokens is present. A
+    // NetworkEnvelope cannot hold the legacy HASH_CASH token of the handshake request of a node of a version up to
+    // 2.1.13, because AuthorizationToken.fromProto rejects the legacy token for every message.
+    private record ReceivedRequestEnvelope(EnvelopePayloadMessage payload,
+                                           Optional<AuthorizationToken> token,
+                                           Optional<LegacyHandshakeToken> legacyToken) {
+    }
+
+    private static ReceivedRequestEnvelope parseRequestEnvelope(byte[] message)
+            throws InvalidProtocolBufferException, UnresolvableProtobufException {
+        bisq.network.protobuf.NetworkEnvelope proto = NetworkEnvelopeSocket.parse(message);
+        // Before the conversion, as for the messages of an established connection
+        NetworkEnvelope.verifyVersion(proto);
+        bisq.network.protobuf.AuthorizationToken tokenProto = proto.getAuthorizationToken();
+        if (LegacyHandshakeToken.hasLegacyBody(tokenProto)) {
+            LegacyHandshakeToken legacyToken = LegacyHandshakeToken.fromProto(tokenProto);
+            return new ReceivedRequestEnvelope(EnvelopePayloadMessage.fromProto(proto.getNetworkMessage()),
+                    Optional.empty(),
+                    Optional.of(legacyToken));
+        }
+        NetworkEnvelope networkEnvelope = NetworkEnvelope.fromProto(proto);
+        return new ReceivedRequestEnvelope(networkEnvelope.getEnvelopePayloadMessage(),
+                Optional.of(networkEnvelope.getAuthorizationToken()),
+                Optional.empty());
     }
 }

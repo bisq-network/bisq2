@@ -22,6 +22,7 @@ import bisq.account.accounts.fiat.CountryBasedAccount;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.timestamp.AccountTimestampService;
 import bisq.common.data.Triple;
+import bisq.common.locale.CountryRepository;
 import bisq.desktop.main.content.user.accounts.AccountDetails;
 import bisq.i18n.Res;
 import javafx.scene.control.Label;
@@ -41,7 +42,7 @@ public abstract class FiatAccountDetails<A extends Account<?, ?>> extends Accoun
 
         if (account instanceof CountryBasedAccount<?> countryBasedAccount) {
             Triple<Text, Label, VBox> currencyTriple = getDescriptionValueVBoxTriple(Res.get("paymentAccounts.country"),
-                    countryBasedAccount.getCountry().getName());
+                    CountryRepository.getNameByCode(countryBasedAccount.getCountry().getCode()));
             gridPane.add(currencyTriple.getThird(), 2, rowIndex);
         }
     }

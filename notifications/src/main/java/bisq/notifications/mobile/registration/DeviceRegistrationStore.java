@@ -19,6 +19,8 @@ package bisq.notifications.mobile.registration;
 
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.ProtobufUtils;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.persistence.PersistableStore;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -53,12 +55,18 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
         return unsafeToProto(serializeForHash);
     }
 
-    public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto) {
-        return new DeviceRegistrationStore(
-                proto.getDeviceByDeviceIdMap().entrySet().stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey,
-                                e -> MobileDeviceProfile.fromProto(e.getValue())
-                        )));
+    public static DeviceRegistrationStore fromProto(bisq.notifications.protobuf.DeviceRegistrationStore proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new DeviceRegistrationStore(
+                    ProtobufUtils.fromProtoEntryStreamSkippingInvalid(proto.getDeviceByDeviceIdMap(),
+                                    MobileDeviceProfile::fromProto)
+                            .collect(Collectors.toMap(Map.Entry::getKey,
+                                    Map.Entry::getValue
+                            )));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
@@ -72,8 +80,13 @@ public final class DeviceRegistrationStore implements PersistableStore<DeviceReg
         };
     }
 
+    /**
+     * Synchronized on the same monitor as the mutators in {@link DeviceRegistrationService}, so a
+     * write started from outside them, such as the backup of all stores, does not snapshot a change
+     * that a failed write is about to undo.
+     */
     @Override
-    public DeviceRegistrationStore getClone() {
+    public synchronized DeviceRegistrationStore getClone() {
         return new DeviceRegistrationStore(Map.copyOf(deviceByDeviceId));
     }
 

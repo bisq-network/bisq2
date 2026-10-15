@@ -26,6 +26,7 @@ import bisq.desktop.main.content.bisq_easy.BisqEasyViewUtils;
 import bisq.desktop.main.content.components.MarketImageComposition;
 import bisq.desktop.main.content.user.profile_card.ProfileCardView;
 import bisq.i18n.Res;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.CacheHint;
@@ -39,6 +40,7 @@ import javafx.util.Callback;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Comparator;
+import java.util.Optional;
 
 @Slf4j
 public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, ProfileCardOffersController> {
@@ -106,13 +108,14 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .valueSupplier(ProfileCardOfferListItem::getFormattedRangeQuoteAmount)
                 .build());
 
-        tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
+        BisqTableColumn<ProfileCardOfferListItem> priceColumn = new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.price"))
                 .right()
                 .minWidth(90)
-                .comparator(Comparator.comparing(ProfileCardOfferListItem::getPriceSpecAsPercent))
                 .setCellFactory(getPriceCellFactory())
-                .build());
+                .build();
+        priceColumn.setComparator(priceComparator(priceColumn));
+        tableView.getColumns().add(priceColumn);
 
         tableView.getColumns().add(new BisqTableColumn.Builder<ProfileCardOfferListItem>()
                 .title(Res.get("user.profileCard.offers.table.columns.paymentMethods"))
@@ -127,6 +130,29 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 .isSortable(false)
                 .setCellFactory(getGotToOfferCellFactory())
                 .build());
+    }
+
+    private static boolean isDescending(TableColumn<?, ?> column) {
+        return column != null && column.getSortType() == TableColumn.SortType.DESCENDING;
+    }
+
+    // Places offers with an unresolved percentage after those with a known one, in both sort
+    // directions. JavaFX reverses the comparator result for a descending column, so the empty
+    // ordering is pre-inverted for that case to stay last either way.
+    @VisibleForTesting
+    static Comparator<ProfileCardOfferListItem> priceComparator(TableColumn<?, ?> column) {
+        return (o1, o2) -> {
+            Optional<Double> p1 = o1.getPriceSpecAsPercent();
+            Optional<Double> p2 = o2.getPriceSpecAsPercent();
+            if (p1.isEmpty() || p2.isEmpty()) {
+                if (p1.isEmpty() == p2.isEmpty()) {
+                    return 0;
+                }
+                int emptyLast = p1.isEmpty() ? 1 : -1;
+                return isDescending(column) ? -emptyLast : emptyLast;
+            }
+            return Double.compare(p1.get(), p2.get());
+        };
     }
 
     private Callback<TableColumn<ProfileCardOfferListItem, ProfileCardOfferListItem>,
@@ -195,12 +221,16 @@ public class ProfileCardOffersView extends View<VBox, ProfileCardOffersModel, Pr
                 super.updateItem(item, empty);
 
                 if (item != null && !empty) {
-                    tooltip.setText(item.getPriceTooltipText());
-                    percentagePriceLabel.setText(item.getFormattedPercentagePrice());
+                    // Bound, not copied: the item updates the properties when a market price
+                    // arrives or changes, and the visible cell has to follow.
+                    tooltip.textProperty().bind(item.getPriceTooltipText());
+                    percentagePriceLabel.textProperty().bind(item.getFormattedPercentagePrice());
                     percentagePriceLabel.setTooltip(tooltip);
                     setGraphic(percentagePriceLabel);
                 } else {
+                    percentagePriceLabel.textProperty().unbind();
                     percentagePriceLabel.setText("");
+                    tooltip.textProperty().unbind();
                     percentagePriceLabel.setTooltip(null);
                     setGraphic(null);
                 }

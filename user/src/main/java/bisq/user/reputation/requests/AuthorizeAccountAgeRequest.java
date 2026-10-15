@@ -18,6 +18,7 @@
 package bisq.user.reputation.requests;
 
 import bisq.common.proto.ProtoResolver;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
@@ -34,6 +35,7 @@ import java.util.Objects;
 
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 @Getter
@@ -42,12 +44,16 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
     public static final int LEGACY_VERSION = 1;
     public static final int CURRENT_VERSION = 2;
     public static final int MAX_ACCOUNT_INPUT_LENGTH = 4096;
-    // MetaData is transient as it will be used indirectly by low level network classes. Only some low level network classes write the metaData to their protobuf representations.
-    private transient final MetaData metaData = new MetaData(TTL_10_DAYS, getClass().getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, AuthorizeAccountAgeRequest.class.getSimpleName(), MAX_MAP_SIZE_100);
     private final String profileId;
+    // The witness hash, key and signature identify the Bisq 1 account. The oracle logs the request, and the log must not
+    // link the Bisq 2 profile to the Bisq 1 account.
+    @ToString.Exclude
     private final String hashAsHex;
     private final long date;
+    @ToString.Exclude
     private final String pubKeyBase64;
+    @ToString.Exclude
     private final String signatureBase64;
     private final int protocolVersion;
     @ToString.Exclude
@@ -89,12 +95,24 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
     public void verify() {
         NetworkDataValidation.validateProfileId(profileId);
         NetworkDataValidation.validateHashAsHex(hashAsHex);
-        if (date != 0) {
-            NetworkDataValidation.validateDate(date);
-        }
         NetworkDataValidation.validatePubKeyBase64(pubKeyBase64);
         NetworkDataValidation.validateSignatureBase64(signatureBase64);
-        NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
+        if (protocolVersion == CURRENT_VERSION) {
+            // The salted account input is the preimage the Bisq 1 bridge recomputes the witness hash from, so a
+            // version-2 request without it can never prove ownership.
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, 1, MAX_ACCOUNT_INPUT_LENGTH);
+            // A requester supplied date is not part of the version-2 proof and is never authoritative. Requiring
+            // it to be absent keeps the request the oracle persists free of attacker chosen values.
+            checkArgument(date == 0, "An account age request of protocol version %s must not carry a date",
+                    CURRENT_VERSION);
+        } else {
+            // Legacy and unknown versions are only bounded structurally. An unknown version cannot be assumed to
+            // use the current field layout, and the oracle rejects every version other than the current one.
+            NetworkDataValidation.validateByteArray(accountInputDataWithSalt, MAX_ACCOUNT_INPUT_LENGTH);
+            if (protocolVersion == LEGACY_VERSION) {
+                NetworkDataValidation.validateDate(date);
+            }
+        }
     }
 
     @Override
@@ -114,16 +132,21 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
         return resolveValueProto(serializeForHash);
     }
 
-    public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto) {
-        return new AuthorizeAccountAgeRequest(proto.hasProtocolVersion()
-                ? proto.getProtocolVersion()
-                : LEGACY_VERSION,
-                proto.getProfileId(),
-                proto.getHashAsHex(),
-                proto.getDate(),
-                proto.getAccountInputDataWithSalt().toByteArray(),
-                proto.getPubKeyBase64(),
-                proto.getSignatureBase64());
+    public static AuthorizeAccountAgeRequest fromProto(bisq.user.protobuf.AuthorizeAccountAgeRequest proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new AuthorizeAccountAgeRequest(proto.hasProtocolVersion()
+                    ? proto.getProtocolVersion()
+                    : LEGACY_VERSION,
+                    proto.getProfileId(),
+                    proto.getHashAsHex(),
+                    proto.getDate(),
+                    proto.getAccountInputDataWithSalt().toByteArray(),
+                    proto.getPubKeyBase64(),
+                    proto.getSignatureBase64());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     public static ProtoResolver<ExternalNetworkMessage> getNetworkMessageResolver() {
@@ -138,8 +161,8 @@ public final class AuthorizeAccountAgeRequest implements MailboxMessage, Externa
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.5, 1);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     public byte[] getAccountInputDataWithSalt() {

@@ -18,80 +18,139 @@
 package bisq.desktop.overlay.tac;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.InitWithDataController;
+import bisq.desktop.common.view.Navigation;
+import bisq.desktop.common.view.NavigationController;
+import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
+import bisq.desktop.overlay.tac.legal_terms.TacLegalTermsController;
+import bisq.desktop.overlay.tac.risk_ack.TacRiskAckController;
 import bisq.settings.SettingsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
+
 @Slf4j
-public class TacController implements InitWithDataController<TacController.InitData> {
+public class TacController extends NavigationController implements InitWithDataController<TacController.InitData> {
+    public enum Mode {
+        ACCEPTANCE,
+        READ_ONLY
+    }
+
     @Getter
     public static final class InitData {
+        private final Mode mode;
         private final Runnable completeHandler;
 
         public InitData(Runnable completeHandler) {
+            this(Mode.ACCEPTANCE, completeHandler);
+        }
+
+        public InitData(Mode mode) {
+            this(mode, null);
+        }
+
+        private InitData(Mode mode, Runnable completeHandler) {
+            this.mode = mode;
             this.completeHandler = completeHandler;
         }
     }
 
+    @Getter
     private final TacModel model;
     @Getter
     private final TacView view;
     private final ServiceProvider serviceProvider;
     private final SettingsService settingsService;
     private final OverlayController overlayController;
+    private final TacRiskAckController riskAckController;
+    private final TacLegalTermsController legalTermsController;
+    private Mode mode = Mode.ACCEPTANCE;
     private Runnable completeHandler;
 
     public TacController(ServiceProvider serviceProvider) {
+        super(NavigationTarget.TAC);
+
         this.serviceProvider = serviceProvider;
         settingsService = serviceProvider.getSettingsService();
         overlayController = OverlayController.getInstance();
         model = new TacModel();
         view = new TacView(model, this);
+        riskAckController = new TacRiskAckController(this::onRiskAckCompleted, this::onReject, this::onClose);
+        legalTermsController = new TacLegalTermsController(this::onAccept, this::onReject, this::onClose, this::onBack);
     }
 
     @Override
     public void initWithData(TacController.InitData data) {
+        mode = data.getMode();
         completeHandler = data.getCompleteHandler();
     }
 
     @Override
     public void onActivate() {
-        model.getTacConfirmed().set(settingsService.getIsTacAccepted().get());
+        boolean readOnly = mode == Mode.READ_ONLY;
+        boolean currentTacAccepted = settingsService.isCurrentTacAccepted();
+        riskAckController.setReadOnly(readOnly);
+        legalTermsController.setReadOnly(readOnly);
+        riskAckController.setConfirmed(currentTacAccepted);
+        legalTermsController.setConfirmed(currentTacAccepted);
 
         overlayController.setEnterKeyHandler(null);
-        overlayController.setUseEscapeKeyHandler(false);
+        overlayController.setUseEscapeKeyHandler(readOnly);
     }
 
     @Override
     public void onDeactivate() {
+        overlayController.setEnterKeyHandler(null);
+        completeHandler = null;
+        mode = Mode.ACCEPTANCE;
+        resetSelectedChildTarget();
+    }
+
+    @Override
+    protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
+        return switch (navigationTarget) {
+            case TAC_RISK_ACK -> Optional.of(riskAckController);
+            case TAC_LEGAL_TERMS -> Optional.of(legalTermsController);
+            default -> Optional.empty();
+        };
     }
 
     void onQuit() {
         serviceProvider.getShutDownHandler().shutdown();
     }
 
-    void onConfirm(boolean selected) {
-        model.getTacConfirmed().set(selected);
-        settingsService.setIsTacAccepted(selected);
-        if (selected) {
-            overlayController.setEnterKeyHandler(this::onAccept);
-        } else {
-            overlayController.setEnterKeyHandler(null);
-        }
+    void onRiskAckCompleted() {
+        Navigation.navigateTo(NavigationTarget.TAC_LEGAL_TERMS);
+    }
+
+    void onBack() {
+        Navigation.navigateTo(NavigationTarget.TAC_RISK_ACK);
     }
 
     void onAccept() {
+        if (mode == Mode.READ_ONLY) {
+            onClose();
+            return;
+        }
+
+        Runnable handler = completeHandler;
+        settingsService.acceptCurrentTac();
         OverlayController.hide(() -> {
-            if (completeHandler != null) {
-                completeHandler.run();
+            if (handler != null) {
+                handler.run();
             }
         });
+        completeHandler = null;
     }
 
     void onReject() {
-        settingsService.setIsTacAccepted(false);
         onQuit();
+    }
+
+    void onClose() {
+        OverlayController.hide();
     }
 }

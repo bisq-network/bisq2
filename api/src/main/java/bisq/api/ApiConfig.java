@@ -35,6 +35,7 @@ public final class ApiConfig {
     // api.server.*
     private final boolean restEnabled;
     private final boolean websocketEnabled;
+    private final boolean websocketCompressionEnabled;
 
     // api.server.bind.*
     private final String bindHost;
@@ -57,7 +58,10 @@ public final class ApiConfig {
     private final int sessionTtlInMinutes;
 
     // TODO This should move to typesafe config
-    private final Set<Permission> grantedPermissions = Set.of(Permission.values());
+    // Auto-grantable ("standard") permissions only — identical to all values today, but the
+    // moment a sensitive permission is declared it is excluded here by construction: pairing
+    // never hands out sensitive capabilities; those need an explicit per-device approval flow.
+    private final Set<Permission> grantedPermissions = Permission.autoGrantable();
 
     public ApiConfig(
             ApiAccessTransportType apiAccessTransportType,
@@ -65,6 +69,7 @@ public final class ApiConfig {
             boolean writePairingQrCodeToDisk,
             boolean restEnabled,
             boolean websocketEnabled,
+            boolean websocketCompressionEnabled,
             String bindHost,
             int bindPort,
             int onionServicePort,
@@ -81,6 +86,7 @@ public final class ApiConfig {
         this.writePairingQrCodeToDisk = writePairingQrCodeToDisk;
         this.restEnabled = restEnabled;
         this.websocketEnabled = websocketEnabled;
+        this.websocketCompressionEnabled = websocketCompressionEnabled;
         this.bindHost = bindHost;
         this.bindPort = bindPort;
         this.onionServicePort = onionServicePort;
@@ -117,6 +123,7 @@ public final class ApiConfig {
 
                 serverConfig.getBoolean("restEnabled"),
                 serverConfig.getBoolean("websocketEnabled"),
+                serverConfig.getBoolean("websocketCompressionEnabled"),
 
                 bindConfig.getString("host"),
                 bindConfig.getInt("port"),

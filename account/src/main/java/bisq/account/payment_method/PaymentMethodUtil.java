@@ -52,6 +52,29 @@ public class PaymentMethodUtil {
         }
     }
 
+    /**
+     * Standard, account-backed payment methods for the given currency. For fiat this is the subset of
+     * {@link #getPaymentMethods(String)} that can back a classic payment account (excludes accountless-only
+     * rails like TELE_BIRR); for altcoins every crypto payment method is account-backed, so the list is the
+     * same as {@link #getPaymentMethods(String)}.
+     * <p>
+     * Use this for the account-creation wizard, the MuSig offer flow, and the REST payment-accounts API. Do
+     * NOT use it for the Bisq Easy offerbook — that must keep listing accountless-only rails.
+     */
+    public static List<PaymentMethod<?>> getStandardAccountPaymentMethods(String code) {
+        if (Asset.isFiat(code)) {
+            return FiatPaymentMethodUtil.getStandardAccountPaymentMethods(code).stream()
+                    .map(pm -> (PaymentMethod<?>) pm)
+                    .collect(Collectors.toList());
+        } else if (Asset.isAltcoin(code)) {
+            return CryptoPaymentMethodUtil.getPaymentMethods(code).stream()
+                    .map(pm -> (PaymentMethod<?>) pm)
+                    .collect(Collectors.toList());
+        } else {
+            throw new UnsupportedOperationException("getStandardAccountPaymentMethods only supports fiat and altcoins. CurrencyCode: " + code);
+        }
+    }
+
     public static PaymentRail getPaymentRail(String name, String code) {
         return getPaymentMethod(name, code).getPaymentRail();
     }

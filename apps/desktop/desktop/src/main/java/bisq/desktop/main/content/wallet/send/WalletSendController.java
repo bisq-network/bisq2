@@ -22,6 +22,7 @@ import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.overlay.OverlayController;
 import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,5 +75,9 @@ public class WalletSendController implements Controller {
                         UIThread.run(() -> new Popup().error(throwable).show());
                     }
                 });
+    }
+
+    void onClose() {
+        OverlayController.hide();
     }
 }

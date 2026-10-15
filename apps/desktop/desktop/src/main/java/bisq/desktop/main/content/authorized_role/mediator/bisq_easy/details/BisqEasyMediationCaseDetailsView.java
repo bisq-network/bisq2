@@ -64,13 +64,13 @@ public class BisqEasyMediationCaseDetailsView extends NavigationView<VBox, BisqE
 
         // UserNames
         buyerUserNameLabel = getValueLabel();
-        buyerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerUserName.copy"));
-        HBox buyerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerUserName",
+        buyerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.buyerUserName.copy"));
+        HBox buyerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.buyerUserName",
                 buyerUserNameLabel, buyerUserNameCopyButton);
 
         sellerUserNameLabel = getValueLabel();
-        sellerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerUserName.copy"));
-        HBox sellerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerUserName",
+        sellerUserNameCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.sellerUserName.copy"));
+        HBox sellerUserNameBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.sellerUserName",
                 sellerUserNameLabel, sellerUserNameCopyButton);
 
 
@@ -135,13 +135,13 @@ public class BisqEasyMediationCaseDetailsView extends NavigationView<VBox, BisqE
 
         // Network addresses
         buyerNetworkAddressLabel = getValueLabel();
-        buyerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress.copy"));
-        HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.buyerNetworkAddress",
+        buyerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.buyerNetworkAddress.copy"));
+        HBox peerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.buyerNetworkAddress",
                 buyerNetworkAddressLabel, buyerNetworkAddressCopyButton);
 
         sellerNetworkAddressLabel = getValueLabel();
-        sellerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress.copy"));
-        HBox sellerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.mediator.mediationCaseDetails.sellerNetworkAddress",
+        sellerNetworkAddressCopyButton = getCopyButton(Res.get("authorizedRole.disputeActor.disputeCaseDetails.sellerNetworkAddress.copy"));
+        HBox sellerNetworkAddressBox = createAndGetDescriptionAndValueBox("authorizedRole.disputeActor.disputeCaseDetails.sellerNetworkAddress",
                 sellerNetworkAddressLabel, sellerNetworkAddressCopyButton);
 
         Region overviewLine = createSeparatorLine();
@@ -186,14 +186,14 @@ public class BisqEasyMediationCaseDetailsView extends NavigationView<VBox, BisqE
         buyerUserNameLabel.setText(String.format("%s (%d)", model.getBuyerUserName(), model.getBuyerCaseCountTotal()));
         sellerUserNameLabel.setText(String.format("%s (%d)", model.getSellerUserName(), model.getSellerCaseCountTotal()));
         buyerUserNameLabel.setTooltip(new Tooltip(Res.get(
-                "authorizedRole.mediator.caseCounts.tooltip",
+                "authorizedRole.disputeActor.caseCounts.tooltip",
                 model.getBuyerBotId(),
                 model.getBuyerUserId(),
                 model.getBuyerCaseCountOpen(),
                 model.getBuyerCaseCountClosed()
         )));
         sellerUserNameLabel.setTooltip(new Tooltip(Res.get(
-                "authorizedRole.mediator.caseCounts.tooltip",
+                "authorizedRole.disputeActor.caseCounts.tooltip",
                 model.getSellerBotId(),
                 model.getSellerUserId(),
                 model.getSellerCaseCountOpen(),

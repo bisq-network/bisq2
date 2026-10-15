@@ -1,3 +1,20 @@
+/*
+ * This file is part of Bisq.
+ *
+ * Bisq is free software: you can redistribute it and/or modify it
+ * under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
 import bisq.common.encoding.Csv;
@@ -65,7 +82,7 @@ class MuSigMediationTableView extends VBox {
         Label headlineLabel = new Label(Res.get("authorizedRole.mediator.table.headline"));
         headlineLabel.getStyleClass().add("bisq-easy-container-headline");
 
-        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.mediator.showClosedCases"));
+        showClosedCasesSwitch = new Switch(Res.get("authorizedRole.disputeActor.showClosedCases"));
 
         searchBox = new SearchBox();
         searchBox.setPrefWidth(90);
@@ -253,7 +270,7 @@ class MuSigMediationTableView extends VBox {
         tableView.getColumns().add(tableView.getSelectionMarkerColumn());
 
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.maker"))
+                .title(Res.get("authorizedRole.disputeActor.table.maker"))
                 .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(item -> item.getMaker().getUserName()))
@@ -267,7 +284,7 @@ class MuSigMediationTableView extends VBox {
                 .includeForCsv(false)
                 .build());
         tableView.getColumns().add(new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.taker"))
+                .title(Res.get("authorizedRole.disputeActor.table.taker"))
                 .minWidth(120)
                 .left()
                 .comparator(Comparator.comparing(item -> item.getTaker().getUserName()))
@@ -311,7 +328,7 @@ class MuSigMediationTableView extends VBox {
                 .tooltipSupplier(MuSigMediationCaseListItem::getPaymentMethod)
                 .build());
         closeCaseDateColumn = new BisqTableColumn.Builder<MuSigMediationCaseListItem>()
-                .title(Res.get("authorizedRole.mediator.table.header.closeCaseDate"))
+                .title(Res.get("authorizedRole.disputeActor.table.header.closeCaseDate"))
                 .minWidth(130)
                 .right()
                 .comparator(Comparator.comparing(MuSigMediationCaseListItem::getCloseCaseDate))
@@ -325,21 +342,27 @@ class MuSigMediationTableView extends VBox {
     private Callback<TableColumn<MuSigMediationCaseListItem, MuSigMediationCaseListItem>,
             TableCell<MuSigMediationCaseListItem, MuSigMediationCaseListItem>> getCloseDateCellFactory() {
         return column -> new TableCell<>() {
+            private final Label date = new Label();
+            private final Label time = new Label();
+            private final VBox vBox = new VBox(3, date, time);
 
-            private final Label label = new Label();
+            {
+                date.getStyleClass().add("table-view-date-column-date");
+                time.getStyleClass().add("table-view-date-column-time");
+                vBox.setAlignment(Pos.CENTER);
+                setAlignment(Pos.CENTER);
+            }
 
             @Override
             protected void updateItem(MuSigMediationCaseListItem item, boolean empty) {
                 super.updateItem(item, empty);
 
+                date.textProperty().unbind();
+                time.textProperty().unbind();
+
                 if (item != null && !empty) {
-                    Label date = new Label(item.getCloseCaseDateString());
-                    date.getStyleClass().add("table-view-date-column-date");
-                    Label time = new Label(item.getCloseCaseTimeString());
-                    time.getStyleClass().add("table-view-date-column-time");
-                    VBox vBox = new VBox(3, date, time);
-                    vBox.setAlignment(Pos.CENTER);
-                    setAlignment(Pos.CENTER);
+                    date.textProperty().bind(item.getCloseCaseDateStringProperty());
+                    time.textProperty().bind(item.getCloseCaseTimeStringProperty());
                     setGraphic(vBox);
                 } else {
                     setGraphic(null);

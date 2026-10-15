@@ -1,6 +1,7 @@
 package bisq.security.keys;
 
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -49,18 +50,22 @@ public final class KeyBundle implements PersistableProto {
                 .setTorKeyPair(torKeyPair.toProto(serializeForHash));
     }
 
-    public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) {
-        // From pre 2.1.8 versions we did not have an i2p key, thus we create one when reading the protobuf
-        boolean hasI2PKeyPair = proto.hasI2PKeyPair();
-        I2PKeyPair i2PKeyPair = hasI2PKeyPair
-                ? I2PKeyPair.fromProto(proto.getI2PKeyPair())
-                : I2PKeyGeneration.generateKeyPair();
-        KeyBundle keyBundle = new KeyBundle(proto.getKeyId(),
-                KeyPairProtoUtil.fromProto(proto.getKeyPair()),
-                TorKeyPair.fromProto(proto.getTorKeyPair()),
-                i2PKeyPair);
-        keyBundle.hadEmptyI2PKeyPair = !hasI2PKeyPair;
-        return keyBundle;
+    public static KeyBundle fromProto(bisq.security.protobuf.KeyBundle proto) throws UnresolvableProtobufException {
+        try {
+            // From pre 2.1.8 versions we did not have an i2p key, thus we create one when reading the protobuf
+            boolean hasI2PKeyPair = proto.hasI2PKeyPair();
+            I2PKeyPair i2PKeyPair = hasI2PKeyPair
+                    ? I2PKeyPair.fromProto(proto.getI2PKeyPair())
+                    : I2PKeyGeneration.generateKeyPair();
+            KeyBundle keyBundle = new KeyBundle(proto.getKeyId(),
+                    KeyPairProtoUtil.fromProto(proto.getKeyPair()),
+                    TorKeyPair.fromProto(proto.getTorKeyPair()),
+                    i2PKeyPair);
+            keyBundle.hadEmptyI2PKeyPair = !hasI2PKeyPair;
+            return keyBundle;
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override

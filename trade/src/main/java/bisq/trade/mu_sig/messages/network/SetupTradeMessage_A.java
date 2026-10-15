@@ -17,9 +17,11 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.contract.ContractSignatureData;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.trade.mu_sig.messages.network.mu_sig_data.PubKeyShares;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -31,6 +33,8 @@ import lombok.extern.slf4j.Slf4j;
 @Getter
 @EqualsAndHashCode(callSuper = true)
 public final class SetupTradeMessage_A extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(SetupTradeMessage_A.class);
+
     private final MuSigContract contract;
     private final ContractSignatureData contractSignatureData;
     private final PubKeyShares pubKeyShares;
@@ -74,21 +78,26 @@ public final class SetupTradeMessage_A extends MuSigTradeMessage {
                 .setPubKeyShares(pubKeyShares.toProto(serializeForHash));
     }
 
-    public static SetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.SetupTradeMessage_A muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageA();
-        return new SetupTradeMessage_A(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                MuSigContract.fromProto(muSigMessageProto.getContract()),
-                ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
-                PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()));
+    public static SetupTradeMessage_A fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.SetupTradeMessage_A muSigMessageProto = proto.getMuSigTradeMessage().getSetupTradeMessageA();
+            return new SetupTradeMessage_A(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    MuSigContract.fromProto(muSigMessageProto.getContract()),
+                    ContractSignatureData.fromProto(muSigMessageProto.getContractSignatureData()),
+                    PubKeyShares.fromProto(muSigMessageProto.getPubKeyShares()));
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 }

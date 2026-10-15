@@ -23,11 +23,21 @@ import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeEventHandlerAsMessageSender;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
 
+import java.util.Optional;
+
+import static bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator.validateChatChannel;
+
 public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAsMessageSender<BisqEasyTrade, BisqEasyAccountDataEvent> {
     private String paymentAccountData;
 
     public BisqEasyAccountDataEventHandler(ServiceProvider serviceProvider, BisqEasyTrade model) {
         super(serviceProvider, model);
+    }
+
+    @Override
+    protected void verifyIntegrity(BisqEasyAccountDataEvent event) {
+        validateChatChannel(serviceProvider.getChatService().getBisqEasyOpenTradeChannelService()
+                .findChannelByTradeId(trade.getId()), trade);
     }
 
     @Override
@@ -37,7 +47,7 @@ public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAs
 
     @Override
     protected void commit() {
-        trade.getPaymentAccountData().set(paymentAccountData);
+        trade.setPaymentAccountData(Optional.of(paymentAccountData));
     }
 
     @Override
@@ -45,7 +55,7 @@ public class BisqEasyAccountDataEventHandler extends BisqEasyTradeEventHandlerAs
         send(new BisqEasyAccountDataMessage(StringUtils.createUid(),
                 trade.getId(),
                 trade.getProtocolVersion(),
-                trade.getMyIdentity().getNetworkId(),
+                trade.getMyself().getNetworkId(),
                 trade.getPeer().getNetworkId(),
                 paymentAccountData,
                 trade.getOffer()));

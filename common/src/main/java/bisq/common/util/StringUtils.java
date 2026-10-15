@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import bisq.common.data.Pair;
+import bisq.common.locale.LocaleRepository;
 import bisq.common.platform.OS;
 import bisq.common.platform.PlatformUtils;
 import com.google.common.base.CaseFormat;
@@ -25,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +44,21 @@ public class StringUtils {
     public static final String DOT_ELLIPSIS = "...";
     public static final String UNICODE_ELLIPSIS = "…";
 
+    private static final String HYPERLINK_MARKER_WORD = "HYPERLINK";
+    private static final Pattern HYPERLINK_MARKER_PATTERN = Pattern.compile("\\[" + HYPERLINK_MARKER_WORD + ":(.*?)]");
+
+    // Strips every character that could forge or reorder a log line before truncating, so an
+    // attacker-controlled value (e.g. a peer-supplied id) cannot inject a fake record. \p{Cntrl}
+    // alone misses the C1 controls (U+0085 NEL) and the format/bidi category (U+202E), so the
+    // class is spelled out: \p{Cc} all controls, \p{Cf} format/bidi, U+2028/U+2029 the line and
+    // paragraph separators.
+    public static String sanitizeForLog(String value) {
+        if (value == null) {
+            return "";
+        }
+        return truncate(value.replaceAll("[\\p{Cc}\\p{Cf}\\u2028\\u2029]", "?"), 60);
+    }
+
     public static String truncate(Object value) {
         return truncate(value.toString());
     }
@@ -51,6 +68,7 @@ public class StringUtils {
     }
 
     public static String truncate(Object value, int maxLength) {
+        checkNotNull(value, "value at truncate must not be null", value);
         return truncate(value.toString(), maxLength);
     }
 
@@ -99,20 +117,6 @@ public class StringUtils {
         return string.toLowerCase().contains(searchString.toLowerCase());
     }
 
-    /*
-     * Method used in chat message to check if we should show mention user/channel popup
-     */
-    public static String deriveWordStartingWith(String text, char indicatorSign) {
-        int index = text.lastIndexOf(indicatorSign);
-        if (index < 0 || (index > 1 && text.charAt(index - 1) != ' ')) return null;
-
-        String result = text.substring(index + 1);
-        if (result.matches("[a-zA-Z\\d]*$")) {
-            return result;
-        }
-        return null;
-    }
-
     public static String capitalize(String value, Locale locale) {
         if (value == null || value.isEmpty()) {
             return value;
@@ -155,16 +159,36 @@ public class StringUtils {
 
     // Replaces the content inside the brackets marked with HYPERLINK with the hyperlink and the number of the hyperlink
     // and add the hyperlink to the hyperlinks list.
-    // E.g. ...some text: [HYPERLINK:https://bisq.community] .... -> ...some text: https://bisq.community [1] ...
+    // E.g. ...some text: [HYPERLINK:https://bisq.community] .... -> ...some text: 'https://bisq.community' [1] ...
+    // Only the application's own text templates may contain a marker. Text of another user must pass
+    // neutralizeHyperlinkMarkers before it is shown or inserted into a template.
     public static String extractHyperlinks(String message, List<String> hyperlinks) {
-        Pattern pattern = Pattern.compile("\\[HYPERLINK:(.*?)]");
-        Matcher matcher = pattern.matcher(message);
+        Matcher matcher = HYPERLINK_MARKER_PATTERN.matcher(message);
         while (matcher.find()) {
             String link = matcher.group(1);
             hyperlinks.add(link);
-            message = message.replaceFirst(pattern.toString(), String.format("'%s' [%d]", link, hyperlinks.size()));
+            message = message.replaceFirst(HYPERLINK_MARKER_PATTERN.pattern(),
+                    String.format("'%s' [%d]", link, hyperlinks.size()));
         }
         return message;
+    }
+
+    /**
+     * Text which the application did not write, for example text of another user, must not create a link in a popup.
+     * Apply this method to such text before a popup shows it, and before it is inserted into a popup text template.
+     * <p>
+     * The method replaces the marker word {@code HYPERLINK} with {@code hyperlink}. {@link #extractHyperlinks} matches
+     * the marker word only in upper case, so {@code [HYPERLINK:x]} is shown as the plain text {@code [hyperlink:x]}.
+     * Breaking the word, and not only complete markers, also covers a value which completes a marker together with a
+     * {@code [} or a {@code :} of the template. The replacement has no upper case letter, so it cannot form a new
+     * marker word, and a second call changes nothing. See docs/specifications/desktop/links.md.
+     */
+    @Nullable
+    public static String neutralizeHyperlinkMarkers(@Nullable String untrustedText) {
+        if (untrustedText == null) {
+            return null;
+        }
+        return untrustedText.replace(HYPERLINK_MARKER_WORD, HYPERLINK_MARKER_WORD.toLowerCase(Locale.ROOT));
     }
 
     public static boolean isNotEmpty(String value) {
@@ -347,5 +371,13 @@ public class StringUtils {
 
     public static String flattenLineBreaks(String value) {
         return value.replaceAll("\\R", ", ");
+    }
+
+    public static char getDecimalSeparator() {
+        return getDecimalSeparator(LocaleRepository.getDefaultLocale());
+    }
+
+    public static char getDecimalSeparator(Locale locale) {
+        return DecimalFormatSymbols.getInstance(locale).getDecimalSeparator();
     }
 }

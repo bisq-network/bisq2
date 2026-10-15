@@ -18,10 +18,13 @@
 package bisq.network.p2p.node.network_load;
 
 import bisq.common.proto.NetworkProto;
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.MathUtils;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @EqualsAndHashCode
@@ -58,6 +61,10 @@ public final class NetworkLoad implements NetworkProto {
 
     @Override
     public void verify() {
+        // The constructor limits the range of both values, but NaN passes MathUtils.bounded unchanged. A peer which
+        // reported NaN would make the difficulty of the proofs of work which this node creates for it NaN.
+        checkArgument(!Double.isNaN(load) && !Double.isNaN(difficultyAdjustmentFactor),
+                "Network load values must be numbers");
     }
 
     @Override
@@ -72,8 +79,12 @@ public final class NetworkLoad implements NetworkProto {
                 .setDifficultyAdjustmentFactor(difficultyAdjustmentFactor);
     }
 
-    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) {
-        double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
-        return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+    public static NetworkLoad fromProto(bisq.network.protobuf.NetworkLoad proto) throws UnresolvableProtobufException {
+        try {
+            double difficultyAdjustmentFactor = proto.getDifficultyAdjustmentFactor();
+            return new NetworkLoad(proto.getLoad(), difficultyAdjustmentFactor);
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

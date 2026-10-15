@@ -19,14 +19,13 @@ package bisq.chat.common;
 
 import bisq.chat.ChatChannelDomain;
 import bisq.common.util.StringUtils;
+import com.google.common.base.Enums;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 
-@Slf4j
 @Getter
 public enum SubDomain {
     // We keep the titles of DISCUSSION_BISQ and SUPPORT_SUPPORT as otherwise we would break backward compatibility.
@@ -48,28 +47,30 @@ public enum SubDomain {
     @Deprecated SUPPORT_REPORTS(ChatChannelDomain.SUPPORT, "reports", SUPPORT_SUPPORT);
 
     public static SubDomain from(ChatChannelDomain chatChannelDomain, String channelTitle) {
-        try {
-            String name = chatChannelDomain.name().toUpperCase(Locale.ROOT) + "_" +
-                    StringUtils.camelCaseToSnakeCase(channelTitle).toUpperCase(Locale.ROOT);
-            return valueOf(name);
-        } catch (Exception e) {
-            log.error("Cannot resolve ChatChannelSubDomain from chatChannelDomain {} and channelTitle={}.",
-                    chatChannelDomain, channelTitle, e);
-            throw e;
-        }
+        return find(chatChannelDomain, channelTitle).orElseThrow(() -> new IllegalArgumentException(
+                "Cannot resolve ChatChannelSubDomain from chatChannelDomain " + chatChannelDomain +
+                        " and channelTitle " + channelTitle));
     }
 
     public static SubDomain from(String channelId) {
-        try {
-            String[] tokens = channelId.split("\\.");
-            String name = tokens[0].toUpperCase(Locale.ROOT);
-            ChatChannelDomain chatChannelDomain = ChatChannelDomain.valueOf(name);
-            String channelTitle = tokens[1];
-            return from(chatChannelDomain, channelTitle);
-        } catch (Exception e) {
-            log.error("Cannot resolve ChatChannelSubDomain from channelId {}.", channelId, e);
-            throw e;
+        return find(channelId).orElseThrow(() -> new IllegalArgumentException(
+                "Cannot resolve ChatChannelSubDomain from channelId " + channelId));
+    }
+
+    public static Optional<SubDomain> find(ChatChannelDomain chatChannelDomain, String channelTitle) {
+        String name = chatChannelDomain.name().toUpperCase(Locale.ROOT) + "_" +
+                StringUtils.camelCaseToSnakeCase(channelTitle).toUpperCase(Locale.ROOT);
+        return Optional.ofNullable(Enums.getIfPresent(SubDomain.class, name).orNull());
+    }
+
+    public static Optional<SubDomain> find(String channelId) {
+        String[] tokens = channelId.split("\\.");
+        if (tokens.length < 2) {
+            return Optional.empty();
         }
+        String chatChannelDomainName = tokens[0].toUpperCase(Locale.ROOT);
+        return Optional.ofNullable(Enums.getIfPresent(ChatChannelDomain.class, chatChannelDomainName).orNull())
+                .flatMap(chatChannelDomain -> find(chatChannelDomain, tokens[1]));
     }
 
     private final ChatChannelDomain chatChannelDomain;

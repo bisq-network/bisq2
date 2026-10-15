@@ -17,9 +17,12 @@
 
 package bisq.offer.options;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Getter
 @ToString
@@ -37,6 +40,16 @@ public final class CollateralOption implements OfferOption {
 
     @Override
     public void verify() {
+        checkArgument(Double.isFinite(buyerSecurityDeposit),
+                "The buyer security deposit must be finite but was %s", buyerSecurityDeposit);
+        checkArgument(Double.isFinite(sellerSecurityDeposit),
+                "The seller security deposit must be finite but was %s", sellerSecurityDeposit);
+        // Double.compare orders -0.0 below +0.0, so the non-canonical zero is rejected along
+        // with negative values; consumers compare deposits with Double.compare semantics.
+        checkArgument(Double.compare(buyerSecurityDeposit, 0) >= 0 && buyerSecurityDeposit <= 1,
+                "The buyer security deposit must be between 0 and 1 but was %s", buyerSecurityDeposit);
+        checkArgument(Double.compare(sellerSecurityDeposit, 0) >= 0 && sellerSecurityDeposit <= 1,
+                "The seller security deposit must be between 0 and 1 but was %s", sellerSecurityDeposit);
     }
 
     public bisq.offer.protobuf.OfferOption.Builder getBuilder(boolean serializeForHash) {
@@ -51,7 +64,12 @@ public final class CollateralOption implements OfferOption {
         return unsafeToProto(serializeForHash);
     }
 
-    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto) {
-        return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+    public static CollateralOption fromProto(bisq.offer.protobuf.CollateralOption proto)
+            throws UnresolvableProtobufException {
+        try {
+            return new CollateralOption(proto.getBuyerSecurityDeposit(), proto.getSellerSecurityDeposit());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 }

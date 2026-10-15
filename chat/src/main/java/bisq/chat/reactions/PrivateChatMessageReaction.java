@@ -32,6 +32,8 @@ import lombok.ToString;
 
 import java.security.PublicKey;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
@@ -60,8 +62,20 @@ public abstract class PrivateChatMessageReaction extends ChatMessageReaction imp
         this.senderUserProfile = senderUserProfile;
         this.receiverNetworkId = receiverNetworkId;
         this.isRemoved = isRemoved;
+    }
 
+    @Override
+    public void verify() {
+        super.verify();
         NetworkDataValidation.validateProfileId(receiverUserProfileId);
+        // The receiver acknowledges a private reaction with an AckMessage which carries its ID, and an AckMessage
+        // accepts at most 100 characters. The reacted message is a chat message, whose ID has at most 50 characters.
+        // Unmodified clients create the ID of a reaction as a UUID.
+        NetworkDataValidation.validateId(id);
+        NetworkDataValidation.validateId(getChatMessageId());
+        // The key of receiverNetworkId decrypts the reaction, so the receiver is the profile of that key
+        checkArgument(receiverUserProfileId.equals(receiverNetworkId.getId()),
+                "receiverUserProfileId is not the ID of the key of receiverNetworkId");
     }
 
     @Override

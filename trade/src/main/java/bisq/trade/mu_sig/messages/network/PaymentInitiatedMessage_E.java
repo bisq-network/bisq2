@@ -17,7 +17,9 @@
 
 package bisq.trade.mu_sig.messages.network;
 
+import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.storage.MetaData;
 import com.google.protobuf.ByteString;
 import lombok.Getter;
 import lombok.ToString;
@@ -29,6 +31,8 @@ import java.util.Arrays;
 @ToString(callSuper = true)
 @Getter
 public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
+    public static final MetaData META_DATA = createMetaData(PaymentInitiatedMessage_E.class);
+
     private final byte[] swapTxInputPartialSignature;
 
     public PaymentInitiatedMessage_E(String id,
@@ -64,20 +68,25 @@ public final class PaymentInitiatedMessage_E extends MuSigTradeMessage {
                 .setSwapTxInputPartialSignature(ByteString.copyFrom(swapTxInputPartialSignature));
     }
 
-    public static PaymentInitiatedMessage_E fromProto(bisq.trade.protobuf.TradeMessage proto) {
-        bisq.trade.protobuf.PaymentInitiatedMessage_E muSigMessageProto = proto.getMuSigTradeMessage().getPaymentInitiatedMessageE();
-        return new PaymentInitiatedMessage_E(
-                proto.getId(),
-                proto.getTradeId(),
-                proto.getProtocolVersion(),
-                NetworkId.fromProto(proto.getSender()),
-                NetworkId.fromProto(proto.getReceiver()),
-                muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
+    public static PaymentInitiatedMessage_E fromProto(bisq.trade.protobuf.TradeMessage proto)
+            throws UnresolvableProtobufException {
+        try {
+            bisq.trade.protobuf.PaymentInitiatedMessage_E muSigMessageProto = proto.getMuSigTradeMessage().getPaymentInitiatedMessageE();
+            return new PaymentInitiatedMessage_E(
+                    proto.getId(),
+                    proto.getTradeId(),
+                    proto.getProtocolVersion(),
+                    NetworkId.fromProto(proto.getSender()),
+                    NetworkId.fromProto(proto.getReceiver()),
+                    muSigMessageProto.getSwapTxInputPartialSignature().toByteArray());
+        } catch (RuntimeException e) {
+            throw new UnresolvableProtobufException(e);
+        }
     }
 
     @Override
-    public double getCostFactor() {
-        return getCostFactor(0.1, 0.3);
+    public MetaData getMetaData() {
+        return META_DATA;
     }
 
     @Override

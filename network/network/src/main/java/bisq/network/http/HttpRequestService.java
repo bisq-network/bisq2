@@ -19,7 +19,7 @@ package bisq.network.http;
 
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.Service;
-import bisq.common.data.Pair;
+import bisq.common.facades.FacadeProvider;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
 import bisq.common.threading.ExecutorFactory;
@@ -28,6 +28,7 @@ import bisq.common.util.ExceptionUtil;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.HttpMethod;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,56 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
+/**
+ * Base service that issues HTTP requests with provider failover, retry, timeout,
+ * and HTTP-client lifecycle management. Subclasses implement {@link #buildRequest}
+ * to describe a single call (method, path, optional body, optional header) and
+ * {@link #parseResult} to decode the response body.
+ *
+ * <h2>Request methods</h2>
+ * Both {@code GET} and {@code POST} are supported. The active method is encoded
+ * in the {@link HttpRequest} descriptor returned by {@link #buildRequest}.
+ *
+ * <h2>Retry &amp; failover semantics</h2>
+ * The pipeline distinguishes failures before calling the client from failures during a call:
+ * <ul>
+ *   <li>A busy client is detected before sending and can always be retried.</li>
+ *   <li>Once the client is called, the server may have applied the request even if
+ *       an I/O error, a timeout, or a response parsing error occurs. Retry then depends on the method:
+ *       <ul>
+ *         <li>{@code GET}: always retried (idempotent by HTTP contract).</li>
+ *         <li>{@code POST}: retried only when the descriptor declares
+ *             {@code retryOnServerError = true}. The default is {@code false}.
+ *             Set it to {@code true} only when the server-side operation is
+ *             idempotent - a failed call means the side effect <i>may</i>
+ *             have been applied, and a blind retry would duplicate it.</li>
+ *       </ul></li>
+ * </ul>
+ *
+ * <p>A 4xx response (other than 408 and 429) to a {@code POST} is a caller error:
+ * it bypasses retry and is propagated to the caller as a {@link CompletionException}.
+ * A subclass whose endpoint encodes transient upstream failures inside a 4xx (see
+ * {@link #isRecoverableClientError}) can reclassify those specific responses back
+ * into the server-level bucket, where the same method gate applies.
+ *
+ * <p>A 4xx response to a {@code GET} fails over like any other failure. The providers
+ * are independent: one provider's 4xx (an unknown transaction, a missing path, refused
+ * access) does not mean that the next provider answers the same, and a {@code GET}
+ * applies nothing that a second attempt could duplicate. The provider is marked as
+ * failed, so later requests do not keep returning to it.
+ *
+ * <h2>Lifecycle</h2>
+ * The service owns the underlying {@link BaseHttpClient}: callers do not need
+ * to manage {@code shutdown()} per request. {@link #shutdown()} drains the
+ * executor and the most recently used client.
+ *
+ * <h2>Logging</h2>
+ * The framework logs the resolved request URL at INFO. It uses the descriptor's
+ * {@link HttpRequest#logPath()} (defaults to {@code path}) for the path portion.
+ * Subclasses whose paths contain device tokens, session identifiers, or other
+ * sensitive values MUST pass a redacted {@code logPath} when constructing the
+ * descriptor — the framework will not redact {@code path} on its own.
+ */
 @Slf4j
 public abstract class HttpRequestService<T, R> implements Service {
     private static class ProviderFailoverException extends RuntimeException {
@@ -121,7 +172,11 @@ public abstract class HttpRequestService<T, R> implements Service {
 
     protected abstract R parseResult(String json) throws JsonProcessingException;
 
-    protected abstract String getParam(HttpRequestUrlProvider provider, T requestData);
+    /**
+     * Describe the HTTP call for the given provider and request data.
+     * See {@link HttpRequest#get(String)} / {@link HttpRequest#post(String, String, bisq.common.data.Pair, boolean)}.
+     */
+    protected abstract HttpRequest buildRequest(HttpRequestUrlProvider provider, T requestData);
 
     public String getSelectedProviderBaseUrl() {
         return Optional.ofNullable(selectedProvider.get()).map(HttpRequestUrlProvider::getBaseUrl).orElse(Res.get("data.na"));
@@ -136,23 +191,23 @@ public abstract class HttpRequestService<T, R> implements Service {
     }
 
     private CompletableFuture<R> requestWithFailover(T requestData, AtomicInteger recursionDepth) {
-        return request(requestData, recursionDepth)
-                .exceptionallyCompose(throwable -> {
-                    ProviderFailoverException providerFailoverException = null;
-                    if (throwable instanceof ProviderFailoverException e1) {
-                        providerFailoverException = e1;
-                    } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException e2) {
-                        providerFailoverException = e2;
-                    }
-                    if (providerFailoverException != null) {
-                        return requestWithFailover(requestData, providerFailoverException.getRecursionDepth());
-                    }
+        // exceptionallyCompose goes via the JdkFacade as Android only provides it from API 34
+        return FacadeProvider.getJdkFacade().exceptionallyCompose(request(requestData, recursionDepth), throwable -> {
+            ProviderFailoverException providerFailoverException = null;
+            if (throwable instanceof ProviderFailoverException e1) {
+                providerFailoverException = e1;
+            } else if (ExceptionUtil.getRootCause(throwable) instanceof ProviderFailoverException e2) {
+                providerFailoverException = e2;
+            }
+            if (providerFailoverException != null) {
+                return requestWithFailover(requestData, providerFailoverException.getRecursionDepth());
+            }
 
-                    return CompletableFuture.failedFuture(throwable);
-                });
+            return CompletableFuture.failedFuture(throwable);
+        });
     }
 
-    private CompletableFuture<R> request(T request, AtomicInteger recursionDepth) {
+    private CompletableFuture<R> request(T requestData, AtomicInteger recursionDepth) {
         if (noProviderAvailable) {
             return CompletableFuture.failedFuture(new RuntimeException("No provider available"));
         }
@@ -161,11 +216,30 @@ public abstract class HttpRequestService<T, R> implements Service {
         }
 
         HttpRequestUrlProvider providerForThisRequest = checkNotNull(selectedProvider.get(), "Selected provider must not be null.");
+        HttpRequest httpRequest = buildRequest(providerForThisRequest, requestData);
         try {
-            return CompletableFuture.supplyAsync(() -> {
-                        BaseHttpClient client = networkService.getHttpClient(providerForThisRequest.getBaseUrl(), userAgent, providerForThisRequest.getTransportType());
+            CompletableFuture<R> requestFuture = CompletableFuture.supplyAsync(() -> {
+                        // For POST the path is appended to the http-client baseUrl when the
+                        // client is constructed, since BaseHttpClient.post(param, header) treats
+                        // 'param' as the body. TODO: refactor BaseHttpClient.post to accept
+                        // (path, body, header) so the API is symmetric with get(path, header).
+                        String clientBaseUrl = httpRequest.method() == HttpMethod.POST
+                                ? joinUrl(providerForThisRequest.getBaseUrl(), httpRequest.path())
+                                : providerForThisRequest.getBaseUrl();
+                        // Redacted variant for logs/exceptions — keeps device tokens, session
+                        // ids etc. out of log files even when the underlying HTTP client logs
+                        // its baseUrl on errors. Equals clientBaseUrl when nothing is redacted.
+                        String clientLogBaseUrl = httpRequest.method() == HttpMethod.POST
+                                ? loggableUrl(providerForThisRequest, httpRequest)
+                                : providerForThisRequest.getBaseUrl();
+                        BaseHttpClient client = networkService.getHttpClient(
+                                clientBaseUrl,
+                                clientLogBaseUrl,
+                                userAgent,
+                                providerForThisRequest.getTransportType());
 
                         if (client.hasPendingRequest()) {
+                            // Transport-level: request was never sent. Always safe to retry.
                             boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, false);
                             if (shouldRetry) {
                                 log.warn("Client had a pending request. We retry the request with new provider {}", selectedProvider.get().getBaseUrl());
@@ -180,16 +254,17 @@ public abstract class HttpRequestService<T, R> implements Service {
                         httpClient = Optional.of(client);
 
                         long requestedAt = System.currentTimeMillis();
-                        String param = getParam(providerForThisRequest, request);
                         try {
-                            log.info("Start Http request to {}", client.getBaseUrl() + "/" + param);
+                            log.info("Start Http {} request to {}",
+                                    httpRequest.method(),
+                                    loggableUrl(providerForThisRequest, httpRequest));
 
-                            String json = client.get(param, Optional.of(new Pair<>("User-Agent", userAgent)));
+                            String json = execute(client, httpRequest);
 
                             long receivedAt = System.currentTimeMillis();
                             String sinceLastResponse = timeSinceLastResponse == 0 ? "" : "Time since last response: " + (receivedAt - timeSinceLastResponse) / 1000 + " sec";
                             log.info("Received response from {} after {} ms. {}",
-                                    client.getBaseUrl(), receivedAt - requestedAt, sinceLastResponse);
+                                    client.getLogBaseUrl(), receivedAt - requestedAt, sinceLastResponse);
                             timeSinceLastResponse = receivedAt;
 
                             R result = parseResult(json);
@@ -206,15 +281,33 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
 
                             Throwable rootCause = ExceptionUtil.getRootCause(e);
-                            log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
+                            // An HttpException message is the sanitized response body; the raw body stays
+                            // available to classifiers through getBody(). Transport failures carry no body
+                            // and keep their stack trace.
+                            if (rootCause instanceof HttpException httpException) {
+                                log.warn("HTTP {} from provider {}: {}",
+                                        httpException.getResponseCode(),
+                                        providerForThisRequest.getBaseUrl(),
+                                        httpException.getMessage());
+                            } else {
+                                log.warn("Encountered exception during HTTP request to provider {}", providerForThisRequest.getBaseUrl(), rootCause);
+                            }
+
                             if (rootCause instanceof HttpException httpException) {
                                 int responseCode = httpException.getResponseCode();
-                                // If not server error we pass the error to the client
-                                // 408 (Request Timeout) and 429 (Too Many Requests) are usually transient
-                                // and should rotate to another provider.
-                                if (responseCode < 500 && responseCode != 408 && responseCode != 429) {
+                                if (responseCode < 500 && responseCode != 408 && responseCode != 429
+                                        && httpRequest.method() != HttpMethod.GET
+                                        && !isRecoverableClientError(httpException)) {
+                                    // POST 4xx (other than 408 / 429): caller error, never retry.
+                                    // A GET 4xx fails over, see the class Javadoc.
                                     throw new CompletionException(e);
                                 }
+                            }
+                            // An I/O or parsing failure can occur after the server applied a POST.
+                            // The client does not report whether delivery occurred, so the opt-in
+                            // must cover every failure once execution has started.
+                            if (!isServerErrorRetryAllowed(httpRequest)) {
+                                throw new CompletionException(e);
                             }
 
                             boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
@@ -225,23 +318,78 @@ public abstract class HttpRequestService<T, R> implements Service {
                             }
                         }
                     }, executorService)
-                    .orTimeout(conf.getTimeoutInSeconds(), SECONDS)
-                    .exceptionallyCompose(throwable -> {
-                        if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
-                            log.warn("Request to provider {} timed out after {} seconds",
-                                    providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
-                            boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
-                            Exception exception = shouldRetry
-                                    ? new ProviderFailoverException("Timeout. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth)
-                                    : new RuntimeException("Timeout. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
-                            return CompletableFuture.failedFuture(exception);
-                        }
-                        return CompletableFuture.failedFuture(throwable);
-                    });
+                    .orTimeout(conf.getTimeoutInSeconds(), SECONDS);
+            // exceptionallyCompose goes via the JdkFacade as Android only provides it from API 34
+            return FacadeProvider.getJdkFacade().exceptionallyCompose(requestFuture, throwable -> {
+                if (ExceptionUtil.getRootCause(throwable) instanceof TimeoutException) {
+                    log.warn("Request to provider {} timed out after {} seconds",
+                            providerForThisRequest.getBaseUrl(), conf.getTimeoutInSeconds());
+                    if (!isServerErrorRetryAllowed(httpRequest)) {
+                        return CompletableFuture.failedFuture(new RuntimeException(
+                                "Timeout. Non-idempotent POST — not retrying. Provider=" + providerForThisRequest.getBaseUrl(),
+                                throwable));
+                    }
+                    boolean shouldRetry = shouldRetry(recursionDepth, providerForThisRequest, true);
+                    Exception exception = shouldRetry
+                            ? new ProviderFailoverException("Timeout. Retrying with next provider " + selectedProvider.get().getBaseUrl(), recursionDepth)
+                            : new RuntimeException("Timeout. We failed at all possible providers and give up. Provider=" + providerForThisRequest.getBaseUrl());
+                    return CompletableFuture.failedFuture(exception);
+                }
+                return CompletableFuture.failedFuture(throwable);
+            });
         } catch (RejectedExecutionException e) {
             log.error("Executor rejected request task.", e);
             return CompletableFuture.failedFuture(e);
         }
+    }
+
+    private String execute(BaseHttpClient client, HttpRequest httpRequest) throws Exception {
+        return switch (httpRequest.method()) {
+            case GET -> client.get(httpRequest.path(), httpRequest.header());
+            case POST -> client.post(
+                    httpRequest.body().orElseThrow(() -> new IllegalStateException("POST request must carry a body")),
+                    httpRequest.header());
+        };
+    }
+
+    /**
+     * Server-level retry is allowed for GET (idempotent by HTTP contract) or for
+     * POST when the descriptor opts in via {@code retryOnServerError = true}.
+     */
+    static boolean isServerErrorRetryAllowed(HttpRequest httpRequest) {
+        return httpRequest.method() == HttpMethod.GET || httpRequest.retryOnServerError();
+    }
+
+    /**
+     * Hook for endpoints that encode transient upstream failures inside a 4xx response
+     * (e.g. a gateway answering an upstream outage with 400 plus a structured body).
+     * Returning {@code true} moves that response from the fail-fast bucket into the
+     * server-level one, so provider failover applies — still gated on
+     * {@link #isServerErrorRetryAllowed}. Only consulted for a POST, because a GET fails over
+     * on every 4xx. Default: every 4xx to a POST is a caller error.
+     */
+    protected boolean isRecoverableClientError(HttpException httpException) {
+        return false;
+    }
+
+    /**
+     * Joins {@code base} and {@code path} into a single URL with exactly one
+     * separating slash, regardless of trailing slash on {@code base} or leading
+     * slash on {@code path}.
+     */
+    static String joinUrl(String base, String path) {
+        String trimmedBase = base.replaceAll("/+$", "");
+        String normalizedPath = path.startsWith("/") ? path : "/" + path;
+        return trimmedBase + normalizedPath;
+    }
+
+    /**
+     * Build the URL string used for INFO logging. Honours the descriptor's
+     * {@link HttpRequest#logPath()} so subclasses can redact sensitive path
+     * segments (device tokens, session ids, etc.) before they hit log files.
+     */
+    static String loggableUrl(HttpRequestUrlProvider provider, HttpRequest httpRequest) {
+        return joinUrl(provider.getBaseUrl(), httpRequest.logPath());
     }
 
     private boolean shouldRetry(AtomicInteger recursionDepth,
