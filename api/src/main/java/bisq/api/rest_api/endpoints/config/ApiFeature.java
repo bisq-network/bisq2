@@ -24,7 +24,8 @@ import lombok.Getter;
 
 /**
  * Registry of the "recent" API features a client may gate its UI on — capabilities that older nodes
- * (or a Bisq Desktop node) might not have yet. Served as stable kebab-case keys by {@code ConfigRestApi}.
+ * (or a Bisq Desktop node) might not have yet. Served as stable kebab-case keys by both
+ * {@code GET /config/capabilities} ({@code ConfigRestApi}) and {@code GET /info} ({@code InfoRestApi}).
  * <p>
  * ONLY list features that are genuinely new enough that some reachable nodes lack them. Long-standing,
  * universally-available behaviour does not belong here — the list should stay small. Add a key ONLY once
@@ -32,8 +33,7 @@ import lombok.Getter;
  * <p>
  * Example — closed trades: a client gates its "Closed trades" screen on {@link #CLOSED_TRADES}. A node
  * that lists it exposes {@code GET /trades/closed}; a node without the capabilities endpoint returns 404,
- * so the client reads it as unsupported and hides the screen. New features (e.g. a future
- * {@code "network-info"} once its subscription topic ships) are added the same way.
+ * so the client reads it as unsupported and hides the screen. New features are added the same way.
  */
 @Getter
 public enum ApiFeature {

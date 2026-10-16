@@ -30,6 +30,7 @@ import bisq.api.rest_api.endpoints.config.ConfigRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
+import bisq.api.rest_api.endpoints.info.InfoRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.PaymentAccountsRestApi;
@@ -88,6 +89,7 @@ class RestPermissionMappingTest {
             Map.entry("/trade-restricting-alert", Permission.SETTINGS),
             Map.entry("/alert-notifications", Permission.SETTINGS),
             Map.entry("/settings", Permission.SETTINGS),
+            Map.entry("/info", Permission.SETTINGS),
             Map.entry("/trades", Permission.TRADES),
             Map.entry("/user-identities", Permission.USER_IDENTITIES),
             Map.entry("/user-profiles", Permission.USER_PROFILES),
@@ -174,6 +176,15 @@ class RestPermissionMappingTest {
                 .isEmpty();
     }
 
+    /**
+     * Clients read these during the handshake. The enumeration above only walks what is registered,
+     * and skips /config altogether, so neither being left unregistered would fail it.
+     */
+    @Test
+    void handshakeResourcesAreServed() {
+        assertThat(resourceConfig().getClasses()).contains(ConfigRestApi.class, InfoRestApi.class);
+    }
+
     /** Every path the authorization filter would consult the mapping for, one per resource method. */
     private static List<String> authorizedResourcePaths() {
         List<String> paths = new ArrayList<>();
@@ -234,6 +245,7 @@ class RestPermissionMappingTest {
                 mock(UserProfileRestApi.class),
                 mock(DevicesRestApi.class),
                 mock(ConfigRestApi.class),
-                mock(ContactsRestApi.class));
+                mock(ContactsRestApi.class),
+                mock(InfoRestApi.class));
     }
 }

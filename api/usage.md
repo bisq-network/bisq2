@@ -34,6 +34,7 @@ from the browser without CORS issues.
 - **User Profile API** - Manage user profiles, report/ignore users
 - **Market Price API** - Get market price quotes
 - **Settings API** - User settings management
+- **Info API** - Node version and supported API features
 - **Payment Accounts API** - Payment account management
 - **Explorer API** - Blockchain explorer data
 
@@ -44,6 +45,7 @@ GET    /user-profiles?ids={ids}           - Get user profiles by IDs
 POST   /user-profiles/report/{profileId}  - Report a user profile
 GET    /market-price/quotes                - Get market price quotes
 GET    /settings                           - Get user settings
+GET    /info                               - Node version, image version and supported API features
 GET    /payment-accounts                   - Get payment accounts
 GET    /explorer/selected                  - Get selected explorer provider
 GET    /explorer/tx/{txId}                 - Get transaction details
