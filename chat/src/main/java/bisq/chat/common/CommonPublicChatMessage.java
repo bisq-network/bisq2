@@ -24,6 +24,7 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -42,7 +43,7 @@ public final class CommonPublicChatMessage extends PublicChatMessage {
     public static final long COMMON_PUBLIC_CHAT_MESSAGE_TTL = TTL_10_DAYS;
 
     // MetaData needs to be symmetric with CommonPublicChatMessageReaction.
-    public static final MetaData META_DATA = new MetaData(COMMON_PUBLIC_CHAT_MESSAGE_TTL, LOW_PRIORITY, CommonPublicChatMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(COMMON_PUBLIC_CHAT_MESSAGE_TTL, StoragePriority.LOW, CommonPublicChatMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public CommonPublicChatMessage(ChatChannelDomain chatChannelDomain,
                                    String channelId,

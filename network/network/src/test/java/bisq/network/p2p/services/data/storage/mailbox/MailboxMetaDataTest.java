@@ -23,6 +23,7 @@ import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.SignedRequest;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.security.keys.KeyGeneration;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,7 @@ class MailboxMetaDataTest {
     private static final String CLASS_NAME = AckMessage.class.getSimpleName();
     // Values a sender or relay could choose: long time to live, highest priority, no map size cost
     private static final MetaData FORGED_META_DATA = new MetaData(MetaData.TTL_100_DAYS,
-            MetaData.HIGHEST_PRIORITY,
+            StoragePriority.HIGHEST,
             CLASS_NAME,
             0);
     // AckMessage has a time to live of 5 days

@@ -21,12 +21,12 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
@@ -36,7 +36,7 @@ public abstract class MuSigTradeMessage extends TradeMessage {
     // All MuSig trade messages use the same storage policy. Each subclass needs its own MetaData instance,
     // because the class name selects the store.
     protected static MetaData createMetaData(Class<? extends MuSigTradeMessage> tradeMessageClass) {
-        return new MetaData(TTL_10_DAYS, HIGH_PRIORITY, tradeMessageClass.getSimpleName());
+        return new MetaData(TTL_10_DAYS, StoragePriority.HIGH, tradeMessageClass.getSimpleName());
     }
 
     protected MuSigTradeMessage(String id,

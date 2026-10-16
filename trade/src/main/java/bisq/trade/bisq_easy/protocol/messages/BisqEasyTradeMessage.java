@@ -21,6 +21,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -35,7 +36,7 @@ public abstract class BisqEasyTradeMessage extends TradeMessage {
     // All Bisq Easy trade messages use the same storage policy. Each subclass needs its own MetaData instance,
     // because the class name selects the store.
     protected static MetaData createMetaData(Class<? extends BisqEasyTradeMessage> tradeMessageClass) {
-        return new MetaData(TTL_10_DAYS, HIGH_PRIORITY, tradeMessageClass.getSimpleName());
+        return new MetaData(TTL_10_DAYS, StoragePriority.HIGH, tradeMessageClass.getSimpleName());
     }
 
     protected BisqEasyTradeMessage(String id, String tradeId, String protocolVersion, NetworkId sender, NetworkId receiver) {

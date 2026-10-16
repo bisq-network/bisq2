@@ -25,6 +25,7 @@ import bisq.chat.pub.PublicChatMessage;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import lombok.EqualsAndHashCode;
@@ -45,7 +46,7 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
     public static final long BISQ_EASY_OFFERBOOK_MESSAGE_TTL = TTL_10_DAYS;
 
     // MetaData needs to be symmetric with BisqEasyOfferbookMessageReaction.
-    public static final MetaData META_DATA = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, LOW_PRIORITY, BisqEasyOfferbookMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(BISQ_EASY_OFFERBOOK_MESSAGE_TTL, StoragePriority.LOW, BisqEasyOfferbookMessage.class.getSimpleName(), MAX_MAP_SIZE_10_000);
     private final Optional<BisqEasyOffer> bisqEasyOffer;
 
     public BisqEasyOfferbookMessage(String channelId,

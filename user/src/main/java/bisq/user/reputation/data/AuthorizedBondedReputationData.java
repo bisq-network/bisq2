@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -37,7 +38,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Date;
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -48,7 +48,7 @@ public final class AuthorizedBondedReputationData implements OracleNodeAuthorize
     public static final int LEGACY_VERSION = 1;
     public static final int VERSION = 2;
 
-    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedBondedReputationData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, StoragePriority.HIGH, AuthorizedBondedReputationData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash(excludeOnlyInVersions = {0, LEGACY_VERSION})
     private final int version;

@@ -26,6 +26,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -46,7 +46,7 @@ public final class AuthorizedBurningmanListByBlock implements OracleNodeAuthoriz
 
     // We use a rather long TTL to ensure in case the oracle nodes have issues to still have BM data in the network.
     // Oracle nodes remove BM data which are older than a certain number of blocks (e.g. 144 blocks or 1 day)
-    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedBurningmanListByBlock.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, StoragePriority.HIGH, AuthorizedBurningmanListByBlock.class.getSimpleName());
 
     @ExcludeForHash
     private final int version;

@@ -401,7 +401,7 @@ public class StorageCanonicalEncoderTest {
     }
 
     private static MetaData getMetaData() {
-        return new MetaData(MetaData.TTL_10_DAYS, MetaData.LOW_PRIORITY, "ExternalData", MetaData.MAX_MAP_SIZE_5000);
+        return new MetaData(MetaData.TTL_10_DAYS, StoragePriority.LOW, "ExternalData", MetaData.MAX_MAP_SIZE_5000);
     }
 
     private static DefaultAuthenticatedData getDefaultAuthenticatedData() {

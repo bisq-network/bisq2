@@ -26,6 +26,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +37,6 @@ import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
@@ -47,7 +47,7 @@ public final class AuthorizedMarketPriceData implements OracleNodeAuthorizedData
     public static final long TTL = TimeUnit.MINUTES.toMillis(10);
     private static final int MAX_NUM_ENTRIES = 200;
 
-    public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, AuthorizedMarketPriceData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, StoragePriority.DEFAULT, AuthorizedMarketPriceData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

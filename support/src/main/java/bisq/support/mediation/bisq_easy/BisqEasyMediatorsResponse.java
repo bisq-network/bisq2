@@ -26,6 +26,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -35,7 +36,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,7 +47,7 @@ public final class BisqEasyMediatorsResponse implements MailboxMessage, External
         SenderPublicKeyProvidingPayload {
     private static final int VERSION = 1;
 
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediatorsResponse.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, BisqEasyMediatorsResponse.class.getSimpleName());
 
     private final String tradeId;
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})

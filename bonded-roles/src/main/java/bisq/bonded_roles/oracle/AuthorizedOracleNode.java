@@ -26,12 +26,12 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
@@ -41,7 +41,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 public final class AuthorizedOracleNode implements OracleNodeAuthorizedData, OwnershipVerifiableData {
     private static final int VERSION = 1;
 
-    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, StoragePriority.HIGHEST, AuthorizedOracleNode.class.getSimpleName(), MAX_MAP_SIZE_100);
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

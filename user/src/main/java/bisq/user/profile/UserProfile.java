@@ -32,6 +32,7 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.security.DigestUtil;
 import bisq.security.keys.PubKey;
 import bisq.security.pow.ProofOfWork;
@@ -48,7 +49,6 @@ import java.security.PublicKey;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_10_000;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_15_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -87,7 +87,7 @@ public final class UserProfile implements OwnershipVerifiableData, PublishDateAw
     }
 
     // We give a bit longer TTL than the chat messages to ensure the chat user is available as long the messages are
-    public static final MetaData META_DATA = new MetaData(TTL, DEFAULT_PRIORITY, UserProfile.class.getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(TTL, StoragePriority.DEFAULT, UserProfile.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     @EqualsAndHashCode.Include
     private final String nickName;

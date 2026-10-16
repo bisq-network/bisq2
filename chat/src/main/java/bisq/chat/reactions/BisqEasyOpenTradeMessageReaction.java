@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -35,7 +36,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOpenTradeMessageReaction extends PrivateChatMessageReaction {
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessage.
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyOpenTradeMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, BisqEasyOpenTradeMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     public BisqEasyOpenTradeMessageReaction(String id,
                                             UserProfile senderUserProfile,

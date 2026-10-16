@@ -25,13 +25,13 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.DEFAULT_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
 
 @Slf4j
@@ -40,7 +40,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_20_DAYS;
 public final class AuthorizedAccountTimestamp implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    public static final MetaData META_DATA = new MetaData(TTL_20_DAYS, DEFAULT_PRIORITY, AuthorizedAccountTimestamp.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_20_DAYS, StoragePriority.DEFAULT, AuthorizedAccountTimestamp.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

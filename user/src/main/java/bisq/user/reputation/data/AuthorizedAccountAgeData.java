@@ -25,6 +25,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.user.reputation.WitnessReputationProtocol;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -35,7 +36,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 
 @Slf4j
@@ -45,7 +45,7 @@ public final class AuthorizedAccountAgeData implements OracleNodeAuthorizedData 
     public static final int VERSION = 2;
     public static final long TTL = TTL_30_DAYS;
 
-    public static final MetaData META_DATA = new MetaData(TTL, HIGHEST_PRIORITY, AuthorizedAccountAgeData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL, StoragePriority.HIGHEST, AuthorizedAccountAgeData.class.getSimpleName());
     @ExcludeForHash(excludeOnlyInVersions = {0, 1})
     private final int version;
     private final String profileId;

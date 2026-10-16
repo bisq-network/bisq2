@@ -29,6 +29,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -43,7 +44,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
@@ -75,7 +75,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
     }
 
     // Metadata needs to be symmetric with BisqEasyOpenTradeMessageReaction.
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, BisqEasyOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;

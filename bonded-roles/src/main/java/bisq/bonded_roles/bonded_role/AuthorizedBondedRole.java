@@ -31,6 +31,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,7 +41,6 @@ import java.util.Optional;
 
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.LEGACY_VERSION;
 import static bisq.bonded_roles.registration.BondedRoleRegistrationProtocol.PROPOSAL_KEY_VERSION;
-import static bisq.network.p2p.services.data.storage.MetaData.HIGHEST_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -53,7 +53,7 @@ public final class AuthorizedBondedRole implements OracleNodeAuthorizedData {
     private static final int PROPOSAL_KEY_DATA_VERSION = 2;
     private static final int CURRENT_DATA_VERSION = PROPOSAL_KEY_DATA_VERSION;
 
-    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGHEST_PRIORITY, AuthorizedBondedRole.class.getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, StoragePriority.HIGHEST, AuthorizedBondedRole.class.getSimpleName(), MAX_MAP_SIZE_100);
     @ExcludeForHash
     @EqualsAndHashCode.Exclude
     private final int version;

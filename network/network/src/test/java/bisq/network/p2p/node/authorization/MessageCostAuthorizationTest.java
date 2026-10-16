@@ -27,6 +27,7 @@ import bisq.network.p2p.services.confidential.ConfidentialMessage;
 import bisq.network.p2p.services.confidential.ack.AckMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.AddMailboxRequest;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxData;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
@@ -58,7 +59,7 @@ class MessageCostAuthorizationTest {
     private static final NetworkLoad NETWORK_LOAD = new NetworkLoad(LOAD, 1);
     // A time to live of 100 days gives the storage cost factor 1 in the formula of earlier versions
     private static final MetaData HIGH_META_DATA = new MetaData(MetaData.TTL_100_DAYS,
-            MetaData.DEFAULT_PRIORITY,
+            StoragePriority.DEFAULT,
             AckMessage.class.getSimpleName(),
             0);
 

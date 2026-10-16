@@ -24,6 +24,7 @@ import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -32,7 +33,6 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
@@ -42,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 public final class ReportToModeratorMessage implements MailboxMessage, ExternalNetworkMessage {
     public final static int MAX_MESSAGE_LENGTH = 10_000;
 
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, ReportToModeratorMessage.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, ReportToModeratorMessage.class.getSimpleName());
     private final long date;
     private final String reporterUserProfileId;
     private final UserProfile accusedUserProfile;
