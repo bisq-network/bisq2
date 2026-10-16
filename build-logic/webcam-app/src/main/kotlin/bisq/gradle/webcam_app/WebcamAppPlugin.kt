@@ -3,11 +3,12 @@ package bisq.gradle.webcam_app
 import bisq.gradle.common.VersionUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.Copy
 import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.language.jvm.tasks.ProcessResources
 
 class WebcamAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -26,15 +27,15 @@ class WebcamAppPlugin : Plugin<Project> {
             filePermissions { unix("0644") }
         }
 
-        val copyWebcamAppVersionToResources = project.tasks.register<Copy>("copyWebcamAppVersionToResources") {
-            dependsOn(project.tasks.named("processResources"))
-
-            from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
-            into(project.layout.buildDirectory.dir("generated/src/main/resources/webcam-app"))
+        project.pluginManager.withPlugin("java") {
+            project.tasks.named<ProcessResources>("processResources") {
+                from(project.layout.projectDirectory.file("version.txt")) {
+                    into("webcam-app")
+                }
+            }
         }
 
         project.tasks.register<Sync>("processWebcamForDesktop") {
-            dependsOn(copyWebcamAppVersionToResources)
             dependsOn(zipWebcamAppShadowJar)
 
             val desktopProject = project.parent?.childProjects?.filter { e -> e.key == "desktop" }?.map { e -> e.value.project }?.first()
