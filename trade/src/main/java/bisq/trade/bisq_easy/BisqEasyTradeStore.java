@@ -17,11 +17,13 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.common.fsm.SnapshotLockTimeoutException;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ExceptionUtil;
 import bisq.persistence.PersistableStore;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -59,8 +61,17 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
                         .map(trade -> {
                             try {
                                 return trade.toProto(serializeForHash);
+                            } catch (SnapshotLockTimeoutException e) {
+                                // Must propagate, not be swallowed like other per-trade failures below: a live
+                                // transition is holding this trade's FsmModel lock past the bounded wait, so this
+                                // snapshot would be stale/incomplete. Letting it fail the whole store write (rather
+                                // than silently dropping just this trade while still reporting success) lets
+                                // PersistableStoreReaderWriter#write rethrow it, so RateLimitedPersistenceClient
+                                // keeps a retry pending for once the transition has released the lock.
+                                throw e;
                             } catch (Exception e) {
-                                log.error("Could not create proto from BisqEasyTrade {}", trade, e);
+                                log.error("Could not create proto from BisqEasyTrade with ID {}. Cause: {}",
+                                        trade.getId(), ExceptionUtil.getSafeStackTraceAsString(e));
                                 return null;
                             }
                         })
@@ -71,8 +82,12 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
                         .map(closedTrade -> {
                             try {
                                 return closedTrade.toProto(serializeForHash);
+                            } catch (SnapshotLockTimeoutException e) {
+                                // See the same-named catch above - must propagate to fail the whole write.
+                                throw e;
                             } catch (Exception e) {
-                                log.error("Could not create proto from BisqEasyClosedTrade {}", closedTrade, e);
+                                log.error("Could not create proto from BisqEasyClosedTrade with trade ID {}. Cause: {}",
+                                        closedTrade.trade().getId(), ExceptionUtil.getSafeStackTraceAsString(e));
                                 return null;
                             }
                         })
