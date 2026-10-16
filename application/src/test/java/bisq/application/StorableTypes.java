@@ -49,14 +49,7 @@ final class StorableTypes {
 
     static List<Class<?>> find() throws IOException {
         List<Class<?>> types = new ArrayList<>();
-        for (String classNameEntry : findBisqClassNames()) {
-            Class<?> clazz;
-            try {
-                clazz = Class.forName(classNameEntry, false, StorableTypes.class.getClassLoader());
-            } catch (Throwable ignore) {
-                // A class which cannot be loaded on this classpath cannot be stored by this application either.
-                continue;
-            }
+        for (Class<?> clazz : findAll()) {
             boolean isStorable = DistributedData.class.isAssignableFrom(clazz) ||
                     MailboxMessage.class.isAssignableFrom(clazz);
             boolean isConcrete = !clazz.isInterface() && !Modifier.isAbstract(clazz.getModifiers());
@@ -64,8 +57,24 @@ final class StorableTypes {
                 types.add(clazz);
             }
         }
-        types.sort(Comparator.comparing(Class::getName));
         return types;
+    }
+
+    /**
+     * Every Bisq class on the test classpath, storable or not. A test which has to show that a property belongs to
+     * the storable types alone needs the types which are not storable as well.
+     */
+    static List<Class<?>> findAll() throws IOException {
+        List<Class<?>> classes = new ArrayList<>();
+        for (String classNameEntry : findBisqClassNames()) {
+            try {
+                classes.add(Class.forName(classNameEntry, false, StorableTypes.class.getClassLoader()));
+            } catch (Throwable ignore) {
+                // A class which cannot be loaded on this classpath cannot be stored by this application either.
+            }
+        }
+        classes.sort(Comparator.comparing(Class::getName));
+        return classes;
     }
 
     private static List<String> findBisqClassNames() throws IOException {
