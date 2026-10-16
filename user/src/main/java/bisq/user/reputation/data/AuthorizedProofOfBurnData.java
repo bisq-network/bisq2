@@ -27,6 +27,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.PublishDateAware;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -38,7 +39,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Objects;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_30_DAYS;
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -47,7 +47,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 public final class AuthorizedProofOfBurnData implements OracleNodeAuthorizedData, PublishDateAware {
     private static final int VERSION = 1;
 
-    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, HIGH_PRIORITY, AuthorizedProofOfBurnData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_30_DAYS, StoragePriority.HIGH, AuthorizedProofOfBurnData.class.getSimpleName());
     @ExcludeForHash
     private final int version;
     private final long blockTime;

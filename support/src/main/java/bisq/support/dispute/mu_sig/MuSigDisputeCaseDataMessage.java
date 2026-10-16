@@ -27,6 +27,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.dispute.SerializedSizeExceededException;
 import com.google.protobuf.ByteString;
@@ -42,7 +43,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 
@@ -51,7 +51,7 @@ import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCaseDataMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCaseDataMessage.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, MuSigDisputeCaseDataMessage.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
     private final byte[] contractHash;

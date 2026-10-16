@@ -29,6 +29,7 @@ import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
 import bisq.network.p2p.services.data.storage.PruneExpiredEntriesService;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.persistence.PersistenceService;
@@ -548,7 +549,7 @@ class AuthenticatedDataStorageServiceTest {
     @Test
     void relayedRemoveAndRefreshRequestsCarryTheRegisteredMetaData()
             throws GeneralSecurityException, UnresolvableProtobufException {
-        MetaData forgedMetaData = new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+        MetaData forgedMetaData = new MetaData(MetaData.TTL_2_DAYS, StoragePriority.HIGHEST,
                 TestDistributedData.class.getSimpleName(), 0);
 
         RemoveAuthenticatedDataRequest removeRequest = RemoveAuthenticatedDataRequest.from(ownerStore, authenticatedData,
@@ -594,7 +595,7 @@ class AuthenticatedDataStorageServiceTest {
         //noinspection deprecation
         RemoveAuthenticatedDataRequest forgedRequest = RemoveAuthenticatedDataRequest.fromProto(
                 removeRequest.toValueProto(false).toBuilder()
-                        .setMetaData(new MetaData(MetaData.TTL_2_DAYS, MetaData.HIGHEST_PRIORITY,
+                        .setMetaData(new MetaData(MetaData.TTL_2_DAYS, StoragePriority.HIGHEST,
                                 TestDistributedData.class.getSimpleName(), 0).toProto(false))
                         .build());
 

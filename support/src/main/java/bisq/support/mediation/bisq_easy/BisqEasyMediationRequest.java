@@ -31,6 +31,7 @@ import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.dispute.SerializedSizeExceededException;
 import bisq.user.profile.UserProfile;
@@ -46,7 +47,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 import static com.google.common.base.Preconditions.checkArgument;
@@ -62,7 +62,7 @@ public final class BisqEasyMediationRequest implements MailboxMessage, ExternalN
         return "MediationRequest" + "." + tradeId;
     }
 
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, BisqEasyMediationRequest.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, BisqEasyMediationRequest.class.getSimpleName());
     private final BisqEasyContract contract;
     private final String tradeId;
     // Part of the identity, so that the network layer does not drop the other trader's request for the same

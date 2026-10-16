@@ -28,6 +28,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.offer.mu_sig.MuSigOffer;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
@@ -42,7 +43,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.MAX_MAP_SIZE_100;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
@@ -57,7 +57,7 @@ public final class MuSigOpenTradeMessage extends PrivateChatMessage<MuSigOpenTra
             ChatMessageType.PROTOCOL_LOG_MESSAGE);
 
     // Metadata needs to be symmetric with MuSigOpenTradeMessageReaction.
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, MuSigOpenTradeMessage.class.getSimpleName(), MAX_MAP_SIZE_100);
 
     private final String tradeId;
     private final Optional<UserProfile> mediator;

@@ -30,6 +30,7 @@ import bisq.network.p2p.message.ReceiverPublicKeyProvidingPayload;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.confidential.ack.AckRequestingMessage;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.dispute.SerializedSizeExceededException;
 import bisq.user.profile.UserProfile;
@@ -45,7 +46,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 import static bisq.support.dispute.ChatMessagePruning.MAX_SERIALIZED_SIZE;
 
@@ -59,7 +59,7 @@ public final class MuSigMediationRequest implements MailboxMessage, ExternalNetw
         return MuSigMediationRequest.class.getSimpleName() + "." + tradeId;
     }
 
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigMediationRequest.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, MuSigMediationRequest.class.getSimpleName());
     private final MuSigContract contract;
     private final String tradeId;
 

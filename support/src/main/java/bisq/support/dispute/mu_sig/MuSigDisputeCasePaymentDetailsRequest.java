@@ -25,6 +25,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -34,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.security.PublicKey;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
@@ -42,7 +42,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @ToString
 @EqualsAndHashCode
 public final class MuSigDisputeCasePaymentDetailsRequest implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigDisputeCasePaymentDetailsRequest.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, MuSigDisputeCasePaymentDetailsRequest.class.getSimpleName());
     private final String tradeId;
     private final NetworkId senderNetworkId;
 

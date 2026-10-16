@@ -21,6 +21,7 @@ import bisq.chat.ChatChannelDomain;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.OwnershipVerifiableData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.security.keys.PubKey;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +37,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 @EqualsAndHashCode(callSuper = true)
 public final class BisqEasyOfferbookMessageReaction extends ChatMessageReaction implements OwnershipVerifiableData {
     // Metadata needs to be symmetric with BisqEasyOfferbookMessage.
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, LOW_PRIORITY, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.LOW, BisqEasyOfferbookMessageReaction.class.getSimpleName(), MAX_MAP_SIZE_10_000);
 
     public BisqEasyOfferbookMessageReaction(String id,
                                             String userProfileId,

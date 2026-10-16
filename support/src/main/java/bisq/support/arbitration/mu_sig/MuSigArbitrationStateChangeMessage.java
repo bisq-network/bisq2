@@ -26,6 +26,7 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.ExternalNetworkMessage;
 import bisq.network.p2p.message.SenderPublicKeyProvidingPayload;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.mailbox.MailboxMessage;
 import bisq.support.arbitration.ArbitrationCaseState;
 import com.google.protobuf.ByteString;
@@ -39,14 +40,13 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 
 @Slf4j
 @Getter
 @ToString
 public final class MuSigArbitrationStateChangeMessage implements MailboxMessage, ExternalNetworkMessage, SenderPublicKeyProvidingPayload {
-    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, HIGH_PRIORITY, MuSigArbitrationStateChangeMessage.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_10_DAYS, StoragePriority.HIGH, MuSigArbitrationStateChangeMessage.class.getSimpleName());
     private final String id;
     private final String tradeId;
     private final NetworkId senderNetworkId;

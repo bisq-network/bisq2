@@ -29,6 +29,7 @@ import bisq.common.validation.NetworkDataValidation;
 import bisq.i18n.Res;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import com.google.protobuf.InvalidProtocolBufferException;
 import lombok.EqualsAndHashCode;
@@ -39,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Optional;
 import java.util.Set;
 
-import static bisq.network.p2p.services.data.storage.MetaData.HIGH_PRIORITY;
 import static bisq.network.p2p.services.data.storage.MetaData.TTL_100_DAYS;
 
 @Slf4j
@@ -51,7 +51,7 @@ public final class AuthorizedAlertData implements AuthorizedDistributedData {
     public final static int MAX_MESSAGE_LENGTH = 1000;
     public final static int MAX_BANNED_ACCOUNT_DATA_LENGTH = 10_000;
 
-    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, AuthorizedAlertData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, StoragePriority.HIGH, AuthorizedAlertData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

@@ -67,7 +67,7 @@ A schema is correct only when tests prove its bytes. Code review cannot find a w
 - Give fields of the same type in one message different values (two different hashes, a sequence number
   different from the version). Otherwise swapped fields produce equal bytes and the test passes.
 - Use negative values for `sint32`/`sint64` where the type allows them (for example
-  `MetaData.LOW_PRIORITY`).
+  `StoragePriority.LOW`).
 - Cover absent optional values (`Optional.empty()`, `null` nested objects) and every implementation of a
   `canonical` field.
 - The objects must pass `verify()`: 20-byte hashes, EC signatures of 68 to 74 bytes, real EC public keys

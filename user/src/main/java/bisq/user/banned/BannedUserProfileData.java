@@ -25,6 +25,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.MetaData;
+import bisq.network.p2p.services.data.storage.StoragePriority;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
 import bisq.user.profile.UserProfile;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -42,7 +43,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.*;
 public final class BannedUserProfileData implements AuthorizedDistributedData {
     private static final int VERSION = 1;
 
-    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, HIGH_PRIORITY, BannedUserProfileData.class.getSimpleName());
+    public static final MetaData META_DATA = new MetaData(TTL_100_DAYS, StoragePriority.HIGH, BannedUserProfileData.class.getSimpleName());
     @EqualsAndHashCode.Exclude
     @ExcludeForHash
     private final int version;

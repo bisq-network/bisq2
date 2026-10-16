@@ -54,17 +54,13 @@ public final class MetaData implements NetworkProto, Canonical {
     public static final int MAX_MAP_SIZE_10_000 = 10_000;
     public static final int MAX_MAP_SIZE_50_000 = 50_000;
 
-    public static final int LOW_PRIORITY = -1;
-    public static final int DEFAULT_PRIORITY = 0;
-    public static final int HIGH_PRIORITY = 1;
-    public static final int HIGHEST_PRIORITY = 2;
-
     private static final int MAX_CLASS_NAME_LENGTH = 50;
     private static final Pattern CLASS_NAME_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9_$]*$");
 
     // How long data are kept in the storage map
     private final long ttl;
-    // Used for inventory request priority of delivery if inventory size exceeds limit
+    // Used for inventory request priority of delivery if inventory size exceeds limit. A declared priority is a
+    // StoragePriority constant. The field is an int, because fromProto takes any value of a received MetaData.
     private final int priority;
     // Not used by this version. Nodes of earlier versions use it as an input of the cost factor of messages (see
     // MessageCostPolicy). Not used as limit of the store (see DataStorageService.MAX_MAP_SIZE).
@@ -80,15 +76,20 @@ public final class MetaData implements NetworkProto, Canonical {
         this(ttl, className, MAX_MAP_SIZE_1000);
     }
 
-    public MetaData(long ttl, int priority, String className) {
+    public MetaData(long ttl, StoragePriority priority, String className) {
         this(ttl, priority, className, MAX_MAP_SIZE_1000);
     }
 
     public MetaData(long ttl, String className, int maxMapSize) {
-        this(ttl, DEFAULT_PRIORITY, className, maxMapSize);
+        this(ttl, StoragePriority.DEFAULT, className, maxMapSize);
     }
 
-    public MetaData(long ttl, int priority, String className, int maxMapSize) {
+    public MetaData(long ttl, StoragePriority priority, String className, int maxMapSize) {
+        this(ttl, priority.getValue(), className, maxMapSize);
+    }
+
+    // For fromProto only. A declared priority is one of the StoragePriority constants; a received one is any int.
+    private MetaData(long ttl, int priority, String className, int maxMapSize) {
         this.ttl = ttl;
         this.priority = priority;
         this.className = className;
