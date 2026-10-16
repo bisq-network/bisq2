@@ -61,6 +61,11 @@ public interface TakeOfferAmountReadOnlyModel {
     MonetaryRange getInputAmountLimits();
 
 
+    ReadOnlyObservable<MonetaryRange> inputAmountLimitsInUsdObservable();
+
+    MonetaryRange getInputAmountLimitsInUsd();
+
+
     ReadOnlyObservable<Double> fixAmountSliderValueObservable();
 
     Double getFixAmountSliderValue();

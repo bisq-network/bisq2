@@ -31,12 +31,9 @@ import bisq.offer.mu_sig.use_case.DraftOfferUseCase;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.presentation.parser.PriceParser;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.scene.control.TextInputControl;
@@ -59,10 +56,6 @@ public class MuSigPriceInput {
 
     public MuSigPriceInput(DraftOfferUseCase draftOfferService) {
         controller = new Controller(draftOfferService);
-    }
-
-    public ReadOnlyObjectProperty<PriceQuote> priceQuoteProperty() {
-        return controller.model.priceQuote;
     }
 
     public ReadOnlyStringProperty getPriceString() {
@@ -237,9 +230,6 @@ public class MuSigPriceInput {
     }
 
     private static class Model implements bisq.desktop.common.view.Model {
-        //todo remove once old code is removed
-        private final ObjectProperty<PriceQuote> priceQuote = new SimpleObjectProperty<>();
-
         private final StringProperty priceString = new SimpleStringProperty();
 
         private boolean isFocused;
@@ -253,7 +243,6 @@ public class MuSigPriceInput {
         }
 
         public void reset() {
-            // priceQuote.set(null);
             priceString.set(null);
             isFocused = false;
             description.set(null);

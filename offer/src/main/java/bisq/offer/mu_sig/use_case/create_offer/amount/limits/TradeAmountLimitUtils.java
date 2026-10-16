@@ -63,6 +63,28 @@ public class TradeAmountLimitUtils {
         return Optional.of(new Rates(btcUsd.get(), Optional.empty()));
     }
 
+    /**
+     * The USD equivalent of a trade amount limit under the given rates. Only the quote side is
+     * market-derived (the base side follows the offer's own price), so it is the side converted
+     * back: the fiat side at the market rates on a Bitcoin-Fiat market, the Bitcoin side at the
+     * BTC/USD rate otherwise.
+     */
+    public static Monetary toUsd(Rates rates, Market market, TradeAmount tradeAmount) {
+        checkNotNull(rates, "rates must not be null");
+        checkNotNull(market, "market must not be null");
+        checkNotNull(tradeAmount, "tradeAmount must not be null");
+        Monetary quoteSideAmount = tradeAmount.getQuoteSideAmount();
+        if (!market.isBtcFiatMarket()) {
+            return AmountConversion.btcToUsd(rates.btcUsdPriceQuote(), quoteSideAmount);
+        }
+        if ("USD".equals(quoteSideAmount.getCode())) {
+            return quoteSideAmount;
+        }
+        return AmountConversion.fiatToUsd(rates.btcUsdPriceQuote(),
+                rates.btcFiatPriceQuote().orElseThrow(),
+                quoteSideAmount);
+    }
+
     public static TradeAmount toTradeAmountLimit(Rates rates,
                                                  Market market,
                                                  PriceQuote priceQuote,

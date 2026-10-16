@@ -24,14 +24,9 @@ import lombok.Getter;
 
 @Getter
 public class MuSigAmountLimitsModel implements Model {
-    private final String minInUsd;
-    private final String maxInUsd;
+    private final StringProperty minInUsd = new SimpleStringProperty();
+    private final StringProperty maxInUsd = new SimpleStringProperty();
     private final StringProperty min = new SimpleStringProperty();
     private final StringProperty max = new SimpleStringProperty();
     private final StringProperty code = new SimpleStringProperty();
-
-    public MuSigAmountLimitsModel(String minInUsd, String maxInUsd) {
-        this.minInUsd = minInUsd;
-        this.maxInUsd = maxInUsd;
-    }
 }
