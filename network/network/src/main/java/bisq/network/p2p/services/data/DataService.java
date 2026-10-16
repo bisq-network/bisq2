@@ -113,6 +113,10 @@ public class DataService implements StorageService.Listener {
         storageService.addListener(this);
     }
 
+    public void initialize() {
+        storageService.initialize();
+    }
+
     public void shutdown() {
         migrationRequestsQueue.shutdown();
         storageService.removeListener(this);
