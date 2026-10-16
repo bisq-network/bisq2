@@ -20,9 +20,13 @@ package bisq.desktop.components.controls.validator;
 import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 
-import java.math.BigDecimal;
+import java.util.regex.Pattern;
 
 public class BitcoinUriAmountValidator extends ValidatorBase {
+    // Accepts non-negative decimal amounts with up to 8 decimal places.
+    // Rejects leading zeros, ".1", "1.", signs, and scientific notation.
+    private static final Pattern BITCOIN_AMOUNT =
+            Pattern.compile("^(?:0|[1-9]\\d*)(?:\\.\\d{1,8})?$");
 
     public BitcoinUriAmountValidator() {
         super(Res.get("validation.invalidBitcoinAmount"));
@@ -41,15 +45,6 @@ public class BitcoinUriAmountValidator extends ValidatorBase {
             return;
         }
 
-        try {
-            BigDecimal amount = new BigDecimal(text);
-            boolean valid = amount.signum() >= 0
-                    && amount.scale() <= 8
-                    && !text.contains("e")
-                    && !text.contains("E");
-            hasErrors.set(!valid);
-        } catch (NumberFormatException ex) {
-            hasErrors.set(true);
-        }
+        hasErrors.set(!BITCOIN_AMOUNT.matcher(text).matches());
     }
 }
