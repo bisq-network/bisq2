@@ -1618,39 +1618,36 @@ tasks.register("publishAll") {
     group = "publishing"
     description = "Publish all the jars in the following modules to local maven repository"
 
-    doLast {
+    // Task dependencies rather than a Gradle process per module, so the publications are built in this build and get
+    // its command line options, like -P and -D
+    dependsOn(
         listOf(
-            ":account:publishToMavenLocal",
-            ":burningman:publishToMavenLocal",
-            ":application:publishToMavenLocal",
-            ":bonded-roles:publishToMavenLocal",
-            ":chat:publishToMavenLocal",
-            ":common:publishToMavenLocal",
-            ":contract:publishToMavenLocal",
-            ":desktop-automation-contract:publishToMavenLocal",
-            ":desktop-automation:publishToMavenLocal",
-            ":i18n:publishToMavenLocal",
-            ":identity:publishToMavenLocal",
-            ":network:publishToMavenLocal",
-            ":network:tor:publishToMavenLocal",
-            ":notifications:publishToMavenLocal",
-            ":offer:publishToMavenLocal",
-            ":persistence:publishToMavenLocal",
-            ":platform:publishToMavenLocal",
-            ":presentation:publishToMavenLocal",
-            ":security:publishToMavenLocal",
-            ":settings:publishToMavenLocal",
-            ":support:publishToMavenLocal",
-            ":trade:publishToMavenLocal",
-            ":user:publishToMavenLocal",
-            ":bisq-easy:publishToMavenLocal",
-        ).forEach {
-            exec {
-                println("Executing Publish To Maven Local: $it")
-                commandLine(getGradleCommand(), it)
-            }
-        }
-    }
+            ":account",
+            ":burningman",
+            ":application",
+            ":bonded-roles",
+            ":chat",
+            ":common",
+            ":contract",
+            ":desktop-automation-contract",
+            ":desktop-automation",
+            ":i18n",
+            ":identity",
+            ":notifications",
+            ":offer",
+            ":persistence",
+            ":platform",
+            ":presentation",
+            ":security",
+            ":settings",
+            ":support",
+            ":trade",
+            ":user",
+            ":bisq-easy",
+        ).map { "$it:publishToMavenLocal" }
+    )
+    // Also publishes the tor build
+    dependsOn(gradle.includedBuild("network").task(":publishToMavenLocal"))
 }
 
 // for jitpack publishing
