@@ -434,6 +434,105 @@ public class AmountSelectionTest {
     }
 
     @Test
+    public void editingTheMaxDigitByDigitLeavesTheMinAlone() {
+        AmountSelection amountSelection = createInitializedAmountSelection();
+        selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
+        fireInitialState();
+        amountSelection.onSetUseRangeAmount(true);
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+        assertEquals(Fiat.fromFaceValue(500, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount());
+
+        // Typing 800 into the max field: every prefix below the min is an edit in progress, not a
+        // completed edit, so it must not drag the min down.
+        amountSelection.onEditMaxTradeAmountFromInputAmount(Fiat.fromFaceValue(8, "USD"));
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount(),
+                "a max prefix below the min must not drag the min");
+        assertEquals(Fiat.fromFaceValue(500, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                "a max prefix below the min must not be applied");
+        amountSelection.onEditMaxTradeAmountFromInputAmount(Fiat.fromFaceValue(80, "USD"));
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount());
+        assertEquals(Fiat.fromFaceValue(500, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount());
+
+        amountSelection.onEditMaxTradeAmountFromInputAmount(Fiat.fromFaceValue(800, "USD"));
+        assertEquals(Fiat.fromFaceValue(800, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                "a max prefix above the min is applied");
+        amountSelection.onSetMaxTradeAmountFromInputAmount(Fiat.fromFaceValue(800, "USD"));
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount());
+        assertEquals(Fiat.fromFaceValue(800, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount());
+        assertNotNull(amountSelection.createAndGetAmountSpec(market));
+    }
+
+    @Test
+    public void editingTheMinAboveTheMaxIsHeldUntilItIsSet() {
+        AmountSelection amountSelection = createInitializedAmountSelection();
+        selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
+        fireInitialState();
+        amountSelection.onSetUseRangeAmount(true);
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+
+        amountSelection.onEditMinTradeAmountFromInputAmount(Fiat.fromFaceValue(600, "USD"));
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount(),
+                "a min edit above the max is held back while the edit is in progress");
+        assertEquals(Fiat.fromFaceValue(500, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                "a min edit in progress never drags the max");
+
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(600, "USD"));
+        assertEquals(Fiat.fromFaceValue(600, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount());
+        assertEquals(Fiat.fromFaceValue(600, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                "the completed edit drags the max along");
+    }
+
+    @Test
+    public void anInProgressEditWithinTheRangeIsApplied() {
+        AmountSelection amountSelection = createInitializedAmountSelection();
+        selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
+        fireInitialState();
+        amountSelection.onSetUseRangeAmount(true);
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+        double minSliderValueBefore = amountSelection.getMinAmountSliderValue();
+
+        amountSelection.onEditMinTradeAmountFromInputAmount(Fiat.fromFaceValue(5, "USD"));
+
+        assertEquals(Fiat.fromFaceValue(10, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount(),
+                "an edit in progress is clamped to the floor and applied when it keeps the order");
+        assertTrue(amountSelection.getMinAmountSliderValue() < minSliderValueBefore,
+                "the slider follows an applied edit in progress");
+        assertEquals(Fiat.fromFaceValue(500, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount());
+    }
+
+    @Test
+    public void anInProgressEditEqualToTheOtherEndpointIsApplied() {
+        AmountSelection amountSelection = createInitializedAmountSelection();
+        selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
+        fireInitialState();
+        amountSelection.onSetUseRangeAmount(true);
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+
+        amountSelection.onEditMaxTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                "an edit equal to the other endpoint keeps the order and is applied");
+        assertEquals(Fiat.fromFaceValue(100, "USD"), amountSelection.getMinTradeAmount().getQuoteSideAmount());
+    }
+
+    @Test
+    public void maxSliderMovedBelowTheMinDragsTheMinAlong() {
+        AmountSelection amountSelection = createInitializedAmountSelection();
+        selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
+        fireInitialState();
+        amountSelection.onSetUseRangeAmount(true);
+        amountSelection.onSetMinTradeAmountFromInputAmount(Fiat.fromFaceValue(100, "USD"));
+
+        amountSelection.onSetMaxTradeAmountFromSliderValue(0.0);
+
+        assertTrue(amountSelection.getMaxTradeAmount().getQuoteSideAmount().getValue()
+                < Fiat.fromFaceValue(100, "USD").getValue(), "the slider must have moved the max below the min");
+        assertEquals(amountSelection.getMaxTradeAmount().getQuoteSideAmount(),
+                amountSelection.getMinTradeAmount().getQuoteSideAmount());
+        assertNotNull(amountSelection.createAndGetAmountSpec(market));
+    }
+
+    @Test
     public void priceDrivenReconcileKeepsANarrowRangeIntact() {
         AmountSelection amountSelection = createInitializedAmountSelection();
         selectPaymentMethod(FiatPaymentRail.ADVANCED_CASH);
