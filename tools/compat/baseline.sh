@@ -33,8 +33,8 @@ if ! commit=$(git -C "$repo_root" rev-parse --verify --quiet "refs/tags/$tag^{co
     exit 2
 fi
 
-# The build of the baseline reads its commit hash with `git rev-parse`. Inside the repository it would get the commit
-# of the checkout instead.
+# Builds of tags that do not know -PbuildCommit (see below) read their commit hash with `git rev-parse`. Inside the
+# repository they would get the commit of the checkout instead.
 mkdir -p "$baseline_root"
 baseline_root_real=$(cd "$baseline_root" && pwd -P)
 repo_root_real=$(cd "$repo_root" && pwd -P)
@@ -63,11 +63,11 @@ if [ -f "$baseline_dir/gradle/wrapper/gradle-wrapper.sha256" ]; then
     fi
 fi
 
-gradle_args=()
+# The export has no .git, so the build takes its commit hash from this property. Builds of older tags ignore it.
+gradle_args=("-PbuildCommit=$commit")
 if [ -f "$overlay_dir/init.gradle" ]; then
     gradle_args+=(--init-script "$overlay_dir/init.gradle" "-Pbisq.compat.overlayDir=$overlay_dir")
 fi
 
 cd "$baseline_dir"
-# The expansion with + keeps `set -u` working with an empty array in bash 3.2 of macOS.
-exec ./gradlew ${gradle_args[@]+"${gradle_args[@]}"} "$@"
+exec ./gradlew "${gradle_args[@]}" "$@"
