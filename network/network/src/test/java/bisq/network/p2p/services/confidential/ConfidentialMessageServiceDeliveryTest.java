@@ -215,13 +215,15 @@ class ConfidentialMessageServiceDeliveryTest {
 
         receive(message);
         receive(message);
-        // One thread processes the messages in their order
+        // One thread processes the messages in their order. When the listener has the next message in both calls, all
+        // notifications were submitted.
         receive(nextMessage);
-        await(() -> listener.messages.contains(nextMessage));
+        await(() -> listener.messages.contains(nextMessage) && listener.confidentialMessages.contains(nextMessage));
         awaitNotifications();
 
-        assertEquals(List.of(message, nextMessage), listener.messages);
-        assertEquals(List.of(message, nextMessage), listener.confidentialMessages);
+        // New messages reach the listener in parallel tasks, so the order of the calls is not defined
+        assertEquals(1, Collections.frequency(listener.messages, message));
+        assertEquals(1, Collections.frequency(listener.confidentialMessages, message));
     }
 
     // The confidential message services must add the listener before the service nodes add it, otherwise it would
