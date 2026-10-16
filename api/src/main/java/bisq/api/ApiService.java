@@ -40,6 +40,7 @@ import bisq.api.rest_api.endpoints.config.ConfigRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
+import bisq.api.rest_api.endpoints.info.InfoRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
@@ -237,6 +238,7 @@ public class ApiService implements Service {
         DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService, clientAuthorizedCheck);
         ConfigRestApi configRestApi = new ConfigRestApi();
         ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
+        InfoRestApi infoRestApi = new InfoRestApi();
 
         ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled() || apiConfig.isWebsocketEnabled()) {
@@ -263,7 +265,8 @@ public class ApiService implements Service {
                     userProfileRestApi,
                     devicesRestApi,
                     configRestApi,
-                    contactsRestApi);
+                    contactsRestApi,
+                    infoRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }
