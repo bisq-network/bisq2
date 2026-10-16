@@ -51,7 +51,7 @@ import static bisq.network.p2p.services.data.storage.MetaData.TTL_10_DAYS;
 @Getter
 @ToString(callSuper = true)
 @EqualsAndHashCode(callSuper = true)
-    public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
+public final class BisqEasyOpenTradeMessage extends PrivateChatMessage<BisqEasyOpenTradeMessageReaction> implements BisqEasyOfferMessage {
     public static final String ACK_REQUESTING_MESSAGE_ID_SEPARATOR = "_";
     private static final Set<ChatMessageType> SUPPORTED_CHAT_MESSAGE_TYPES = EnumSet.of(ChatMessageType.TEXT,
             ChatMessageType.LEAVE,
