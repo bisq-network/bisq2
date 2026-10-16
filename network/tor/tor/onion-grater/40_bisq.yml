@@ -21,6 +21,7 @@
         response:
         - pattern:     '250-status/bootstrap-phase=*'
           replacement: '250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=100 TAG=done SUMMARY="Done"'
+      - pattern:       'net/listeners/socks'
     ADD_ONION:
       - pattern:     'NEW:(\S+) Port=9999,(\S+)'
         replacement: 'NEW:{} Port=9999,{client-address}:{}'

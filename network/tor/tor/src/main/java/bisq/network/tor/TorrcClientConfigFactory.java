@@ -25,9 +25,11 @@ import lombok.Builder;
 import net.freehaven.tor.control.PasswordDigest;
 
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static bisq.network.tor.common.torrc.Torrc.Keys.DISABLE_NETWORK;
+
 
 @Builder
 public class TorrcClientConfigFactory {
@@ -43,14 +45,14 @@ public class TorrcClientConfigFactory {
         this.hashedControlPassword = hashedControlPassword;
     }
 
-    public Map<String, String> torrcClientConfigMap(Map<String, String> torrcOverrides) {
-        Map<String, String> torrcClientConfig = clientTorrcGenerator().generate();
+    public Map<String, List<String>> torrcClientConfigMap(Map<String, List<String>> torrcOverrides) {
+        Map<String, List<String>> torrcClientConfig = clientTorrcGenerator().generate();
+        torrcClientConfig.put(DISABLE_NETWORK, List.of("1"));
         torrcClientConfig.putAll(torrcOverrides);
-        torrcClientConfig.put(DISABLE_NETWORK, "1");
         return torrcClientConfig;
     }
 
-    private TorrcConfigGenerator clientTorrcGenerator() {
+    TorrcConfigGenerator clientTorrcGenerator() {
         TorrcConfigGenerator baseTorrcGenerator = baseTorrcGenerator();
         if (isTestNetwork) {
             baseTorrcGenerator = testNetworkTorrcGenerator(baseTorrcGenerator);

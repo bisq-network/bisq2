@@ -17,6 +17,7 @@
 
 package bisq.network.tor.common.torrc;
 
+import java.util.List;
 import java.util.Map;
 
 public class RelayTorrcGenerator implements TorrcConfigGenerator {
@@ -27,12 +28,12 @@ public class RelayTorrcGenerator implements TorrcConfigGenerator {
     }
 
     @Override
-    public Map<String, String> generate() {
-        Map<String, String> torConfigMap = baseTorrcConfigGenerator.generate();
+    public Map<String, List<String>> generate() {
+        Map<String, List<String>> torConfigMap = baseTorrcConfigGenerator.generate();
 
-        torConfigMap.put("ExitRelay", "1");
-        torConfigMap.put("ExitPolicy", "accept 127.0.0.0/8:*,accept private:*,accept *:*,reject *:*");
-        torConfigMap.put("ExitPolicyRejectPrivate", "0");
+        torConfigMap.put("ExitRelay", List.of("1"));
+        torConfigMap.put("ExitPolicy", List.of("accept 127.0.0.0/8:*,accept private:*,accept *:*,reject *:*"));
+        torConfigMap.put("ExitPolicyRejectPrivate", List.of("0"));
 
         return torConfigMap;
     }

@@ -20,6 +20,7 @@ package bisq.network.tor;
 import bisq.common.network.TransportConfig;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
+import com.typesafe.config.ConfigObject;
 import com.typesafe.config.ConfigValue;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -27,9 +28,10 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -47,7 +49,8 @@ public class TorTransportConfig implements TransportConfig {
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
-                parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
+                parseTorrcOverrideConfig(config.getObject("torrcOverrides")),
+                parseTorrcOverrideFilePath(dataDirPath, config),
                 config.getInt("sendMessageThrottleTime"),
                 config.getInt("receiveMessageThrottleTime"),
                 config.getBoolean("useExternalTor")
@@ -70,13 +73,24 @@ public class TorTransportConfig implements TransportConfig {
         return allDirectoryAuthorities;
     }
 
-    private static Map<String, String> parseTorrcOverrideConfig(com.typesafe.config.Config torrcOverrides) {
-        Map<String, String> torrcOverrideConfigMap = new HashMap<>();
-        torrcOverrides.entrySet()
-                .forEach(entry -> torrcOverrideConfigMap.put(
-                        entry.getKey(), (String) entry.getValue().unwrapped()
-                ));
-        return torrcOverrideConfigMap;
+    private static Map<String, List<String>> parseTorrcOverrideConfig(ConfigObject torrcOverrides) {
+        return TorrcOverrideConfigParser.parse(torrcOverrides);
+    }
+
+    private static Optional<Path> parseTorrcOverrideFilePath(Path dataDirPath,
+                                                             com.typesafe.config.Config config) {
+        if (!config.hasPath("torrcOverrideFilePath")) {
+            return Optional.empty();
+        }
+
+        String filePath = config.getString("torrcOverrideFilePath");
+        if (filePath.isBlank()) {
+            return Optional.empty();
+        }
+
+        Path torrcOverridePath = Path.of(filePath);
+        return torrcOverridePath.isAbsolute() ? Optional.of(torrcOverridePath) :
+                Optional.of(dataDirPath.resolve(torrcOverridePath));
     }
 
     private static String getStringFromConfigValue(ConfigValue configValue, String key) {
@@ -94,7 +108,14 @@ public class TorTransportConfig implements TransportConfig {
     private final int socketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
-    private final Map<String, String> torrcOverrides;
+    private final Map<String, List<String>> torrcOverrides;
+    /**
+     * Optional path to a torrc-style file whose entries override {@code torrcOverrides}.
+     * Relative paths are resolved against the data directory at parse time, so the value
+     * is always absolute when present. When present this file takes precedence over the
+     * inline {@code torrcOverrides} map. Empty (the default) means use {@code torrcOverrides}.
+     */
+    private final Optional<Path> torrcOverrideFilePath;
     private final int sendMessageThrottleTime;
     private final int receiveMessageThrottleTime;
     private final boolean useExternalTor;
@@ -106,7 +127,8 @@ public class TorTransportConfig implements TransportConfig {
                               int socketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
-                              Map<String, String> torrcOverrides,
+                              Map<String, List<String>> torrcOverrides,
+                              Optional<Path> torrcOverrideFilePath,
                               int sendMessageThrottleTime,
                               int receiveMessageThrottleTime,
                               boolean useExternalTor) {
@@ -118,6 +140,7 @@ public class TorTransportConfig implements TransportConfig {
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
+        this.torrcOverrideFilePath = torrcOverrideFilePath;
         this.sendMessageThrottleTime = sendMessageThrottleTime;
         this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         this.useExternalTor = useExternalTor;

@@ -47,6 +47,16 @@ public class PlatformUtils {
         }
 
         // *nix
+        // Tails runs the home directory in tmpfs, so the default path is wiped on every reboot.
+        // Persistent Storage is mounted at ~/Persistent, but only once the user unlocked it at boot.
+        // While it is locked we stay on the default path and let TailsPersistenceGuard report the risk.
+        if (LinuxDistribution.isTails()) {
+            Path persistentStoragePath = Paths.get(System.getProperty("user.home"), "Persistent");
+            if (Files.isDirectory(persistentStoragePath)) {
+                return persistentStoragePath;
+            }
+        }
+
         return Paths.get(System.getProperty("user.home"), ".local", "share");
     }
 
