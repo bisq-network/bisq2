@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -84,17 +85,20 @@ public class OfferbookRestApi extends RestApiBase {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
+    private final BisqEasySellersReputationBasedTradeAmountService sellersReputationService;
 
 
     public OfferbookRestApi(ChatService chatService,
                             MarketPriceService marketPriceService,
-                            UserService userService
+                            UserService userService,
+                            BisqEasySellersReputationBasedTradeAmountService sellersReputationService
     ) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         this.marketPriceService = marketPriceService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
         reputationService = userService.getReputationService();
+        this.sellersReputationService = sellersReputationService;
     }
 
     @DELETE
@@ -340,10 +344,13 @@ public class OfferbookRestApi extends RestApiBase {
 
     private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         try {
+            boolean hasSellerSufficientReputation = sellersReputationService.hasSellerSufficientReputation(
+                    bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow());
             return OfferItemPresentationDtoFactory.create(userProfileService,
                     userIdentityService,
                     reputationService,
                     marketPriceService,
+                    hasSellerSufficientReputation,
                     bisqEasyOfferbookMessage);
         } catch (RuntimeException e) {
             // A single offer whose amounts cannot be converted at its price (an overflowing

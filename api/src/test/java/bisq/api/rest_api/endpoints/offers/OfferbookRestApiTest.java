@@ -23,6 +23,7 @@ import bisq.api.dto.offer.amount.spec.QuoteSideFixedAmountSpecDto;
 import bisq.api.dto.offer.price.spec.PriceSpecDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
@@ -37,6 +38,7 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.i18n.Res;
 import bisq.network.identity.NetworkId;
+import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.spec.FixPriceSpec;
 import bisq.user.UserService;
 import bisq.user.identity.UserIdentity;
@@ -54,6 +56,7 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
@@ -80,15 +83,16 @@ class OfferbookRestApiTest {
 
         OfferbookRestApi api = new OfferbookRestApi(chatService,
                 mock(MarketPriceService.class),
-                mock(UserService.class, RETURNS_DEEP_STUBS));
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                mock(BisqEasySellersReputationBasedTradeAmountService.class));
 
         OfferItemPresentationDto validDto = mock(OfferItemPresentationDto.class);
         try (MockedStatic<OfferItemPresentationDtoFactory> factory = mockStatic(OfferItemPresentationDtoFactory.class)) {
-            factory.when(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), eq(validMessage)))
+            factory.when(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), anyBoolean(), eq(validMessage)))
                     .thenReturn(Optional.of(validDto));
             // The overflowing offer throws in the factory the way an amount conversion does,
             // instead of aborting the whole endpoint stream with a 500.
-            factory.when(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), eq(overflowingMessage)))
+            factory.when(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), anyBoolean(), eq(overflowingMessage)))
                     .thenThrow(new ArithmeticException("overflow"));
 
             Response response = api.getOffers("USD");
@@ -97,6 +101,34 @@ class OfferbookRestApiTest {
             @SuppressWarnings("unchecked")
             List<OfferItemPresentationDto> entity = (List<OfferItemPresentationDto>) response.getEntity();
             assertThat(entity).containsExactly(validDto);
+        }
+    }
+
+    @Test
+    void itemCarriesTheSellersReputationVerdictOfTheService() {
+        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+        BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
+        when(chatService.getBisqEasyOfferbookChannelService().findChannel(market)).thenReturn(Optional.of(channel));
+        BisqEasyOfferbookMessage message = offerMessage();
+        ObservableSet<BisqEasyOfferbookMessage> messages = new ObservableSet<>();
+        messages.add(message);
+        when(channel.getChatMessages()).thenReturn(messages);
+        BisqEasySellersReputationBasedTradeAmountService sellersReputationService =
+                mock(BisqEasySellersReputationBasedTradeAmountService.class);
+        when(sellersReputationService.hasSellerSufficientReputation(message.getBisqEasyOffer().orElseThrow()))
+                .thenReturn(true);
+        OfferbookRestApi api = new OfferbookRestApi(chatService,
+                mock(MarketPriceService.class),
+                mock(UserService.class, RETURNS_DEEP_STUBS),
+                sellersReputationService);
+
+        try (MockedStatic<OfferItemPresentationDtoFactory> factory = mockStatic(OfferItemPresentationDtoFactory.class)) {
+            factory.when(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), anyBoolean(), any()))
+                    .thenReturn(Optional.empty());
+
+            api.getOffers("USD");
+
+            factory.verify(() -> OfferItemPresentationDtoFactory.create(any(), any(), any(), any(), eq(true), eq(message)));
         }
     }
 
@@ -135,7 +167,8 @@ class OfferbookRestApiTest {
         when(userProfile.getNetworkId()).thenReturn(networkId);
         when(userProfile.getId()).thenReturn("a".repeat(40));
         when(userProfile.getTerms()).thenReturn("");
-        OfferbookRestApi api = new OfferbookRestApi(chatService, mock(MarketPriceService.class), userService);
+        OfferbookRestApi api = new OfferbookRestApi(chatService, mock(MarketPriceService.class), userService,
+                mock(BisqEasySellersReputationBasedTradeAmountService.class));
         CreateOfferRequest request = new CreateOfferRequest(DirectionDto.SELL,
                 new MarketDto("BTC", "USD", "Bitcoin", "US Dollar"),
                 Set.of("MAIN_CHAIN"),
@@ -164,6 +197,7 @@ class OfferbookRestApiTest {
     private BisqEasyOfferbookMessage offerMessage() {
         BisqEasyOfferbookMessage message = mock(BisqEasyOfferbookMessage.class);
         when(message.hasBisqEasyOffer()).thenReturn(true);
+        when(message.getBisqEasyOffer()).thenReturn(Optional.of(mock(BisqEasyOffer.class)));
         return message;
     }
 }
