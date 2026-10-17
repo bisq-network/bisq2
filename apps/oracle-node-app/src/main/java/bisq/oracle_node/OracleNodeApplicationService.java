@@ -97,7 +97,8 @@ public class OracleNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> oracleNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
-                    if (success) {
+                    // success is null if the initialization failed with an exception
+                    if (Boolean.TRUE.equals(success)) {
                         difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
                                 .getMostRecentValueOrDefault()
                                 .addObserver(mostRecentValueOrDefault ->
