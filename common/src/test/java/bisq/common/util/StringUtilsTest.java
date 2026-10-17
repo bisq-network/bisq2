@@ -4,12 +4,14 @@ import bisq.common.data.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SuppressWarnings("SpellCheckingInspection")
 @Slf4j
@@ -55,6 +57,37 @@ public class StringUtilsTest {
         assertEquals("1...", StringUtils.truncate("12345", 4, StringUtils.DOT_ELLIPSIS));
         assertEquals("123…", StringUtils.truncate("12345", 4));
         assertEquals("12345...", StringUtils.truncate("1234567890", 8, StringUtils.DOT_ELLIPSIS));
+    }
+
+    @Test
+    public void truncateDoesNotSplitASurrogatePair() {
+        // One code point stored as two chars, a high and a low surrogate
+        String emoji = "😀";
+
+        // The cut falls between the two chars of the emoji, so the emoji is dropped as a whole
+        assertEquals("1…", StringUtils.truncate("1" + emoji + "45", 3));
+        assertEquals("1...", StringUtils.truncate("1" + emoji + "4567", 5, StringUtils.DOT_ELLIPSIS));
+        assertEquals(emoji + "…", StringUtils.truncate(emoji + emoji + "5", 4));
+        assertEquals("…", StringUtils.truncate(emoji + "345", 2));
+
+        // The cut falls right after the emoji, so the emoji is kept
+        assertEquals("1" + emoji + "…", StringUtils.truncate("1" + emoji + "456", 4));
+        assertEquals(emoji + "…", StringUtils.truncate(emoji + "345", 3));
+    }
+
+    @Test
+    public void truncateNeverOutputsAnUnpairedSurrogate() {
+        String text = "a😀bc😀😀d🇩🇪";
+        for (String ellipsis : List.of(StringUtils.UNICODE_ELLIPSIS, StringUtils.DOT_ELLIPSIS)) {
+            for (int maxLength = ellipsis.length() + 1; maxLength <= text.length() + 1; maxLength++) {
+                String truncated = StringUtils.truncate(text, maxLength, ellipsis);
+
+                assertTrue(truncated.length() <= maxLength, "maxLength=" + maxLength);
+                // An unpaired surrogate does not survive encoding, it comes back as '?'
+                String decoded = new String(truncated.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8);
+                assertEquals(truncated, decoded, "maxLength=" + maxLength);
+            }
+        }
     }
 
     @Test

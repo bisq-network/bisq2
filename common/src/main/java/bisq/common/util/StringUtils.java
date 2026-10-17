@@ -81,7 +81,13 @@ public class StringUtils {
         checkNotNull(ellipsis, "ellipsis at truncate must not be null");
         int ellipsisLength = ellipsis.length();
         if (maxLength > ellipsisLength && value.length() > maxLength) {
-            return value.substring(0, maxLength - ellipsisLength) + ellipsis;
+            int endIndex = maxLength - ellipsisLength;
+            // Do not cut between the two chars of a surrogate pair (e.g. an emoji). The lone high
+            // surrogate is not valid UTF-16 and gets replaced by '?' when the text is encoded as UTF-8.
+            if (Character.isHighSurrogate(value.charAt(endIndex - 1))) {
+                endIndex--;
+            }
+            return value.substring(0, endIndex) + ellipsis;
         } else {
             return value;
         }
