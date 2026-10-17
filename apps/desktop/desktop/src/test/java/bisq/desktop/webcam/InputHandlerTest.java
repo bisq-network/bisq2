@@ -175,6 +175,7 @@ public class InputHandlerTest {
                 false,
                 0,
                 false,
+                false,
                 false));
     }
 

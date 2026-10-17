@@ -18,6 +18,7 @@
 package bisq.java_se.application;
 
 import bisq.application.ApplicationService;
+import bisq.application.migration.MigrationListener;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.platform.MemoryReportService;
 import bisq.common.platform.PlatformUtils;
@@ -33,7 +34,11 @@ public abstract class JavaSeApplicationService extends ApplicationService {
     protected final MemoryReportService memoryReportService;
 
     public JavaSeApplicationService(String configFileName, String[] args) {
-        super(configFileName, args, PlatformUtils.getUserDataDirPath());
+        this(configFileName, args, MigrationListener.NONE);
+    }
+
+    public JavaSeApplicationService(String configFileName, String[] args, MigrationListener migrationListener) {
+        super(configFileName, args, PlatformUtils.getUserDataDirPath(), migrationListener);
 
         // The JDKs for Java SE and Android have different API support, thus, we use a
         // facade with Android compatible APIs by default and set for Java SE based applicationServices

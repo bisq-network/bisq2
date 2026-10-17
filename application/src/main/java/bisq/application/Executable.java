@@ -1,5 +1,6 @@
 package bisq.application;
 
+import bisq.application.migration.IncompleteMigrationException;
 import bisq.common.platform.PlatformUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +52,14 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
             handleInstanceLockFailure(e);
             // handleInstanceLockFailure is expected to terminate the JVM. In case a custom implementation
             // returns, we must not continue with a half initialized application.
+            throw e;
+        } catch (IncompleteMigrationException e) {
+            // A migration failed, and the configuration or the user chose not to start on the data directory, which is
+            // not fully migrated. As above, there is nothing to shut down.
+            shutDownStarted = true;
+            log.error(e.getMessage());
+            System.err.println("Error: " + e.getMessage());
+            System.exit(PlatformUtils.EXIT_INCOMPLETE_MIGRATION);
             throw e;
         }
     }

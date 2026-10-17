@@ -8,6 +8,8 @@ EnvironmentFile=/etc/default/bisq2-seed.env
 ExecStart=/bisq/bisq2/apps/seed-node-app/build/install/seed-node-app/bin/seed-node-app
 ExecStop=/bin/kill -TERM ${MAINPID}
 Restart=on-failure
+# Exit code 3: a migration of the data directory failed. A restart would only fail again.
+RestartPreventExitStatus=3
 
 User=bisq
 Group=bisq

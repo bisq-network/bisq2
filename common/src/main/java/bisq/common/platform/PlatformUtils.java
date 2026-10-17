@@ -31,6 +31,9 @@ import java.util.List;
 public class PlatformUtils {
     public static final int EXIT_SUCCESS = 0;
     public static final int EXIT_FAILURE = 1;
+    // A migration of the data directory failed, so the app did not start. Service managers must not restart the app
+    // automatically: each start would run the migration again and fail again, until an operator looks at the cause.
+    public static final int EXIT_INCOMPLETE_MIGRATION = 3;
 
     public static Path getUserDataDirPath() {
         if (OS.isWindows()) {
