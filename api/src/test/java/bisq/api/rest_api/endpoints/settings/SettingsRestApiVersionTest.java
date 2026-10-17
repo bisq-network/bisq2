@@ -19,7 +19,9 @@ package bisq.api.rest_api.endpoints.settings;
 
 import bisq.api.dto.settings.SettingsApiVersionDto;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.json.JsonMapperProvider;
 import bisq.settings.SettingsService;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
@@ -38,12 +40,20 @@ class SettingsRestApiVersionTest {
     // Deployed clients key their config caches on it, so dropping it here would go unnoticed.
     @Test
     void reportsImageVersionWhenSet() {
-        assertThat(getVersion(Map.of("BISQ_IMAGE_VERSION", " 2.1.13.0 ")).imageVersion()).isEqualTo("2.1.13.0");
+        assertThat(getVersion(Map.of("BISQ_IMAGE_VERSION", " 2.1.13.0 ")).imageVersion()).hasValue("2.1.13.0");
     }
 
     @Test
     void reportsNoImageVersionWhenNotSet() {
-        assertThat(getVersion(Map.of()).imageVersion()).isNull();
+        assertThat(getVersion(Map.of()).imageVersion()).isEmpty();
+    }
+
+    // Released versions omit the key when no image version is set; an empty Optional must not write null.
+    @Test
+    void imageVersionKeyIsOmittedFromJsonWhenNotSet() {
+        assertThat(toJson(getVersion(Map.of())).has("imageVersion")).isFalse();
+        assertThat(toJson(getVersion(Map.of("BISQ_IMAGE_VERSION", "2.1.13.0"))).get("imageVersion").asText())
+                .isEqualTo("2.1.13.0");
     }
 
     private static SettingsApiVersionDto getVersion(Map<String, String> env) {
@@ -51,5 +61,9 @@ class SettingsRestApiVersionTest {
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         return (SettingsApiVersionDto) response.getEntity();
+    }
+
+    private static JsonNode toJson(SettingsApiVersionDto dto) {
+        return JsonMapperProvider.get().valueToTree(dto);
     }
 }

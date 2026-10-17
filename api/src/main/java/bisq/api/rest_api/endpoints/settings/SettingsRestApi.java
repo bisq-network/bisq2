@@ -37,6 +37,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 @Slf4j
@@ -89,7 +90,7 @@ public class SettingsRestApi extends RestApiBase {
     public Response getVersion() {
         try {
             String version = ApplicationVersion.getVersion().toString();
-            String imageVersion = ImageVersion.resolve(env).orElse(null);
+            Optional<String> imageVersion = ImageVersion.resolve(env);
             return Response.ok(new SettingsApiVersionDto(version, imageVersion)).build();
         } catch (Exception e) {
             log.error("Error getting version", e);
