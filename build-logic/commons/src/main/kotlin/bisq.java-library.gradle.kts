@@ -9,5 +9,5 @@ val bisqVersion = extensions.getByType<VersionCatalogsExtension>().named("libs")
 
 dependencies {
     api(platform("bisq:platform:$bisqVersion"))
-    implementation("bisq:common")
+    implementation("bisq:common:$bisqVersion")
 }

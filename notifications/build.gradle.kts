@@ -8,7 +8,7 @@ dependencies {
     implementation(project(":i18n"))
     implementation(project(":security"))
     implementation(project(":bonded-roles"))
-    implementation("network:network")
+    implementation("network:network:$version")
 
     implementation(libs.bundles.jackson)
     implementation(libs.typesafe.config)

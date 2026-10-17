@@ -20,6 +20,24 @@ java {
     }
 }
 
+// Holds the commit hash of common, which changes with every commit. Without this, every commit would rerun every
+// test task that has common on its runtime classpath.
+normalization {
+    runtimeClasspath {
+        ignore("bisq/common/application/build-commit.properties")
+    }
+}
+
+// Shadow reads its dependencies with the normalization above, so a fat jar would keep an old commit hash. Track them by
+// content as well.
+pluginManager.withPlugin("com.gradleup.shadow") {
+    tasks.named("shadowJar") {
+        inputs.files(configurations.named("runtimeClasspath"))
+            .withPropertyName("runtimeClasspathContent")
+            .withPathSensitivity(PathSensitivity.NAME_ONLY)
+    }
+}
+
 tasks {
     test {
         useJUnitPlatform()
