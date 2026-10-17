@@ -4,14 +4,29 @@ import bisq.application.migration.IncompleteMigrationException;
 import bisq.common.platform.PlatformUtils;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
+import javax.annotation.Nullable;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 @Slf4j
 public abstract class Executable<T extends ApplicationService> implements ShutDownHandler {
+    // The application services limit their own shutdown to 10 seconds. The shutdown hook waits a bit longer, so that it
+    // cannot keep a hanging JVM alive for ever.
+    private static final long MAX_SHUTDOWN_HOOK_WAIT_SEC = 20;
+
     protected final T applicationService;
-    protected final List<Runnable> shutdownHandlers = new ArrayList<>();
+    // The UI adds handlers while a shutdown hook can already run them
+    protected final List<Runnable> shutdownHandlers = new CopyOnWriteArrayList<>();
     protected volatile boolean shutDownStarted;
+    // Completes when shutdown(boolean) has shut down the application service and run the shutdown handlers. Null as
+    // long as shutdown(boolean) did not run, for example when a failed start exits on its own. It is set before
+    // shutDownStarted, so that a thread which sees shutDownStarted from shutdown(boolean) also sees the future.
+    @Nullable
+    private volatile CompletableFuture<Void> shutdownCompleted;
 
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
@@ -25,6 +40,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
                 // We must not call System.exit as otherwise we would hang.
                 shutdown(false);
             }
+            awaitShutdownCompleted();
         }));
 
         try {
@@ -47,6 +63,12 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
             throw e;
         }
 
+        // A shutdown hook can have started the shutdown meanwhile, for example on SIGTERM. Starting the app would then
+        // initialize services which are being shut down.
+        if (shutDownStarted) {
+            log.info("Shutdown started during the start. The app does not start.");
+            return;
+        }
         launchApplication(args);
     }
 
@@ -90,45 +112,82 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         shutdown(true);
     }
 
-    public void shutdown(boolean callExit) {
-        if (shutDownStarted) {
-            log.info("shutDown has already started");
-            return;
+    /**
+     * Shuts down the application service and runs the shutdown handlers, unless a shutdown has already started.
+     *
+     * @return Completes when the shutdown which this or an earlier call started has completed
+     */
+    public CompletableFuture<Void> shutdown(boolean callExit) {
+        CompletableFuture<Void> completed;
+        // The quit button and the shutdown hook can call this at the same time
+        synchronized (this) {
+            if (shutDownStarted) {
+                log.info("shutDown has already started");
+                CompletableFuture<Void> startedShutdown = shutdownCompleted;
+                return startedShutdown != null ? startedShutdown : CompletableFuture.completedFuture(null);
+            }
+            completed = new CompletableFuture<>();
+            shutdownCompleted = completed;
+            shutDownStarted = true;
         }
-        shutDownStarted = true;
         try {
             notifyAboutShutdown();
             if (applicationService != null) {
                 applicationService.shutdown()
-                        .thenRun(() -> {
-                            shutdownHandlers.forEach(shutdownHandler -> {
-                                try {
-                                    shutdownHandler.run();
-                                } catch (Exception e) {
-                                    log.error("Exception at running shutdownHandler", e);
-                                }
-                            });
-                            if (callExit) {
-                                exitJvm();
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                log.error("Shutdown of the application service failed", throwable);
                             }
+                            completeShutdown(completed, callExit);
                         });
             } else {
-                shutdownHandlers.forEach(shutdownHandler -> {
-                    try {
-                        shutdownHandler.run();
-                    } catch (Exception e) {
-                        log.error("Exception at running shutdownHandler", e);
-                    }
-                });
-                if (callExit) {
-                    exitJvm();
-                }
+                completeShutdown(completed, callExit);
             }
         } catch (Exception e) {
             log.error("Exception at shutdown", e);
-            if (callExit) {
-                exitJvm();
+            completeShutdown(completed, callExit);
+        }
+        return completed;
+    }
+
+    private void completeShutdown(CompletableFuture<Void> completed, boolean callExit) {
+        try {
+            runShutdownHandlers();
+        } finally {
+            // Completed before exitJvm, because System.exit waits for the shutdown hook, which waits for this future
+            completed.complete(null);
+        }
+        if (callExit) {
+            exitJvm();
+        }
+    }
+
+    private void runShutdownHandlers() {
+        shutdownHandlers.forEach(shutdownHandler -> {
+            try {
+                shutdownHandler.run();
+            } catch (Exception e) {
+                log.error("Exception at running shutdownHandler", e);
             }
+        });
+    }
+
+    // The JVM ends when the shutdown hook returns. So the hook waits for the shutdown which it or another caller
+    // started. Without this, on SIGTERM, which the system sends when it shuts down, the JVM ended before the
+    // application service had completed its shutdown.
+    private void awaitShutdownCompleted() {
+        CompletableFuture<Void> completed = shutdownCompleted;
+        if (completed == null) {
+            return;
+        }
+        try {
+            completed.get(MAX_SHUTDOWN_HOOK_WAIT_SEC, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.warn("Shutdown did not complete within {} seconds. The JVM ends anyway.", MAX_SHUTDOWN_HOOK_WAIT_SEC);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException e) {
+            log.error("Shutdown failed", e);
         }
     }
 
@@ -153,6 +212,10 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     }
 
     protected void onApplicationLaunched() {
+        // See the check at the end of the constructor. The desktop app calls this later, after it built its UI.
+        if (shutDownStarted) {
+            return;
+        }
         applicationService.initialize()
                 .whenComplete(this::onApplicationServiceInitialized);
     }
