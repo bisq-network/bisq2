@@ -37,6 +37,14 @@ public record OfferItemPresentationDto(BisqEasyOfferDto bisqEasyOffer,
                                        String formattedPriceSpec,
                                        List<String> quoteSidePaymentMethods,
                                        List<String> baseSidePaymentMethods,
-                                       ReputationScoreDto reputationScore // Can change by reputation changes
+                                       ReputationScoreDto reputationScore, // Can change by reputation changes
+                                       /**
+                                        * Whether the maker's reputation covers the offer's minimum or fixed amount, with the
+                                        * tolerance of the desktop offerbook. Buy offers are always true, and the user's own
+                                        * offers are judged like all others. True when a market price is missing, because the
+                                        * required score is then unknown; the node still refuses to take such an offer. False
+                                        * when the amount overflows in USD. Can change by market price and reputation changes.
+                                        */
+                                       boolean hasSellerSufficientReputation
 ) {
 }

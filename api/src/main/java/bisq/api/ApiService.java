@@ -212,7 +212,8 @@ public class ApiService implements Service {
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
-                userService);
+                userService,
+                bisqEasyService.getBisqEasySellersReputationBasedTradeAmountService());
         TradeRestApi tradeRestApi = new TradeRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
                 userService,
