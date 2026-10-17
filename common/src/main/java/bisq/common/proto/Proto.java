@@ -17,7 +17,6 @@
 
 package bisq.common.proto;
 
-import bisq.common.annotation.ExcludeForHash;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 import org.slf4j.Logger;
@@ -27,11 +26,9 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Interface for any object which gets serialized using protobuf.
@@ -103,19 +100,6 @@ public interface Proto {
         return resolveBuilder(getBuilder(serializeForHash), serializeForHash).build();
     }
 
-    private Set<String> getExcludedFields() {
-        return Arrays.stream(getAllDeclaredFields(getClass()))
-                .peek(field -> field.setAccessible(true))
-                .filter(field -> field.isAnnotationPresent(ExcludeForHash.class))
-                .filter(field -> {
-                    int[] excludeOnlyInVersions = field.getAnnotation(ExcludeForHash.class).excludeOnlyInVersions();
-                    return excludeOnlyInVersions.length == 0 ||
-                            Arrays.stream(excludeOnlyInVersions).boxed().anyMatch(version -> version == getVersion());
-                })
-                .map(Field::getName)
-                .collect(Collectors.toSet());
-    }
-
     /**
      * Requires that the name of the java fields is the same as the name of the proto definition.
      *
@@ -123,7 +107,10 @@ public interface Proto {
      * @return Builder with the fields annotated with ExcludeForHash cleared.
      */
     private <B extends Message.Builder> B clearAnnotatedFields(B builder) {
-        Set<String> excludedFields = getExcludedFields();
+        Set<String> excludedFields = ExcludeForHashFields.get(getClass(), getVersion());
+        if (excludedFields.isEmpty()) {
+            return builder;
+        }
         /*if (!excludedFields.isEmpty()) {
             getLogger().debug("Clear fields in builder annotated with @ExcludeForHash: {}", excludedFields);
         }*/
