@@ -189,7 +189,7 @@ public class Bi2pController {
         try {
             return FileReaderUtils.readStringFromResource("bi2p/version.txt");
         } catch (IOException e) {
-            log.error("Could not read version. Run gradle task `copyI2pRouterAppVersionToResources`.", e);
+            log.error("Could not read version.", e);
             return "n/a";
         }
     }

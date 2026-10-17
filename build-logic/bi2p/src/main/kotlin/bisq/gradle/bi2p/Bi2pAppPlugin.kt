@@ -3,24 +3,15 @@ package bisq.gradle.bi2p
 import bisq.gradle.common.VersionUtil
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.tasks.Copy
+import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+import org.gradle.kotlin.dsl.named
 import org.gradle.kotlin.dsl.register
+import org.gradle.language.jvm.tasks.ProcessResources
 
 class Bi2pAppPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-        val copyBi2pAppVersionToDesktop = project.tasks.register<Copy>("copyBi2pAppVersionToDesktop") {
-            val desktopProject = project.rootProject.findProject(":apps:desktop")
-                ?: project.rootProject.subprojects.find { it.name == "desktop" }
-            requireNotNull(desktopProject) { "Desktop project not found (expected ':apps:desktop')." }
-            desktopProject.tasks.let {
-                from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
-                include("version.txt")
-                into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))
-            }
-        }
-
         val zipBi2pAppShadowJar: TaskProvider<Zip> = project.tasks.register<Zip>("zipBi2pAppShadowJar") {
             dependsOn(project.tasks.named("shadowJar"))
 
@@ -35,26 +26,25 @@ class Bi2pAppPlugin : Plugin<Project> {
             filePermissions { unix("0644") }
         }
 
-        val copyBi2pAppVersionToResources = project.tasks.register<Copy>("copyBi2pAppVersionToResources") {
-            dependsOn(project.tasks.named("processResources"))
-
-            from(project.layout.projectDirectory.asFile.absolutePath + "/version.txt")
-            into(project.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))
+        project.pluginManager.withPlugin("java") {
+            project.tasks.named<ProcessResources>("processResources") {
+                from(project.layout.projectDirectory.file("version.txt")) {
+                    into("bi2p")
+                }
+            }
         }
 
-        project.tasks.register<Copy>("processBi2pForDesktop") {
-            dependsOn(copyBi2pAppVersionToResources)
+        project.tasks.register<Sync>("processBi2pForDesktop") {
             dependsOn(zipBi2pAppShadowJar)
-            dependsOn(copyBi2pAppVersionToDesktop)
 
             val desktopProject = project.rootProject.findProject(":apps:desktop")
                 ?: project.rootProject.subprojects.find { it.name == "desktop" }
             requireNotNull(desktopProject) { "Desktop project not found (expected ':apps:desktop')." }
-            desktopProject.tasks.let {
-                from(project.layout.buildDirectory.dir("generated"))
-                exclude("sources")
-                into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))
+            from(project.layout.buildDirectory.dir("generated")) {
+                include("bi2p-" + VersionUtil.getVersionFromFile(project) + ".zip")
             }
+            from(project.layout.projectDirectory.file("version.txt"))
+            into(desktopProject.layout.buildDirectory.dir("generated/src/main/resources/bi2p"))
         }
     }
 }
