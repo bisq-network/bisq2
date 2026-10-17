@@ -26,6 +26,12 @@ tasks.named("build") {
     })
 }
 
+// The network modules depend on the tor modules, so they are published together. The root build cannot reach the tor
+// build, which only this build includes.
+tasks.named("publishToMavenLocal") {
+    dependsOn(gradle.includedBuild("tor").task(":publishToMavenLocal"))
+}
+
 extensions.findByName("buildScan")?.withGroovyBuilder {
     setProperty("termsOfServiceUrl", "https://gradle.com/terms-of-service")
     setProperty("termsOfServiceAgree", "yes")
