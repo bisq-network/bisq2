@@ -24,6 +24,7 @@ import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.application.ShutDownHandler;
 import bisq.application.State;
+import bisq.application.migration.MigrationListener;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.release.AppType;
@@ -110,8 +111,10 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final ClosedTradeItemsService closedTradeItemsService;
     private final MuSigService muSigService;
     private final BurningmanService burningmanService;
-    public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
-        super("desktop", args);
+    public DesktopApplicationService(String[] args,
+                                     ShutDownHandler shutDownHandler,
+                                     MigrationListener migrationListener) {
+        super("desktop", args, migrationListener);
 
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 

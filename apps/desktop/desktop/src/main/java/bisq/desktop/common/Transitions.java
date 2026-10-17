@@ -57,7 +57,7 @@ public class Transitions {
 
     public enum Type {
         BLACK(node -> darken(node, -1)),
-        VERY_DARK(node -> darken(node, -0.85)),
+        VERY_DARK(node -> darken(node, VERY_DARK_BRIGHTNESS)),
         DARK(node -> darken(node, -0.7)),
         MEDIUM(node -> darken(node, -0.5)),
         LIGHT(node -> darken(node, -0.25)),
@@ -83,6 +83,7 @@ public class Transitions {
         }
     }
 
+    public static final double VERY_DARK_BRIGHTNESS = -0.85;
     public static final Type DEFAULT_TYPE = Type.VERY_DARK;
 
     private static final int CROSS_FADE_IN_DURATION = 1500;

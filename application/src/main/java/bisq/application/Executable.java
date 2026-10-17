@@ -27,15 +27,25 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
             }
         }));
 
-        applicationService = createApplicationServiceOrExit(args);
+        try {
+            applicationService = createApplicationServiceOrExit(args);
 
-        long ts = System.currentTimeMillis();
-        applicationService.pruneAllBackups().join();
-        log.info("pruneAllBackups took {} ms", System.currentTimeMillis() - ts);
+            long ts = System.currentTimeMillis();
+            applicationService.pruneAllBackups().join();
+            log.info("pruneAllBackups took {} ms", System.currentTimeMillis() - ts);
 
-        ts = System.currentTimeMillis();
-        applicationService.readAllPersisted().join();
-        log.info("readAllPersisted took {} ms", System.currentTimeMillis() - ts);
+            ts = System.currentTimeMillis();
+            applicationService.readAllPersisted().join();
+            log.info("readAllPersisted took {} ms", System.currentTimeMillis() - ts);
+        } catch (RuntimeException | Error e) {
+            // An app can start threads before this, for example the desktop app its JavaFX thread. Such a thread would
+            // keep the JVM running after the failed start, so the JVM exits here.
+            shutDownStarted = true;
+            log.error("Startup failed", e);
+            System.err.println("Error: Startup failed: " + e);
+            System.exit(PlatformUtils.EXIT_FAILURE);
+            throw e;
+        }
 
         launchApplication(args);
     }

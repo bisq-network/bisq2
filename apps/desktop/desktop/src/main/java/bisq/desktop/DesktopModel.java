@@ -19,6 +19,7 @@ package bisq.desktop;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.common.view.NavigationModel;
+import javafx.geometry.Rectangle2D;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -46,6 +47,15 @@ public class DesktopModel extends NavigationModel {
 
     public DesktopModel(String title) {
         this.title = title;
+    }
+
+    // The size of the main window when no size is saved
+    public static double defaultStageWidth(Rectangle2D screenBounds) {
+        return Math.max(MIN_WIDTH, Math.min(PREF_WIDTH, screenBounds.getWidth()));
+    }
+
+    public static double defaultStageHeight(Rectangle2D screenBounds) {
+        return Math.max(MIN_HEIGHT, Math.min(PREF_HEIGHT, screenBounds.getHeight()));
     }
 
     @Override
