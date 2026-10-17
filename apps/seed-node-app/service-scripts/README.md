@@ -134,3 +134,13 @@ sudo systemctl status bisq2-seed
 # To check the log output
 sudo journalctl --no-pager --unit bisq2-seed
 ```
+
+## Failed migration of the data directory
+
+At the first start after an update, the seed runs the migrations of its data directory. If a migration fails, the
+seed does not start, because it could damage data which is not fully migrated. It exits with code 3, and systemd does
+not restart it. The log names the failed migration and the cause.
+
+The migrations run again at the next start. To start once although a migration failed, for example to recover data,
+add `-Dapplication.startAfterFailedMigration=true` to `JAVA_OPTS` in `/etc/default/bisq2-seed.env` and start the service.
+Remove the option again after that start: while it is set, the seed also starts after later failed migrations.

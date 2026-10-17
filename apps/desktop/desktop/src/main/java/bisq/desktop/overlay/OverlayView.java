@@ -49,6 +49,8 @@ import org.fxmisc.easybind.EasyBind;
 import org.fxmisc.easybind.Subscription;
 import org.fxmisc.easybind.monadic.MonadicBinding;
 
+import javax.annotation.Nullable;
+
 @Slf4j
 public class OverlayView extends NavigationView<AnchorPane, OverlayModel, OverlayController> {
     private static final Interpolator INTERPOLATOR = Interpolator.SPLINE(0.25, 0.1, 0.25, 1);
@@ -58,7 +60,10 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
     private final Stage stage;
     private final Window window;
     private final ChangeListener<Number> positionListener;
+    private final ChangeListener<Number> ownerSizeListener;
     private final Scene scene;
+    @Nullable
+    private Region childRoot;
     private Subscription childViewSizePin;
     private UIScheduler centerTime;
     private final EventHandler<KeyEvent> onKeyPressedHandler = controller::onKeyPressed;
@@ -100,9 +105,18 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
             centerTime = UIScheduler.run(this::layout).after(3000);
         };
 
+        // The overlay is limited to the size of its owner. The owner can change its size while the overlay shows, for
+        // example when the main window gets its saved size after it was shown with another one. Without this, the
+        // overlay would keep the limit of the old size.
+        ownerSizeListener = (observable, oldValue, newValue) -> {
+            if (childRoot != null) {
+                resizeStage(childRoot.getPrefWidth(), childRoot.getPrefHeight());
+            }
+        };
+
         model.getView().addListener((observable, oldValue, newValue) -> {
             if (newValue != null) {
-                Region childRoot = newValue.getRoot();
+                childRoot = newValue.getRoot();
                 Layout.pinToAnchorPane(childRoot, 0, 0, 0, 0);
                 root.getChildren().setAll(childRoot);
                 resizeStage(childRoot.getPrefWidth(), childRoot.getPrefHeight());
@@ -119,6 +133,7 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                                     size.getSecond().doubleValue()));
                 }
             } else {
+                childRoot = null;
                 hide();
             }
         });
@@ -155,10 +170,15 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
         scene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
         ownerScene.addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
 
+        // show() runs again for each new child view of a shown overlay, so the listeners are removed first, to add them
+        // only once
+        removeListeners();
         window.xProperty().addListener(positionListener);
         window.yProperty().addListener(positionListener);
         window.widthProperty().addListener(positionListener);
         window.heightProperty().addListener(positionListener);
+        owner.widthProperty().addListener(ownerSizeListener);
+        owner.heightProperty().addListener(ownerSizeListener);
 
         model.getTransitionsType().apply(owner);
         animateDisplay(controller::onShown);
@@ -183,15 +203,20 @@ public class OverlayView extends NavigationView<AnchorPane, OverlayModel, Overla
                 centerTime.stop();
             }
 
-            if (window != null && positionListener != null) {
-                window.xProperty().removeListener(positionListener);
-                window.yProperty().removeListener(positionListener);
-                window.widthProperty().removeListener(positionListener);
-            }
+            removeListeners();
 
             root.getChildren().clear();
             controller.onHidden();
         });
+    }
+
+    private void removeListeners() {
+        window.xProperty().removeListener(positionListener);
+        window.yProperty().removeListener(positionListener);
+        window.widthProperty().removeListener(positionListener);
+        window.heightProperty().removeListener(positionListener);
+        owner.widthProperty().removeListener(ownerSizeListener);
+        owner.heightProperty().removeListener(ownerSizeListener);
     }
 
     private void animateDisplay(Runnable onFinishedHandler) {

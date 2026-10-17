@@ -22,6 +22,7 @@ import bisq.application.Executable;
 import bisq.application.InstanceLockException;
 import bisq.application.InstanceLockUnavailableException;
 import bisq.desktop.DesktopController;
+import bisq.desktop.common.application.JavaFxApplicationData;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.components.overlay.Popup;
@@ -36,13 +37,15 @@ import javax.swing.SwingUtilities;
 import java.awt.GraphicsEnvironment;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.concurrent.CompletableFuture;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
 @Slf4j
 public class DesktopExecutable extends Executable<DesktopApplicationService> {
+    // Set on the JavaFX thread, read by the shutdown hook
     @Nullable
-    private DesktopController desktopController;
+    private volatile DesktopController desktopController;
     @Nullable
     private Popup shutdownInProcessPopup;
 
@@ -52,34 +55,50 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected DesktopApplicationService createApplicationService(String[] args) {
-        return new DesktopApplicationService(args, this);
+        // The constructor of the application service runs the migrations of the data directory, and MigrationScreen
+        // shows them in the main window. So JavaFX starts first. It shows no window unless a migration runs.
+        // If the constructor throws, Executable exits the JVM, so the JavaFX thread does not keep it running
+        launchJavaFx(args);
+        return new DesktopApplicationService(args, this, new MigrationScreen(JavaFXApplication.onApplicationLaunched));
     }
 
     @Override
     protected void launchApplication(String[] args) {
-        new Thread(() -> {
-            Thread.currentThread().setName("JavaFXApplication.launch");
-            Application.launch(JavaFXApplication.class, args); //blocks until app is closed
-        }).start();
-
+        // JavaFX runs already (see createApplicationService). As the launch future is usually complete by now,
+        // whenComplete would call us on this thread, so the UI part is moved to the JavaFX thread.
         JavaFXApplication.onApplicationLaunched
                 .whenComplete((applicationData, throwable) -> {
                     if (throwable == null) {
-                        try {
-                            log.info("Java FX Application launched");
-                            setupStartupAndShutdownErrorHandlers();
-                            desktopController = new DesktopController(applicationService.getState(),
-                                    applicationService.getServiceProvider(),
-                                    applicationData,
-                                    this::onApplicationLaunched);
-                            desktopController.init();
-                        } catch (Throwable t) {
-                            shutdownAfterStartupFailure("Desktop startup failed", t);
-                        }
+                        Platform.runLater(() -> {
+                            try {
+                                log.info("Java FX Application launched");
+                                setupStartupAndShutdownErrorHandlers();
+                                desktopController = new DesktopController(applicationService.getState(),
+                                        applicationService.getServiceProvider(),
+                                        applicationData,
+                                        this::onApplicationLaunched);
+                                desktopController.init();
+                            } catch (Throwable t) {
+                                shutdownAfterStartupFailure("Desktop startup failed", t);
+                            }
+                        });
                     } else {
                         shutdownAfterStartupFailure("Could not launch JavaFX application.", throwable);
                     }
                 });
+    }
+
+    private static void launchJavaFx(String[] args) {
+        new Thread(() -> {
+            Thread.currentThread().setName("JavaFXApplication.launch");
+            try {
+                Application.launch(JavaFXApplication.class, args); //blocks until app is closed
+            } catch (Throwable t) {
+                // Without this, MigrationScreen and launchApplication would wait for the launch forever
+                JavaFXApplication.onApplicationLaunched.completeExceptionally(t);
+                throw t;
+            }
+        }).start();
     }
 
     @Override
@@ -103,8 +122,8 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
             message = Res.get("popup.instanceLockFailed.msg", appName, appDataDirPath,
                     InstanceLockUnavailableException.DISABLE_CHECK_OPTION, reason);
         }
-        // We are called before JavaFX is launched, thus we cannot use our Popup. We use a lightweight AWT dialog
-        // instead if a display is available and fall back to stderr otherwise.
+        // JavaFX can already run, but our Popup needs the desktop UI, which does not exist yet. We use a lightweight AWT
+        // dialog instead if a display is available and fall back to stderr otherwise.
         if (!GraphicsEnvironment.isHeadless()) {
             try {
                 SwingUtilities.invokeAndWait(() ->
@@ -149,7 +168,10 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     @Override
     protected void notifyAboutShutdown() {
-        if (shutdownInProcessPopup != null) {
+        // The popup needs the desktop UI. Before it exists, for example while migrations run or when JavaFX failed to
+        // start, there is nothing to show it in, and Platform.runLater would wait forever for a JavaFX which failed to
+        // start.
+        if (shutdownInProcessPopup != null || desktopController == null) {
             return;
         }
         try {
@@ -193,16 +215,19 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
 
     private void shutdownAfterStartupFailure(String message, Throwable throwable) {
         log.error(message, throwable);
-        applicationService.shutdown().whenComplete((ignored, shutdownThrowable) -> {
-            if (shutdownThrowable != null) {
-                log.warn("Shutdown after startup failure failed", shutdownThrowable);
-            }
-            if (Platform.isFxApplicationThread()) {
-                Platform.exit();
-            } else {
-                System.exit(EXIT_FAILURE);
-            }
-        });
+        // The same shutdown as on quit, so that the shutdown hook waits for it and does not start a second one
+        CompletableFuture<Void> exit = shutdown(false)
+                .whenComplete((ignored, shutdownThrowable) -> System.exit(EXIT_FAILURE));
+        if (!isJavaFxLaunched()) {
+            // Without JavaFX, no other thread keeps the JVM alive until the shutdown completes. The JVM would then exit
+            // with code 0 before the shutdown and the exit with EXIT_FAILURE. So this thread waits for both.
+            exit.handle((result, exitThrowable) -> result).join();
+        }
+    }
+
+    private static boolean isJavaFxLaunched() {
+        CompletableFuture<JavaFxApplicationData> launched = JavaFXApplication.onApplicationLaunched;
+        return launched.isDone() && !launched.isCompletedExceptionally();
     }
 
     private void setupStartupAndShutdownErrorHandlers() {

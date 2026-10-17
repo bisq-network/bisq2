@@ -226,21 +226,17 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> apiService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
-                    if (throwable == null) {
-                        if (success) {
-                            setState(State.APP_INITIALIZED);
+                    // success is null if the initialization failed with an exception
+                    if (Boolean.TRUE.equals(success)) {
+                        setState(State.APP_INITIALIZED);
 
-                            difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
-                                    .getMostRecentValueOrDefault()
-                                    .addObserver(mostRecentValueOrDefault ->
-                                            networkService.getNetworkLoadServices().forEach(networkLoadService ->
-                                                    networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
+                        difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService()
+                                .getMostRecentValueOrDefault()
+                                .addObserver(mostRecentValueOrDefault ->
+                                        networkService.getNetworkLoadServices().forEach(networkLoadService ->
+                                                networkLoadService.setDifficultyAdjustmentFactor(mostRecentValueOrDefault)));
 
-                            log.info("ApplicationService initialized");
-                        } else {
-                            setState(State.FAILED);
-                            log.error("Initializing applicationService failed");
-                        }
+                        log.info("ApplicationService initialized");
                     } else {
                         setState(State.FAILED);
                         log.error("Initializing applicationService failed", throwable);

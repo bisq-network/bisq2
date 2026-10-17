@@ -91,7 +91,8 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> seedNodeService.initialize())
                 .orTimeout(5, TimeUnit.MINUTES)
                 .whenComplete((success, throwable) -> {
-                    if (success) {
+                    // success is null if the initialization failed with an exception
+                    if (Boolean.TRUE.equals(success)) {
                         // todo move to a service class
                         difficultyAdjustmentServicePin = bondedRolesService.getDifficultyAdjustmentService().getMostRecentValueOrDefault().addObserver(mostRecentValueOrDefault ->
                                 networkService.getNetworkLoadServices().forEach(networkLoadService ->

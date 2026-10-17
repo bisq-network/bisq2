@@ -74,13 +74,14 @@ public class ImageUtil {
         return Screen.getPrimary().getOutputScaleX() > 1.5;
     }
 
+    // Replaces the icons, so that a second call for the same stage does not add them twice
     public static void addAppIcons(Stage stage) {
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_512.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_256.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_128.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_64.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_32.png"));
-        stage.getIcons().add(ImageUtil.getImageByPath("images/app_window/icon_16.png"));
+        stage.getIcons().setAll(ImageUtil.getImageByPath("images/app_window/icon_512.png"),
+                ImageUtil.getImageByPath("images/app_window/icon_256.png"),
+                ImageUtil.getImageByPath("images/app_window/icon_128.png"),
+                ImageUtil.getImageByPath("images/app_window/icon_64.png"),
+                ImageUtil.getImageByPath("images/app_window/icon_32.png"),
+                ImageUtil.getImageByPath("images/app_window/icon_16.png"));
     }
 
     /**

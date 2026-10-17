@@ -16,6 +16,7 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @Slf4j
@@ -118,6 +119,41 @@ public class FileMutatorUtilsTest {
         Path path = tempDirPath.resolve("writefile.txt");
         FileMutatorUtils.writeToPath("data", path);
         assertEquals("data", FileReaderUtils.readUTF8String(path));
+    }
+
+    @Test
+    void testWriteToPathAtomicallyReplacesFile(@TempDir Path tempDirPath) throws IOException {
+        Path path = tempDirPath.resolve("file.txt");
+        FileMutatorUtils.writeToPath("old", path);
+
+        FileMutatorUtils.writeToPathAtomically("new", path);
+
+        assertEquals("new", FileReaderUtils.readUTF8String(path));
+        assertThat(tempDirPath.resolve("file.txt.tmp")).doesNotExist();
+    }
+
+    @Test
+    void testWriteToPathAtomicallyOverwritesTempFileOfEarlierCrash(@TempDir Path tempDirPath) throws IOException {
+        Path path = tempDirPath.resolve("file.txt");
+        Path tempPath = tempDirPath.resolve("file.txt.tmp");
+        FileMutatorUtils.writeToPath("a partial content which is longer than the new content", tempPath);
+
+        FileMutatorUtils.writeToPathAtomically("new", path);
+
+        assertEquals("new", FileReaderUtils.readUTF8String(path));
+        assertThat(tempPath).doesNotExist();
+    }
+
+    @Test
+    void testFailedWriteToPathAtomicallyKeepsPreviousContent(@TempDir Path tempDirPath) throws IOException {
+        Path path = tempDirPath.resolve("file.txt");
+        FileMutatorUtils.writeToPath("old", path);
+        // A directory at the path of the temporary file makes the write fail
+        Files.createDirectory(tempDirPath.resolve("file.txt.tmp"));
+
+        assertThrows(IOException.class, () -> FileMutatorUtils.writeToPathAtomically("new", path));
+
+        assertEquals("old", FileReaderUtils.readUTF8String(path));
     }
 
     @Test
