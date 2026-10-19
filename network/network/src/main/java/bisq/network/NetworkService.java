@@ -205,6 +205,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         log.info("initialize");
         NetworkExecutors.initialize(config.getNotifyExecutorMaxPoolSize());
         Connection.setExecutorMaxPoolSize(config.getConnectionExecutorMaxPoolSize());
+        dataService.ifPresent(DataService::initialize);
 
         NetworkId defaultNetworkId = networkIdService.getOrCreateDefaultNetworkId();
 

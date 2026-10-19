@@ -67,6 +67,31 @@ class StorableTypeMetaDataTest {
     }
 
     /**
+     * A MetaData on a type which the network storage never stores has no effect, while it reads as if the type were
+     * kept for that ttl and ordered by that priority. AuthorizeAccountTimestampV1Payload and V2Payload carried one
+     * from the commit which split them out of a MailboxMessage until it was removed again, and no test noticed.
+     * <p>
+     * Only a concrete type is checked. An abstract base or an interface may hold one for its subtypes.
+     */
+    @Test
+    void onlyAStorableTypeDeclaresMetaData() throws Exception {
+        Set<Class<?>> storableTypes = Set.copyOf(StorableTypes.find());
+        List<String> errors = new ArrayList<>();
+        for (Class<?> type : StorableTypes.findAll()) {
+            if (type.isInterface() || Modifier.isAbstract(type.getModifiers()) || storableTypes.contains(type)) {
+                continue;
+            }
+            for (Field field : type.getDeclaredFields()) {
+                if (field.getType() == MetaData.class && Modifier.isStatic(field.getModifiers())) {
+                    errors.add(type.getName() + " declares " + field.getName() + ", but is neither a DistributedData"
+                            + " nor a MailboxMessage, so the storage never stores it");
+                }
+            }
+        }
+        assertEquals(List.of(), errors);
+    }
+
+    /**
      * The network storage does not accept a type which is missing in the StorableTypesRegistry. A type which is added
      * to the code but not to ResolverConfig could not be stored.
      */
