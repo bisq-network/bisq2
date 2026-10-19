@@ -20,10 +20,8 @@ package bisq.bonded_roles.market_price;
 import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -39,12 +37,6 @@ import static org.mockito.Mockito.mock;
  */
 class MarketPriceRequestServiceTest {
     private MarketPriceRequestService service;
-
-    @BeforeAll
-    static void setUpResources() {
-        // MarketPriceProvider reads a display name from the resources
-        Res.setAndApplyLanguageTag("en");
-    }
 
     @BeforeEach
     void setUp() {
