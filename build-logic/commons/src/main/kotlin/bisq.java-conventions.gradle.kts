@@ -1,3 +1,6 @@
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+import org.gradle.api.tasks.testing.logging.TestLogEvent
+
 plugins {
     `java-library`
 }
@@ -41,6 +44,10 @@ pluginManager.withPlugin("com.gradleup.shadow") {
 tasks {
     test {
         useJUnitPlatform()
+        testLogging {
+            events(TestLogEvent.FAILED, TestLogEvent.SKIPPED)
+            exceptionFormat = TestExceptionFormat.FULL
+        }
     }
 
     withType<Jar> {
