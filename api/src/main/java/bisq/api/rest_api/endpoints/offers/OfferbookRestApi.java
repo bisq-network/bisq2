@@ -21,6 +21,7 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -32,6 +33,7 @@ import bisq.common.market.MarketRepository;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.api.dto.presentation.offerbook.SellerReputationVerdict;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
@@ -84,17 +86,20 @@ public class OfferbookRestApi extends RestApiBase {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
+    private final BisqEasySellersReputationBasedTradeAmountService sellersReputationService;
 
 
     public OfferbookRestApi(ChatService chatService,
                             MarketPriceService marketPriceService,
-                            UserService userService
+                            UserService userService,
+                            BisqEasySellersReputationBasedTradeAmountService sellersReputationService
     ) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         this.marketPriceService = marketPriceService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
         reputationService = userService.getReputationService();
+        this.sellersReputationService = sellersReputationService;
     }
 
     @DELETE
@@ -339,11 +344,17 @@ public class OfferbookRestApi extends RestApiBase {
     }
 
     private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
+        BisqEasyOffer offer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
+        Optional<Boolean> hasSellerSufficientReputation = SellerReputationVerdict.find(sellersReputationService, offer);
+        if (hasSellerSufficientReputation.isEmpty()) {
+            return Optional.empty();
+        }
         try {
             return OfferItemPresentationDtoFactory.create(userProfileService,
                     userIdentityService,
                     reputationService,
                     marketPriceService,
+                    hasSellerSufficientReputation.get(),
                     bisqEasyOfferbookMessage);
         } catch (RuntimeException e) {
             // A single offer whose amounts cannot be converted at its price (an overflowing

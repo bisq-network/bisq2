@@ -21,6 +21,8 @@ import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.subscription.ModificationType;
 import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
+import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -58,12 +60,14 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final ReputationService reputationService;
     private final UserIdentityService userIdentityService;
     private final MarketPriceService marketPriceService;
+    private final BisqEasySellersReputationBasedTradeAmountService sellersReputationService;
     private final Set<Pin> pins = new HashSet<>();
 
     public OffersWebSocketService(SubscriberRepository subscriberRepository,
                                   ChatService chatService,
                                   UserService userService,
-                                  BondedRolesService bondedRolesService) {
+                                  BondedRolesService bondedRolesService,
+                                  BisqEasyService bisqEasyService) {
         super(subscriberRepository, OFFERS);
 
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
@@ -71,6 +75,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
         userIdentityService = userService.getUserIdentityService();
         reputationService = userService.getReputationService();
         marketPriceService = bondedRolesService.getMarketPriceService();
+        sellersReputationService = bisqEasyService.getBisqEasySellersReputationBasedTradeAmountService();
     }
 
     @Override
@@ -185,6 +190,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 userIdentityService,
                 reputationService,
                 marketPriceService,
+                sellersReputationService.hasSellerSufficientReputation(bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow()),
                 bisqEasyOfferbookMessage);
     }
 }

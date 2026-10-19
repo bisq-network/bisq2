@@ -108,7 +108,7 @@ public class SubscriptionService implements Service {
 
         marketPriceWebSocketService = new MarketPriceWebSocketService(subscriberRepository, bondedRolesService);
         numOffersWebSocketService = new NumOffersWebSocketService(subscriberRepository, chatService, userService, bisqEasyService);
-        offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService);
+        offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService, bisqEasyService);
         tradesWebSocketService = new TradesWebSocketService(subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(subscriberRepository, tradeService);
         tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(subscriberRepository,
