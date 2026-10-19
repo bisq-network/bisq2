@@ -14,10 +14,13 @@ processes it again when it processes the next message of a trade.
 
 ## Rules
 
-1. A node keeps a trade message whose trade does not exist as a pending message. It processes the pending messages
-   again when it processes a trade message of an existing trade. A pending message which the node then passes to the
-   protocol of its trade is no longer pending. A pending message of an existing trade whose sender is not the trade
-   peer is dropped, as [Sender of a trade message](trade-message-sender.md) defines.
+1. A node keeps a trade message whose trade has no protocol yet as a pending message. The decision to keep a message
+   as pending and the creation of the protocol of its trade are one step. So a message which arrives while the node
+   creates the protocol either reaches the protocol directly, or is pending before the protocol exists. The node
+   processes the pending messages again when it processes a trade message of an existing trade. A maker processes the
+   take offer request right after it created the protocol of the trade. A pending message which the node then passes
+   to the protocol of its trade is no longer pending. A pending message of an existing trade whose sender is not the
+   trade peer is dropped, as [Sender of a trade message](trade-message-sender.md) defines.
 2. A node keeps at most 100 pending messages. When a message arrives while the node keeps 100 pending messages, the
    node drops the oldest pending message and keeps the new one. A message which is already pending does not change
    the number or the order of the pending messages.
@@ -44,6 +47,14 @@ processes it again when it processes the next message of a trade.
 
 ## Reasons
 
+- Rule 1, one step: the network layer passes each message to the trade service in a task of its own, so the
+  messages of a trade can be processed at the same time (see [Startup replay](../network/startup-replay.md)). The
+  node acknowledges a message when it decrypts it, so the peer does not send it again (see
+  [Message acknowledgement](../network/message-acknowledgement.md)). Without the one step, a message could find no
+  protocol, then the take offer request could create the protocol and process the pending messages, and only then the
+  message could become pending. Only a later trade message would pass it to the protocol. When a seller takes a buy
+  offer and sends the payment account data right after the request, no such message comes: the buyer waits for the
+  account data, and the seller waits for the payment.
 - Rule 2: anybody can send trade messages with made-up trade IDs to a node. Such a message never gets a trade, so
   without a bound it stays in memory until the node restarts, and the memory of the node grows without limit. A node
   has only a few trades whose messages can arrive before the trade exists, so 100 pending messages leave room for all

@@ -170,8 +170,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private final PendingTradeMessages<MuSigTradeMessage> pendingTradeMessages = new PendingTradeMessages<>();
     private final Map<String, Scheduler> closeTradeTimeoutSchedulerByTradeId = new ConcurrentHashMap<>();
     private final Map<String, CompletableFuture<Void>> observeDepositTxConfirmationStatusFutureByTradeId = new ConcurrentHashMap<>();
-    // Coordinates early-message buffering with protocol registration. Never acquire a protocol
-    // monitor or process messages while holding this lock; those operations can call blocking RPCs.
+    // Coordinates early-message buffering with protocol registration: the decision "no protocol, so the
+    // message is pending" and the registration of a protocol are one step, for trade, dispute and
+    // settlement messages. Never acquire a protocol monitor or process messages while holding this lock;
+    // those operations can call blocking RPCs.
     private final Object pendingMessagesLock = new Object();
     // Serializes maker-side trade creation so two concurrent take requests for the same trade id
     // cannot race a second trade or protocol into the registries.
@@ -458,9 +460,18 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             handleMuSigTradeMessage(message, protocol.orElseThrow());
             return;
         }
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    if (isMessageOfTradePeer(message, protocol)) {
-                        handleMuSigTradeMessage(message, protocol);
+        // A message which became pending after the take offer request processed the pending messages would not reach
+        // the protocol (rule 1 of docs/specifications/trade/pending-trade-messages.md)
+        Optional<MuSigProtocol> protocol;
+        synchronized (pendingMessagesLock) {
+            protocol = findProtocol(tradeId);
+            if (protocol.isEmpty()) {
+                pendingTradeMessages.add(message);
+            }
+        }
+        protocol.ifPresentOrElse(existingProtocol -> {
+                    if (isMessageOfTradePeer(message, existingProtocol)) {
+                        handleMuSigTradeMessage(message, existingProtocol);
                     } else {
                         pendingTradeMessages.remove(message);
                     }
@@ -470,7 +481,6 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
                                     "for re-processing when the next message arrives.",
                             StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
-                    pendingTradeMessages.add(message);
                 });
     }
 

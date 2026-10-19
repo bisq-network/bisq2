@@ -135,6 +135,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // adding of a new trade of a take offer request one step.
     @Getter(AccessLevel.NONE)
     private final Object tradeCreationLock = new Object();
+    // The lock makes the decision "no protocol, so the message is pending" and the registration of a protocol one
+    // step. A message which arrives while a take offer request creates the protocol of its trade then either finds the
+    // protocol, or is pending before the request processes the pending messages (rule 1 of
+    // docs/specifications/trade/pending-trade-messages.md). The network layer does not deliver the message again, so
+    // a message which became pending after that pass would not reach the protocol. Nothing else runs under the lock.
+    @Getter(AccessLevel.NONE)
+    private final Object pendingMessagesLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
         this.serviceProvider = serviceProvider;
@@ -261,9 +268,16 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
-        findProtocol(tradeId).ifPresentOrElse(protocol -> {
-                    if (isMessageOfTradePeer(message, protocol)) {
-                        handleBisqEasyTradeMessage(message, protocol);
+        Optional<BisqEasyProtocol> protocol;
+        synchronized (pendingMessagesLock) {
+            protocol = findProtocol(tradeId);
+            if (protocol.isEmpty()) {
+                pendingMessages.add(message);
+            }
+        }
+        protocol.ifPresentOrElse(existingProtocol -> {
+                    if (isMessageOfTradePeer(message, existingProtocol)) {
+                        handleBisqEasyTradeMessage(message, existingProtocol);
                     } else {
                         pendingMessages.remove(message);
                     }
@@ -273,7 +287,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                     log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
                                     "for re-processing when the next message arrives.",
                             StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
-                    pendingMessages.add(message);
                 });
     }
 
@@ -593,7 +606,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
-        tradeProtocolById.put(id, tradeProtocol);
+        synchronized (pendingMessagesLock) {
+            tradeProtocolById.put(id, tradeProtocol);
+        }
 
         bisqEasyOpenTradeChannelService.findChannelByTradeId(id)
                 .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
