@@ -380,6 +380,19 @@ class BisqEasyMediatorServiceRequestChecksTest {
         assertNotEquals(cases.get(0), new BisqEasyMediationCase(peersRequest));
     }
 
+    @Test
+    void acceptsOtherTradersRequestWithDifferentTakerAsSecondCase() {
+        // The other trader's contract names the taker with other addresses. The key is the same, so is the trade ID.
+        BisqEasyContract firstContract = TestContracts.contract(requester, peer, mediator);
+        cases.add(new BisqEasyMediationCase(createRequest(firstContract, requester, peer)));
+        BisqEasyContract otherContract = TestContracts.contract(requester, TestUserProfiles.withOtherAddress(peer), mediator);
+        BisqEasyMediationRequest peersRequest = createRequest(otherContract, peer, requester);
+
+        assertEquals(tradeId, peersRequest.getTradeId());
+        assertTrue(BisqEasyMediatorService.verifyMediationRequest(peersRequest, mock(BannedUserService.class), cases).isPresent());
+        assertNotEquals(cases.get(0), new BisqEasyMediationCase(peersRequest));
+    }
+
     private BisqEasyMediationRequest createRequest(BisqEasyContract contract,
                                                    UserProfile requester,
                                                    UserProfile peer) {
