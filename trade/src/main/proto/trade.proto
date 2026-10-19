@@ -87,6 +87,9 @@ message Trade {
     BisqEasyTrade bisqEasyTrade = 30;
     MuSigTrade muSigTrade = 31;
   }
+
+  // The trade messages which wait in the event queue of the state machine of the trade
+  repeated TradeMessage queuedTradeMessages = 32;
 }
 message TradeMessage {
   string id = 1;

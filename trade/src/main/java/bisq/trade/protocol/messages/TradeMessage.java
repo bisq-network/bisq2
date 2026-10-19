@@ -91,6 +91,11 @@ public abstract class TradeMessage implements MailboxMessage, ExternalNetworkMes
 
     abstract public bisq.trade.protobuf.TradeMessage.Builder getValueBuilder(boolean serializeForHash);
 
+    @Override
+    public bisq.trade.protobuf.TradeMessage toValueProto(boolean serializeForHash) {
+        return resolveValueProto(serializeForHash);
+    }
+
     public static TradeMessage fromProto(bisq.trade.protobuf.TradeMessage proto) throws UnresolvableProtobufException {
         return switch (proto.getMessageCase()) {
             case BISQEASYTRADEMESSAGE -> BisqEasyTradeMessage.fromProto(proto);
