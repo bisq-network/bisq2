@@ -20,14 +20,6 @@ javafx {
     modules = listOf("javafx.controls")
 }
 
-sourceSets {
-    main {
-        resources {
-            srcDir(layout.buildDirectory.file("generated/src/main/resources"))
-        }
-    }
-}
-
 dependencies {
     implementation("bisq:i18n")
     implementation(libs.zxing.core)
