@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -35,8 +35,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
  * <br/>
- * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
- * pending states after the next state transition.
+ * In case of out-of-order events we store the un-handled events (at most one per event type; subclasses may persist
+ * them) and retry to apply those pending states after the next state transition.
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
@@ -62,7 +62,27 @@ public abstract class Fsm<M extends FsmModel> {
     abstract protected void configTransitions();
 
     public <E extends Event> void handle(E event) {
+        // The Fsm monitor is the primary lock: callers serialize multi-step work with event handling via
+        // synchronized (protocol) (e.g. MuSigTradeService). The model lock is taken second - always in this order.
         synchronized (this) {
+            handleUnderModelLock(event);
+        }
+    }
+
+    private <E extends Event> void handleUnderModelLock(E event) {
+        // The model lock serves readers which only hold the model, not this Fsm (e.g. a persistence snapshot of
+        // {state, eventQueue}, see FsmModel#getStateAndEventQueueSnapshot): holding it for the whole transition
+        // means such a snapshot is never taken mid-transition. A live transition takes it unbounded; only the
+        // snapshot side uses a bounded tryLock.
+        model.lock.lock();
+        try {
+            // Tracks whether this call reached a final state, so the finally block below can route the mandatory
+            // post-transition persist() call through persistOnFinalState() instead of the normal persist(). This
+            // matters for privacy/retention: a final state clears eventQueue/processedEvents
+            // in-memory a few lines below, and that wipe must reach disk promptly - persistOnFinalState() bypasses
+            // any write-rate limiting a subclass may apply to the ordinary persist(), so the wipe is not silently
+            // dropped and left stranded on disk for an indefinite time.
+            boolean reachedFinalState = false;
             try {
                 checkNotNull(event, "event must not be null");
                 State currentState = model.getState();
@@ -106,26 +126,30 @@ public abstract class Fsm<M extends FsmModel> {
                         if (newState.isFinalState()) {
                             model.processedEvents.clear();
                             model.eventQueue.clear();
+                            reachedFinalState = true;
                         } else {
                             model.processedEvents.add(eventClass);
                             // Apply all pending events to see if any of those match our current state.
                             // If an exception is thrown by the processed pending event it will get thrown to the
                             // caller. This would be a different triggering event as the event which cause
                             // the exception (the one from the queue).
-                            // Clone set to avoid ConcurrentModificationException
-                            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                            drainEventQueue();
                         }
                     }
                 } else {
                     log.info("We did not find a transition with state {} and event {}. " +
-                                    "We add the event to the eventQueue for potential later processing.",
+                                    "We add the event to the eventQueue for potential later processing unless it " +
+                                    "was processed already or an event of that type is queued already.",
                             currentState, eventClass.getSimpleName());
                     // In case we get an event which does not match our current state we add the event to our
-                    // event queue if the event was not already processed.
-                    transitionMap.keySet().stream()
-                            .filter(key -> key.getSecond().equals(eventClass) &&
-                                    !model.processedEvents.contains(eventClass))
-                            .forEach(e -> model.eventQueue.add(event));
+                    // event queue if the event was not already processed. At most one event per type is queued:
+                    // out-of-order handling only supports unique event/state pairs, so a second event of a queued
+                    // type could never be applied, and an unbounded queue would let a peer grow the trade data
+                    // (which subclasses may persist) at will. The first one is kept.
+                    if (!model.processedEvents.contains(eventClass) &&
+                            model.eventQueue.stream().noneMatch(queued -> queued.getClass().equals(eventClass))) {
+                        model.eventQueue.add(event);
+                    }
                 }
             } catch (Exception exception) {
                 log.error("Error at handling {}.", describe(event), exception);
@@ -140,12 +164,64 @@ public abstract class Fsm<M extends FsmModel> {
                 // We throw the exception to allow specific error handling to the implementation class.
                 throw fsmException;
             } finally {
-                persist();
+                if (reachedFinalState) {
+                    persistOnFinalState();
+                } else {
+                    persist();
+                }
             }
+        } finally {
+            model.lock.unlock();
         }
     }
 
+    /**
+     * Persistence hook invoked after every handled event (and from the error path).
+     */
     protected abstract void persist();
+
+    /**
+     * Called instead of {@link #persist()} exactly once, when a transition reaches a final state. The default
+     * implementation just delegates to {@link #persist()}; override to bypass any write-rate limiting the
+     * concrete {@link #persist()} implementation applies (see {@code bisq.persistence.RateLimitedPersistenceClient}).
+     * <br/>
+     * Reaching a final state clears {@code eventQueue}/{@code processedEvents} in-memory a few lines above in
+     * {@link #handle(Event)}; those may hold sensitive, trade-specific network messages. Without a guaranteed,
+     * unthrottled flush here, a rate-limited persist() call could be silently dropped, leaving the (already
+     * in-memory-wiped) sensitive data sitting on disk for an unbounded time - potentially until the process's
+     * next unrelated persist() call, or its next clean shutdown, neither of which is guaranteed to happen promptly
+     * (or at all, on a crash/kill -9).
+     */
+    protected void persistOnFinalState() {
+        persist();
+    }
+
+    /**
+     * Re-attempts to handle every event currently sitting in the event queue against the current state.
+     * <br/>
+     * This is called automatically after any successful transition (see {@link #handle(Event)}), but it is
+     * also safe - and sometimes necessary - to call explicitly, e.g. once right after a model has been restored
+     * from persisted data: the event queue itself is not guaranteed to be persisted for every {@link FsmModel}
+     * subclass, so events which arrived out of order before a restart may otherwise never be re-applied because
+     * no further live transition ever occurs for that trade.
+     * <br/>
+     * Safe to call when the queue is empty (no-op) and safe to call multiple times. Exceptions from handling a
+     * queued event behave exactly as for a live event: each event goes through the concrete {@link #handle(Event)}
+     * implementation, so whether an {@link FsmException} propagates to the caller or is absorbed is up to the
+     * subclass (e.g. the trade protocols swallow it and surface an error state instead).
+     */
+    public void drainEventQueue() {
+        // Same lock order as handle(). Both locks are reentrant, so the nested handle(event) calls below are free.
+        synchronized (this) {
+            model.lock.lock();
+            try {
+                // Copy since handle() mutates model.eventQueue; a list keeps the arrival order for the replay.
+                List.copyOf(model.getEventQueue()).forEach(this::handle);
+            } finally {
+                model.lock.unlock();
+            }
+        }
+    }
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);
