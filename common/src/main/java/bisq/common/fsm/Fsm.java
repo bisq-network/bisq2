@@ -112,8 +112,7 @@ public abstract class Fsm<M extends FsmModel> {
                             // If an exception is thrown by the processed pending event it will get thrown to the
                             // caller. This would be a different triggering event as the event which cause
                             // the exception (the one from the queue).
-                            // Clone set to avoid ConcurrentModificationException
-                            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                            handleQueuedEvents();
                         }
                     }
                 } else {
@@ -142,6 +141,17 @@ public abstract class Fsm<M extends FsmModel> {
             } finally {
                 persist();
             }
+        }
+    }
+
+    /**
+     * Applies the queued events to the current state. An event which has no transition from the current state stays in
+     * the queue.
+     */
+    public void handleQueuedEvents() {
+        synchronized (this) {
+            // Clone set to avoid ConcurrentModificationException
+            new HashSet<>(model.getEventQueue()).forEach(this::handle);
         }
     }
 
