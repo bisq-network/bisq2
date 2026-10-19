@@ -24,6 +24,9 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.util.MathUtils;
+import bisq.user.profile.UserProfile;
+import bisq.user.reputation.ReputationScore;
+import bisq.user.reputation.ReputationService;
 import com.google.common.math.LongMath;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -34,6 +37,7 @@ import java.util.Optional;
 import static bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator.validateSellersReputation;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -293,5 +297,92 @@ class BisqEasyTradeAmountLimitsTest {
         assertTrue(BisqEasyTradeAmountLimits.findRequiredReputationScoreByFiatAmount(marketPriceService,
                 EUR_MARKET,
                 Fiat.fromFaceValue(500, "EUR")).isEmpty());
+    }
+
+    @Test
+    void maxUsdTradeAmountIsZeroForZeroScore() {
+        Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(0);
+        assertEquals(0, result.getValue());
+        assertEquals("USD", result.getCode());
+    }
+
+    @Test
+    void maxUsdTradeAmountScalesWith200PerUsd() {
+        // 30_000 score / 200 per USD = $150
+        Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(30_000);
+        assertEquals(Fiat.fromFaceValue(150, "USD").getValue(), result.getValue());
+    }
+
+    @Test
+    void maxUsdTradeAmountIsCappedAt600Usd() {
+        // 200_000 score / 200 = $1000, but cap is $600
+        Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(200_000);
+        assertEquals(Fiat.fromFaceValue(600, "USD").getValue(), result.getValue());
+    }
+
+    @Test
+    void maxUsdTradeAmountAtExactCap() {
+        // 120_000 / 200 = $600 exactly
+        Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(120_000);
+        assertEquals(Fiat.fromFaceValue(600, "USD").getValue(), result.getValue());
+    }
+
+    @Test
+    void maxUsdTradeAmountJustBelowCapIsRoundedDown() {
+        // 119_999 / 200 = $599.995, rounded down to whole USD (docs/specifications/trade/bisq-easy-seller-reputation-limit.md)
+        Fiat result = BisqEasyTradeAmountLimits.getMaxUsdTradeAmount(119_999);
+        assertEquals(Fiat.fromFaceValue(599, "USD").getValue(), result.getValue());
+    }
+
+    @Test
+    void sellOfferAllowedWithScoreAtThreshold() {
+        assertTrue(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER));
+    }
+
+    @Test
+    void sellOfferRejectedWithScoreBelowThreshold() {
+        assertFalse(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER - 1));
+    }
+
+    @Test
+    void sellOfferAllowedWithScoreAboveThreshold() {
+        assertTrue(isAllowedToCreateSellOffer(BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER + 1));
+    }
+
+    @Test
+    void sellOfferRejectedWithZeroScore() {
+        assertFalse(isAllowedToCreateSellOffer(0));
+    }
+
+    @Test
+    void constantsHaveExpectedValues() {
+        assertEquals(6, Monetary.toFaceValue(BisqEasyTradeAmountLimits.DEFAULT_MIN_USD_TRADE_AMOUNT, 0));
+        assertEquals(600, Monetary.toFaceValue(BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT, 0));
+        assertEquals(0, Monetary.toFaceValue(BisqEasyTradeAmountLimits.MAX_USD_TRADE_AMOUNT_WITHOUT_REPUTATION, 0));
+        assertEquals(0.05, BisqEasyTradeAmountLimits.TOLERANCE);
+        assertEquals(1200, BisqEasyTradeAmountLimits.MIN_REPUTATION_SCORE_TO_CREATE_SELL_OFFER);
+    }
+
+    @Test
+    void resultMatchScoreIsValid() {
+        assertTrue(BisqEasyTradeAmountLimits.Result.MATCH_SCORE.isValid());
+    }
+
+    @Test
+    void resultMatchToleratedScoreIsValid() {
+        assertTrue(BisqEasyTradeAmountLimits.Result.MATCH_TOLERATED_SCORE.isValid());
+    }
+
+    @Test
+    void resultScoreTooLowIsNotValid() {
+        assertFalse(BisqEasyTradeAmountLimits.Result.SCORE_TOO_LOW.isValid());
+    }
+
+    private boolean isAllowedToCreateSellOffer(long totalScore) {
+        UserProfile userProfile = mock(UserProfile.class);
+        ReputationService reputationService = mock(ReputationService.class);
+        when(reputationService.getReputationScore(userProfile))
+                .thenReturn(new ReputationScore(totalScore, 0, Integer.MAX_VALUE));
+        return BisqEasyTradeAmountLimits.isAllowedToCreateSellOffer(reputationService, userProfile);
     }
 }

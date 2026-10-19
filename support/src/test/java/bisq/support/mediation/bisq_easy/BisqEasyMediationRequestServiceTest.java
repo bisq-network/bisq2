@@ -24,15 +24,21 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
+import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
 import bisq.chat.ChatMessageType;
 import bisq.chat.ChatService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.common.encoding.Hex;
 import bisq.common.market.MarketRepository;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.TradeId;
@@ -54,6 +60,7 @@ import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.profile.UserProfile;
+import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -65,12 +72,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -85,7 +94,11 @@ import static org.mockito.Mockito.when;
  * contract, so a channel with another own identity or peer cannot request mediation either.
  */
 class BisqEasyMediationRequestServiceTest {
+    private static final String OFFER_ID = "offer-test-123";
+
     private NetworkService networkService;
+    private AuthorizedBondedRolesService authorizedBondedRolesService;
+    private UserProfileService userProfileService;
     private BisqEasyOpenTradeChannelService openTradeChannelService;
     private BisqEasyMediationRequestService service;
     private UserIdentity makerIdentity;
@@ -93,19 +106,26 @@ class BisqEasyMediationRequestServiceTest {
     private UserProfile mediator;
     private BisqEasyContract contract;
     private String tradeId;
+    private String makerProfileId;
+    private String takerProfileId;
 
     @BeforeEach
     void setUp() {
         networkService = mock(NetworkService.class);
         UserService userService = mock(UserService.class);
+        userProfileService = mock(UserProfileService.class);
+        when(userService.getUserProfileService()).thenReturn(userProfileService);
         when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
         openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
         ChatService chatService = mock(ChatService.class);
         when(chatService.getBisqEasyOpenTradeChannelService()).thenReturn(openTradeChannelService);
+        BondedRolesService bondedRolesService = mock(BondedRolesService.class);
+        authorizedBondedRolesService = mock(AuthorizedBondedRolesService.class);
+        when(bondedRolesService.getAuthorizedBondedRolesService()).thenReturn(authorizedBondedRolesService);
         service = new BisqEasyMediationRequestService(networkService,
                 chatService,
                 userService,
-                mock(BondedRolesService.class));
+                bondedRolesService);
 
         makerIdentity = createUserIdentity("maker");
         taker = createUserProfile("taker");
@@ -121,6 +141,9 @@ class BisqEasyMediationRequestServiceTest {
                 new MarketPriceSpec(),
                 60_000_0000);
         tradeId = TradeId.fromContract(contract);
+
+        makerProfileId = padId("maker");
+        takerProfileId = padId("taker");
     }
 
     private BisqEasyOpenTradeChannel makersChannel(Optional<UserProfile> channelMediator) {
@@ -256,6 +279,80 @@ class BisqEasyMediationRequestServiceTest {
         verify(networkService, never()).confidentialSend(any(), any(), any());
     }
 
+    @Test
+    void selectMediatorReturnsEmptyWhenNoMediators() {
+        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).thenReturn(Stream.empty());
+
+        Optional<UserProfile> result = service.selectMediator(makerProfileId, takerProfileId, OFFER_ID);
+        assertTrue(result.isEmpty());
+    }
+
+    // The traders' profiles are known, so selecting a trader would return that trader. Without the exclusion, some of
+    // the offer IDs select the maker or the taker.
+    @Test
+    void selectMediatorExcludesMakerAndTaker() {
+        AuthorizedBondedRole makerRole = createRole(makerProfileId);
+        AuthorizedBondedRole takerRole = createRole(takerProfileId);
+        RoleWithId mediator = createRoleWithId();
+        stubTradersProfiles();
+
+        UserProfile mediatorProfile = createUserProfile("selected-mediator");
+        when(userProfileService.findUserProfile(mediator.profileId)).thenReturn(Optional.of(mediatorProfile));
+
+        for (int i = 0; i < 10; i++) {
+            when(authorizedBondedRolesService.getAuthorizedBondedRoleStream())
+                    .thenReturn(Stream.of(makerRole, takerRole, mediator.role));
+            Optional<UserProfile> result = service.selectMediator(makerProfileId, takerProfileId, "offer-" + i);
+
+            assertEquals(Optional.of(mediatorProfile), result, "offer-" + i);
+        }
+    }
+
+    @Test
+    void selectMediatorReturnsEmptyWhenAllExcluded() {
+        AuthorizedBondedRole makerRole = createRole(makerProfileId);
+        AuthorizedBondedRole takerRole = createRole(takerProfileId);
+        stubTradersProfiles();
+
+        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream())
+                .thenReturn(Stream.of(makerRole, takerRole));
+
+        Optional<UserProfile> result = service.selectMediator(makerProfileId, takerProfileId, OFFER_ID);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    void selectMediatorReturnsEmptyWhenProfileNotFound() {
+        RoleWithId role = createRoleWithId();
+
+        when(authorizedBondedRolesService.getAuthorizedBondedRoleStream()).thenReturn(Stream.of(role.role));
+        when(userProfileService.findUserProfile(anyString())).thenReturn(Optional.empty());
+
+        Optional<UserProfile> result = service.selectMediator(makerProfileId, takerProfileId, OFFER_ID);
+        assertTrue(result.isEmpty());
+    }
+
+    // The oracle node's profile is known, so selecting the oracle node would return it. Without the bond type filter,
+    // some of the offer IDs select the oracle node.
+    @Test
+    void selectMediatorOnlyIncludesMediatorBondTypes() {
+        RoleWithId mediator = createRoleWithId();
+        String oracleProfileId = padId("oracl");
+        AuthorizedBondedRole oracleRole = createRoleWithType(oracleProfileId, BondedRoleType.ORACLE_NODE);
+        when(userProfileService.findUserProfile(oracleProfileId)).thenReturn(Optional.of(createUserProfile("oracle-node")));
+
+        UserProfile mediatorProfile = createUserProfile("selected-mediator");
+        when(userProfileService.findUserProfile(mediator.profileId)).thenReturn(Optional.of(mediatorProfile));
+
+        for (int i = 0; i < 10; i++) {
+            when(authorizedBondedRolesService.getAuthorizedBondedRoleStream())
+                    .thenReturn(Stream.of(mediator.role, oracleRole));
+            Optional<UserProfile> result = service.selectMediator(makerProfileId, takerProfileId, "offer-" + i);
+
+            assertEquals(Optional.of(mediatorProfile), result, "offer-" + i);
+        }
+    }
+
     private BisqEasyOpenTradeMessage message(UserProfile sender, String messageTradeId, String channelId) {
         return new BisqEasyOpenTradeMessage(messageTradeId,
                 StringUtils.createUid(),
@@ -321,5 +418,54 @@ class BisqEasyMediationRequestServiceTest {
         Address address = Address.from("127.0.0.1", 1000);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(address.getTransportType(), address)),
                 new PubKey(keyPair.getPublic(), keyId));
+    }
+
+    private void stubTradersProfiles() {
+        when(userProfileService.findUserProfile(makerProfileId)).thenReturn(Optional.of(createUserProfile("maker-role")));
+        when(userProfileService.findUserProfile(takerProfileId)).thenReturn(Optional.of(createUserProfile("taker-role")));
+    }
+
+    private record RoleWithId(AuthorizedBondedRole role, String profileId) {}
+
+    private static RoleWithId createRoleWithId() {
+        KeyPair kp = KeyGeneration.generateDefaultEcKeyPair();
+        PubKey pubKey = new PubKey(kp.getPublic(), "key-" + System.nanoTime());
+        String profileId = pubKey.getId();
+        AuthorizedBondedRole role = buildRole(profileId, kp, pubKey, BondedRoleType.MEDIATOR);
+        return new RoleWithId(role, profileId);
+    }
+
+    private static AuthorizedBondedRole createRole(String profileId) {
+        KeyPair kp = KeyGeneration.generateDefaultEcKeyPair();
+        PubKey pubKey = new PubKey(kp.getPublic(), "key-" + profileId);
+        return buildRole(profileId, kp, pubKey, BondedRoleType.MEDIATOR);
+    }
+
+    private static AuthorizedBondedRole createRoleWithType(String profileId, BondedRoleType type) {
+        KeyPair kp = KeyGeneration.generateDefaultEcKeyPair();
+        PubKey pubKey = new PubKey(kp.getPublic(), "key-" + profileId);
+        return buildRole(profileId, kp, pubKey, type);
+    }
+
+    private static AuthorizedBondedRole buildRole(String profileId, KeyPair kp, PubKey pubKey, BondedRoleType type) {
+        AddressByTransportTypeMap addresses = new AddressByTransportTypeMap(
+                Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(9000))
+        );
+        NetworkId networkId = new NetworkId(addresses, pubKey);
+        return new AuthorizedBondedRole(
+                profileId,
+                Hex.encode(kp.getPublic().getEncoded()),
+                type,
+                profileId.substring(0, 10) + "-bond",
+                "dummySig+base64sig00000000000000000000000000000000000000000000000=",
+                Optional.of(addresses),
+                networkId,
+                Optional.empty(),
+                false
+        );
+    }
+
+    private static String padId(String prefix) {
+        return (prefix + "0".repeat(40)).substring(0, 40);
     }
 }

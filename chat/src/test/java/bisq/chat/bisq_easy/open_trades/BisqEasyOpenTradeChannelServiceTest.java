@@ -17,14 +17,37 @@
 
 package bisq.chat.bisq_easy.open_trades;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.account.protocol_type.TradeProtocolType;
 import bisq.chat.ChatMessageType;
+import bisq.common.market.Market;
+import bisq.common.network.AddressByTransportTypeMap;
+import bisq.common.network.TransportType;
+import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
+import bisq.identity.Identity;
 import bisq.network.NetworkService;
+import bisq.network.SendMessageResult;
+import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.identity.NetworkId;
+import bisq.offer.Direction;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.offer.price.spec.MarketPriceSpec;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import bisq.security.keys.I2PKeyGeneration;
+import bisq.security.keys.KeyBundle;
+import bisq.security.keys.KeyGeneration;
+import bisq.security.keys.PubKey;
+import bisq.security.keys.TorKeyGeneration;
+import bisq.security.pow.ProofOfWork;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
@@ -34,23 +57,32 @@ import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 public class BisqEasyOpenTradeChannelServiceTest {
@@ -58,9 +90,13 @@ public class BisqEasyOpenTradeChannelServiceTest {
     private static final String MAKER_PROFILE_ID = "2222222222222222222222222222222222222222";
     private static final String OTHER_PROFILE_ID = "3333333333333333333333333333333333333333";
     private static final String TRADE_ID = "tradeId";
+    private static final Market MARKET = new Market("BTC", "USD", "Bitcoin", "US Dollar");
 
     private BisqEasyOpenTradeChannelService service;
     private UserIdentityService userIdentityService;
+    private UserProfileService userProfileService;
+    private BannedUserService bannedUserService;
+    private NetworkService networkService;
     private UserProfile taker;
     private UserIdentity makerIdentity;
 
@@ -74,10 +110,12 @@ public class BisqEasyOpenTradeChannelServiceTest {
         when(persistence.persistAsync(any())).thenReturn(CompletableFuture.completedFuture(null));
 
         userIdentityService = mock(UserIdentityService.class);
+        userProfileService = mock(UserProfileService.class);
+        bannedUserService = mock(BannedUserService.class);
         UserService userService = mock(UserService.class);
         when(userService.getUserIdentityService()).thenReturn(userIdentityService);
-        when(userService.getUserProfileService()).thenReturn(mock(UserProfileService.class));
-        when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
+        when(userService.getUserProfileService()).thenReturn(userProfileService);
+        when(userService.getBannedUserService()).thenReturn(bannedUserService);
         when(userService.getContactListService()).thenReturn(mock(ContactListService.class));
 
         makerIdentity = mock(UserIdentity.class);
@@ -87,7 +125,8 @@ public class BisqEasyOpenTradeChannelServiceTest {
         taker = mock(UserProfile.class);
         when(taker.getId()).thenReturn(TAKER_PROFILE_ID);
 
-        service = new BisqEasyOpenTradeChannelService(persistenceService, mock(NetworkService.class), userService);
+        networkService = mock(NetworkService.class);
+        service = new BisqEasyOpenTradeChannelService(persistenceService, networkService, userService);
     }
 
     @Test
@@ -255,6 +294,85 @@ public class BisqEasyOpenTradeChannelServiceTest {
         assertTrue(service.findChannelByTradeId(TRADE_ID).orElseThrow().getChatMessages().contains(message));
     }
 
+    @Test
+    void sendTakeOfferMessageFailsWhenMakerNotFound() {
+        BisqEasyOffer offer = createOffer(createNetworkId(4001));
+        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.empty());
+
+        CompletableFuture<SendMessageResult> result = service.sendTakeOfferMessage("trade-1", offer, Optional.empty());
+
+        assertTrue(result.isCompletedExceptionally());
+        ExecutionException ex = assertThrows(ExecutionException.class, result::get);
+        assertTrue(ex.getCause().getMessage().contains("makerUserProfile not found"));
+    }
+
+    @Test
+    void sendTakeOfferMessageFailsWhenMakerIsBanned() {
+        NetworkId makerNetworkId = createNetworkId(4001);
+        UserProfile makerProfile = createUserProfile(makerNetworkId);
+        BisqEasyOffer offer = createOffer(makerNetworkId);
+        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.of(makerProfile));
+        when(bannedUserService.isUserProfileBanned(makerProfile)).thenReturn(true);
+
+        CompletableFuture<SendMessageResult> result = service.sendTakeOfferMessage("trade-1", offer, Optional.empty());
+
+        assertTrue(result.isCompletedExceptionally());
+        ExecutionException ex = assertThrows(ExecutionException.class, result::get);
+        assertTrue(ex.getCause().getMessage().contains("Maker is banned"));
+    }
+
+    @Test
+    void sendTakeOfferMessageFailsWhenSelfIsBanned() {
+        NetworkId makerNetworkId = createNetworkId(4001);
+        UserProfile makerProfile = createUserProfile(makerNetworkId);
+        BisqEasyOffer offer = createOffer(makerNetworkId);
+        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.of(makerProfile));
+        when(bannedUserService.isUserProfileBanned(makerProfile)).thenReturn(false);
+
+        NetworkId takerNetworkId = createNetworkId(4002);
+        UserProfile takerProfile = createUserProfile(takerNetworkId);
+        UserIdentity takerIdentity = createUserIdentity(takerProfile, takerNetworkId);
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(takerIdentity);
+        when(bannedUserService.isUserProfileBanned(takerProfile)).thenReturn(true);
+
+        CompletableFuture<SendMessageResult> result = service.sendTakeOfferMessage("trade-1", offer, Optional.empty());
+
+        assertTrue(result.isCompletedExceptionally());
+        verify(networkService, never()).confidentialSend(any(), any(), any());
+        assertTrue(service.findChannelByTradeId("trade-1").isEmpty());
+    }
+
+    @Test
+    void sendTakeOfferMessageCreatesChannelAndSends() {
+        NetworkId makerNetworkId = createNetworkId(4001);
+        UserProfile makerProfile = createUserProfile(makerNetworkId);
+        BisqEasyOffer offer = createOffer(makerNetworkId);
+        when(userProfileService.findUserProfile(offer.getMakersUserProfileId())).thenReturn(Optional.of(makerProfile));
+        when(bannedUserService.isUserProfileBanned(any(UserProfile.class))).thenReturn(false);
+        when(bannedUserService.isUserProfileBanned(any(String.class))).thenReturn(false);
+        when(bannedUserService.isRateLimitExceeding(any(String.class))).thenReturn(false);
+
+        NetworkId takerNetworkId = createNetworkId(4002);
+        UserProfile takerProfile = createUserProfile(takerNetworkId);
+        UserIdentity takerIdentity = createUserIdentity(takerProfile, takerNetworkId);
+        when(userIdentityService.getSelectedUserIdentity()).thenReturn(takerIdentity);
+
+        SendMessageResult sendResult = new SendMessageResult();
+        when(networkService.confidentialSend(any(), any(NetworkId.class), any())).thenReturn(CompletableFuture.completedFuture(sendResult));
+
+        CompletableFuture<SendMessageResult> result = service.sendTakeOfferMessage("trade-1", offer, Optional.empty());
+
+        assertFalse(result.isCompletedExceptionally());
+        assertDoesNotThrow(() -> result.get());
+        ArgumentCaptor<EnvelopePayloadMessage> sent = ArgumentCaptor.forClass(EnvelopePayloadMessage.class);
+        verify(networkService).confidentialSend(sent.capture(), eq(makerNetworkId), any());
+        BisqEasyOpenTradeMessage takeOfferMessage = assertInstanceOf(BisqEasyOpenTradeMessage.class, sent.getValue());
+        assertEquals(ChatMessageType.TAKE_BISQ_EASY_OFFER, takeOfferMessage.getChatMessageType());
+        assertEquals(Optional.of(offer), takeOfferMessage.getBisqEasyOffer());
+        BisqEasyOpenTradeChannel channel = service.findChannelByTradeId("trade-1").orElseThrow();
+        assertTrue(channel.getChatMessages().contains(takeOfferMessage));
+    }
+
     private void tradeWithTakerExists() {
         service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
                 tradeId.equals(TRADE_ID) && senderUserProfileId.equals(TAKER_PROFILE_ID));
@@ -314,5 +432,49 @@ public class BisqEasyOpenTradeChannelServiceTest {
         NetworkId networkId = mock(NetworkId.class);
         when(networkId.getId()).thenReturn(userProfileId);
         return networkId;
+    }
+
+    private static NetworkId createNetworkId(int port) {
+        KeyPair kp = KeyGeneration.generateDefaultEcKeyPair();
+        PubKey pubKey = new PubKey(kp.getPublic(), "key-" + port);
+        AddressByTransportTypeMap addresses = new AddressByTransportTypeMap(
+                Map.of(TransportType.CLEAR, LocalHostAddressTypeFacade.toLocalHostAddress(port))
+        );
+        return new NetworkId(addresses, pubKey);
+    }
+
+    private static UserProfile createUserProfile(NetworkId networkId) {
+        PubKey pubKey = networkId.getPubKey();
+        ProofOfWork proofOfWork = new ProofOfWork(pubKey.getHash(), 0, null, 1.0, new byte[72], 0);
+        return new UserProfile(1, "nick", proofOfWork, 0, networkId, "", "", "1.0.0");
+    }
+
+    private static UserIdentity createUserIdentity(UserProfile userProfile, NetworkId networkId) {
+        KeyPair kp = KeyGeneration.generateDefaultEcKeyPair();
+        var torKeyPair = TorKeyGeneration.generateKeyPair();
+        var i2pKeyPair = I2PKeyGeneration.generateKeyPair();
+        KeyBundle keyBundle = new KeyBundle(userProfile.getId(), kp, torKeyPair, i2pKeyPair);
+        Identity identity = new Identity(userProfile.getId(), networkId, keyBundle);
+        return new UserIdentity(identity, userProfile);
+    }
+
+    private static BisqEasyOffer createOffer(NetworkId makerNid) {
+        return new BisqEasyOffer(
+                "offer-channel-test",
+                System.currentTimeMillis(),
+                makerNid,
+                Direction.SELL,
+                MARKET,
+                new BaseSideFixedAmountSpec(100_000L),
+                new MarketPriceSpec(),
+                List.of(TradeProtocolType.BISQ_EASY),
+                List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
+                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),
+                List.of(),
+                List.of("en"),
+                0,
+                "1.0.0",
+                "1.0.0"
+        );
     }
 }
