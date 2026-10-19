@@ -21,6 +21,8 @@ import lombok.Getter;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -240,6 +242,29 @@ public class FsmTest {
         assertEquals("test_comp", fsm.getModel().data);
         assertEquals(0, model.eventQueue.size());
         assertEquals(0, model.processedEvents.size());
+    }
+
+    @Test
+    void testHandleQueuedEventsOfRestoredModel() {
+        // The events have no handler, so they need no model
+        MockEvent2 eventWithTransitionFromRestoredState = new MockEvent2(null, "");
+        MockEvent3 eventWithTransitionFromLaterState = new MockEvent3(null, "");
+        MockModel model = new MockModel(MockState.S1,
+                Set.of(eventWithTransitionFromRestoredState, eventWithTransitionFromLaterState));
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S3)
+                .on(MockEvent3.class)
+                .to(MockState.COMPLETED);
+
+        fsm.handleQueuedEvents();
+        assertEquals(MockState.S2, model.getState());
+        assertEquals(Set.of(eventWithTransitionFromLaterState), model.getEventQueue());
     }
 
     @Test
@@ -692,6 +717,10 @@ public class FsmTest {
         public MockModel(MockState state, String data) {
             super(state);
             this.data = data;
+        }
+
+        public MockModel(MockState state, Set<Event> eventQueue) {
+            super(state, eventQueue, Set.of());
         }
 
         private String data = null;

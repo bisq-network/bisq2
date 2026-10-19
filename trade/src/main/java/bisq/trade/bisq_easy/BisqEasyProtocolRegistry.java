@@ -61,6 +61,11 @@ final class BisqEasyProtocolRegistry {
         return Optional.ofNullable(protocolByTradeId.get(tradeId));
     }
 
+    // A copy, so that later changes of the protocols do not change it
+    List<BisqEasyProtocol> getProtocols() {
+        return List.copyOf(protocolByTradeId.values());
+    }
+
     /**
      * Returns the protocol of the trade of the message. If the trade has no protocol, the message is pending before
      * this method returns, and the result is empty.

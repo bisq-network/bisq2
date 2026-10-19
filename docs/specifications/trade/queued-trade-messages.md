@@ -16,9 +16,9 @@ yet. It applies to Bisq Easy and to MuSig. The terms are those of [Sender of a t
 
 The mailbox of the network does not keep the order of messages (see
 [Pending trade messages](pending-trade-messages.md)). So a trade message can arrive while the trade is in a state from
-which its protocol has no transition for the message. The protocol keeps such an event in the event queue. After each
-change of the state, it applies the queued events again to the new state. In a final state, the protocol clears the
-event queue.
+which its protocol has no transition for the message. The protocol then keeps the message in the event queue. After
+each change of the state, it applies the queued events again to the new state. When the trade reaches a final state,
+the protocol clears the event queue.
 
 Example: the seller as maker has sent its payment account data and waits for the Bitcoin address of the buyer. The
 buyer receives the account data, pays, and sends the confirmation that it sent the fiat payment. If this confirmation
@@ -34,6 +34,14 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
    event queue of the trade contains these messages again.
 2. When the node loads a trade, it skips a queued trade message which it cannot parse. It keeps the trade and the
    other queued trade messages of the trade (rule 4 of [Validation at parsing](../network/validation-at-parsing.md)).
+3. At startup, the trade service applies the queued events of each stored trade once, after it knows the trade
+   restrictions of the stored alerts. The protocol processes a queued event which has a transition from the current
+   state of the trade, as it does after a change of the state. The other events stay in the event queue.
+4. During a halt of trading, or when the version of the node is below the minimum version for trading, the trade
+   service does not apply the queued events at startup. They stay in the event queue, and the protocol applies them
+   after the next change of the state.
+5. When the queued events of one trade fail at startup, the node logs the failure and continues with the next trade.
+   The start of the trade service does not fail, as for the items of [Startup replay](../network/startup-replay.md).
 
 ## Reasons
 
@@ -47,6 +55,17 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
 - Rule 2: a later version can add an integrity rule which a persisted message breaks (rule 3 of
   [Validation at parsing](../network/validation-at-parsing.md)). If such a message made the trade fail at parsing, the
   trade store would skip the whole trade, and the next write of the store would remove the trade from the disk.
+- Rule 3: when the protocol has finished an event, no queued event has a transition from the current state, because
+  the protocol applies the queued events after each change of the state. A stored trade can still have such an event,
+  in two cases. First, the node writes the store in another thread than the protocol. A write can contain the new
+  state of a trade and still the queued event which the protocol processes next. If the node stops before the next
+  write, the store keeps this combination. Second, a later version can add a transition from the stored state. In both
+  cases, the event would otherwise wait for a change of the state which only the event itself causes.
+- Rule 4: the queued trade messages come from the trade peer. The security managers halt trading, or require a
+  minimum version for trading, to stop the handlers of the protocol. The node ignores a new trade message during such
+  a restriction (see "Same restrictions as a new message" in [Startup replay](../network/startup-replay.md)), so it
+  does not process a queued one either.
+- Rule 5: one stored trade must not stop the start of the node or the other trades.
 
 ## Compatibility
 
@@ -82,6 +101,16 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
   - What would remove it: the redaction also removes the queued trade messages of a trade whose date for the
     redaction has passed.
   - Who decides: the developers.
-- **Writes of the trade store.** The trade services write their store at most once per second and at a regular
-  shutdown. If the node stops without a regular shutdown, it can lose a queued trade message which arrived shortly
-  before, as it can lose every other recent change of a trade.
+- **Restriction at startup.** A queued event which has a transition from the stored state waits during a restriction
+  of trading at startup (rule 4). When the restriction ends, the node does not apply the queued events. It applies
+  them at the next change of the state or at the next start without a restriction.
+  - Why it remains: the change applies the queued events only at startup and after a change of the state, as the
+    protocol did before.
+  - What would remove it: the trade services apply the queued events again when a restriction of trading ends.
+  - Who decides: the developers.
+
+## Not covered
+
+How often the trade services write their store. They write it at most once per second and at a regular shutdown. If
+the node stops without a regular shutdown, it can lose a queued trade message which arrived shortly before, as it can
+lose every other recent change of a trade.

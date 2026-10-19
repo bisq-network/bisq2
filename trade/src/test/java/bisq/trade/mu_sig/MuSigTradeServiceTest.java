@@ -23,6 +23,8 @@ import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.BondedRolesService;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
+import bisq.bonded_roles.security_manager.alert.AlertType;
+import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.chat.ChatService;
 import bisq.chat.mu_sig.open_trades.MuSigDisputeAgentType;
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
@@ -345,6 +347,57 @@ class MuSigTradeServiceTest {
             assertThat(trade.getTradeState()).isEqualTo(stateBefore);
             assertThat(trade.getEventQueue()).isEmpty();
         }
+    }
+
+    // A stored trade keeps its queued trade messages, and the trade service applies them at startup with the trade
+    // restrictions of the stored alerts (docs/specifications/trade/queued-trade-messages.md). The protocol has a
+    // transition for an error report of the peer from every state.
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsAppliedAtStartup() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture ignored = new MediationFixture(storedTrade, true)) {
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
+            assertThat(storedTrade.getEventQueue()).isEmpty();
+        }
+    }
+
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsNotAppliedAtStartupDuringAStoredHaltOfTrading() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading());
+
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.DEPOSIT_TX_CONFIRMED);
+            assertThat(storedTrade.getEventQueue()).hasSize(1);
+        }
+    }
+
+    private static MuSigTrade withQueuedErrorReportOfPeer(MuSigTrade trade) throws Exception {
+        MuSigReportErrorMessage report = new MuSigReportErrorMessage("peer-error", trade.getId(),
+                MuSigProtocol.VERSION, trade.getPeer().getNetworkId(), trade.getMyself().getNetworkId(),
+                "error", "", TradeProtocolFailure.UNKNOWN);
+        return MuSigTrade.fromProto(trade.toProto(false).toBuilder()
+                .addQueuedTradeMessages(report.toValueProto(false))
+                .build());
+    }
+
+    private static AuthorizedAlertData haltOfTrading() {
+        return new AuthorizedAlertData("alertId",
+                System.currentTimeMillis(),
+                AlertType.EMERGENCY,
+                Optional.empty(),
+                Optional.of("Trading is halted"),
+                true,
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                "1".repeat(40),
+                false,
+                Optional.empty(),
+                AppType.DESKTOP);
     }
 
     @Test

@@ -147,7 +147,8 @@ public abstract class Fsm<M extends FsmModel> {
 
     /**
      * Applies the queued events to the current state. An event which has no transition from the current state stays in
-     * the queue.
+     * the queue. The Fsm calls it after each change of the state. The owner of a persisted model calls it after it
+     * restored the model with its event queue, as the restored state can already have a transition for a queued event.
      */
     public void handleQueuedEvents() {
         synchronized (this) {
