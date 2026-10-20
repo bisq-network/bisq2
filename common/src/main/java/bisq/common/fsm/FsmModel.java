@@ -25,7 +25,6 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -35,12 +34,13 @@ import java.util.concurrent.ConcurrentHashMap;
 public class FsmModel {
     private final Observable<State> state = new Observable<>();
 
-    // Package visibility for access from Fsm mutating the collections 
-    // The persistence of a model can read the event queue in its own thread while the Fsm changes it. A concurrent set
-    // does not throw a ConcurrentModificationException in that case.
+    // Package visibility for access from Fsm mutating the collections
+    // The persistence of a model can read the event queue in its own thread while the Fsm changes it. The hash code of
+    // a model reads both sets, for example when a trade store copies its trades for a write while the Fsm of another
+    // trade changes its model. A concurrent set does not throw a ConcurrentModificationException in these cases.
     @ToString.Exclude
     final Set<Event> eventQueue = ConcurrentHashMap.newKeySet();
-    final Set<Class<? extends Event>> processedEvents = new HashSet<>();
+    final Set<Class<? extends Event>> processedEvents = ConcurrentHashMap.newKeySet();
 
     public FsmModel(State initialState, Set<Event> eventQueue) {
         this(initialState, eventQueue, Set.of());
