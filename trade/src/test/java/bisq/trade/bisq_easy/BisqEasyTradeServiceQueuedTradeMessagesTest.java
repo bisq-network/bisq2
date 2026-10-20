@@ -65,6 +65,8 @@ import static org.mockito.Mockito.when;
  * arrives before the buyer's Bitcoin address.
  */
 class BisqEasyTradeServiceQueuedTradeMessagesTest {
+    private static final String BTC_ADDRESS = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
+
     private final List<BisqEasyTradeService> services = new ArrayList<>();
     private ObservableSet<AuthorizedAlertData> alerts;
     private NetworkId makerNetworkId;
@@ -129,11 +131,25 @@ class BisqEasyTradeServiceQueuedTradeMessagesTest {
         assertEquals(1, storedTrade.getEventQueue().size());
     }
 
+    @Test
+    void queuedTradeMessageIsNotProcessedAtStartupBelowAStoredMinimumVersion() throws UnresolvableProtobufException {
+        BisqEasyTrade storedTrade = storedTradeWithQueuedConfirmFiatSent();
+        alerts.add(minimumVersionForTrading());
+
+        startServiceWith(storedTrade);
+
+        assertEquals(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                storedTrade.getState());
+        assertEquals(1, storedTrade.getEventQueue().size());
+    }
+
     // A store whose write contains the state after the Bitcoin address, but still the queued confirmation which the
     // protocol processes in the next step
     private BisqEasyTrade storedTradeWithQueuedConfirmFiatSent() throws UnresolvableProtobufException {
-        return BisqEasyTrade.fromProto(trade.toProto(false).toBuilder()
+        bisq.trade.protobuf.Trade proto = trade.toProto(false);
+        return BisqEasyTrade.fromProto(proto.toBuilder()
                 .setState(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS.name())
+                .setBisqEasyTrade(proto.getBisqEasyTrade().toBuilder().setBitcoinPaymentData(BTC_ADDRESS))
                 .addQueuedTradeMessages(confirmFiatSent().toValueProto(false))
                 .build());
     }
@@ -165,7 +181,7 @@ class BisqEasyTradeServiceQueuedTradeMessagesTest {
                 BisqEasyProtocol.VERSION,
                 takerNetworkId,
                 makerNetworkId,
-                "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq",
+                BTC_ADDRESS,
                 offer);
     }
 
@@ -178,6 +194,23 @@ class BisqEasyTradeServiceQueuedTradeMessagesTest {
                 true,
                 false,
                 Optional.empty(),
+                Optional.empty(),
+                "1".repeat(40),
+                false,
+                Optional.empty(),
+                AppType.DESKTOP);
+    }
+
+    // The minimum version is above the version of every node, so the node of the test is restricted
+    private static AuthorizedAlertData minimumVersionForTrading() {
+        return new AuthorizedAlertData("alertId",
+                System.currentTimeMillis(),
+                AlertType.EMERGENCY,
+                Optional.empty(),
+                Optional.of("Update to trade"),
+                false,
+                true,
+                Optional.of("99.0.0"),
                 Optional.empty(),
                 "1".repeat(40),
                 false,

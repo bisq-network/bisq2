@@ -375,6 +375,20 @@ class MuSigTradeServiceTest {
         }
     }
 
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsNotAppliedAtStartupBelowAStoredMinimumVersion() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(minimumVersionForTrading());
+
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.DEPOSIT_TX_CONFIRMED);
+            assertThat(storedTrade.getEventQueue()).hasSize(1);
+        }
+    }
+
     private static MuSigTrade withQueuedErrorReportOfPeer(MuSigTrade trade) throws Exception {
         MuSigReportErrorMessage report = new MuSigReportErrorMessage("peer-error", trade.getId(),
                 MuSigProtocol.VERSION, trade.getPeer().getNetworkId(), trade.getMyself().getNetworkId(),
@@ -393,6 +407,23 @@ class MuSigTradeServiceTest {
                 true,
                 false,
                 Optional.empty(),
+                Optional.empty(),
+                "1".repeat(40),
+                false,
+                Optional.empty(),
+                AppType.DESKTOP);
+    }
+
+    // The minimum version is above the version of every node, so the node of the test is restricted
+    private static AuthorizedAlertData minimumVersionForTrading() {
+        return new AuthorizedAlertData("alertId",
+                System.currentTimeMillis(),
+                AlertType.EMERGENCY,
+                Optional.empty(),
+                Optional.of("Update to trade"),
+                false,
+                true,
+                Optional.of("99.0.0"),
                 Optional.empty(),
                 "1".repeat(40),
                 false,
