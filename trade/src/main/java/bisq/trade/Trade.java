@@ -106,7 +106,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P maker,
                     TradeLifecycleState lifecycleState,
                     Set<Event> queuedEvents) {
-        super(state, queuedEvents, Set.of());
+        super(state, queuedEvents);
 
         this.contract = contract;
         this.id = id;

@@ -720,7 +720,7 @@ public class FsmTest {
         }
 
         public MockModel(MockState state, Set<Event> eventQueue) {
-            super(state, eventQueue, Set.of());
+            super(state, eventQueue);
         }
 
         private String data = null;
