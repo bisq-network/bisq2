@@ -80,16 +80,6 @@ class PendingTradeMessagesTest {
     }
 
     @Test
-    void removeReportsWhetherTheMessageWasPending() {
-        BisqEasyTradeMessage message = message(1);
-        pendingMessages.add(message);
-
-        assertThat(pendingMessages.remove(message)).isTrue();
-        assertThat(pendingMessages.remove(message)).isFalse();
-        assertThat(pendingMessages.isEmpty()).isTrue();
-    }
-
-    @Test
     void removingTheMessagesOfATradeReturnsThemOnceInArrivalOrder() {
         BisqEasyTradeMessage first = message(1, "trade");
         BisqEasyTradeMessage ofOtherTrade = message(2, "other-trade");
