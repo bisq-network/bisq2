@@ -241,6 +241,8 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     // messages of earlier sessions (see docs/specifications/network/startup-replay.md).
                     authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
+                    handleQueuedEventsOfStoredTrades();
+
                     StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
                                     .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
                             this::onMessage);
@@ -494,6 +496,25 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     message.getClass().getSimpleName());
         }
         return isMessageOfTradePeer;
+    }
+
+    // A stored trade keeps its queued trade messages, and the stored state can already have a transition for one of
+    // them, for example after a later version added the transition. Such a message would otherwise wait for a change of
+    // the state which only the message itself causes. The queued messages come from the trade peer, so the trade
+    // restrictions of the stored alerts apply as for a new message
+    // (see docs/specifications/trade/queued-trade-messages.md).
+    private void handleQueuedEventsOfStoredTrades() {
+        try {
+            verifyTradingNotOnHalt();
+            verifyMinVersionForTrading();
+        } catch (TradeRestrictedException e) {
+            log.warn("We do not apply the queued events of the stored trades as trading is currently not allowed: {}",
+                    e.getMessage());
+            return;
+        }
+        StartupReplay.forEach(tradeProtocolById.values().stream()
+                        .filter(protocol -> !protocol.getTrade().getEventQueue().isEmpty()),
+                protocol -> submitTradeTask(protocol.getTrade().getId(), protocol::handleQueuedEvents));
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {

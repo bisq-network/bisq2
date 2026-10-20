@@ -17,6 +17,7 @@
 
 package bisq.trade;
 
+import bisq.common.fsm.Event;
 import bisq.common.fsm.FsmModel;
 import bisq.common.fsm.State;
 import bisq.common.monetary.Monetary;
@@ -24,12 +25,14 @@ import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
+import bisq.common.proto.ProtobufUtils;
 import bisq.contract.Contract;
 import bisq.contract.TradeId;
 import bisq.identity.Identity;
 import bisq.offer.Direction;
 import bisq.offer.Offer;
 import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.trade.protocol.messages.TradeMessage;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
@@ -37,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Getter
@@ -88,7 +93,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 myIdentity,
                 taker,
                 maker,
-                lifecycleState);
+                lifecycleState,
+                Set.of());
     }
 
     protected Trade(C contract,
@@ -98,8 +104,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     Identity myIdentity,
                     P taker,
                     P maker,
-                    TradeLifecycleState lifecycleState) {
-        super(state);
+                    TradeLifecycleState lifecycleState,
+                    Set<Event> queuedEvents) {
+        super(state, queuedEvents);
 
         this.contract = contract;
         this.id = id;
@@ -126,7 +133,28 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         Optional.ofNullable(getPeersErrorStackTrace()).ifPresent(builder::setPeersErrorStackTrace);
         Optional.ofNullable(getTradeProtocolFailure()).ifPresent(e -> builder.setTradeProtocolFailure(e.toProtoEnum()));
         Optional.ofNullable(getPeersTradeProtocolFailure()).ifPresent(e -> builder.setPeersTradeProtocolFailure(e.toProtoEnum()));
+        // The node does not receive a queued trade message again, so the trade keeps it. A local event, for example a
+        // user action, has no persisted form (see docs/specifications/trade/queued-trade-messages.md).
+        getEventQueue().forEach(event -> {
+            if (event instanceof TradeMessage tradeMessage) {
+                try {
+                    builder.addQueuedTradeMessages(tradeMessage.toValueProto(serializeForHash));
+                } catch (RuntimeException e) {
+                    log.error("Trade message of type {} with trade ID {} could not be serialized at toValueProto.",
+                            tradeMessage.getClass().getSimpleName(),
+                            tradeMessage.getTradeId());
+                }
+            }
+        });
         return builder;
+    }
+
+    // A queued trade message which we cannot parse, for example after a later version added an integrity rule, is
+    // skipped. The trade and its other queued messages are kept (rule 4 of
+    // docs/specifications/network/validation-at-parsing.md).
+    protected static Set<Event> queuedTradeMessagesFromProto(bisq.trade.protobuf.Trade proto) {
+        return ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getQueuedTradeMessagesList(), TradeMessage::fromProto)
+                .collect(Collectors.toSet());
     }
 
     protected void setErrorMessage(String errorMessage) {

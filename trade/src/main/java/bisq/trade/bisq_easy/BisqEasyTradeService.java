@@ -40,6 +40,7 @@ import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
 import bisq.network.NetworkService;
+import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.network.p2p.services.confidential.ConfidentialMessageService;
@@ -55,9 +56,9 @@ import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyBuyerAsTakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
-import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsMakerProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasySellerAsTakerProtocol;
+import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyAccountDataEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyBtcConfirmedEvent;
 import bisq.trade.bisq_easy.protocol.events.BisqEasyCancelTradeEvent;
@@ -191,6 +192,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         // alerts must be known before it (see docs/specifications/network/startup-replay.md).
         authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
+        handleQueuedEventsOfStoredTrades();
+
         networkService.subscribeToConfidentialMessages(this);
 
         numDaysAfterRedactingTradeDataScheduler = Scheduler.run(this::maybeRedactDataOfCompletedTrades)
@@ -289,6 +292,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                     message.getClass().getSimpleName());
         }
         return isMessageOfTradePeer;
+    }
+
+    // A stored trade keeps its queued trade messages, and the stored state can already have a transition for one of
+    // them, for example after a later version added the transition. Such a message would otherwise wait for a change of
+    // the state which only the message itself causes. The queued messages come from the trade peer, so the trade
+    // restrictions of the stored alerts apply as for a new message
+    // (see docs/specifications/trade/queued-trade-messages.md).
+    private void handleQueuedEventsOfStoredTrades() {
+        try {
+            verifyTradingNotOnHalt();
+            verifyMinVersionForTrading();
+        } catch (TradeRestrictedException e) {
+            log.warn("We do not apply the queued events of the stored trades as trading is currently not allowed: {}",
+                    e.getMessage());
+            return;
+        }
+        StartupReplay.forEach(protocolRegistry.getProtocols().stream(), BisqEasyProtocol::handleQueuedEvents);
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {

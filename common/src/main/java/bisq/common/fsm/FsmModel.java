@@ -19,6 +19,7 @@ package bisq.common.fsm;
 
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @ToString
@@ -34,17 +36,23 @@ public class FsmModel {
     private final Observable<State> state = new Observable<>();
 
     // Package visibility for access from Fsm mutating the collections 
-    final Set<Event> eventQueue = new HashSet<>();
+    // The persistence of a model can read the event queue in its own thread while the Fsm changes it. A concurrent set
+    // does not throw a ConcurrentModificationException in that case.
+    @ToString.Exclude
+    final Set<Event> eventQueue = ConcurrentHashMap.newKeySet();
     final Set<Class<? extends Event>> processedEvents = new HashSet<>();
 
-    public FsmModel(State initialState) {
-        if (initialState == null) {
-            throw new FsmConfigException("initialState must not be null");
-        }
-        state.set(initialState);
+    public FsmModel(State initialState, Set<Event> eventQueue) {
+        this(initialState, eventQueue, Set.of());
     }
 
-    public FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
+    @VisibleForTesting
+    FsmModel(State initialState) {
+        this(initialState, Set.of(), Set.of());
+    }
+
+    @VisibleForTesting
+    FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
         if (initialState == null) {
             throw new FsmConfigException("initialState must not be null");
         }

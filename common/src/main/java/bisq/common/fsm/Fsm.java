@@ -35,8 +35,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
  * <br/>
- * In case of out-of-order events we store the un-handled events (we do not persist it) and retry to apply those
- * pending states after the next state transition.
+ * In case of out-of-order events we store the un-handled events in the event queue of the model and retry to apply
+ * those pending events after the next state transition. The owner of a persisted model can persist the event queue
+ * with the model (a trade persists its queued trade messages).
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
@@ -112,8 +113,7 @@ public abstract class Fsm<M extends FsmModel> {
                             // If an exception is thrown by the processed pending event it will get thrown to the
                             // caller. This would be a different triggering event as the event which cause
                             // the exception (the one from the queue).
-                            // Clone set to avoid ConcurrentModificationException
-                            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+                            handleQueuedEvents();
                         }
                     }
                 } else {
@@ -142,6 +142,18 @@ public abstract class Fsm<M extends FsmModel> {
             } finally {
                 persist();
             }
+        }
+    }
+
+    /**
+     * Applies the queued events to the current state. An event which has no transition from the current state stays in
+     * the queue. The Fsm calls it after each change of the state. The owner of a persisted model calls it after it
+     * restored the model with its event queue, as the restored state can already have a transition for a queued event.
+     */
+    public void handleQueuedEvents() {
+        synchronized (this) {
+            // Clone set to avoid ConcurrentModificationException
+            new HashSet<>(model.getEventQueue()).forEach(this::handle);
         }
     }
 

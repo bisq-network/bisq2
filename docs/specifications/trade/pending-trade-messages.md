@@ -10,7 +10,9 @@ responses of Bisq Easy trades, which arrive before the trade channel exists. The
 A node creates a trade when it takes an offer, or when it receives the take offer request of a taker. Trade messages
 travel through the mailbox of the network, and the mailbox does not keep the order of messages. So a trade message can
 arrive before the take offer request which creates its trade. The node keeps such a message as a pending message and
-passes it to the protocol of its trade when that protocol handles its next message.
+passes it to the protocol of its trade when that protocol handles its next message. A message of an existing trade
+which the protocol of the trade cannot process yet is a queued trade message (see
+[Queued trade messages](queued-trade-messages.md)).
 
 ## Rules
 

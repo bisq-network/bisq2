@@ -118,7 +118,9 @@ messages already reach the listeners in parallel tasks, so this adds no new kind
 
 ## Not covered
 
-Local data which a service restores at startup, for example its own trades, is not part of this rule.
+Local data which a service restores at startup, for example its own trades, is not part of this rule. A stored trade
+can keep trade messages of its trade peer which its protocol could not process yet. The trade services apply them at
+startup as [Queued trade messages](../trade/queued-trade-messages.md) defines.
 
 The service for message delivery states replays no confidential messages. It needs no replay, because the node passes
 each confidential message to this service when it decrypts the message (rule 1 of
