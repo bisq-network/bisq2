@@ -88,18 +88,23 @@ final class BisqEasyProtocolRegistry {
         }
     }
 
-    boolean removePendingMessage(BisqEasyTradeMessage message) {
-        return pendingMessages.remove(message);
+    /**
+     * Removes the pending messages of the trade and returns them in arrival order. Two callers never get the same
+     * message, so each pending message reaches the protocol of its trade once.
+     */
+    List<BisqEasyTradeMessage> removePendingMessagesOfTrade(String tradeId) {
+        return pendingMessages.removeMessagesOfTrade(tradeId);
     }
 
+    @VisibleForTesting
     boolean hasPendingMessages() {
         return !pendingMessages.isEmpty();
     }
 
     /**
-     * A copy of the pending messages in arrival order. The caller processes them outside of the lock, and processing a
-     * message may add or remove pending messages.
+     * A copy of the pending messages in arrival order. Later changes of the pending messages do not change the copy.
      */
+    @VisibleForTesting
     List<BisqEasyTradeMessage> getPendingMessagesInArrivalOrder() {
         return pendingMessages.getMessagesInArrivalOrder();
     }

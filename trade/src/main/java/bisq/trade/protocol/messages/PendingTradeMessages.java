@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Trade messages which arrived before the protocol of their trade existed. The trade service processes them again
- * when it processes the next message of a trade.
+ * Trade messages which arrived before the protocol of their trade existed. The trade service passes the messages of a
+ * trade to its protocol when the protocol has handled a message of that trade, for a maker the take offer request.
  * <p>
  * Anybody can send a trade message with a made-up trade ID. Such a message never gets a protocol, so it would stay
  * in memory until the node restarts. The number of kept messages is therefore bounded by {@link #MAX_PENDING_MESSAGES}.
@@ -75,10 +75,26 @@ public class PendingTradeMessages<M extends TradeMessage> {
     }
 
     /**
-     * A copy of the pending messages in arrival order. The caller processes the messages outside the monitor of
-     * this object, and processing a message may add or remove pending messages.
+     * A copy of the pending messages in arrival order. Later changes of the pending messages do not change the copy.
      */
     public synchronized List<M> getMessagesInArrivalOrder() {
         return new ArrayList<>(messages);
+    }
+
+    /**
+     * Removes the pending messages of the trade and returns them in arrival order. Two callers never get the same
+     * message, so the trade service passes each pending message to the protocol of its trade once.
+     */
+    public synchronized List<M> removeMessagesOfTrade(String tradeId) {
+        List<M> messagesOfTrade = new ArrayList<>();
+        Iterator<M> iterator = messages.iterator();
+        while (iterator.hasNext()) {
+            M message = iterator.next();
+            if (message.getTradeId().equals(tradeId)) {
+                messagesOfTrade.add(message);
+                iterator.remove();
+            }
+        }
+        return messagesOfTrade;
     }
 }
