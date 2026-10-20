@@ -53,10 +53,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
 import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
@@ -65,6 +69,7 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,6 +78,7 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -84,6 +90,8 @@ import static org.mockito.Mockito.when;
  * docs/specifications/trade/take-offer-request-validation.md.
  */
 class BisqEasyTradeServiceTakeOfferRequestTest {
+    private static final String REQUEST_THREAD = "take-offer-request";
+
     private ServiceProvider serviceProvider;
     private IdentityService identityService;
     private BisqEasyTradeService service;
@@ -288,6 +296,61 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
     }
 
+    // The network layer processes messages on several threads, so a copy of a request, for example from the mailbox,
+    // can arrive while the maker verifies the request. The check, the verification and the creation of the trade are
+    // one step, so the copy waits until the trade exists, and is then dropped.
+    @Test
+    void copyOfRequestWhichArrivesWhileTheRequestIsVerifiedIsDropped() throws Exception {
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+        BisqEasyTakeOfferRequest copy = takeOfferRequest(contract, offersNetworkId);
+        CountDownLatch verifyingRequest = new CountDownLatch(1);
+        CountDownLatch continueRequest = new CountDownLatch(1);
+        // The verification of a request starts with this lookup
+        when(serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(takerIdentity.getId()))
+                .thenAnswer(invocation -> {
+                    if (REQUEST_THREAD.equals(Thread.currentThread().getName())) {
+                        verifyingRequest.countDown();
+                        assertThat(continueRequest.await(10, SECONDS)).isTrue();
+                    }
+                    return false;
+                });
+
+        TestThread requestThread = new TestThread(REQUEST_THREAD, () -> service.onMessage(request));
+        assertThat(verifyingRequest.await(10, SECONDS)).isTrue();
+        TestThread copyThread = new TestThread("copy-of-take-offer-request", () -> service.onMessage(copy));
+        try {
+            awaitWaitingFor(copyThread.thread, requestThread.thread);
+        } finally {
+            continueRequest.countDown();
+        }
+        requestThread.join();
+        copyThread.join();
+
+        assertThat(service.getTrades()).hasSize(1);
+        // The maker answered the request once, and it did not reject the copy
+        verify(serviceProvider.getNetworkService(), times(1)).confidentialSend(any(), any(), any());
+        verify(serviceProvider.getNetworkService()).confidentialSend(any(BisqEasyTakeOfferResponse.class),
+                eq(takerIdentity.getNetworkId()),
+                any());
+    }
+
+    // Returns when the thread waits for a monitor or lock which the owner thread holds. Fails when the thread finishes
+    // first, because then it did not wait for the owner.
+    private static void awaitWaitingFor(Thread thread, Thread owner) throws InterruptedException {
+        long deadline = System.nanoTime() + SECONDS.toNanos(10);
+        while (System.nanoTime() < deadline) {
+            ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.threadId());
+            if (info != null && info.getLockOwnerId() == owner.threadId()) {
+                return;
+            }
+            assertThat(thread.isAlive())
+                    .as(thread.getName() + " finished without waiting for " + owner.getName())
+                    .isTrue();
+            Thread.sleep(5);
+        }
+        throw new AssertionError(thread.getName() + " did not wait for " + owner.getName());
+    }
+
     private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract, NetworkId receiver)
             throws GeneralSecurityException {
         return takeOfferRequest(buyerAsTakerTrade(contract, takerIdentity).getId(), contract, receiver);
@@ -342,5 +405,28 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         Address otherAddress = Address.from("127.0.0.1", port);
         return new NetworkId(new AddressByTransportTypeMap(Map.of(otherAddress.getTransportType(), otherAddress)),
                 networkId.getPubKey());
+    }
+
+    // A started thread whose failure the test reports
+    private static final class TestThread {
+        private final Thread thread;
+        private final AtomicReference<Throwable> failure = new AtomicReference<>();
+
+        private TestThread(String name, Runnable task) {
+            thread = new Thread(() -> {
+                try {
+                    task.run();
+                } catch (Throwable throwable) {
+                    failure.set(throwable);
+                }
+            }, name);
+            thread.start();
+        }
+
+        private void join() throws InterruptedException {
+            thread.join(SECONDS.toMillis(10));
+            assertThat(thread.isAlive()).as(thread.getName() + " has finished").isFalse();
+            assertThat(failure.get()).as(thread.getName() + " has not failed").isNull();
+        }
     }
 }
