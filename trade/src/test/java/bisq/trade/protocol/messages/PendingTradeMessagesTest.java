@@ -30,9 +30,14 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.stream.IntStream;
 
 import static bisq.trade.protocol.messages.PendingTradeMessages.MAX_PENDING_MESSAGES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -96,6 +101,32 @@ class PendingTradeMessagesTest {
         assertThat(pendingMessages.getMessagesInArrivalOrder()).containsExactly(ofOtherTrade);
     }
 
+    // Rule 1 of docs/specifications/trade/pending-trade-messages.md: two threads which process messages of one trade
+    // can take its pending messages at the same time, and each pending message must reach the protocol once. The test
+    // cannot fail for correct code. How often it detects a missing synchronization depends on the number of CPUs.
+    @Test
+    void twoThreadsWhichRemoveTheMessagesOfATradeNeverGetTheSameMessage() throws Exception {
+        List<BisqEasyTradeMessage> messages = IntStream.range(0, 40)
+                .mapToObj(index -> message(index, "trade"))
+                .toList();
+        CyclicBarrier start = new CyclicBarrier(2);
+        ExecutorService executor = Executors.newFixedThreadPool(2);
+        try {
+            for (int round = 0; round < 20_000; round++) {
+                messages.forEach(pendingMessages::add);
+                Future<List<BisqEasyTradeMessage>> first = executor.submit(() -> removeMessagesOfTradeAfter(start));
+                Future<List<BisqEasyTradeMessage>> second = executor.submit(() -> removeMessagesOfTradeAfter(start));
+                List<BisqEasyTradeMessage> taken = new ArrayList<>(first.get(10, SECONDS));
+                taken.addAll(second.get(10, SECONDS));
+
+                assertThat(taken).as("messages taken in round %s", round).containsExactlyInAnyOrderElementsOf(messages);
+            }
+        } finally {
+            executor.shutdownNow();
+        }
+        assertThat(pendingMessages.isEmpty()).isTrue();
+    }
+
     @Test
     void snapshotIsNotChangedByLaterModifications() {
         BisqEasyTradeMessage message = message(1);
@@ -106,6 +137,11 @@ class PendingTradeMessagesTest {
 
         assertThat(snapshot).containsExactly(message);
         assertThat(pendingMessages.isEmpty()).isTrue();
+    }
+
+    private List<BisqEasyTradeMessage> removeMessagesOfTradeAfter(CyclicBarrier start) throws Exception {
+        start.await(10, SECONDS);
+        return pendingMessages.removeMessagesOfTrade("trade");
     }
 
     private List<BisqEasyTradeMessage> messages(int count) {
