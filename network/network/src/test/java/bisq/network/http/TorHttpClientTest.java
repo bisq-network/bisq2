@@ -29,16 +29,22 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TorHttpClientTest {
     private static final String HOST = "abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuvwx.onion";
@@ -61,8 +67,7 @@ class TorHttpClientTest {
     @Test
     void eachRequestUsesItsOwnSocksCredentials() throws Exception {
         CompletableFuture<List<Connection>> connections = serve(2);
-        Socks5ProxyProvider proxyProvider = new Socks5ProxyProvider(new Socks5Proxy("127.0.0.1", serverSocket.getLocalPort()));
-        TorHttpClient client = new TorHttpClient("http://" + HOST, "http://" + HOST, "test", proxyProvider);
+        TorHttpClient client = createClient();
 
         assertEquals("ok", client.get("first", Optional.empty()));
         assertEquals("ok", client.get("second", Optional.empty()));
@@ -76,6 +81,35 @@ class TorHttpClientTest {
         assertEquals("GET /second HTTP/1.1", second.requestLine());
         assertEquals("0", first.password());
         assertNotEquals(first.username(), second.username());
+    }
+
+    // Tor answers the SOCKS5 connect request only after it has built the circuit and reached the server, which can
+    // take seconds. shutdown() must abort the request while it waits, instead of waiting for the connection manager,
+    // which holds its lock for the whole connect.
+    @Test
+    void shutdownAbortsRequestWhileSocksConnectIsPending() throws Exception {
+        CountDownLatch connectRequestReceived = new CountDownLatch(1);
+        CompletableFuture<Void> proxy = serveWithoutAnsweringConnectRequest(connectRequestReceived);
+        TorHttpClient client = createClient();
+
+        CompletableFuture<String> request = CompletableFuture.supplyAsync(() -> {
+            try {
+                return client.get("pending", Optional.empty());
+            } catch (IOException e) {
+                throw new CompletionException(e);
+            }
+        });
+        assertTrue(connectRequestReceived.await(TIMEOUT, TimeUnit.MILLISECONDS));
+
+        assertTrue(client.shutdown().get(TIMEOUT, TimeUnit.MILLISECONDS));
+        assertThrows(ExecutionException.class, () -> request.get(TIMEOUT, TimeUnit.MILLISECONDS));
+        // Completes when the client has closed the connection of the aborted request
+        proxy.get(TIMEOUT, TimeUnit.MILLISECONDS);
+    }
+
+    private TorHttpClient createClient() throws IOException {
+        Socks5ProxyProvider proxyProvider = new Socks5ProxyProvider(new Socks5Proxy("127.0.0.1", serverSocket.getLocalPort()));
+        return new TorHttpClient("http://" + HOST, "http://" + HOST, "test", proxyProvider);
     }
 
     // A SOCKS5 proxy which accepts the given number of connections one after the other. On each connection it performs
@@ -92,6 +126,44 @@ class TorHttpClientTest {
                     }
                 }
                 result.complete(connections);
+            } catch (IOException | RuntimeException | AssertionError e) {
+                result.completeExceptionally(e);
+            }
+        });
+        thread.setDaemon(true);
+        thread.start();
+        return result;
+    }
+
+    // A SOCKS5 proxy which performs the authentication of one connection and then leaves the connect request
+    // unanswered, like Tor while it builds the circuit. It keeps the connection open until the client closes it.
+    // The future completes when the client has closed it, and fails if the proxy got something unexpected.
+    private CompletableFuture<Void> serveWithoutAnsweringConnectRequest(CountDownLatch connectRequestReceived) {
+        CompletableFuture<Void> result = new CompletableFuture<>();
+        Thread thread = new Thread(() -> {
+            try (Socket socket = serverSocket.accept()) {
+                socket.setSoTimeout(TIMEOUT);
+                DataInputStream in = new DataInputStream(socket.getInputStream());
+                OutputStream out = socket.getOutputStream();
+
+                assertEquals(5, in.readByte());
+                in.readFully(new byte[in.readUnsignedByte()]);
+                out.write(new byte[]{5, 2});
+
+                assertEquals(1, in.readByte());
+                readString(in);
+                readString(in);
+                out.write(new byte[]{1, 0});
+
+                // The first byte of the connect request, which stays unanswered
+                assertEquals(5, in.readByte());
+                connectRequestReceived.countDown();
+                try {
+                    in.readAllBytes();
+                } catch (SocketException ignore) {
+                    // The client may close the connection with a reset
+                }
+                result.complete(null);
             } catch (IOException | RuntimeException | AssertionError e) {
                 result.completeExceptionally(e);
             }
