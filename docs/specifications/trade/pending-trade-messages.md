@@ -1,6 +1,6 @@
 # Pending trade messages
 
-This specification defines how a node keeps trade messages which arrive before the trade exists. It applies to Bisq
+This specification defines how a node keeps trade messages whose trade has no protocol yet. It applies to Bisq
 Easy and to MuSig. Rule 4 applies the same limits to chat messages of Bisq Easy and MuSig trades, and rule 5 to mediator
 responses of Bisq Easy trades, which arrive before the trade channel exists. The terms are those of
 [Sender of a trade message](trade-message-sender.md).

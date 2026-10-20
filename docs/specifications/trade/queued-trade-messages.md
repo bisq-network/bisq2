@@ -25,8 +25,8 @@ buyer receives the account data, pays, and sends the confirmation that it sent t
 arrives before the Bitcoin address, the protocol of the seller queues it. When the Bitcoin address arrives, the
 protocol processes the address and then the queued confirmation.
 
-[Pending trade messages](pending-trade-messages.md) are different: they arrive before their trade exists, and the
-trade service keeps them. Queued trade messages belong to a trade which exists, and its protocol keeps them.
+[Pending trade messages](pending-trade-messages.md) are different: their trade has no protocol yet, so the trade
+service keeps them. Queued trade messages belong to a trade which has a protocol, and this protocol keeps them.
 
 ## Rules
 

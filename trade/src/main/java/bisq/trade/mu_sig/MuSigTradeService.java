@@ -237,8 +237,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 .thenApply(result -> {
                     persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
 
-                    // The trade restrictions of the stored alerts must be known before the replay of the processed
-                    // messages of earlier sessions (see docs/specifications/network/startup-replay.md).
+                    // The trade restrictions of the stored alerts must be known before the replay of the messages
+                    // which the node processed earlier in this run, for example from the mailbox (see
+                    // docs/specifications/network/startup-replay.md).
                     authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
                     handleQueuedEventsOfStoredTrades();
