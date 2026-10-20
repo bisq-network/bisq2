@@ -244,10 +244,6 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
                     handleQueuedEventsOfStoredTrades();
 
-                    StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
-                                    .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
-                            this::onMessage);
-
                     tradeByIdPin = getTradeById().addObserver(new HashMapObserver<>() {
                         @Override
                         public void put(String key, MuSigTrade value) {
@@ -269,7 +265,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                         }
                     });
 
-                    networkService.addConfidentialMessageListener(this);
+                    // Replays the messages which the node processed earlier in this run, and registers this service in
+                    // one step, so that no message is lost or arrives twice in between
+                    // (docs/specifications/network/startup-replay.md).
+                    networkService.subscribeToConfidentialMessages(this);
 
                     // At startup we observe all unconfirmed deposit txs
                     getTrades().stream()
