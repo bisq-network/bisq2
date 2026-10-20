@@ -30,12 +30,17 @@ it contains only the type and the stack trace, because the message can contain v
 
 A persistence client which limits its write rate keeps a failed state as unsaved, as it keeps a state
 whose write it skipped because of the rate limit. Its next write, or the write at shutdown, writes the
-state again.
+state again. A failure while the client copies its store for a write counts as a failed write: the
+client logs it as described above, keeps the state as unsaved, and its later writes run as usual.
 
 Reason: a persistence client reports a failed asynchronous write only as the result `false`, without
 the cause, and most callers do not read the result. Without the log entry, a node with a full disk
 runs on with data which it does not save, and nothing shows why the data is missing after the next
 start.
+
+Reason for the failed copy: the client copies the store in the thread which asks for the write, while
+other threads can change the store. Before this rule, a copy which threw left the client marked as
+writing, so it dropped every later write of the store until shutdown.
 
 Reason for the unsaved state: the write at shutdown runs only when the client knows that its state is
 not on disk. Before this rule a failed write did not count as unsaved, so a change after which the

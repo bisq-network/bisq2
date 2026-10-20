@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ConcurrentModificationException;
 import java.util.List;
 import java.util.concurrent.CompletionException;
 
@@ -76,6 +77,35 @@ class PersistenceWriteFailureTest {
         assertFalse(client.persist().join());
 
         assertTrue(client.isDropped());
+    }
+
+    // A copy of the store which throws must not block the later writes of a rate-limited client. Before, the client
+    // kept its write marked as in progress and dropped every later write until shutdown.
+    @Test
+    void rateLimitedClientWritesAgainAfterAFailedCopy() {
+        FailingCopyTestClient client = new FailingCopyTestClient(new PersistenceService(tempDir),
+                new ConcurrentModificationException());
+
+        assertFalse(client.persist().join());
+        assertTrue(client.isDropped());
+
+        assertTrue(client.persist().join());
+        assertFalse(client.isDropped());
+        assertFalse(client.getPersistence().read().isEmpty());
+    }
+
+    // The message of the cause of a failed copy can contain values of the store, which can be private
+    @Test
+    void failedCopyIsLoggedWithTheStorePathAndWithoutTheMessageOfItsCause() {
+        FailingCopyTestClient client = new FailingCopyTestClient(new PersistenceService(tempDir),
+                new IllegalStateException("private value"));
+
+        List<ILoggingEvent> events = captureErrors(RateLimitedPersistenceClient.class,
+                () -> assertFalse(client.persist().join()));
+
+        assertEquals(1, events.size());
+        assertTrue(events.get(0).getFormattedMessage().contains(client.getPersistence().getStorePath().toString()));
+        assertFalse(events.get(0).getFormattedMessage().contains("private value"));
     }
 
     @Test
@@ -171,7 +201,11 @@ class PersistenceWriteFailureTest {
     }
 
     private static List<ILoggingEvent> captureErrors(Runnable runnable) {
-        Logger logger = (Logger) LoggerFactory.getLogger(Persistence.class);
+        return captureErrors(Persistence.class, runnable);
+    }
+
+    private static List<ILoggingEvent> captureErrors(Class<?> loggerClass, Runnable runnable) {
+        Logger logger = (Logger) LoggerFactory.getLogger(loggerClass);
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
         logger.addAppender(appender);
@@ -199,6 +233,33 @@ class PersistenceWriteFailureTest {
 
         RateLimitedTestClient(PersistenceService service) {
             persistence = service.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, "RateLimitedTestStore", store);
+        }
+
+        @Override
+        public Persistence<TimestampStore> getPersistence() {
+            return persistence;
+        }
+
+        @Override
+        public TimestampStore getPersistableStore() {
+            return store;
+        }
+    }
+
+    // The copy of its store throws once, as a copy can when another thread changes the store. The client has no rate
+    // limit, so that a test can write again at once.
+    private static class FailingCopyTestClient extends RateLimitedPersistenceClient<TimestampStore> {
+        private final TimestampStore store = spy(new TimestampStore());
+        private final Persistence<TimestampStore> persistence;
+
+        FailingCopyTestClient(PersistenceService service, RuntimeException failureOfFirstCopy) {
+            doThrow(failureOfFirstCopy).doCallRealMethod().when(store).getClone();
+            persistence = service.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, "FailingCopyTestStore", store);
+        }
+
+        @Override
+        protected long getMaxWriteRateInMs() {
+            return 0;
         }
 
         @Override
