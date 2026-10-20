@@ -47,7 +47,8 @@ import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
 
 @Slf4j
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+// Equal by the trade ID of Trade
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTradeParty> {
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<MuSigTradeState> tradeState = new Observable<>();

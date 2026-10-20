@@ -481,13 +481,21 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.getClosedTrades();
     }
 
+    // The closed trade is added before the open trade is removed. A copy of the store for a write between the two steps
+    // then contains the trade twice instead of not at all, and prunePersisted removes the open copy at the next start.
     public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
-        persistableStore.getTrades().remove(trade);
         BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
         persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
+        persistableStore.getTrades().remove(trade);
 
         protocolRegistry.remove(trade.getId());
         persist();
+    }
+
+    // Stores of earlier versions can contain a closed trade also as an open trade (see BisqEasyTradeStore)
+    @Override
+    public BisqEasyTradeStore prunePersisted(BisqEasyTradeStore persisted) {
+        return persisted.withoutOpenCopiesOfClosedTrades();
     }
 
     public void deleteTrade(BisqEasyTrade trade) {

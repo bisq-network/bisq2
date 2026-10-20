@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -80,11 +81,36 @@ class BisqEasyTradeTest {
         assertEquals(List.of(Optional.empty(), Optional.of("accountData")), received);
     }
 
+    // A trade is identified by its trade ID. The stores keep trades in hash sets, so the hash code must not change while
+    // the trade runs, and two objects of the same trade, for example after a restart, are equal.
+    @Test
+    void tradesWithTheSameIdAreEqualAndKeepTheirHashCodeWhileTheyChange() {
+        BisqEasyTrade trade = createTrade();
+        BisqEasyTrade sameTrade = createTrade();
+        int hashCode = trade.hashCode();
+
+        trade.setProtocolVersion("1.0.0");
+        trade.setPaymentAccountData(Optional.of("accountData"));
+
+        assertEquals(hashCode, trade.hashCode());
+        assertEquals(sameTrade, trade);
+        assertEquals(sameTrade.hashCode(), trade.hashCode());
+    }
+
+    @Test
+    void tradesWithDifferentIdsAreNotEqual() {
+        assertNotEquals(createTrade("offerId"), createTrade("otherOfferId"));
+    }
+
     private static BisqEasyTrade createTrade() {
+        return createTrade("offerId");
+    }
+
+    private static BisqEasyTrade createTrade(String offerId) {
         BisqEasyContract contract = mock(BisqEasyContract.class);
         when(contract.getTakeOfferDate()).thenReturn(0L);
         BisqEasyOffer offer = mock(BisqEasyOffer.class);
-        when(offer.getId()).thenReturn("offerId");
+        when(offer.getId()).thenReturn(offerId);
         NetworkId takerNetworkId = mock(NetworkId.class);
         when(takerNetworkId.getId()).thenReturn("takerNetworkId");
         NetworkId makerNetworkId = mock(NetworkId.class);

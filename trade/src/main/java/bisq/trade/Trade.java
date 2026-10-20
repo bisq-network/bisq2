@@ -43,10 +43,13 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+// A trade is identified by its trade ID (docs/specifications/trade/trade-id.md). The other fields change while the trade
+// runs, for example its state and the protocol version, and the stores keep trades in hash sets. A hash code over these
+// fields made the removal of a trade from such a set fail.
 @Slf4j
 @Getter
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+@EqualsAndHashCode(callSuper = false, onlyExplicitlyIncluded = true)
 public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P extends TradeParty> extends FsmModel implements PersistableProto {
     private static TradeRole createRole(boolean isBuyer, boolean isTaker) {
         return isBuyer ?
@@ -58,11 +61,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                         TradeRole.SELLER_AS_MAKER);
     }
 
+    @EqualsAndHashCode.Include
     private final String id;
     private final Identity myIdentity;
     private final P taker;
     private final P maker;
-    // transient fields are excluded by default for EqualsAndHashCode
     private transient final TradeRole tradeRole;
     private final C contract;
     private final Observable<String> errorMessage = new Observable<>();

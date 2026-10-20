@@ -45,7 +45,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
 @ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
+// Equal by the trade ID of Trade
+@EqualsAndHashCode(callSuper = true, onlyExplicitlyIncluded = true)
 public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, BisqEasyTradeParty> {
     private final Observable<Optional<String>> paymentAccountData = new Observable<>(Optional.empty());
     private final Observable<Optional<String>> bitcoinPaymentData = new Observable<>(Optional.empty()); // btc address in case of mainChain, or LN invoice if LN is used
@@ -58,7 +59,6 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
     // Wrapper for stateObservable which is not handled as generic in Fsm
     private final transient Observable<BisqEasyTradeState> tradeState = new Observable<>();
 
-    @EqualsAndHashCode.Exclude
     private final Observable<Optional<Long>> tradeCompletedDate = new Observable<>(Optional.empty());
 
     public BisqEasyTrade(BisqEasyContract contract,
