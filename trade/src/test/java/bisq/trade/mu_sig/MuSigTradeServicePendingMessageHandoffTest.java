@@ -193,21 +193,21 @@ class MuSigTradeServicePendingMessageHandoffTest {
         assertThat(lookupFoundNoProtocol.await(10, SECONDS)).isTrue();
         assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
 
-        // The other thread creates the protocol, which then handles a first message and processes the pending messages
+        // The other thread creates the protocol, which then handles a first message and processes the pending messages.
+        // The thread finishes only after the task of the first message, so without the fix the error report becomes
+        // pending only after that task has looked at the pending messages.
         TestThread protocolThread = new TestThread(PROTOCOL_THREAD, () -> {
             service.initialize().join();
             service.onMessage(paymentInitiatedMessage("first-message"));
-            awaitTradeTasks();
+            awaitTasksSubmittedSoFar();
         });
         awaitFinishedOrWaitingFor(protocolThread.thread, messageThread.thread);
         continueMessageThread.countDown();
 
         messageThread.join();
         protocolThread.join();
-        awaitTradeTasks();
 
-        assertThat(trade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
-        assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
+        assertErrorReportReachesTheProtocol();
     }
 
     // The order without overlap: the error report is pending when the protocol is created
@@ -218,23 +218,30 @@ class MuSigTradeServicePendingMessageHandoffTest {
         service.initialize().get(5, SECONDS);
 
         service.onMessage(paymentInitiatedMessage("first-message"));
-        awaitTradeTasks();
 
-        assertThat(trade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
-        assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
+        assertErrorReportReachesTheProtocol();
     }
 
-    // A task of the trade can submit further tasks, so we wait until the executor has completed every submitted task.
-    // Only a running task submits a new one while the test waits here.
-    private void awaitTradeTasks() throws InterruptedException {
+    // The executor of the service has one thread and a queue, so it runs the tasks in the order of their submission. A
+    // task which we submit now runs after every task which was submitted before it. The counters of the executor cannot
+    // show this: they do not count a task which a worker has taken from the queue but not yet started.
+    private void awaitTasksSubmittedSoFar() throws Exception {
         ThreadPoolExecutor executor = (ThreadPoolExecutor) service.getExecutor();
+        assertThat(executor.getPoolSize()).as("the executor runs the tasks on one thread").isLessThanOrEqualTo(1);
+        executor.submit(() -> {
+        }).get(10, SECONDS);
+    }
+
+    // The task of a message which the protocol handles submits a task for each pending message, so the error report
+    // reaches the protocol in a later task. We wait for its result instead of waiting for the tasks.
+    private void assertErrorReportReachesTheProtocol() throws InterruptedException {
         long deadline = System.nanoTime() + SECONDS.toNanos(10);
-        while (executor.getCompletedTaskCount() < executor.getTaskCount()) {
-            if (System.nanoTime() > deadline) {
-                throw new AssertionError("The tasks of the trade did not finish");
-            }
+        while ((trade.getTradeState() != MuSigTradeState.FAILED_AT_PEER || !service.getPendingTradeMessages().isEmpty())
+                && System.nanoTime() < deadline) {
             Thread.sleep(5);
         }
+        assertThat(trade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
+        assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
     }
 
     // Returns when the thread has finished, or when it waits for a monitor or lock which the owner thread holds
