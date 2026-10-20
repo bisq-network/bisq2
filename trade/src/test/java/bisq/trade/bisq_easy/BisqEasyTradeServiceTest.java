@@ -183,6 +183,21 @@ class BisqEasyTradeServiceTest {
     }
 
     @Test
+    @DisplayName("wasTradeIdUsed covers a closed and deleted trade, findOpenTrade does not")
+    void was_trade_id_used_covers_closed_and_deleted_trade() {
+        BisqEasyTrade trade = addTradeDirectly();
+        String tradeId = trade.getId();
+
+        service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
+        assertThat(service.findOpenTrade(tradeId)).isEmpty();
+        assertThat(service.wasTradeIdUsed(tradeId)).isTrue();
+
+        service.deleteTrade(trade);
+        assertThat(service.getClosedTrades()).isEmpty();
+        assertThat(service.wasTradeIdUsed(tradeId)).isTrue();
+    }
+
+    @Test
     @DisplayName("closeTrade moves trade from open to closed set")
     void close_trade_moves_to_closed() {
         BisqEasyTrade trade = addTradeDirectly();
