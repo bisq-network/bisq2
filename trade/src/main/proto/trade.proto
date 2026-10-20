@@ -88,8 +88,13 @@ message Trade {
     MuSigTrade muSigTrade = 31;
   }
 
+  // Nodes of earlier versions read these field numbers, so they must not get another type or meaning:
+  // 32 was "SubmarineTrade submarineTrade", a case of the oneof message, up to version 2.1.7.
+  reserved 32;
+  reserved "submarineTrade";
+
   // The trade messages which wait in the event queue of the state machine of the trade
-  repeated TradeMessage queuedTradeMessages = 32;
+  repeated TradeMessage queuedTradeMessages = 33;
 }
 message TradeMessage {
   string id = 1;

@@ -95,6 +95,9 @@ a node does while such an alert exists.
   - What would remove it: the offer lists hide or mark these offers, with the check of rule 3.
   - Who decides: the developers.
 - **Open trades across versions.** A node which rules 1 or 2 restrict drops the trade messages of its open trades after
-  it acknowledged them. The trade stops until the alert ends or the user updates; trade chat and mediation still work.
+  it acknowledged them. The trade peer does not send an acknowledged message again. So when the alert ends or the user
+  updates, the trade still waits for the dropped message. Trade chat and mediation still work.
+  - Why it remains: rules 1 and 2 stop the handlers of the protocol during an emergency. Whether a node may process
+    such messages after the restriction ends is a security decision.
   - What would remove it: a restricted node keeps such messages and processes them when the restriction ends.
   - Who decides: the developers.

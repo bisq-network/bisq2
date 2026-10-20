@@ -17,6 +17,7 @@
 
 package bisq.persistence;
 
+import bisq.common.util.ExceptionUtil;
 import bisq.common.util.StringUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -60,8 +61,22 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
             lastWrite = System.currentTimeMillis();
             writeInProgress = true;
             dropped = false;
+            T clone;
+            try {
+                clone = getPersistableStore().getClone();
+            } catch (RuntimeException e) {
+                // Without the reset, every later call would see a write in progress and drop its state until
+                // shutdown. The state is not on disk, so the next call or the shutdown hook writes it again (see
+                // docs/specifications/persistence/store-write-results.md). The message of the cause can contain values
+                // of the store, so the log contains only its type and stack trace.
+                writeInProgress = false;
+                dropped = true;
+                log.error("Copying the store {} for a write failed. Cause: {}", getPersistence().getStorePath(),
+                        ExceptionUtil.getSafeStackTraceAsString(e));
+                return CompletableFuture.completedFuture(false);
+            }
             return getPersistence()
-                    .persistAsync(getPersistableStore().getClone())
+                    .persistAsync(clone)
                     .handle((nil, throwable) -> {
                         writeInProgress = false;
                         if (throwable != null) {

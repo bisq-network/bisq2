@@ -37,7 +37,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * <br/>
  * In case of out-of-order events we store the un-handled events in the event queue of the model and retry to apply
  * those pending events after the next state transition. The owner of a persisted model can persist the event queue
- * with the model (a trade persists its queued trade messages).
+ * with the model (a trade persists its queued trade messages). The queue keeps at most one event of a type which has
+ * only state-changing transitions (see addToEventQueue).
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
@@ -109,6 +110,11 @@ public abstract class Fsm<M extends FsmModel> {
                             model.eventQueue.clear();
                         } else {
                             model.processedEvents.add(eventClass);
+                            // We do not queue an event of a processed type (addToEventQueue), so we remove a queued
+                            // one as well. It remains when the type has an internal transition, as the queue keeps
+                            // each event of such a type, or when a new event of the type was applied before the queued
+                            // events, for example after the model was restored with its event queue.
+                            model.eventQueue.removeIf(queuedEvent -> queuedEvent.getClass().equals(eventClass));
                             // Apply all pending events to see if any of those match our current state.
                             // If an exception is thrown by the processed pending event it will get thrown to the
                             // caller. This would be a different triggering event as the event which cause
@@ -117,15 +123,7 @@ public abstract class Fsm<M extends FsmModel> {
                         }
                     }
                 } else {
-                    log.info("We did not find a transition with state {} and event {}. " +
-                                    "We add the event to the eventQueue for potential later processing.",
-                            currentState, eventClass.getSimpleName());
-                    // In case we get an event which does not match our current state we add the event to our
-                    // event queue if the event was not already processed.
-                    transitionMap.keySet().stream()
-                            .filter(key -> key.getSecond().equals(eventClass) &&
-                                    !model.processedEvents.contains(eventClass))
-                            .forEach(e -> model.eventQueue.add(event));
+                    addToEventQueue(event, currentState, transitionMapEntriesForEvent);
                 }
             } catch (Exception exception) {
                 log.error("Error at handling {}.", describe(event), exception);
@@ -152,12 +150,50 @@ public abstract class Fsm<M extends FsmModel> {
      */
     public void handleQueuedEvents() {
         synchronized (this) {
-            // Clone set to avoid ConcurrentModificationException
-            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+            // We iterate over a copy, as handle changes the queue. A nested call, which runs after each change of the
+            // state, can have applied or removed an event of the copy. Such an event is no longer queued, so we skip it.
+            for (Event event : new HashSet<>(model.getEventQueue())) {
+                if (model.eventQueue.contains(event)) {
+                    handle(event);
+                }
+            }
         }
     }
 
     protected abstract void persist();
+
+    /**
+     * Adds an event which has no transition from the current state to the event queue, so that a later state can apply
+     * it. A state-changing transition records the type of its event as processed, and an event of a processed type is
+     * not queued. So the out-of-order handling applies at most one event of a type which has only state-changing
+     * transitions, and the queue keeps only the first event of such a type. The sender of an event, for example the
+     * peer of a trade, can send copies with other content or other message IDs. Without that rule the copies would grow
+     * the queue without limit. An internal transition does not record the type as processed, so the queue keeps each
+     * event of a type with an internal transition.
+     */
+    private void addToEventQueue(Event event,
+                                 State currentState,
+                                 Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> transitionMapEntriesForEvent) {
+        Class<? extends Event> eventClass = event.getClass();
+        if (model.processedEvents.contains(eventClass)) {
+            log.info("We did not find a transition with state {} and event {}. An event of that type was processed " +
+                    "already, so we do not add it to the eventQueue.", currentState, eventClass.getSimpleName());
+            return;
+        }
+        boolean hasInternalTransition = transitionMapEntriesForEvent.stream()
+                .anyMatch(entry -> entry.getValue().isInternal());
+        boolean isOtherEventOfTypeQueued = model.eventQueue.stream()
+                .anyMatch(queuedEvent -> queuedEvent.getClass().equals(eventClass) && !queuedEvent.equals(event));
+        if (!hasInternalTransition && isOtherEventOfTypeQueued) {
+            log.info("We did not find a transition with state {} and event {}. The eventQueue holds an event of " +
+                    "that type already, so we do not add it.", currentState, eventClass.getSimpleName());
+            return;
+        }
+        log.info("We did not find a transition with state {} and event {}. " +
+                        "We add the event to the eventQueue for potential later processing.",
+                currentState, eventClass.getSimpleName());
+        model.eventQueue.add(event);
+    }
 
     public TransitionBuilder<M> addTransition() {
         return new TransitionBuilder<>(this);
