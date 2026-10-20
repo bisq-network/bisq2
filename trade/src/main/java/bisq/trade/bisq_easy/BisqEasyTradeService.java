@@ -130,8 +130,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    // The network layer delivers messages on several threads. The lock makes the check for an existing trade and the
-    // adding of a new trade of a take offer request one step.
+    // The network layer delivers messages on several threads, so the maker can process two copies of a take offer
+    // request at the same time. The lock makes the check for an existing trade, the verification of the request and the
+    // adding of the new trade one step (docs/specifications/trade/take-offer-request-validation.md).
     private final Object tradeCreationLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
@@ -538,6 +539,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                     message.getTradeId());
             return Optional.empty();
         }
+        Optional<RuntimeException> rejection;
         synchronized (tradeCreationLock) {
             if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
                 logDroppedTakeOfferRequest(message, "a trade with its trade ID exists already", tradeId);
@@ -545,20 +547,32 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
             // Only after the check above: a rejection of a copy of a request which we have handled would fail the
             // trade at the taker
-            try {
-                BisqEasyTakeOfferRequestValidator.validate(serviceProvider, myIdentity.get(), message);
-            } catch (RuntimeException e) {
-                log.warn("We reject the take offer request. tradeId={}", tradeId, e);
-                reportTakeOfferRejection(bisqEasyTrade, e);
-                return Optional.empty();
+            rejection = findTakeOfferRejection(myIdentity.get(), message);
+            if (rejection.isEmpty()) {
+                persistableStore.addTrade(bisqEasyTrade);
             }
-            persistableStore.addTrade(bisqEasyTrade);
+        }
+        // The report goes over the network, which can take long, so other requests must not wait for it
+        if (rejection.isPresent()) {
+            log.warn("We reject the take offer request. tradeId={}", tradeId, rejection.get());
+            reportTakeOfferRejection(bisqEasyTrade, rejection.get());
+            return Optional.empty();
         }
         persist();
 
         maybeAddPeerToContactList(sender.getId(), myIdentity.get().getId());
 
         return Optional.of(createAndAddTradeProtocol(bisqEasyTrade));
+    }
+
+    // Returns the reason for the rejection of the request, if the request fails the verification
+    private Optional<RuntimeException> findTakeOfferRejection(Identity myIdentity, BisqEasyTakeOfferRequest message) {
+        try {
+            BisqEasyTakeOfferRequestValidator.validate(serviceProvider, myIdentity, message);
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            return Optional.of(e);
+        }
     }
 
     // A rejected take offer request creates no trade, so no state machine reports the rejection to the taker. We

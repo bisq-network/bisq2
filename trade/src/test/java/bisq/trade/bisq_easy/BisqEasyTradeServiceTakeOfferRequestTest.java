@@ -35,6 +35,7 @@ import bisq.contract.ContractService;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
 import bisq.identity.IdentityService;
+import bisq.network.SendMessageResult;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -59,6 +60,7 @@ import java.security.GeneralSecurityException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -334,6 +336,58 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
                 any());
     }
 
+    // The rejection report goes over the network, which can take long. The maker sends it after the step which creates
+    // trades, so another request does not wait for it.
+    @Test
+    void requestIsProcessedWhileTheRejectionOfAnotherRequestIsSent() throws Exception {
+        Identity ignoredTaker = identity("ignored-taker");
+        when(serviceProvider.getUserService().getUserProfileService().isChatUserIgnored(ignoredTaker.getId()))
+                .thenReturn(true);
+        BisqEasyContract contractOfIgnoredTaker = contract(contract.getOffer(),
+                ignoredTaker.getNetworkId(),
+                Optional.empty());
+        BisqEasyTakeOfferRequest rejectedRequest = takeOfferRequest(ignoredTaker, contractOfIgnoredTaker, offersNetworkId);
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+        CountDownLatch sendingRejection = new CountDownLatch(1);
+        CountDownLatch continueRejection = new CountDownLatch(1);
+        when(serviceProvider.getNetworkService().confidentialSend(any(BisqEasyReportErrorMessage.class), any(), any()))
+                .thenAnswer(invocation -> {
+                    sendingRejection.countDown();
+                    assertThat(continueRejection.await(10, SECONDS)).isTrue();
+                    return CompletableFuture.completedFuture(new SendMessageResult());
+                });
+
+        TestThread rejectionThread = new TestThread("rejected-take-offer-request",
+                () -> service.onMessage(rejectedRequest));
+        assertThat(sendingRejection.await(10, SECONDS)).isTrue();
+        TestThread requestThread = new TestThread(REQUEST_THREAD, () -> service.onMessage(request));
+        try {
+            awaitFinishedWithoutWaitingFor(requestThread.thread, rejectionThread.thread);
+            assertThat(service.findTrade(request.getTradeId())).isPresent();
+        } finally {
+            continueRejection.countDown();
+        }
+        requestThread.join();
+        rejectionThread.join();
+        assertThat(service.findTrade(rejectedRequest.getTradeId())).isEmpty();
+    }
+
+    // Returns when the thread has finished. Fails when the thread waits for a monitor or lock which the other thread
+    // holds.
+    private static void awaitFinishedWithoutWaitingFor(Thread thread, Thread other) throws InterruptedException {
+        long deadline = System.nanoTime() + SECONDS.toNanos(10);
+        while (thread.isAlive()) {
+            ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.threadId());
+            assertThat(info != null && info.getLockOwnerId() == other.threadId())
+                    .as(thread.getName() + " waits for " + other.getName())
+                    .isFalse();
+            if (System.nanoTime() > deadline) {
+                throw new AssertionError(thread.getName() + " did not finish");
+            }
+            Thread.sleep(5);
+        }
+    }
+
     // Returns when the thread waits for a monitor or lock which the owner thread holds. Fails when the thread finishes
     // first, because then it did not wait for the owner.
     private static void awaitWaitingFor(Thread thread, Thread owner) throws InterruptedException {
@@ -353,18 +407,30 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
     private BisqEasyTakeOfferRequest takeOfferRequest(BisqEasyContract contract, NetworkId receiver)
             throws GeneralSecurityException {
-        return takeOfferRequest(buyerAsTakerTrade(contract, takerIdentity).getId(), contract, receiver);
+        return takeOfferRequest(takerIdentity, contract, receiver);
+    }
+
+    private BisqEasyTakeOfferRequest takeOfferRequest(Identity taker, BisqEasyContract contract, NetworkId receiver)
+            throws GeneralSecurityException {
+        return takeOfferRequest(buyerAsTakerTrade(contract, taker).getId(), taker, contract, receiver);
     }
 
     private BisqEasyTakeOfferRequest takeOfferRequest(String tradeId, BisqEasyContract contract, NetworkId receiver)
             throws GeneralSecurityException {
+        return takeOfferRequest(tradeId, takerIdentity, contract, receiver);
+    }
+
+    private BisqEasyTakeOfferRequest takeOfferRequest(String tradeId,
+                                                      Identity taker,
+                                                      BisqEasyContract contract,
+                                                      NetworkId receiver) throws GeneralSecurityException {
         return new BisqEasyTakeOfferRequest(StringUtils.createUid(),
                 tradeId,
                 BisqEasyProtocol.VERSION,
-                takerIdentity.getNetworkId(),
+                taker.getNetworkId(),
                 receiver,
                 contract,
-                new ContractService(mock(SecurityService.class)).signContract(contract, takerIdentity.getKeyBundle().getKeyPair()));
+                new ContractService(mock(SecurityService.class)).signContract(contract, taker.getKeyBundle().getKeyPair()));
     }
 
     // The author of an offerbook message is the maker of its offer.
