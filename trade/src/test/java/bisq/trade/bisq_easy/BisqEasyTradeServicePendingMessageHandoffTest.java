@@ -338,7 +338,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
 
         private BisqEasyTrade buyersTrade() {
-            return buyer.service.findTrade(sellersTrade.getId()).orElseThrow();
+            return buyer.service.findOpenTrade(sellersTrade.getId()).orElseThrow();
         }
     }
 
@@ -366,7 +366,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
 
         private BisqEasyTrade sellersTrade() {
-            return seller.service.findTrade(buyersTrade.getId()).orElseThrow();
+            return seller.service.findOpenTrade(buyersTrade.getId()).orElseThrow();
         }
     }
 

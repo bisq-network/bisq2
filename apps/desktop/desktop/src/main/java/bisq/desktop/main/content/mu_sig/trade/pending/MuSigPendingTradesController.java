@@ -262,14 +262,14 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
 
     // Channel
     private void handleChannelAdded(MuSigOpenTradeChannel channel) {
-        tradeService.findTrade(channel.getTradeId())
+        tradeService.findOpenTrade(channel.getTradeId())
                 .ifPresentOrElse(trade -> handleTradeAndChannelAdded(trade, channel),
                         () -> log.warn("Channel with tradeId {} was added but associated trade is not found.", channel.getTradeId()));
     }
 
     private void handleChannelRemoved(MuSigOpenTradeChannel channel) {
         String tradeId = channel.getTradeId();
-        tradeService.findTrade(tradeId)
+        tradeService.findOpenTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
                             Optional<MuSigPendingTradeListItem> listItem = findListItem(tradeId);
@@ -361,7 +361,7 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
 
     // Misc
     private void updatePredicate() {
-        model.getFilteredList().setPredicate(e -> tradeService.findTrade(e.getTradeId()).isPresent());
+        model.getFilteredList().setPredicate(e -> tradeService.findOpenTrade(e.getTradeId()).isPresent());
     }
 
     private void maybeSelectFirst() {
@@ -401,6 +401,6 @@ public final class MuSigPendingTradesController extends ChatController<MuSigPend
 
     private boolean hasTradeForChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         return chatChannel instanceof MuSigOpenTradeChannel channel &&
-                tradeService.findTrade(channel.getTradeId()).isPresent();
+                tradeService.findOpenTrade(channel.getTradeId()).isPresent();
     }
 }

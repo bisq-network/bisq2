@@ -142,7 +142,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         service.onMessage(request);
 
-        BisqEasyTrade trade = service.findTrade(request.getTradeId()).orElseThrow();
+        BisqEasyTrade trade = service.findOpenTrade(request.getTradeId()).orElseThrow();
         assertThat(trade.getState()).isEqualTo(
                 BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS);
         assertThat(trade.getMaker().getContractSignatureData().get()).isNotNull();
@@ -167,7 +167,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         assertThatCode(() -> service.onMessage(request)).doesNotThrowAnyException();
 
-        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
         verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
     }
 
@@ -181,7 +181,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         assertThatCode(() -> service.onMessage(request)).doesNotThrowAnyException();
 
-        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
         verify(serviceProvider.getNetworkService(), never()).confidentialSend(any(), any(), any());
     }
 
@@ -197,7 +197,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         assertThatCode(() -> service.onMessage(request)).doesNotThrowAnyException();
 
-        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
     }
 
     @Test
@@ -205,7 +205,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         // A second request with the same offer, taker and take offer date has the trade ID of the first one.
         BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
         service.onMessage(request);
-        BisqEasyTrade trade = service.findTrade(request.getTradeId()).orElseThrow();
+        BisqEasyTrade trade = service.findOpenTrade(request.getTradeId()).orElseThrow();
         BisqEasyTradeState stateAfterFirstRequest = trade.getTradeState();
 
         BisqEasyTakeOfferRequest secondRequest = takeOfferRequest(contract, offersNetworkId);
@@ -236,7 +236,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         service.onMessage(request);
 
-        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
         assertThat(service.findProtocol(request.getTradeId())).isEmpty();
         verify(serviceProvider.getUserService().getContactListService(), never())
                 .addContactListEntry(any(), any(), any());
@@ -275,7 +275,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
 
         service.onMessage(request);
 
-        assertThat(service.findTrade(request.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
         ArgumentCaptor<BisqEasyReportErrorMessage> report = ArgumentCaptor.forClass(BisqEasyReportErrorMessage.class);
         verify(serviceProvider.getNetworkService()).confidentialSend(report.capture(),
                 eq(takerIdentity.getNetworkId()),
@@ -287,7 +287,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
     void copyOfRequestForAnExistingTradeIsDroppedWithoutValidation() throws GeneralSecurityException {
         BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
         service.onMessage(request);
-        BisqEasyTrade trade = service.findTrade(request.getTradeId()).orElseThrow();
+        BisqEasyTrade trade = service.findOpenTrade(request.getTradeId()).orElseThrow();
         // The validation would reject the copy, as the offer left the offerbook when it was taken
         removeOffersFromOfferbook();
         clearInvocations(serviceProvider.getNetworkService());
@@ -363,13 +363,13 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         TestThread requestThread = new TestThread(REQUEST_THREAD, () -> service.onMessage(request));
         try {
             awaitFinishedWithoutWaitingFor(requestThread.thread, rejectionThread.thread);
-            assertThat(service.findTrade(request.getTradeId())).isPresent();
+            assertThat(service.findOpenTrade(request.getTradeId())).isPresent();
         } finally {
             continueRejection.countDown();
         }
         requestThread.join();
         rejectionThread.join();
-        assertThat(service.findTrade(rejectedRequest.getTradeId())).isEmpty();
+        assertThat(service.findOpenTrade(rejectedRequest.getTradeId())).isEmpty();
     }
 
     // Returns when the thread has finished. Fails when the thread waits for a monitor or lock which the other thread

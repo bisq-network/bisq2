@@ -131,7 +131,7 @@ public class TradeStateController implements Controller {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
+            Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findOpenTrade(channel.getTradeId());
             if (optionalBisqEasyTrade.isEmpty()) {
                 model.resetAll();
                 return;
@@ -249,7 +249,7 @@ public class TradeStateController implements Controller {
 
     void onShowTradeDetails() {
         BisqEasyOpenTradeChannel channel = model.getChannel().get();
-        Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
+        Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findOpenTrade(channel.getTradeId());
         if (optionalBisqEasyTrade.isEmpty()) {
             model.resetAll();
             return;

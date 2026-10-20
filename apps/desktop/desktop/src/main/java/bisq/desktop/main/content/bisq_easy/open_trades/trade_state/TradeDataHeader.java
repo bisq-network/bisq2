@@ -100,7 +100,7 @@ public class TradeDataHeader {
                 if (channel == null) {
                     return;
                 }
-                Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findTrade(channel.getTradeId());
+                Optional<BisqEasyTrade> optionalBisqEasyTrade = bisqEasyTradeService.findOpenTrade(channel.getTradeId());
                 if (optionalBisqEasyTrade.isEmpty()) {
                     return;
                 }

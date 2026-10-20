@@ -165,7 +165,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         // A message for one of our trades which the peer sent to another of our user profiles must not create a channel
         // (rule 6 of docs/specifications/trade/pending-trade-messages.md).
         bisqEasyOpenTradeChannelService.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) ->
-                findTrade(tradeId)
+                findOpenTrade(tradeId)
                         .filter(trade -> trade.getPeer().getNetworkId().getId().equals(senderUserProfileId) &&
                                 trade.getMyself().getNetworkId().getId().equals(receiverUserProfileId))
                         .isPresent());
@@ -177,7 +177,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         chatChannelsPin = bisqEasyOpenTradeChannelService.getChannels().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(BisqEasyOpenTradeChannel channel) {
-                findTrade(channel.getTradeId()).ifPresent(trade -> failTradeOnChatChannelMismatch(trade, channel));
+                findOpenTrade(channel.getTradeId()).ifPresent(trade -> failTradeOnChatChannelMismatch(trade, channel));
             }
 
             @Override
@@ -381,7 +381,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         checkArgument(findProtocol(bisqEasyTrade.getId()).isEmpty(),
                 "We received the BisqEasyTakeOfferRequest for an already existing protocol");
 
-        checkArgument(!tradeExists(bisqEasyTrade.getId()), "A trade with that ID exists already");
+        checkArgument(!wasTradeIdUsed(bisqEasyTrade.getId()), "A trade with that ID exists already");
         persistableStore.addTrade(bisqEasyTrade);
         persist();
 
@@ -464,8 +464,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Misc API
     /* --------------------------------------------------------------------- */
 
-    public Optional<BisqEasyTrade> findTrade(String tradeId) {
-        return persistableStore.findTrade(tradeId);
+    // An open trade is a trade which the user has not closed yet, also one in a final state. closeTrade moves a trade to
+    // the closed trades, so this method does not find it anymore. wasTradeIdUsed also covers closed and deleted trades.
+    public Optional<BisqEasyTrade> findOpenTrade(String tradeId) {
+        return persistableStore.findOpenTrade(tradeId);
     }
 
     public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
@@ -550,7 +552,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
         Optional<RuntimeException> rejection;
         synchronized (tradeCreationLock) {
-            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+            if (findProtocol(tradeId).isPresent() || wasTradeIdUsed(tradeId)) {
                 logDroppedTakeOfferRequest(message, "a trade with its trade ID exists already", tradeId);
                 return Optional.empty();
             }
@@ -744,9 +746,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return protocolRegistry.find(id);
     }
 
+    // Whether we ever had a trade with the trade ID: an open trade, a closed trade, or a closed trade which the user
+    // deleted since. findOpenTrade finds only an open trade. The store keeps the ID of each of our trades, so that no
+    // new trade gets the ID of an earlier one, for example from a copy of a take offer request
+    // (docs/specifications/trade/take-offer-request-validation.md).
     @VisibleForTesting
-    boolean tradeExists(String tradeId) {
-        return persistableStore.tradeExists(tradeId);
+    boolean wasTradeIdUsed(String tradeId) {
+        return persistableStore.wasTradeIdUsed(tradeId);
     }
 
     private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {

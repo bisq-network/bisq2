@@ -261,14 +261,14 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     // Channel
     private void handleChannelAdded(BisqEasyOpenTradeChannel channel) {
-        bisqEasyTradeService.findTrade(channel.getTradeId())
+        bisqEasyTradeService.findOpenTrade(channel.getTradeId())
                 .ifPresentOrElse(trade -> handleTradeAndChannelAdded(trade, channel),
                         () -> log.warn("Channel with tradeId {} was added but associated trade is not found.", channel.getTradeId()));
     }
 
     private void handleChannelRemoved(BisqEasyOpenTradeChannel channel) {
         String tradeId = channel.getTradeId();
-        bisqEasyTradeService.findTrade(tradeId)
+        bisqEasyTradeService.findOpenTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
                             Optional<OpenTradeListItem> listItem = findListItem(tradeId);
@@ -360,7 +360,7 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     // Misc
     private void updatePredicate() {
-        model.getFilteredList().setPredicate(e -> bisqEasyTradeService.findTrade(e.getTradeId()).isPresent());
+        model.getFilteredList().setPredicate(e -> bisqEasyTradeService.findOpenTrade(e.getTradeId()).isPresent());
     }
 
     private void maybeSelectFirst() {
@@ -403,6 +403,6 @@ public final class BisqEasyOpenTradesController extends ChatController<BisqEasyO
 
     private boolean hasTradeForChannel(ChatChannel<? extends ChatMessage> chatChannel) {
         return chatChannel instanceof BisqEasyOpenTradeChannel channel &&
-                bisqEasyTradeService.findTrade(channel.getTradeId()).isPresent();
+                bisqEasyTradeService.findOpenTrade(channel.getTradeId()).isPresent();
     }
 }

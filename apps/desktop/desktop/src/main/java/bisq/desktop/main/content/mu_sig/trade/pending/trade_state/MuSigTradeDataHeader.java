@@ -100,7 +100,7 @@ public class MuSigTradeDataHeader {
                 if (channel == null) {
                     return;
                 }
-                Optional<MuSigTrade> optionalMuSigTrade = muSigTradeService.findTrade(channel.getTradeId());
+                Optional<MuSigTrade> optionalMuSigTrade = muSigTradeService.findOpenTrade(channel.getTradeId());
                 if (optionalMuSigTrade.isEmpty()) {
                     return;
                 }

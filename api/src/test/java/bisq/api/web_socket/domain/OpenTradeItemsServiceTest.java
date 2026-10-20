@@ -56,7 +56,7 @@ class OpenTradeItemsServiceTest {
         BisqEasyOpenTradeChannelService channelService = mock(BisqEasyOpenTradeChannelService.class);
         BisqEasyTrade trade = trade();
         BisqEasyOpenTradeChannel channel = channel();
-        when(bisqEasyTradeService.findTrade(TRADE_ID)).thenReturn(Optional.of(trade));
+        when(bisqEasyTradeService.findOpenTrade(TRADE_ID)).thenReturn(Optional.of(trade));
         when(channelService.findChannelByTradeId(TRADE_ID)).thenReturn(Optional.of(channel));
 
         TradeItemPresentationDto itemDto = itemDto();

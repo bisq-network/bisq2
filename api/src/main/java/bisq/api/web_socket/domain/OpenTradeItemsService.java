@@ -158,14 +158,14 @@ public class OpenTradeItemsService implements Service {
 
     // Channel
     private void handleChannelAdded(BisqEasyOpenTradeChannel channel) {
-        bisqEasyTradeService.findTrade(channel.getTradeId())
+        bisqEasyTradeService.findOpenTrade(channel.getTradeId())
                 .ifPresentOrElse(trade -> handleTradeAndChannelAdded(trade, channel),
                         () -> log.warn("Channel with tradeId {} was added but associated trade is not found.", channel.getTradeId()));
     }
 
     private void handleChannelRemoved(BisqEasyOpenTradeChannel channel) {
         String tradeId = channel.getTradeId();
-        bisqEasyTradeService.findTrade(tradeId)
+        bisqEasyTradeService.findOpenTrade(tradeId)
                 .ifPresentOrElse(this::handleTradeAndChannelRemoved,
                         () -> {
                             Optional<TradeItemPresentationDto> listItem = findListItem(tradeId);
