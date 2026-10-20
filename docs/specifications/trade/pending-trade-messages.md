@@ -17,13 +17,14 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 ## Rules
 
 1. A node keeps a trade message whose trade has no protocol yet as a pending message. The decision to keep a message
-   as pending and the creation of the protocol of its trade are one step. So a message which arrives while the node
-   creates the protocol either reaches the protocol directly, or is pending before the protocol exists. When the
-   protocol of a trade has handled a trade message, the node passes the pending messages of that trade to the protocol,
-   in arrival order. The protocol of a maker handles the take offer request right after the node created it. A
-   pending message which the node passes to the protocol is no longer pending, and the node passes each pending message
-   to the protocol only once. A pending message of an existing trade whose sender is not the trade peer is dropped, as
-   [Sender of a trade message](trade-message-sender.md) defines.
+   as pending and the registration of the protocol of its trade are one step. So a message which arrives while the
+   node registers the protocol either reaches the protocol directly, or is pending before the registration. After the
+   registration, the node passes the pending messages of the trade to the protocol, in arrival order, when the
+   protocol has handled a message of the trade. A maker does this right after its protocol has handled the take offer
+   request. A taker, and a node which registers the protocols of its stored trades at startup, register protocols for
+   which no message can be pending. A pending message which the node passes to the protocol is no longer pending, and
+   the node passes each pending message to the protocol only once. A pending message of an existing trade whose sender
+   is not the trade peer is dropped, as [Sender of a trade message](trade-message-sender.md) defines.
 2. A node keeps at most 100 pending messages. When a message arrives while the node keeps 100 pending messages, the
    node drops the oldest pending message and keeps the new one. A message which is already pending does not change
    the number or the order of the pending messages.
@@ -61,6 +62,14 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 - Rule 1, only once: a protocol must apply a message of the trade peer once. The state machine ignores a second copy
   only of a message which changed the state of the trade. A MuSig protocol applies some messages without a change of
   the state, and it would apply a second copy again.
+- Rule 1, after the registration: a message can become pending only while its trade has no protocol, because the
+  decision is one step with the registration. So the node gets all pending messages of the trade when it takes them
+  after the registration, and no later message of the trade becomes pending. If it took them before the
+  registration, a message which became pending afterwards would stay pending.
+- Rule 1, taker and startup: the trade ID contains the take offer date (see [Trade ID](trade-id.md)). The trade peer
+  of a taker learns the trade ID only from the take offer request, which the taker sends after it registered its
+  protocol. The pending messages exist only in memory, and at startup the node registers the protocols of its stored
+  trades before it receives messages. So no message of these trades can be pending.
 - Rule 2: anybody can send trade messages with made-up trade IDs to a node. Such a message never gets a trade, so
   without a bound it stays in memory until the node restarts, and the memory of the node grows without limit. A node
   has only a few trades whose messages can arrive before the trade exists, so 100 pending messages leave room for all

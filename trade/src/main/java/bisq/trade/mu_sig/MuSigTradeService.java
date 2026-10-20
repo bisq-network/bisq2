@@ -532,10 +532,13 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         });
     }
 
-    // Runs in a task of the trade. The pending messages of the trade became pending before the protocol existed (see
-    // pendingMessagesLock), so a maker processes them right after the take offer request. We take them out of the
-    // pending messages in one step. So two tasks which process messages of the trade never pass the same pending message
-    // to the protocol. Mediation settlement messages wait in their own pending messages.
+    // Runs in the task which handled a message of the trade, after that message, so the protocol does not run on the
+    // network thread. All trades share the executor of these tasks. The pending messages of the trade became pending
+    // before the protocol existed (see pendingMessagesLock), so a maker processes them right after the take offer
+    // request. A call before the registration of the protocol could miss a message which becomes pending later (rule 1
+    // of docs/specifications/trade/pending-trade-messages.md). We take them out of the pending messages in one step. So
+    // two tasks which process messages of the trade never pass the same pending message to the protocol. Mediation
+    // settlement messages wait in their own pending messages.
     private void processPendingTradeMessages(MuSigProtocol protocol) {
         String tradeId = protocol.getTrade().getId();
         pendingTradeMessages.removeMessagesOfTrade(tradeId).forEach(pendingMessage -> {
