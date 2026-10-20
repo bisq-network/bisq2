@@ -267,14 +267,12 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         protocolRegistry.findOrKeepAsPending(message).ifPresentOrElse(protocol -> {
                     if (isMessageOfTradePeer(message, protocol)) {
                         handleBisqEasyTradeMessage(message, protocol);
-                    } else {
-                        protocolRegistry.removePendingMessage(message);
                     }
                 },
                 () -> {
                     // Trade messages carry private data of the traders, so the log names only the message type.
                     log.info("Protocol with tradeId {} not found. We add the message of type {} to pendingMessages " +
-                                    "for re-processing when the next message arrives.",
+                                    "for processing when the protocol of the trade handles its next message.",
                             StringUtils.sanitizeForLog(tradeId), message.getClass().getSimpleName());
                 });
     }
@@ -295,16 +293,21 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
         protocol.handle(message);
+        processPendingMessages(protocol);
+    }
 
-        if (protocolRegistry.removePendingMessage(message)) {
+    // The pending messages of the trade became pending before the protocol existed (see BisqEasyProtocolRegistry), so
+    // a maker processes them right after the take offer request. We take them out of the pending messages in one step.
+    // So two threads which process messages of the trade never pass the same pending message to the protocol.
+    private void processPendingMessages(BisqEasyProtocol protocol) {
+        String tradeId = protocol.getModel().getId();
+        protocolRegistry.removePendingMessagesOfTrade(tradeId).forEach(pendingMessage -> {
             log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
-                    message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
-        }
-
-        if (protocolRegistry.hasPendingMessages()) {
-            log.info("We have pendingMessages. We try to re-process them now.");
-            protocolRegistry.getPendingMessagesInArrivalOrder().forEach(this::handleBisqEasyTradeMessage);
-        }
+                    pendingMessage.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId));
+            if (isMessageOfTradePeer(pendingMessage, protocol)) {
+                protocol.handle(pendingMessage);
+            }
+        });
     }
 
 

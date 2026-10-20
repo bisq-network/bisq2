@@ -27,7 +27,10 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.exceptions.TradeProtocolFailure;
@@ -36,12 +39,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static bisq.trade.protocol.messages.PendingTradeMessages.MAX_PENDING_MESSAGES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -53,13 +59,15 @@ class BisqEasyTradeServicePendingMessagesTest {
     private final NetworkId me = networkId("me", 1001);
     private final NetworkId peer = networkId("peer", 1002);
     private final NetworkId thirdParty = networkId("third-party", 1003);
+    private final BisqEasyProtocolRegistry protocolRegistry = new BisqEasyProtocolRegistry();
 
     private BisqEasyTradeService service;
     private BisqEasyTrade trade;
 
     @BeforeEach
     void setUp() {
-        service = new BisqEasyTradeService(mock(ServiceProvider.class, RETURNS_DEEP_STUBS), AppType.DESKTOP);
+        service = new BisqEasyTradeService(mock(ServiceProvider.class, RETURNS_DEEP_STUBS), AppType.DESKTOP,
+                protocolRegistry);
         // I am the taker and the buyer. The peer is the maker.
         BisqEasyContract contract = mock(BisqEasyContract.class);
         when(contract.getTakeOfferDate()).thenReturn(0L);
@@ -99,6 +107,27 @@ class BisqEasyTradeServicePendingMessagesTest {
         // confirmation message in its first state, so that message does not change the state either.
         assertThat(trade.getState()).isEqualTo(BisqEasyTradeState.INIT);
         assertThat(trade.getEventQueue()).doesNotContain(errorReport(peer));
+    }
+
+    // Each pending message reaches the protocol once. Two messages which the peer sent before the trade existed are
+    // pending. A later message of the trade makes the node pass them to the protocol.
+    @Test
+    void eachPendingMessageOfTheTradeReachesTheProtocolOnce() {
+        BisqEasyAccountDataMessage accountData = new BisqEasyAccountDataMessage("account-data-of-peer",
+                trade.getId(), "1.0.0", peer, me, "account data", trade.getOffer());
+        BisqEasyConfirmBtcSentMessage btcSent = new BisqEasyConfirmBtcSentMessage("btc-sent-of-peer",
+                trade.getId(), "1.0.0", peer, me, Optional.empty());
+        service.onMessage(accountData);
+        service.onMessage(btcSent);
+        startServiceWithTrade();
+        BisqEasyProtocol protocol = spy(service.findProtocol(trade.getId()).orElseThrow());
+        protocolRegistry.add(trade.getId(), protocol);
+
+        service.onMessage(confirmFiatReceipt());
+
+        verify(protocol).handle(accountData);
+        verify(protocol).handle(btcSent);
+        assertThat(protocolRegistry.hasPendingMessages()).isFalse();
     }
 
     private void sendMessagesWithUnknownTradeIds(int count) {

@@ -85,6 +85,18 @@ class PendingTradeMessagesTest {
     }
 
     @Test
+    void removingTheMessagesOfATradeReturnsThemOnceInArrivalOrder() {
+        BisqEasyTradeMessage first = message(1, "trade");
+        BisqEasyTradeMessage ofOtherTrade = message(2, "other-trade");
+        BisqEasyTradeMessage second = message(3, "trade");
+        List.of(first, ofOtherTrade, second).forEach(pendingMessages::add);
+
+        assertThat(pendingMessages.removeMessagesOfTrade("trade")).containsExactly(first, second);
+        assertThat(pendingMessages.removeMessagesOfTrade("trade")).isEmpty();
+        assertThat(pendingMessages.getMessagesInArrivalOrder()).containsExactly(ofOtherTrade);
+    }
+
+    @Test
     void snapshotIsNotChangedByLaterModifications() {
         BisqEasyTradeMessage message = message(1);
         pendingMessages.add(message);
@@ -101,8 +113,12 @@ class PendingTradeMessagesTest {
     }
 
     private BisqEasyTradeMessage message(int index) {
+        return message(index, "trade-" + index);
+    }
+
+    private BisqEasyTradeMessage message(int index, String tradeId) {
         return new BisqEasyReportErrorMessage("message-" + index,
-                "trade-" + index,
+                tradeId,
                 "1.0.0",
                 sender,
                 receiver,

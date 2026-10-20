@@ -86,6 +86,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -194,12 +195,12 @@ class MuSigTradeServicePendingMessageHandoffTest {
         assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
 
         // The other thread creates the protocol, which then handles a first message and processes the pending messages.
-        // The thread finishes only after the task of the first message, so without the fix the error report becomes
-        // pending only after that task has looked at the pending messages.
+        // The thread finishes only when the executor has no task left, so without the fix the error report becomes
+        // pending only after the task of the first message has looked at the pending messages.
         TestThread protocolThread = new TestThread(PROTOCOL_THREAD, () -> {
             service.initialize().join();
             service.onMessage(paymentInitiatedMessage("first-message"));
-            awaitTasksSubmittedSoFar();
+            awaitIdleExecutor();
         });
         awaitFinishedOrWaitingFor(protocolThread.thread, messageThread.thread);
         continueMessageThread.countDown();
@@ -222,18 +223,45 @@ class MuSigTradeServicePendingMessageHandoffTest {
         assertErrorReportReachesTheProtocol();
     }
 
-    // The executor of the service has one thread and a queue, so it runs the tasks in the order of their submission. A
-    // task which we submit now runs after every task which was submitted before it. The counters of the executor cannot
-    // show this: they do not count a task which a worker has taken from the queue but not yet started.
-    private void awaitTasksSubmittedSoFar() throws Exception {
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) service.getExecutor();
-        assertThat(executor.getPoolSize()).as("the executor runs the tasks on one thread").isLessThanOrEqualTo(1);
-        executor.submit(() -> {
-        }).get(10, SECONDS);
+    // Each pending message reaches the protocol once. Two messages which the peer sent before the protocol existed are
+    // pending. The first message which the protocol handles makes the node pass them to the protocol.
+    @Test
+    void eachPendingMessageOfTheTradeReachesTheProtocolOnce() throws Exception {
+        PaymentInitiatedMessage_E firstPendingMessage = paymentInitiatedMessage("first-pending-message");
+        PaymentInitiatedMessage_E secondPendingMessage = paymentInitiatedMessage("second-pending-message");
+        service.onMessage(firstPendingMessage);
+        service.onMessage(secondPendingMessage);
+        service.initialize().get(5, SECONDS);
+        awaitIdleExecutor();
+        MuSigProtocol protocol = spy(service.findProtocol(trade.getId()).orElseThrow());
+        service.getTradeProtocolById().put(trade.getId(), protocol);
+
+        service.onMessage(paymentInitiatedMessage("first-message"));
+        awaitIdleExecutor();
+
+        verify(protocol).handle(firstPendingMessage);
+        verify(protocol).handle(secondPendingMessage);
+        assertThat(service.getPendingTradeMessages().isEmpty()).isTrue();
     }
 
-    // The task of a message which the protocol handles submits a task for each pending message, so the error report
-    // reaches the protocol in a later task. We wait for its result instead of waiting for the tasks.
+    // The executor of the service has one thread and a queue, so it runs the tasks one after the other, in the order of
+    // their submission. While a task of the test runs, no other task runs, and so no task can submit a further task. So
+    // when the queue is empty while the task of the test runs, every task which was submitted before has run. A task can
+    // submit further tasks, so we repeat until the queue is empty. The counters of the executor cannot show this: they
+    // do not count a task which a worker has taken from the queue but not yet started.
+    private void awaitIdleExecutor() throws Exception {
+        ThreadPoolExecutor executor = (ThreadPoolExecutor) service.getExecutor();
+        assertThat(executor.getPoolSize()).as("the executor runs the tasks on one thread").isLessThanOrEqualTo(1);
+        long deadline = System.nanoTime() + SECONDS.toNanos(10);
+        while (!executor.submit(() -> executor.getQueue().isEmpty()).get(10, SECONDS)) {
+            if (System.nanoTime() > deadline) {
+                throw new AssertionError("The tasks of the trade did not finish");
+            }
+        }
+    }
+
+    // The protocol handles the messages in tasks on the executor of the service, so we wait, with a deadline, for the
+    // result in the trade and in the pending messages.
     private void assertErrorReportReachesTheProtocol() throws InterruptedException {
         long deadline = System.nanoTime() + SECONDS.toNanos(10);
         while ((trade.getTradeState() != MuSigTradeState.FAILED_AT_PEER || !service.getPendingTradeMessages().isEmpty())
