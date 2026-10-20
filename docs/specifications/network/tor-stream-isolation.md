@@ -49,6 +49,11 @@ Bisq must send different credentials for them.
    value. The password is the fixed value `0`.
 2. Therefore, an HTTP connection never shares a circuit with another HTTP connection or with a P2P
    connection.
+3. An HTTP connection over Tor carries one HTTP request only. Bisq closes the connection after the
+   response. It does not reuse the connection for a later request, a redirect, or a retry.
+   Therefore, each HTTP request uses its own circuit. For a redirect and a retry this is not a
+   privacy requirement: the server chose the redirect target and sees both requests anyway. It
+   keeps the rule free of exceptions, and therefore simple to test.
 
 ## Rules for the SOCKS5 handshake
 
@@ -124,7 +129,8 @@ Separate circuits prevent the attacks above. They do not remove every way to lin
   it. The second connection can then be faster.
 - **More circuits:** When several nodes of one user connect to the same peer, each node needs its
   own circuit to that peer. Users with several profiles therefore create more circuits. Each HTTP
-  connection also needs its own circuit.
+  connection also needs its own circuit. Because Bisq does not reuse an HTTP connection, a redirect
+  or a retry of an HTTP request also needs a new circuit.
 - **Configuration:** The SOCKS port flag `NoIsolateSOCKSAuth` disables this protection. It can be
   set in the configuration of an external Tor or with a `torrc` override.
 

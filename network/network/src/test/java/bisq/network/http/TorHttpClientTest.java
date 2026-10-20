@@ -53,7 +53,7 @@ class TorHttpClientTest {
     private final ServerSocket serverSocket = new ServerSocket(0, 2, InetAddress.getLoopbackAddress());
 
     // What the fake proxy received on one connection
-    private record Connection(String username, String password, String host, int port, String requestLine) {
+    private record Connection(String username, String password, String host, int port, List<String> requestLines) {
     }
 
     TorHttpClientTest() throws IOException {
@@ -66,21 +66,37 @@ class TorHttpClientTest {
 
     @Test
     void eachRequestUsesItsOwnSocksCredentials() throws Exception {
-        CompletableFuture<List<Connection>> connections = serve(2);
+        CompletableFuture<List<Connection>> connections = serve();
         TorHttpClient client = createClient();
 
         assertEquals("ok", client.get("first", Optional.empty()));
         assertEquals("ok", client.get("second", Optional.empty()));
 
-        List<Connection> received = connections.get(TIMEOUT, TimeUnit.MILLISECONDS);
+        List<Connection> received = stopAndGet(connections);
+        assertEquals(2, received.size());
         Connection first = received.get(0);
         Connection second = received.get(1);
         assertEquals(HOST, first.host());
         assertEquals(80, first.port());
-        assertEquals("GET /first HTTP/1.1", first.requestLine());
-        assertEquals("GET /second HTTP/1.1", second.requestLine());
+        assertEquals(List.of("GET /first HTTP/1.1"), first.requestLines());
+        assertEquals(List.of("GET /second HTTP/1.1"), second.requestLines());
         assertEquals("0", first.password());
         assertNotEquals(first.username(), second.username());
+    }
+
+    // A connection reused for the redirect would put both requests on one Tor circuit (the rules for HTTP requests
+    // over Tor in docs/specifications/network/tor-stream-isolation.md)
+    @Test
+    void sameHostRedirectUsesNewConnection() throws Exception {
+        CompletableFuture<List<Connection>> connections = serve();
+        TorHttpClient client = createClient();
+
+        assertEquals("ok", client.get("redirect", Optional.empty()));
+
+        List<Connection> received = stopAndGet(connections);
+        assertEquals(List.of(List.of("GET /redirect HTTP/1.1"), List.of("GET /target HTTP/1.1")),
+                received.stream().map(Connection::requestLines).toList());
+        assertNotEquals(received.get(0).username(), received.get(1).username());
     }
 
     // Tor answers the SOCKS5 connect request only after it has built the circuit and reached the server, which can
@@ -112,15 +128,32 @@ class TorHttpClientTest {
         return new TorHttpClient("http://" + HOST, "http://" + HOST, "test", proxyProvider);
     }
 
-    // A SOCKS5 proxy which accepts the given number of connections one after the other. On each connection it performs
-    // the SOCKS5 handshake, reads the HTTP request, and answers "ok". The future completes with what it received.
-    private CompletableFuture<List<Connection>> serve(int numConnections) {
+    // When a request has returned, the client has opened and closed all its connections, so the proxy can stop
+    private List<Connection> stopAndGet(CompletableFuture<List<Connection>> connections) throws Exception {
+        serverSocket.close();
+        return connections.get(TIMEOUT, TimeUnit.MILLISECONDS);
+    }
+
+    // A SOCKS5 proxy which accepts connections one after the other until the server socket is closed. On each
+    // connection it performs the SOCKS5 handshake. Then it answers HTTP requests and keeps the connection open until
+    // the client closes it. It answers "GET /redirect" with a redirect to "/target" on the same host, and any other
+    // request with "ok". The future completes with what it received.
+    private CompletableFuture<List<Connection>> serve() {
         CompletableFuture<List<Connection>> result = new CompletableFuture<>();
         Thread thread = new Thread(() -> {
             List<Connection> connections = new ArrayList<>();
             try {
-                for (int i = 0; i < numConnections; i++) {
-                    try (Socket socket = serverSocket.accept()) {
+                while (true) {
+                    Socket socket;
+                    try {
+                        socket = serverSocket.accept();
+                    } catch (SocketException e) {
+                        if (serverSocket.isClosed()) {
+                            break;
+                        }
+                        throw e;
+                    }
+                    try (socket) {
                         socket.setSoTimeout(TIMEOUT);
                         connections.add(handle(socket));
                     }
@@ -195,14 +228,34 @@ class TorHttpClientTest {
         int port = in.readUnsignedShort();
         out.write(new byte[]{5, 0, 0, 1, 0, 0, 0, 0, 0, 0});
 
-        String requestLine = readLine(in);
-        String header;
-        do {
-            header = readLine(in);
-        } while (!header.isEmpty());
-        out.write("HTTP/1.1 200 OK\r\nContent-Length: 2\r\nConnection: close\r\n\r\nok".getBytes(StandardCharsets.US_ASCII));
-        out.flush();
-        return new Connection(username, password, host, port, requestLine);
+        // No "Connection: close": the client must not send a second request on this connection
+        List<String> requestLines = new ArrayList<>();
+        String requestLine;
+        while ((requestLine = readRequestLine(in)) != null) {
+            requestLines.add(requestLine);
+            String header;
+            do {
+                header = readLine(in);
+                if (header == null) {
+                    throw new EOFException("The client closed the connection inside an HTTP request");
+                }
+            } while (!header.isEmpty());
+            String response = requestLine.startsWith("GET /redirect ")
+                    ? "HTTP/1.1 302 Found\r\nLocation: http://" + HOST + "/target\r\nContent-Length: 0\r\n\r\n"
+                    : "HTTP/1.1 200 OK\r\nContent-Length: 2\r\n\r\nok";
+            out.write(response.getBytes(StandardCharsets.US_ASCII));
+            out.flush();
+        }
+        return new Connection(username, password, host, port, requestLines);
+    }
+
+    // Returns null if the client closed the connection instead of sending another request
+    private static String readRequestLine(DataInputStream in) throws IOException {
+        try {
+            return readLine(in);
+        } catch (SocketException e) {
+            return null; // The client may close the connection with a reset
+        }
     }
 
     private static String readString(DataInputStream in) throws IOException {
@@ -211,11 +264,15 @@ class TorHttpClientTest {
         return new String(bytes, StandardCharsets.US_ASCII);
     }
 
+    // Returns null if the client closed the connection before the first byte of the line
     private static String readLine(DataInputStream in) throws IOException {
         StringBuilder line = new StringBuilder();
         int b;
         while ((b = in.read()) != '\n') {
             if (b == -1) {
+                if (line.isEmpty()) {
+                    return null;
+                }
                 throw new EOFException("The client closed the connection inside an HTTP line");
             }
             if (b != '\r') {

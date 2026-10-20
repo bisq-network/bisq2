@@ -143,6 +143,10 @@ public class TorHttpClient extends BaseHttpClient {
         try {
             closeableHttpClient = checkNotNull(HttpClients.custom()
                     .setConnectionManager(cm)
+                    // An HTTP connection over Tor carries one HTTP request only (the rules for HTTP requests over
+                    // Tor in docs/specifications/network/tor-stream-isolation.md). A connection kept alive would
+                    // carry a redirect or a retry of this request on the circuit of the request itself.
+                    .setConnectionReuseStrategy((request, response, context) -> false)
                     .setDefaultRequestConfig(RequestConfig.custom()
                             .setResponseTimeout(Timeout.ofSeconds(30))
                             .build()) // Timeout waiting for response
