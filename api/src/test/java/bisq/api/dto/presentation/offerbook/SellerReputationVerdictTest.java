@@ -71,5 +71,33 @@ class SellerReputationVerdictTest {
                 .toList();
         assertThat(warnings).hasSize(1);
         assertThat(warnings.get(0).getThrowableProxy()).isNull();
+        // The simple name of an anonymous class is empty
+        assertThat(warnings.get(0).getFormattedMessage()).contains("java.lang.IllegalStateException");
+    }
+
+    // The maker chooses the offer ID, so a line break in it could forge a log line. The layout prints a logged
+    // throwable as it is, like every other one.
+    @Test
+    void logMessagesOfAFailingCheckHaveNoLineBreak() {
+        when(offer.getId()).thenReturn("offer-id\nFORGED offer-id");
+        when(sellersReputationService.hasSellerSufficientReputation(offer))
+                .thenThrow(new IllegalStateException("check\r\nFORGED failed"));
+        Logger logger = (Logger) LoggerFactory.getLogger(SellerReputationVerdict.class);
+        Level level = logger.getLevel();
+        logger.setLevel(Level.DEBUG);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+
+        try {
+            SellerReputationVerdict.find(sellersReputationService, offer);
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(level);
+        }
+
+        assertThat(appender.list).extracting(ILoggingEvent::getLevel).containsExactly(Level.WARN, Level.DEBUG);
+        assertThat(appender.list).extracting(ILoggingEvent::getFormattedMessage)
+                .allSatisfy(message -> assertThat(message).doesNotContain("\n", "\r"));
     }
 }

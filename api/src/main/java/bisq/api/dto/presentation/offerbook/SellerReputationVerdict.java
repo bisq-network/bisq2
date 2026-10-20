@@ -18,6 +18,7 @@
 package bisq.api.dto.presentation.offerbook;
 
 import bisq.bisq_easy.BisqEasySellersReputationBasedTradeAmountService;
+import bisq.common.util.StringUtils;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,8 +32,11 @@ public class SellerReputationVerdict {
         try {
             return Optional.of(sellersReputationService.hasSellerSufficientReputation(offer));
         } catch (RuntimeException e) {
-            log.warn("Could not check the seller reputation of offer {}: {}", offer.getId(), e.toString());
-            log.debug("Could not check the seller reputation of offer {}", offer.getId(), e);
+            // The maker chooses the offer ID
+            String offerId = StringUtils.sanitizeForLog(offer.getId());
+            log.warn("Could not check the seller reputation of offer {}: {}: {}",
+                    offerId, e.getClass().getName(), StringUtils.sanitizeForLog(e.getMessage()));
+            log.debug("Could not check the seller reputation of offer {}", offerId, e);
             return Optional.empty();
         }
     }
