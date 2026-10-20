@@ -150,8 +150,13 @@ public abstract class Fsm<M extends FsmModel> {
      */
     public void handleQueuedEvents() {
         synchronized (this) {
-            // Clone set to avoid ConcurrentModificationException
-            new HashSet<>(model.getEventQueue()).forEach(this::handle);
+            // We iterate over a copy, as handle changes the queue. A nested call, which runs after each change of the
+            // state, can have applied or removed an event of the copy. Such an event is no longer queued, so we skip it.
+            for (Event event : new HashSet<>(model.getEventQueue())) {
+                if (model.eventQueue.contains(event)) {
+                    handle(event);
+                }
+            }
         }
     }
 

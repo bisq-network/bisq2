@@ -339,6 +339,38 @@ public class FsmTest {
     }
 
     @Test
+    void testHandleQueuedEventsSkipsEventRemovedByNestedCall() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        // MockEvent2 has an internal transition, so the queue keeps each of its events
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .stay();
+
+        fsm.handle(new MockEvent2(model, "first"));
+        fsm.handle(new MockEvent2(model, "second"));
+        assertEquals(2, model.eventQueue.size());
+
+        // One queued MockEvent2 changes the state to S2, and the Fsm removes the other one. The replay must not apply
+        // the removed event with the internal transition from S2.
+        fsm.handle(new MockEvent1(model, "forward"));
+        assertEquals(MockState.S2, model.getState());
+        assertNull(model.data);
+        assertEquals(0, model.eventQueue.size());
+    }
+
+    @Test
     void testFromAny() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
