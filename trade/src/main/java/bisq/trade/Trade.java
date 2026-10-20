@@ -137,7 +137,13 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
         // user action, has no persisted form (see docs/specifications/trade/queued-trade-messages.md).
         getEventQueue().forEach(event -> {
             if (event instanceof TradeMessage tradeMessage) {
-                builder.addQueuedTradeMessages(tradeMessage.toValueProto(serializeForHash));
+                try {
+                    builder.addQueuedTradeMessages(tradeMessage.toValueProto(serializeForHash));
+                } catch (RuntimeException e) {
+                    log.error("Trade message of type {} with trade ID {} could not be serialized at toValueProto.",
+                            tradeMessage.getClass().getSimpleName(),
+                            tradeMessage.getTradeId());
+                }
             }
         });
         return builder;

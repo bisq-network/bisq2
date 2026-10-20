@@ -38,6 +38,7 @@ public class FsmModel {
     // Package visibility for access from Fsm mutating the collections 
     // The persistence of a model can read the event queue in its own thread while the Fsm changes it. A concurrent set
     // does not throw a ConcurrentModificationException in that case.
+    @ToString.Exclude
     final Set<Event> eventQueue = ConcurrentHashMap.newKeySet();
     final Set<Class<? extends Event>> processedEvents = new HashSet<>();
 
