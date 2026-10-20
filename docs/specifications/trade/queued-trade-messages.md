@@ -151,7 +151,8 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
 - **State and event queue of one write.** The node writes a trade in another thread than the protocol, and the write
   reads the state of the trade and its event queue one after the other. While the protocol applies a queued event, a
   write can contain the state before the event and an event queue without the event. If the node stops before its
-  next write, it loses the event. The next write follows within about one second (see "Not covered").
+  next write, it loses the event. [Store write results](../persistence/store-write-results.md) defines when the next
+  write happens.
   - Why it remains: the state machine and the write of the store share no lock, and a lock which the write takes
     while the protocol runs its handlers would delay the writes of all trades. A consistent write needs a change of
     the state machine.
