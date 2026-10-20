@@ -439,18 +439,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Misc API
     /* --------------------------------------------------------------------- */
 
-    @VisibleForTesting
-    Optional<BisqEasyProtocol> findProtocol(String id) {
-        return protocolRegistry.find(id);
-    }
-
     public Optional<BisqEasyTrade> findTrade(String tradeId) {
         return persistableStore.findTrade(tradeId);
-    }
-
-    @VisibleForTesting
-    boolean tradeExists(String tradeId) {
-        return persistableStore.tradeExists(tradeId);
     }
 
     public boolean wasOfferAlreadyTaken(BisqEasyOffer bisqEasyOffer, NetworkId takerNetworkId) {
@@ -462,10 +452,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     public ReadOnlyObservableSet<BisqEasyTrade> getTrades() {
         return persistableStore.getTrades();
-    }
-
-    private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
-        return persistableStore.getAllTrades();
     }
 
     public ReadOnlyObservableSet<BisqEasyClosedTrade> getClosedTrades() {
@@ -706,6 +692,20 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
     // Misc
     /* --------------------------------------------------------------------- */
+
+    @VisibleForTesting
+    Optional<BisqEasyProtocol> findProtocol(String id) {
+        return protocolRegistry.find(id);
+    }
+
+    @VisibleForTesting
+    boolean tradeExists(String tradeId) {
+        return persistableStore.tradeExists(tradeId);
+    }
+
+    private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
+        return persistableStore.getAllTrades();
+    }
 
     private void maybeAddPeerToContactList(String peersProfileId, String myProfileId) {
         if (settingsService.getDoAutoAddToContactList()) {
