@@ -84,9 +84,12 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
 
 ## Compatibility
 
-- The queued trade messages are a new field of the persisted trade: `queuedTradeMessages`, number 32 of the message
+- The queued trade messages are a new field of the persisted trade: `queuedTradeMessages`, number 33 of the message
   `Trade` in `trade.proto`. The number is higher than every number which the message `Trade` used in the last
   release.
+- Number 32 is reserved. Up to version 2.1.7 it was `submarineTrade`, a case of the `oneof message` of `Trade`. A node
+  of such a version would read queued trade messages under number 32 as that case, and its next write of the store
+  would lose the trade.
 - A store of an earlier version has no queued trade messages. This version loads its trades with an empty event queue,
   as before.
 - An earlier version which loads a store of this version ignores the field. It loses the queued trade messages, as it
