@@ -59,6 +59,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -66,7 +67,7 @@ import static bisq.api.web_socket.subscription.Topic.OFFERS;
 
 @Slf4j
 public class OffersWebSocketService extends BaseWebSocketService {
-    private static final long RESEND_DELAY_SECONDS = 30;
+    private static final long RESEND_INTERVAL_NANOS = TimeUnit.SECONDS.toNanos(30);
 
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final UserProfileService userProfileService;
@@ -81,6 +82,9 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final Object offerUpdateLock = new Object();
     private final ScheduledExecutorService resendExecutor;
     private final AtomicBoolean isResendScheduled = new AtomicBoolean();
+    private final LongSupplier nanoTime;
+    // Written before isResendScheduled is reset, so that the revision which schedules the next pass reads it
+    private volatile long lastPassStartNanos;
     // Verdicts the subscribers hold. Keyed like the channel's message set, as authors choose the IDs.
     // Written only under offerUpdateLock.
     private final Map<BisqEasyOfferbookMessage, Boolean> sellerReputationVerdictByMessage = new ConcurrentHashMap<>();
@@ -95,7 +99,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 userService,
                 bondedRolesService,
                 bisqEasyService,
-                ExecutorFactory.newSingleThreadScheduledExecutor("OffersWebSocketService.resend"));
+                ExecutorFactory.newSingleThreadScheduledExecutor("OffersWebSocketService.resend"),
+                System::nanoTime);
     }
 
     @VisibleForTesting
@@ -104,9 +109,12 @@ public class OffersWebSocketService extends BaseWebSocketService {
                            UserService userService,
                            BondedRolesService bondedRolesService,
                            BisqEasyService bisqEasyService,
-                           ScheduledExecutorService resendExecutor) {
+                           ScheduledExecutorService resendExecutor,
+                           LongSupplier nanoTime) {
         super(subscriberRepository, OFFERS);
         this.resendExecutor = resendExecutor;
+        this.nanoTime = nanoTime;
+        lastPassStartNanos = nanoTime.getAsLong() - RESEND_INTERVAL_NANOS;
 
         bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         userProfileService = userService.getUserProfileService();
@@ -223,12 +231,14 @@ public class OffersWebSocketService extends BaseWebSocketService {
         return toJson(payload);
     }
 
-    // Revisions come in bursts and each pass checks all offers, so one delayed pass serves a burst. It runs on its own
-    // thread, not on the thread which changed the price or the score.
+    // Revisions come in bursts and each pass checks all offers, so passes start at most once per interval. The pass
+    // runs on its own thread, not on the thread which changed the price or the score.
     private void scheduleResend() {
         if (isResendScheduled.compareAndSet(false, true)) {
+            long delayNanos = Math.max(0, RESEND_INTERVAL_NANOS - (nanoTime.getAsLong() - lastPassStartNanos));
             try {
                 resendExecutor.schedule(() -> {
+                    lastPassStartNanos = nanoTime.getAsLong();
                     // Reset before the pass, so that a revision during the pass schedules another one
                     isResendScheduled.set(false);
                     try {
@@ -236,7 +246,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                     } catch (Exception e) {
                         log.error("Failed to resend offers with a changed seller reputation verdict", e);
                     }
-                }, RESEND_DELAY_SECONDS, TimeUnit.SECONDS);
+                }, delayNanos, TimeUnit.NANOSECONDS);
             } catch (RejectedExecutionException e) {
                 // Shutdown stopped the executor during this revision; no pass is needed anymore
             }

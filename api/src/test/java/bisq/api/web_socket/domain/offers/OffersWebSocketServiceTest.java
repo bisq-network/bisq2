@@ -89,6 +89,7 @@ class OffersWebSocketServiceTest {
     private Runnable onSend = () -> {
     };
     private int numVerdictChecks;
+    private long nanoTime;
     private MockedStatic<OfferItemPresentationDtoFactory> factory;
     private OffersWebSocketService service;
 
@@ -160,7 +161,8 @@ class OffersWebSocketServiceTest {
                 userService,
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 bisqEasyService,
-                resendExecutor);
+                resendExecutor,
+                () -> nanoTime);
     }
 
     @AfterEach
@@ -170,22 +172,75 @@ class OffersWebSocketServiceTest {
     }
 
     @Test
-    void revisionsJoinOnePassWhichRunsThirtySecondsLater() throws Exception {
+    void firstRevisionRunsThePassRightAway() {
+        service.initialize().join();
+
+        // The revision at registration
+        assertThat(resendExecutor.delaysInNanos).containsExactly(0L);
+    }
+
+    @Test
+    void revisionsWithinThirtySecondsOfAPassJoinOnePassAtTheEndOfThatWindow() throws Exception {
         BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
         service.initialize().join();
+        runScheduledPass();
         sentEvents.clear();
 
+        nanoTime += TimeUnit.SECONDS.toNanos(10);
         setVerdict(message, false);
         offerValidityRevision.set(1L);
         offerValidityRevision.set(2L);
         offerValidityRevision.set(3L);
         assertThat(sentEvents).isEmpty();
-        // The revision at registration scheduled the pass, and the later revisions joined it
-        assertThat(resendExecutor.delaysInSeconds).containsExactly(30L);
+        assertThat(resendExecutor.delaysInNanos).containsExactly(0L, TimeUnit.SECONDS.toNanos(20));
 
         runScheduledPass();
         assertThat(sentEvents).hasSize(1);
         assertSentItem(sentEvents.get(0), "ADDED", "message-a", false);
+    }
+
+    @Test
+    void revisionThirtySecondsAfterAPassRunsThePassRightAway() {
+        service.initialize().join();
+        runScheduledPass();
+
+        nanoTime += TimeUnit.SECONDS.toNanos(30);
+        offerValidityRevision.set(1L);
+        assertThat(resendExecutor.delaysInNanos).containsExactly(0L, 0L);
+    }
+
+    @Test
+    void revisionWhileInitializeChecksAVerdictSchedulesAPass() throws Exception {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        // The verdict flips after initialize read it
+        onVerdictCheck = () -> {
+            onVerdictCheck = () -> {
+            };
+            setVerdict(message, false);
+            offerValidityRevision.set(1L);
+        };
+        service.initialize().join();
+        sentEvents.clear();
+
+        runScheduledPass();
+        assertThat(sentEvents).hasSize(1);
+        assertSentItem(sentEvents.get(0), "ADDED", "message-a", false);
+    }
+
+    @Test
+    void windowStartsWhenThePassStarts() {
+        addSellOffer("message-a", "offer-a", true);
+        service.initialize().join();
+        // The pass takes 10 seconds
+        onVerdictCheck = () -> {
+            onVerdictCheck = () -> {
+            };
+            nanoTime += TimeUnit.SECONDS.toNanos(10);
+        };
+        runScheduledPass();
+
+        offerValidityRevision.set(1L);
+        assertThat(resendExecutor.delaysInNanos).containsExactly(0L, TimeUnit.SECONDS.toNanos(20));
     }
 
     @Test
@@ -666,7 +721,7 @@ class OffersWebSocketServiceTest {
     // Runs a scheduled task only when the test asks for it, so that no test waits for the delay
     private static class ManualScheduledExecutor extends ScheduledThreadPoolExecutor {
         private final List<Runnable> tasks = new ArrayList<>();
-        private final List<Long> delaysInSeconds = new ArrayList<>();
+        private final List<Long> delaysInNanos = new ArrayList<>();
 
         ManualScheduledExecutor() {
             super(1);
@@ -678,7 +733,7 @@ class OffersWebSocketServiceTest {
                 throw new RejectedExecutionException("Executor is shut down");
             }
             tasks.add(command);
-            delaysInSeconds.add(unit.toSeconds(delay));
+            delaysInNanos.add(unit.toNanos(delay));
             return null;
         }
 
