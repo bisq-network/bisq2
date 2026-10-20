@@ -375,30 +375,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             return;
         }
         try {
-            MuSigOffer claimedOffer;
-            try {
-                // The request is validated before any trade is created or persisted; a rejected
-                // request must not leave a failed trade, a protocol entry or a contact-list entry.
-                MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
-                MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
-                MuSigTakeOfferRequestValidator.validateEconomics(
-                        serviceProvider.getBondedRolesService().getMarketPriceService(),
-                        settingsService,
-                        muSigTraderMediationService,
-                        muSigTraderArbitrationService,
-                        message);
-                claimedOffer = MuSigTakeOfferRequestValidator.validateOffer(
-                        serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
-            } catch (TradeProtocolException e) {
-                throw e;
-            } catch (RuntimeException e) {
-                log.warn("Unexpected failure while validating a MuSig take offer request. tradeId={}",
-                        StringUtils.sanitizeForLog(message.getTradeId()), e);
-                throw new TradeProtocolException(
-                        "The maker has rejected the take offer request because the offer is not available anymore.",
-                        TradeProtocolFailure.OFFER_NOT_AVAILABLE,
-                        e);
-            }
+            // The request is validated before any trade is created or persisted; a rejected
+            // request must not leave a failed trade, a protocol entry or a contact-list entry.
+            MuSigOffer claimedOffer = validateTakeOfferRequest(message);
             MuSigContract muSigContract = message.getContract();
             makerCreatesProtocol(muSigContract,
                     claimedOffer,
@@ -411,6 +390,31 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     StringUtils.sanitizeForLog(message.getTradeId()));
             reportTakeOfferRejection(networkService, identityService, message, e);
             return;
+        }
+    }
+
+    // Returns the offer of the request, or throws a TradeProtocolException with the reason for the rejection
+    private MuSigOffer validateTakeOfferRequest(SetupTradeMessage_A message) {
+        try {
+            MuSigTakeOfferRequestValidator.validateIdentity(serviceProvider.getContractService(), message);
+            MuSigTakeOfferRequestValidator.validateTakerProfileKnown(userProfileService, message);
+            MuSigTakeOfferRequestValidator.validateEconomics(
+                    serviceProvider.getBondedRolesService().getMarketPriceService(),
+                    settingsService,
+                    muSigTraderMediationService,
+                    muSigTraderArbitrationService,
+                    message);
+            return MuSigTakeOfferRequestValidator.validateOffer(
+                    serviceProvider.getOfferService().getMuSigOfferService().getMyMuSigOffersService(), message);
+        } catch (TradeProtocolException e) {
+            throw e;
+        } catch (RuntimeException e) {
+            log.warn("Unexpected failure while validating a MuSig take offer request. tradeId={}",
+                    StringUtils.sanitizeForLog(message.getTradeId()), e);
+            throw new TradeProtocolException(
+                    "The maker has rejected the take offer request because the offer is not available anymore.",
+                    TradeProtocolFailure.OFFER_NOT_AVAILABLE,
+                    e);
         }
     }
 
