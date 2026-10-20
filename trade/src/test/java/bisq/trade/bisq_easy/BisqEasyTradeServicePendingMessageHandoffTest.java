@@ -110,7 +110,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
 
         deliverWithLookupBeforeTheProtocolExists(trade.buyer, request, accountData);
 
-        assertThat(trade.buyer.service.getPendingMessages().isEmpty()).isTrue();
+        assertThat(trade.buyer.protocolRegistry.hasPendingMessages()).isFalse();
         assertThat(trade.buyersTrade().getPaymentAccountData()).contains(ACCOUNT_DATA);
         assertThat(trade.buyersTrade().getTradeState()).isEqualTo(
                 BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA);
@@ -128,7 +128,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
 
         deliverWithLookupBeforeTheProtocolExists(trade.seller, request, btcAddress);
 
-        assertThat(trade.seller.service.getPendingMessages().isEmpty()).isTrue();
+        assertThat(trade.seller.protocolRegistry.hasPendingMessages()).isFalse();
         assertThat(trade.sellersTrade().getBitcoinPaymentData()).contains(BTC_ADDRESS);
         assertThat(trade.sellersTrade().getTradeState()).isEqualTo(
                 BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS);
@@ -145,7 +145,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
 
         deliverWithLookupAfterTheProtocolExists(trade.buyer, request, accountData);
 
-        assertThat(trade.buyer.service.getPendingMessages().isEmpty()).isTrue();
+        assertThat(trade.buyer.protocolRegistry.hasPendingMessages()).isFalse();
         assertThat(trade.buyersTrade().getPaymentAccountData()).contains(ACCOUNT_DATA);
         assertThat(trade.buyersTrade().getTradeState()).isEqualTo(
                 BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_);
@@ -161,10 +161,10 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         BisqEasyAccountDataMessage accountData = trade.seller.takeSentMessage(BisqEasyAccountDataMessage.class);
 
         trade.buyer.service.onMessage(accountData);
-        assertThat(trade.buyer.service.getPendingMessages().getMessagesInArrivalOrder()).containsExactly(accountData);
+        assertThat(trade.buyer.protocolRegistry.getPendingMessagesInArrivalOrder()).containsExactly(accountData);
         trade.buyer.service.onMessage(request);
 
-        assertThat(trade.buyer.service.getPendingMessages().isEmpty()).isTrue();
+        assertThat(trade.buyer.protocolRegistry.hasPendingMessages()).isFalse();
         assertThat(trade.buyersTrade().getPaymentAccountData()).contains(ACCOUNT_DATA);
         assertThat(trade.buyersTrade().getTradeState()).isEqualTo(
                 BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA);
@@ -199,13 +199,13 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
                 assertThat(continueMessageThread.await(10, SECONDS)).isTrue();
             }
             return protocol;
-        }).when(receiver.service).findProtocol(message.getTradeId());
+        }).when(receiver.protocolRegistry).find(message.getTradeId());
 
         TestThread messageThread = new TestThread(MESSAGE_THREAD, () -> receiver.service.onMessage(message));
         assertThat(lookupFoundNoProtocol.await(10, SECONDS)).isTrue();
-        assertThat(receiver.service.getPendingMessages().isEmpty())
+        assertThat(receiver.protocolRegistry.hasPendingMessages())
                 .as("the message thread stops between its lookup and the decision that the message is pending")
-                .isTrue();
+                .isFalse();
 
         TestThread requestThread = new TestThread(REQUEST_THREAD, () -> receiver.service.onMessage(request));
         awaitFinishedOrWaitingFor(requestThread.thread, messageThread.thread);
@@ -239,7 +239,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
 
         TestThread messageThread = new TestThread(MESSAGE_THREAD, () -> receiver.service.onMessage(message));
         messageThread.join();
-        assertThat(receiver.service.getPendingMessages().isEmpty()).isTrue();
+        assertThat(receiver.protocolRegistry.hasPendingMessages()).isFalse();
         continueRequestThread.countDown();
         requestThread.join();
     }
@@ -363,11 +363,12 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
     }
 
-    // A trade service whose network service keeps the sent trade messages until the test delivers them. The service is
-    // a spy, so a test can stop a thread at the protocol lookup.
+    // A trade service whose network service keeps the sent trade messages until the test delivers them. The protocol
+    // registry of the service is a spy, so a test can stop a thread at the protocol lookup.
     private final class Node {
         private final ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         private final List<BisqEasyTradeMessage> sentMessages = new CopyOnWriteArrayList<>();
+        private final BisqEasyProtocolRegistry protocolRegistry = spy(new BisqEasyProtocolRegistry());
         private BisqEasyTradeService service;
 
         private Node() {
@@ -387,7 +388,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
 
         private void start(BisqEasyTrade... trades) {
-            service = spy(new BisqEasyTradeService(serviceProvider, AppType.DESKTOP));
+            service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP, protocolRegistry);
             nodes.add(this);
             when(serviceProvider.getBisqEasyTradeService()).thenReturn(service);
             for (BisqEasyTrade trade : trades) {

@@ -78,22 +78,20 @@ import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.protocol.handler.TradeMessageHandler;
-import bisq.trade.protocol.messages.PendingTradeMessages;
 import bisq.user.banned.BannedUserService;
 import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -118,8 +116,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final AppType appType;
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
-    // We don't persist the protocol, only the model.
-    private final Map<String, BisqEasyProtocol> tradeProtocolById = new ConcurrentHashMap<>();
+    // Only the registry changes the protocols and the pending messages. It keeps the decision "no protocol, so the
+    // message is pending" and the registration of a protocol one step.
+    @Getter(AccessLevel.NONE)
+    private final BisqEasyProtocolRegistry protocolRegistry;
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
@@ -130,21 +130,19 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
-    private final PendingTradeMessages<BisqEasyTradeMessage> pendingMessages = new PendingTradeMessages<>();
     // The network layer delivers messages on several threads. The lock makes the check for an existing trade and the
     // adding of a new trade of a take offer request one step.
     @Getter(AccessLevel.NONE)
     private final Object tradeCreationLock = new Object();
-    // The lock makes the decision "no protocol, so the message is pending" and the registration of a protocol one
-    // step. A message which arrives while a take offer request creates the protocol of its trade then either finds the
-    // protocol, or is pending before the request processes the pending messages (rule 1 of
-    // docs/specifications/trade/pending-trade-messages.md). The network layer does not deliver the message again, so
-    // a message which became pending after that pass would not reach the protocol. Nothing else runs under the lock.
-    @Getter(AccessLevel.NONE)
-    private final Object pendingMessagesLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
+        this(serviceProvider, appType, new BisqEasyProtocolRegistry());
+    }
+
+    @VisibleForTesting
+    BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType, BisqEasyProtocolRegistry protocolRegistry) {
         this.serviceProvider = serviceProvider;
+        this.protocolRegistry = protocolRegistry;
         networkService = serviceProvider.getNetworkService();
         identityService = serviceProvider.getIdentityService();
         settingsService = serviceProvider.getSettingsService();
@@ -268,18 +266,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
-        Optional<BisqEasyProtocol> protocol;
-        synchronized (pendingMessagesLock) {
-            protocol = findProtocol(tradeId);
-            if (protocol.isEmpty()) {
-                pendingMessages.add(message);
-            }
-        }
-        protocol.ifPresentOrElse(existingProtocol -> {
-                    if (isMessageOfTradePeer(message, existingProtocol)) {
-                        handleBisqEasyTradeMessage(message, existingProtocol);
+        protocolRegistry.findOrKeepAsPending(message).ifPresentOrElse(protocol -> {
+                    if (isMessageOfTradePeer(message, protocol)) {
+                        handleBisqEasyTradeMessage(message, protocol);
                     } else {
-                        pendingMessages.remove(message);
+                        protocolRegistry.removePendingMessage(message);
                     }
                 },
                 () -> {
@@ -307,14 +298,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
         protocol.handle(message);
 
-        if (pendingMessages.remove(message)) {
+        if (protocolRegistry.removePendingMessage(message)) {
             log.info("We remove the message of type {} with tradeId {} from pendingMessages.",
                     message.getClass().getSimpleName(), StringUtils.sanitizeForLog(message.getTradeId()));
         }
 
-        if (!pendingMessages.isEmpty()) {
+        if (protocolRegistry.hasPendingMessages()) {
             log.info("We have pendingMessages. We try to re-process them now.");
-            pendingMessages.getMessagesInArrivalOrder().forEach(this::handleBisqEasyTradeMessage);
+            protocolRegistry.getPendingMessagesInArrivalOrder().forEach(this::handleBisqEasyTradeMessage);
         }
     }
 
@@ -451,7 +442,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     /* --------------------------------------------------------------------- */
 
     public Optional<BisqEasyProtocol> findProtocol(String id) {
-        return Optional.ofNullable(tradeProtocolById.get(id));
+        return protocolRegistry.find(id);
     }
 
     public Optional<BisqEasyTrade> findTrade(String tradeId) {
@@ -486,7 +477,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
         persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
 
-        tradeProtocolById.remove(trade.getId());
+        protocolRegistry.remove(trade.getId());
         persist();
     }
 
@@ -606,9 +597,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             }
         }
         trade.setProtocolVersion(tradeProtocol.getVersion());
-        synchronized (pendingMessagesLock) {
-            tradeProtocolById.put(id, tradeProtocol);
-        }
+        protocolRegistry.add(id, tradeProtocol);
 
         bisqEasyOpenTradeChannelService.findChannelByTradeId(id)
                 .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
