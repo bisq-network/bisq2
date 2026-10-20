@@ -23,4 +23,6 @@ the payment proof.
 ## Not covered
 
 An action which arrives before the state which accepts it is queued by the state machine and is not refused. Its trade
-log message is sent.
+log message is sent. When an action of the same type is queued already, the state machine drops the later action
+(rule 6 of [Queued trade messages](queued-trade-messages.md)). The later action is not refused either, so its trade log
+message is sent, although the protocol applies only the first action.

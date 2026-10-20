@@ -42,6 +42,10 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
    after the next change of the state.
 5. When the queued events of one trade fail at startup, the node logs the failure and continues with the next trade.
    The start of the trade service does not fail, as for the items of [Startup replay](../network/startup-replay.md).
+6. The event queue of a trade holds at most one event of each type for which the protocol has only state-changing
+   transitions. When the queue holds an event of such a type, the protocol drops a later event of the same type which
+   it cannot process yet. The first event stays in the queue.
+7. When an event changes the state of the trade, the protocol removes the other queued events of the same type.
 
 ## Reasons
 
@@ -66,6 +70,17 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
   a restriction (see "Same restrictions as a new message" in [Startup replay](../network/startup-replay.md)), so it
   does not process a queued one either.
 - Rule 5: one stored trade must not stop the start of the node or the other trades.
+- Rule 6: the protocol records the type of each event which changed the state, and it does not queue an event of a
+  recorded type. The protocols use a type with only state-changing transitions for at most one change of the state:
+  such a type has several transitions only in alternative paths of the protocol. So only one queued event of the type
+  can be applied. The trade peer can send copies of a message with other message IDs or other content. Without rule 6,
+  the copies would grow the event queue without limit. Rule 1 would persist them, every write of the store would
+  contain them, and every start would apply them again. The protocol keeps the first event. It has no reason to
+  prefer a later one: a peer which sends two different messages for one step does not follow the protocol. A message
+  which the network delivered twice has the same message ID, so it is one event.
+- Rule 7: the protocol does not queue an event of a recorded type (rule 6). A queued event of a recorded type is still
+  possible when a new event of its type changes the state before the protocol applies the queued events, for example
+  at startup before rule 3. Without rule 7, the queue would keep that event until the trade reaches a final state.
 
 ## Compatibility
 
@@ -89,10 +104,21 @@ trade service keeps them. Queued trade messages belong to a trade which exists, 
   does not queue an event of a recorded type. It keeps the recorded types only in memory. So after a restart, it
   queues a copy of a message which it processed before the restart, for example the second copy of a mailbox message,
   and the node persists the copy with the trade. The copy stays in the event queue until the trade reaches a final
-  state.
+  state. Rule 6 still applies, so the queue holds at most one such copy of each type.
   - Why it remains: the change persists only the queued trade messages, which the trade needs to continue.
   - What would remove it: persisting the processed event types together with the trade.
   - Who decides: the developers.
+- **Types with an internal transition.** Rule 6 does not limit the events of a type for which the protocol has an
+  internal transition, a transition which processes the event without a change of the state. Several events of such
+  a type can be valid. The trade peer can grow the event queue with such events while the trade is in a state before
+  the internal transition. The protocol applies and removes them when the trade reaches a state with that transition.
+  Only MuSig has such types for trade messages: `MuSigCustomPayoutPsbtMessage`,
+  `MuSigMediationResultRejectionMessage`, and for the buyer `PaymentReceivedMessage_F`.
+  - Why it remains: the number of valid events of such a type is a rule of the protocol. The state machine cannot
+    know it.
+  - What would remove it: a rule of the MuSig protocol for these types, for example one queued event of each type,
+    a limit per type, or no queuing before the states of the mediation.
+  - Who decides: the developers, together with the MuSig protocol.
 - **Redaction of trade data.** The Bisq Easy trade service redacts the payment account data of a trade some days after
   the trade, as the setting for the redaction of trade data defines. The redaction does not cover the queued trade
   messages. A queued trade message can contain the payment account data of the trade peer. It stays on the disk until

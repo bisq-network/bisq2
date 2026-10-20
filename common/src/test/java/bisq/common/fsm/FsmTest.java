@@ -268,6 +268,77 @@ public class FsmTest {
     }
 
     @Test
+    void testEventQueueKeepsOnlyFirstEventOfStateChangingType() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S2);
+
+        MockEvent2 first = new MockEvent2(model, "first");
+        fsm.handle(first);
+        fsm.handle(new MockEvent2(model, "second"));
+        assertEquals(Set.of(first), model.getEventQueue());
+
+        fsm.handle(new MockEvent1(model, "forward"));
+        assertEquals(MockState.S2, model.getState());
+        assertEquals("first", model.data);
+        assertEquals(0, model.eventQueue.size());
+    }
+
+    @Test
+    void testEventQueueKeepsEachEventOfTypeWithInternalTransition() {
+        MockModel model = new MockModel(MockState.INIT);
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .to(MockState.S1);
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .stay();
+
+        fsm.handle(new MockEvent2(model, "first"));
+        fsm.handle(new MockEvent2(model, "second"));
+        assertEquals(2, model.eventQueue.size());
+
+        fsm.handle(new MockEvent1(model, "forward"));
+        assertEquals(MockState.S1, model.getState());
+        assertEquals(0, model.eventQueue.size());
+    }
+
+    @Test
+    void testProcessedTypeRemovesQueuedEventOfThatType() {
+        // A restored model can hold a queued event for which the restored state has a transition, until its owner
+        // calls handleQueuedEvents. A new event of that type can arrive before.
+        MockEvent2 queuedEvent = new MockEvent2(null, "");
+        MockModel model = new MockModel(MockState.S1, Set.of(queuedEvent));
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+
+        fsm.addTransition()
+                .from(MockState.S1)
+                .on(MockEvent2.class)
+                .to(MockState.S2);
+        fsm.addTransition()
+                .from(MockState.S2)
+                .on(MockEvent3.class)
+                .to(MockState.S3);
+
+        fsm.handle(new MockEvent2(null, ""));
+        assertEquals(MockState.S2, model.getState());
+        assertEquals(0, model.eventQueue.size());
+    }
+
+    @Test
     void testFromAny() {
         MockModel model = new MockModel(MockState.INIT);
         SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
