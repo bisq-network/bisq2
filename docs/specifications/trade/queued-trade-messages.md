@@ -40,8 +40,10 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
 4. During a halt of trading, or when the version of the node is below the minimum version for trading, the trade
    service does not apply the queued events at startup. They stay in the event queue, and the protocol applies them
    after the next change of the state.
-5. When the queued events of one trade fail at startup, the node logs the failure and continues with the next trade.
-   The start of the trade service does not fail, as for the items of [Startup replay](../network/startup-replay.md).
+5. A queued event whose handler fails at startup makes the trade fail, and the protocol reports the failure to the
+   trade peer, as for a new message. When the queued events of one trade fail at startup in another way, the node logs
+   the failure and continues with the next trade. The start of the trade service does not fail, as for the items of
+   [Startup replay](../network/startup-replay.md).
 6. The event queue of a trade holds at most one event of each type for which the protocol has only state-changing
    transitions. When the queue holds an event of such a type, the protocol drops a later event of the same type which
    it cannot process yet. The first event stays in the queue.
@@ -64,7 +66,9 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   in two cases. First, the node writes the store in another thread than the protocol. A write can contain the new
   state of a trade and still the queued event which the protocol processes next. If the node stops before the next
   write, the store keeps this combination. Second, a later version can add a transition from the stored state. In both
-  cases, the event would otherwise wait for a change of the state which only the event itself causes.
+  cases, the event would otherwise wait for a change of the state which only the event itself causes. A write can
+  also contain the old state without the event which the protocol processes. Rule 3 cannot help in that case, because
+  the event is lost (see "State and event queue of one write" in the known limitations).
 - Rule 4: the queued trade messages come from the trade peer. The security managers halt trading, or require a
   minimum version for trading, to stop the handlers of the protocol. The node ignores a new trade message during such
   a restriction (see "Same restrictions as a new message" in [Startup replay](../network/startup-replay.md)), so it
@@ -133,9 +137,32 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
 - **Restriction at startup.** A queued event which has a transition from the stored state waits during a restriction
   of trading at startup (rule 4). When the restriction ends, the node does not apply the queued events. It applies
   them at the next change of the state or at the next start without a restriction.
-  - Why it remains: the change applies the queued events only at startup and after a change of the state, as the
-    protocol did before.
+  - Why it remains: the trade services apply the trade restrictions when they accept a message or start an action,
+    and they do nothing when a restriction ends. A step at the end of a restriction belongs to the decision how a node
+    handles the trade messages of a restriction (see "Open trades across versions" in
+    [Trade restrictions](trade-restrictions.md)).
   - What would remove it: the trade services apply the queued events again when a restriction of trading ends.
+  - Who decides: the developers.
+- **State and event queue of one write.** The node writes a trade in another thread than the protocol, and the write
+  reads the state of the trade and its event queue one after the other. While the protocol applies a queued event, a
+  write can contain the state before the event and an event queue without the event. If the node stops before its
+  next write, it loses the event. The next write follows within about one second (see "Not covered").
+  - Why it remains: the state machine and the write of the store share no lock, and a lock which the write takes
+    while the protocol runs its handlers would delay the writes of all trades. A consistent write needs a change of
+    the state machine.
+  - What would remove it: the state machine sets the new state before it removes the processed event from the queue,
+    and the write reads the event queue before the state. Or the state machine provides one consistent copy of the
+    state, the event queue and the data of the trade for each write.
+  - Who decides: the developers.
+- **Ban of the trade peer.** A new trade message of a banned sender is ignored. The node does not check whether the
+  sender of a queued trade message is banned, neither at startup (rule 3) nor when the protocol applies the queued
+  events after a change of the state. So a queued message of a trade peer who was banned after the message arrived is
+  still applied.
+  - Why it remains: a queued message passed the checks of a new message when it arrived, and the trade peer does not
+    send it again. Dropping it later stops the trade at that step. Whether a ban stops the trades of the banned user
+    which are in progress is a decision of its own.
+  - What would remove it: one rule for the messages of a trade peer which arrived before a ban, which applies to new
+    and to queued messages.
   - Who decides: the developers.
 
 ## Not covered
