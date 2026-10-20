@@ -34,6 +34,8 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
    event queue of the trade contains these messages again.
 2. When the node loads a trade, it skips a queued trade message which it cannot parse. It keeps the trade and the
    other queued trade messages of the trade (rule 4 of [Validation at parsing](../network/validation-at-parsing.md)).
+   When the node writes a trade, it skips a queued trade message which it cannot serialize. It logs the type of the
+   message and the stack trace of the cause, without the message of the cause.
 3. At startup, the trade service applies the queued events of each stored trade once, after it knows the trade
    restrictions of the stored alerts. The protocol processes a queued event which has a transition from the current
    state of the trade, as it does after a change of the state. The other events stay in the event queue.
@@ -60,7 +62,10 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   payment.
 - Rule 2: a later version can add an integrity rule which a persisted message breaks (rule 3 of
   [Validation at parsing](../network/validation-at-parsing.md)). If such a message made the trade fail at parsing, the
-  trade store would skip the whole trade, and the next write of the store would remove the trade from the disk.
+  trade store would skip the whole trade, and the next write of the store would remove the trade from the disk. The
+  same holds for a write: the Bisq Easy trade store leaves out a trade which it cannot serialize, and a MuSig trade
+  store fails its whole write. A message which the node parsed can be serialized, so the skip at a write is a
+  protection only. The message of a cause can contain data of the trade, so the log leaves it out.
 - Rule 3: when the protocol has finished an event, no queued event has a transition from the current state, because
   the protocol applies the queued events after each change of the state. A stored trade can still have such an event,
   in two cases. First, the node writes the store in another thread than the protocol. A write can contain the new

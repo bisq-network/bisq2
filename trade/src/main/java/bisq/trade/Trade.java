@@ -26,6 +26,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.ProtobufUtils;
+import bisq.common.util.ExceptionUtil;
 import bisq.contract.Contract;
 import bisq.contract.TradeId;
 import bisq.identity.Identity;
@@ -140,9 +141,11 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 try {
                     builder.addQueuedTradeMessages(tradeMessage.toValueProto(serializeForHash));
                 } catch (RuntimeException e) {
-                    log.error("Trade message of type {} with trade ID {} could not be serialized at toValueProto.",
+                    // The message of the cause can contain data of the trade, so the log has only its stack trace
+                    log.error("We skip a queued trade message of type {} of trade {} which we cannot write. Cause:\n{}",
                             tradeMessage.getClass().getSimpleName(),
-                            tradeMessage.getTradeId());
+                            getId(),
+                            ExceptionUtil.getSafeStackTraceAsString(e));
                 }
             }
         });
