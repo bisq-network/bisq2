@@ -84,7 +84,6 @@ import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
 import com.google.common.annotations.VisibleForTesting;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -103,7 +102,6 @@ import static com.google.common.base.Preconditions.checkArgument;
 //TODO Consider to use async calls at handle (CompletableFuture.runAsync(()...)
 
 @Slf4j
-@Getter
 public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyTradeStore> implements Service, ConfidentialMessageService.Listener {
     private final ServiceProvider serviceProvider;
     private final NetworkService networkService;
@@ -112,13 +110,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private final BannedUserService bannedUserService;
     private final AlertService alertService;
 
+    @Getter
     private final Persistence<BisqEasyTradeStore> persistence;
     private final AppType appType;
+    @Getter
     private final BisqEasyTradeStore persistableStore = new BisqEasyTradeStore();
 
     // Only the registry changes the protocols and the pending messages. It keeps the decision "no protocol, so the
     // message is pending" and the registration of a protocol one step.
-    @Getter(AccessLevel.NONE)
     private final BisqEasyProtocolRegistry protocolRegistry;
     private final ContactListService contactListService;
     private final UserProfileService userProfileService;
@@ -132,7 +131,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     private Scheduler numDaysAfterRedactingTradeDataScheduler;
     // The network layer delivers messages on several threads. The lock makes the check for an existing trade and the
     // adding of a new trade of a take offer request one step.
-    @Getter(AccessLevel.NONE)
     private final Object tradeCreationLock = new Object();
 
     public BisqEasyTradeService(ServiceProvider serviceProvider, AppType appType) {
@@ -441,7 +439,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Misc API
     /* --------------------------------------------------------------------- */
 
-    public Optional<BisqEasyProtocol> findProtocol(String id) {
+    @VisibleForTesting
+    Optional<BisqEasyProtocol> findProtocol(String id) {
         return protocolRegistry.find(id);
     }
 
@@ -449,7 +448,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.findTrade(tradeId);
     }
 
-    public boolean tradeExists(String tradeId) {
+    @VisibleForTesting
+    boolean tradeExists(String tradeId) {
         return persistableStore.tradeExists(tradeId);
     }
 
@@ -464,7 +464,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         return persistableStore.getTrades();
     }
 
-    public ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
+    private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {
         return persistableStore.getAllTrades();
     }
 
