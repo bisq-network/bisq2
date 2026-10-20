@@ -1,0 +1,67 @@
+name: Reproducible JitPack jars
+
+# Checks that JitPack serves the same jars as a build on a runner, for the head of main and of the newest
+# for-mobile-based-on-X.Y.Z branch. A user who takes Bisq from JitPack can then verify its jars with a build of their
+# own. jitpack_reproducibility_check.yml does the check of one branch and reports failures in an issue.
+# Developers can start the check by hand for any branch or tag which contains this workflow. Such a check covers only
+# that branch or tag and does not change the issues.
+on:
+  schedule:
+    - cron: '37 4 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# A check by hand and the scheduled check of main must not open two issues at the same time
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  checked_out_ref:
+    name: ${{ github.ref_name }}
+    uses: ./.github/workflows/jitpack_reproducibility_check.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      name: ${{ github.ref_name }}
+      ref: ${{ github.sha }}
+      issue-title: ${{ github.ref == 'refs/heads/main' && 'The reproducibility check of the JitPack jars of main failed' || '' }}
+
+  # Uses the rule of sync_for_mobile_to_main.yml: the highest version among the branches without prefix or suffix
+  newest_mobile_branch:
+    name: Select the newest for-mobile branch
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      branch: ${{ steps.select.outputs.branch }}
+    steps:
+      - name: Select the branch
+        id: select
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          heads=$(git ls-remote --heads "https://github.com/$REPOSITORY.git" 'for-mobile-based-on-*')
+          branch=$(printf '%s\n' "$heads" | awk -F'refs/heads/' '{print $2}' \
+            | grep -E '^for-mobile-based-on-[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -n 1 || true)
+          echo "Newest for-mobile branch: ${branch:-none}"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
+  newest_mobile_branch_check:
+    name: ${{ needs.newest_mobile_branch.outputs.branch }}
+    needs: newest_mobile_branch
+    if: needs.newest_mobile_branch.outputs.branch != ''
+    uses: ./.github/workflows/jitpack_reproducibility_check.yml
+    permissions:
+      contents: read
+      issues: write
+    with:
+      name: ${{ needs.newest_mobile_branch.outputs.branch }}
+      ref: ${{ needs.newest_mobile_branch.outputs.branch }}
+      # The title does not name the branch, so the first passing check of a new for-mobile branch closes the issue of
+      # the one before
+      issue-title: 'The reproducibility check of the JitPack jars of the newest for-mobile branch failed'

@@ -1,0 +1,175 @@
+# Builds the jars of one branch, tag or commit on a runner with the command of jitpack.yml and checks that JitPack
+# serves the same bytes for that commit. With an issue title, a failed check opens that issue or comments on the open
+# one, and the next passing check closes it. jitpack_reproducibility.yml calls this workflow.
+on:
+  workflow_call:
+    inputs:
+      name:
+        description: 'Name of the checked branch or tag, for the reports'
+        required: true
+        type: string
+      ref:
+        description: 'Branch, tag or commit to check'
+        required: true
+        type: string
+      issue-title:
+        description: 'Title of the issue which reports a failed check. Empty reports in no issue.'
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  compare:
+    name: Compare the jars with JitPack
+    runs-on: ubuntu-24.04
+    # The script waits up to 45 minutes for the JitPack build after the build on the runner
+    timeout-minutes: 90
+    outputs:
+      commit: ${{ steps.request.outputs.commit }}
+      verdict: ${{ steps.compare.outputs.verdict }}
+    steps:
+      # The checked ref can be older than this workflow and lack the script, so the script comes from the commit of
+      # this workflow
+      - name: Checkout the script
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: .github/scripts
+
+      - name: Checkout the ref to check
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.ref }}
+          path: target
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Verify Gradle wrapper checksums
+        shell: bash
+        working-directory: target
+        run: sha256sum -c gradle/wrapper/gradle-wrapper.sha256
+
+      # JitPack builds while the runner builds
+      - name: Request the JitPack build
+        id: request
+        shell: bash
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          commit=$(git -C target rev-parse HEAD)
+          echo "commit=$commit" >> "$GITHUB_OUTPUT"
+          .github/scripts/check-jitpack-reproducibility.bash request "$REPOSITORY" "$commit"
+
+      # Gradle compresses the jars with the zlib of the JDK it runs on. Temurin ships its own zlib, like the OpenJDK
+      # which JitPack uses (see jitpack.yml). Zulu uses the zlib of the runner. The compiler JDK comes from the
+      # toolchain, as on JitPack.
+      - name: Setup Java JDK
+        uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        with:
+          java-version: '21.0.11'
+          distribution: 'temurin'
+          check-latest: false
+
+      # The command of jitpack.yml, without gradle/actions/setup-gradle so that no cache from another run is used.
+      # The empty repository holds only the jars of this build. Older versions of publishAll start a Gradle process
+      # per module, which does not get -D options of the command line but does get JAVA_TOOL_OPTIONS.
+      - name: Build the jars
+        shell: bash
+        working-directory: target
+        env:
+          JAVA_TOOL_OPTIONS: -Dmaven.repo.local=${{ runner.temp }}/local-repo
+        run: ./gradlew --no-build-cache --console=plain publishAll
+
+      - name: Compare the jars with JitPack
+        id: compare
+        shell: bash
+        env:
+          NAME: ${{ inputs.name }}
+          COMMIT: ${{ steps.request.outputs.commit }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set +e
+          .github/scripts/check-jitpack-reproducibility.bash compare "$RUNNER_TEMP/local-repo" "$REPOSITORY" "$COMMIT" \
+            "$RUNNER_TEMP/jitpack" | tee "$RUNNER_TEMP/report.txt"
+          status=${PIPESTATUS[0]}
+          set -e
+          case $status in
+            0) verdict=reproducible ;;
+            1) verdict=different ;;
+            2) verdict=jitpack-failed ;;
+            *) verdict=error ;;
+          esac
+          echo "verdict=$verdict" >> "$GITHUB_OUTPUT"
+          {
+            echo "### JitPack jars of $NAME at ${COMMIT:0:10}: $verdict"
+            echo '```'
+            cat "$RUNNER_TEMP/report.txt"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
+
+      # The JitPack jars stay available on JitPack, the jars of the runner do not
+      - name: Upload the different jars
+        if: failure() && steps.compare.outputs.verdict == 'different'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: different-jars-${{ steps.request.outputs.commit }}
+          path: ${{ runner.temp }}/jitpack/different
+          if-no-files-found: ignore
+          retention-days: 30
+
+  report:
+    name: Report the result in an issue
+    needs: compare
+    if: always() && inputs.issue-title != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      issues: write
+    steps:
+      - name: Open, update or close the issue
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TITLE: ${{ inputs.issue-title }}
+          NAME: ${{ inputs.name }}
+          RESULT: ${{ needs.compare.result }}
+          VERDICT: ${{ needs.compare.outputs.verdict }}
+          COMMIT: ${{ needs.compare.outputs.commit }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # A mention subscribes the user to the issue, so the later comments also reach them. A fork does not notify
+          # the maintainers of bisq-network/bisq2.
+          MAINTAINERS: ${{ github.repository == 'bisq-network/bisq2' && '@HenrikJannsen @rodvar @wodoro' || '' }}
+        run: |
+          issue=$(gh issue list --state open --author app/github-actions --search "\"$TITLE\" in:title" \
+            --json number,title | jq -r --arg title "$TITLE" 'map(select(.title == $title)) | first | .number // empty')
+          checked="$NAME${COMMIT:+ at $COMMIT}"
+
+          if [ "$RESULT" = success ]; then
+            if [ -n "$issue" ]; then
+              gh issue close "$issue" --comment "The check of $checked passed: $RUN_URL"
+            fi
+            exit 0
+          fi
+
+          case $VERDICT in
+            different)
+              reason='At least one jar of the runner differs from the JitPack jar, or JitPack does not serve it.' ;;
+            jitpack-failed)
+              reason="The JitPack build failed or did not finish in time: https://jitpack.io/com/github/$GH_REPO/${COMMIT:0:10}/build.log" ;;
+            *)
+              reason='The check failed before it could compare the jars.' ;;
+          esac
+          message=$(printf '%s\n\n%s' "The check of $checked failed. $reason" "The summary of the run lists the compared jars: $RUN_URL")
+
+          if [ -n "$issue" ]; then
+            gh issue comment "$issue" --body "$message"
+          else
+            about='.github/workflows/jitpack_reproducibility_check.yml builds the jars on a runner with the command of jitpack.yml and compares them byte for byte with the jars which JitPack serves for the same commit. The next passing check closes this issue.'
+            gh issue create --title "$TITLE" --body "$(printf '%s\n\n%s\n\n%s' "$message" "$about" "$MAINTAINERS")"
+          fi
