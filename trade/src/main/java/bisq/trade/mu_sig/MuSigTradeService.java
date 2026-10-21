@@ -374,23 +374,35 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                     StringUtils.sanitizeForLog(message.getTradeId()));
             return;
         }
+        String tradeId = message.getTradeId();
+        Optional<MuSigProtocol> protocol;
         try {
-            // The request is validated before any trade is created or persisted; a rejected
-            // request must not leave a failed trade, a protocol entry or a contact-list entry.
-            MuSigOffer claimedOffer = validateTakeOfferRequest(message);
-            MuSigContract muSigContract = message.getContract();
-            makerCreatesProtocol(muSigContract,
-                    claimedOffer,
-                    message.getTradeId(),
-                    message.getSender(),
-                    message.getReceiver())
-                    .ifPresent(protocol -> handleMuSigTradeMessage(message, protocol));
+            // The check, the validation and the creation of the trade are one step, because the maker can process two
+            // copies of a request at the same time. The check comes first: a rejection of a copy of a request which we
+            // have handled would fail the trade at the taker, for example when the offer was closed when it was taken
+            // (docs/specifications/trade/take-offer-request-validation.md).
+            synchronized (tradeCreationLock) {
+                if (findProtocol(tradeId).isPresent() || findOpenTrade(tradeId).isPresent()) {
+                    log.warn("Dropping a copy of the MuSig take offer request of an existing trade. tradeId={}",
+                            StringUtils.sanitizeForLog(tradeId));
+                    return;
+                }
+                // The request is validated before any trade is created or persisted; a rejected
+                // request must not leave a failed trade, a protocol entry or a contact-list entry.
+                MuSigOffer claimedOffer = validateTakeOfferRequest(message);
+                protocol = makerCreatesProtocol(message.getContract(),
+                        claimedOffer,
+                        tradeId,
+                        message.getSender(),
+                        message.getReceiver());
+            }
         } catch (TradeProtocolException e) {
-            log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
-                    StringUtils.sanitizeForLog(message.getTradeId()));
+            // The report goes over the network, so it is sent after the lock was released
+            log.warn("Dropping an invalid MuSig take offer request. tradeId={}", StringUtils.sanitizeForLog(tradeId));
             reportTakeOfferRejection(networkService, identityService, message, e);
             return;
         }
+        protocol.ifPresent(muSigProtocol -> handleMuSigTradeMessage(message, muSigProtocol));
     }
 
     // Returns the offer of the request, or throws a TradeProtocolException with the reason for the rejection
