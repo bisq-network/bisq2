@@ -209,6 +209,13 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
 
         TestThread requestThread = new TestThread(REQUEST_THREAD, () -> receiver.service.onMessage(request));
         awaitFinishedOrWaitingFor(requestThread.thread, messageThread.thread);
+        // A request thread which waits for the lock of the message thread must wait before it registers the
+        // protocol. Otherwise the registration is not one step with the decision of the message thread.
+        if (requestThread.thread.isAlive()) {
+            assertThat(receiver.protocolRegistry.find(message.getTradeId()))
+                    .as("the request thread waits before it registers the protocol")
+                    .isEmpty();
+        }
         continueMessageThread.countDown();
 
         messageThread.join();
@@ -331,7 +338,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
 
         private BisqEasyTrade buyersTrade() {
-            return buyer.service.findTrade(sellersTrade.getId()).orElseThrow();
+            return buyer.service.findOpenTrade(sellersTrade.getId()).orElseThrow();
         }
     }
 
@@ -359,7 +366,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
         }
 
         private BisqEasyTrade sellersTrade() {
-            return seller.service.findTrade(buyersTrade.getId()).orElseThrow();
+            return seller.service.findOpenTrade(buyersTrade.getId()).orElseThrow();
         }
     }
 

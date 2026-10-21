@@ -62,10 +62,6 @@ public class PendingTradeMessages<M extends TradeMessage> {
         messages.add(message);
     }
 
-    public synchronized boolean remove(M message) {
-        return messages.remove(message);
-    }
-
     public synchronized boolean isEmpty() {
         return messages.isEmpty();
     }

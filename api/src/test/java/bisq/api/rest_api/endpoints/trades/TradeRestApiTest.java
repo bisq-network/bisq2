@@ -122,7 +122,7 @@ class TradeRestApiTest {
         BitcoinPaymentMethodSpec paymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
         BitcoinPaymentMethod paymentMethod = mock(BitcoinPaymentMethod.class);
         when(openTradeChannelService.findChannelByTradeId(tradeId)).thenReturn(Optional.of(channel));
-        when(bisqEasyTradeService.findTrade(tradeId)).thenReturn(Optional.of(trade));
+        when(bisqEasyTradeService.findOpenTrade(tradeId)).thenReturn(Optional.of(trade));
         when(trade.getContract()).thenReturn(contract);
         when(contract.getBaseSidePaymentMethodSpec()).thenReturn(paymentMethodSpec);
         when(paymentMethodSpec.getPaymentMethod()).thenReturn(paymentMethod);
@@ -162,7 +162,7 @@ class TradeRestApiTest {
         BitcoinPaymentMethodSpec paymentMethodSpec = mock(BitcoinPaymentMethodSpec.class);
         BitcoinPaymentMethod paymentMethod = mock(BitcoinPaymentMethod.class);
         when(openTradeChannelService.findChannelByTradeId(tradeId)).thenReturn(Optional.of(channel));
-        when(bisqEasyTradeService.findTrade(tradeId)).thenReturn(Optional.of(trade));
+        when(bisqEasyTradeService.findOpenTrade(tradeId)).thenReturn(Optional.of(trade));
         when(trade.getContract()).thenReturn(contract);
         when(contract.getBaseSidePaymentMethodSpec()).thenReturn(paymentMethodSpec);
         when(paymentMethodSpec.getPaymentMethod()).thenReturn(paymentMethod);

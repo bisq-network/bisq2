@@ -102,11 +102,8 @@ final class MuSigTradeStore implements PersistableStore<MuSigTradeStore> {
         tradeById.remove(tradeId);
     }
 
-    boolean tradeExists(String tradeId) {
-        return tradeById.containsKey(tradeId);
-    }
-
-    Optional<MuSigTrade> findTrade(String tradeId) {
+    // Closing a trade removes it from tradeById, so only an open trade is found
+    Optional<MuSigTrade> findOpenTrade(String tradeId) {
         return Optional.ofNullable(tradeById.get(tradeId));
     }
 

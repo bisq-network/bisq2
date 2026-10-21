@@ -22,6 +22,7 @@ import bisq.common.proto.ProtoResolver;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.proto.UnresolvableProtobufMessageException;
+import bisq.common.util.ExceptionUtil;
 import bisq.persistence.PersistableStore;
 import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -52,6 +53,9 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         this.closedTrades.setAll(closedTrades);
     }
 
+    // A trade holds private data of the traders, for example the payment account data, and the message of an exception
+    // can contain values of the trade. So a failure is logged with the trade ID and the stack trace only
+    // (docs/specifications/persistence/store-write-results.md).
     @Override
     public bisq.trade.protobuf.BisqEasyTradeStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.trade.protobuf.BisqEasyTradeStore.newBuilder()
@@ -60,7 +64,8 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
                             try {
                                 return trade.toProto(serializeForHash);
                             } catch (Exception e) {
-                                log.error("Could not create proto from BisqEasyTrade {}", trade, e);
+                                log.error("Could not create proto from BisqEasyTrade {}. Cause:\n{}",
+                                        trade.getId(), ExceptionUtil.getSafeStackTraceAsString(e));
                                 return null;
                             }
                         })
@@ -72,7 +77,8 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
                             try {
                                 return closedTrade.toProto(serializeForHash);
                             } catch (Exception e) {
-                                log.error("Could not create proto from BisqEasyClosedTrade {}", closedTrade, e);
+                                log.error("Could not create proto from BisqEasyClosedTrade {}. Cause:\n{}",
+                                        closedTrade.trade().getId(), ExceptionUtil.getSafeStackTraceAsString(e));
                                 return null;
                             }
                         })
@@ -153,11 +159,13 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         tradeIds.add(trade.getId());
     }
 
-    Optional<BisqEasyTrade> findTrade(String tradeId) {
+    // Searches only the open trades in trades. Closing a trade moves it from trades to closedTrades.
+    Optional<BisqEasyTrade> findOpenTrade(String tradeId) {
         return trades.stream().filter(trade -> trade.getId().equals(tradeId)).findAny();
     }
 
-    boolean tradeExists(String tradeId) {
+    // Also true for a trade which was closed or deleted since: tradeIds keeps the ID of every trade which we added.
+    boolean wasTradeIdUsed(String tradeId) {
         return tradeIds.contains(tradeId);
     }
 }

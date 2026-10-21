@@ -240,6 +240,13 @@ class MuSigTradeServicePendingMessageHandoffTest {
             awaitIdleExecutor();
         });
         awaitFinishedOrWaitingFor(protocolThread.thread, messageThread.thread);
+        // A protocol thread which waits for the lock of the message thread must wait before it registers the
+        // protocol. Otherwise the registration is not one step with the decision of the message thread.
+        if (protocolThread.thread.isAlive()) {
+            assertThat(service.findProtocol(trade.getId()))
+                    .as("the protocol thread waits before it registers the protocol")
+                    .isEmpty();
+        }
         continueMessageThread.countDown();
 
         messageThread.join();

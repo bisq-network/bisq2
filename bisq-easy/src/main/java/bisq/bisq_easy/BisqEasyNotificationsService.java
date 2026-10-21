@@ -192,7 +192,7 @@ public class BisqEasyNotificationsService implements Service {
                 .filter(chatNotification -> !dismissedNotifications.contains(chatNotification))
                 .flatMap(notification -> {
                     if (notification.getTradeId()
-                            .flatMap(bisqEasyTradeService::findTrade)
+                            .flatMap(bisqEasyTradeService::findOpenTrade)
                             .filter(trade -> bisqEasyOpenTradeChannelService.findChannelByTradeId(trade.getId()).isPresent())
                             .isPresent()) {
                         orphanedNotifications.remove(notification);

@@ -38,8 +38,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * the protocol.
  * <p>
  * Under the lock, the registry only changes its own data. The only other lock which it takes there is the monitor of
- * the pending messages, and that monitor takes no further lock. So the lock cannot be part of a lock cycle. The trade
- * service handles the messages and calls the protocols outside of the lock.
+ * the pending messages. Under that monitor, the pending messages take only the locks of the logger, when they log a
+ * dropped message, and the logger does not call the trade service. So the lock cannot be part of a lock cycle. The
+ * trade service handles the messages and calls the protocols outside of the lock.
  */
 final class BisqEasyProtocolRegistry {
     private final Object lock = new Object();

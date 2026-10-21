@@ -171,15 +171,30 @@ class BisqEasyTradeServiceTest {
     }
 
     @Test
-    @DisplayName("findTrade returns empty for non-existent trade ID")
-    void find_trade_returns_empty_for_nonexistent_id() {
-        assertThat(service.findTrade("nonexistent-trade-id")).isEmpty();
+    @DisplayName("findOpenTrade returns empty for non-existent trade ID")
+    void find_open_trade_returns_empty_for_nonexistent_id() {
+        assertThat(service.findOpenTrade("nonexistent-trade-id")).isEmpty();
     }
 
     @Test
-    @DisplayName("tradeExists returns false for non-existent trade ID")
-    void trade_exists_returns_false_for_nonexistent_id() {
-        assertThat(service.tradeExists("nonexistent-trade-id")).isFalse();
+    @DisplayName("wasTradeIdUsed returns false for non-existent trade ID")
+    void was_trade_id_used_returns_false_for_nonexistent_id() {
+        assertThat(service.wasTradeIdUsed("nonexistent-trade-id")).isFalse();
+    }
+
+    @Test
+    @DisplayName("wasTradeIdUsed covers a closed and deleted trade, findOpenTrade does not")
+    void was_trade_id_used_covers_closed_and_deleted_trade() {
+        BisqEasyTrade trade = addTradeDirectly();
+        String tradeId = trade.getId();
+
+        service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
+        assertThat(service.findOpenTrade(tradeId)).isEmpty();
+        assertThat(service.wasTradeIdUsed(tradeId)).isTrue();
+
+        service.deleteTrade(trade);
+        assertThat(service.getClosedTrades()).isEmpty();
+        assertThat(service.wasTradeIdUsed(tradeId)).isTrue();
     }
 
     @Test
@@ -191,7 +206,7 @@ class BisqEasyTradeServiceTest {
         UserProfile peerProfile = createUserProfile(20);
         service.closeTrade(trade, myProfile, peerProfile);
 
-        assertThat(service.findTrade(trade.getId())).isEmpty();
+        assertThat(service.findOpenTrade(trade.getId())).isEmpty();
         assertThat(service.getClosedTrades())
                 .anyMatch(ct -> ct.trade().getId().equals(trade.getId()));
     }
@@ -236,7 +251,7 @@ class BisqEasyTradeServiceTest {
 
         service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
 
-        assertThat(service.findTrade(trade.getId())).isEmpty();
+        assertThat(service.findOpenTrade(trade.getId())).isEmpty();
         assertThat(service.getClosedTrades()).anyMatch(ct -> ct.trade().getId().equals(trade.getId()));
         assertThat(service.wasOfferAlreadyTaken(offer, takerNid)).isFalse();
     }
@@ -299,7 +314,7 @@ class BisqEasyTradeServiceTest {
 
         assertThat(service.getTrades()).extracting(BisqEasyTrade::getId).containsExactly(openTrade.getId());
         assertThat(service.getClosedTrades()).hasSize(1);
-        assertThat(service.tradeExists(openCopy.getId())).isTrue();
+        assertThat(service.wasTradeIdUsed(openCopy.getId())).isTrue();
         assertThat(service.findProtocol(openCopy.getId())).isEmpty();
         assertThat(service.findProtocol(openTrade.getId())).isPresent();
     }
@@ -324,10 +339,10 @@ class BisqEasyTradeServiceTest {
     }
 
     @Test
-    @DisplayName("findTrade returns correct trade by ID")
-    void find_trade_returns_correct_trade() {
+    @DisplayName("findOpenTrade returns correct trade by ID")
+    void find_open_trade_returns_correct_trade() {
         BisqEasyTrade trade = addTradeDirectly();
-        Optional<BisqEasyTrade> found = service.findTrade(trade.getId());
+        Optional<BisqEasyTrade> found = service.findOpenTrade(trade.getId());
         assertThat(found).isPresent();
         assertThat(found.get().getId()).isEqualTo(trade.getId());
     }

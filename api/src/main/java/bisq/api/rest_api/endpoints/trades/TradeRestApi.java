@@ -332,7 +332,7 @@ public class TradeRestApi extends RestApiBase {
                 return;
             }
 
-            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findTrade(tradeId);
+            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findOpenTrade(tradeId);
             if (optionalTrade.isEmpty()) {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Trade not found for ID " + tradeId));
                 return;
@@ -485,7 +485,7 @@ public class TradeRestApi extends RestApiBase {
         });
 
         try {
-            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findTrade(tradeId);
+            Optional<BisqEasyTrade> optionalTrade = bisqEasyTradeService.findOpenTrade(tradeId);
             if (optionalTrade.isEmpty()) {
                 asyncResponse.resume(buildResponse(Response.Status.NOT_FOUND, "Trade not found for ID " + tradeId));
                 return;

@@ -170,6 +170,16 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   - What would remove it: one rule for the messages of a trade peer which arrived before a ban, which applies to new
     and to queued messages.
   - Who decides: the developers.
+- **Queued event without a transition.** A later version can remove all transitions of a message type. A store of an
+  earlier version can then hold a queued trade message of this type. The state machine treats an event without a
+  transition as an error. So when the protocol applies its queued events, at startup or after a change of the state,
+  the trade fails, and the protocol reports the failure to the trade peer.
+  - Why it remains: the developers decided on 2026-10-20 not to handle this case. A change of a protocol which
+    removes the transitions of a message type is very unlikely and rare. The protocol applies the event queue only
+    while the trade is not closed, so the case needs an update of the node while such a message waits in an open
+    trade. A check for this case where the protocol handles events adds code for little value.
+  - What would remove it: the protocol removes a queued event whose type has no transition, and logs its type.
+  - Who decides: the developers.
 
 ## Not covered
 

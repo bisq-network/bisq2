@@ -118,7 +118,7 @@ public class MuSigTradeStateController implements Controller {
                 return;
             }
 
-            Optional<MuSigTrade> optionalMuSigTrade = tradeService.findTrade(channel.getTradeId());
+            Optional<MuSigTrade> optionalMuSigTrade = tradeService.findOpenTrade(channel.getTradeId());
             if (optionalMuSigTrade.isEmpty()) {
                 model.resetAll();
                 return;
@@ -255,7 +255,7 @@ public class MuSigTradeStateController implements Controller {
 
     void onShowTradeDetails() {
         MuSigOpenTradeChannel channel = model.getChannel().get();
-        Optional<MuSigTrade> optionalMuSigTrade = tradeService.findTrade(channel.getTradeId());
+        Optional<MuSigTrade> optionalMuSigTrade = tradeService.findOpenTrade(channel.getTradeId());
         if (optionalMuSigTrade.isEmpty()) {
             model.resetAll();
             return;

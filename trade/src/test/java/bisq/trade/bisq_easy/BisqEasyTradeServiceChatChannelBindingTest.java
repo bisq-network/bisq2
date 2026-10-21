@@ -195,7 +195,7 @@ class BisqEasyTradeServiceChatChannelBindingTest {
 
         service.onMessage(takeOfferRequest(trade.getId(), takerIdentity, contract));
 
-        BisqEasyTrade makerTrade = service.findTrade(trade.getId()).orElseThrow();
+        BisqEasyTrade makerTrade = service.findOpenTrade(trade.getId()).orElseThrow();
         assertEquals(BisqEasyTradeState.FAILED, makerTrade.getState());
         assertEquals(TradeProtocolFailure.CHANNEL_DATA_MISMATCH, makerTrade.getTradeProtocolFailure());
     }
@@ -226,7 +226,7 @@ class BisqEasyTradeServiceChatChannelBindingTest {
         service.initialize();
         AtomicBoolean tradeStoredWhenProcessing = new AtomicBoolean();
         doAnswer(invocation -> {
-            tradeStoredWhenProcessing.set(service.findTrade(invocation.getArgument(0)).isPresent());
+            tradeStoredWhenProcessing.set(service.findOpenTrade(invocation.getArgument(0)).isPresent());
             return null;
         }).when(channelService).processPendingMessages(anyString());
 

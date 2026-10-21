@@ -213,7 +213,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
                 muSigOpenTradeChannelService,
                 muSigTraderMediationService,
                 muSigTraderArbitrationService,
-                this::findTrade,
+                this::findOpenTrade,
                 this::persist);
         muSigMediationCustomPayoutService = new MuSigMediationCustomPayoutService();
 
@@ -711,7 +711,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
 
         muSigTrade.getMyself().setAccountPayload(takersAccountPayload);
 
-        checkArgument(!tradeExists(muSigTrade.getId()), "A trade with that ID exists already");
+        checkArgument(findOpenTrade(muSigTrade.getId()).isEmpty(), "A trade with that ID exists already");
         persistableStore.addTrade(muSigTrade);
         persist();
 
@@ -791,12 +791,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         return Optional.ofNullable(tradeProtocolById.get(id));
     }
 
-    public Optional<MuSigTrade> findTrade(String tradeId) {
-        return persistableStore.findTrade(tradeId);
-    }
-
-    public boolean tradeExists(String tradeId) {
-        return persistableStore.tradeExists(tradeId);
+    // closeTrade removes a trade from the store, so only an open trade is found. Unlike the Bisq Easy trade store, the
+    // MuSig trade store keeps no IDs of closed trades, so it cannot tell whether we ever had a trade with an ID.
+    public Optional<MuSigTrade> findOpenTrade(String tradeId) {
+        return persistableStore.findOpenTrade(tradeId);
     }
 
     public boolean wasOfferAlreadyTaken(MuSigOffer muSigOffer, NetworkId takerNetworkId) {
@@ -857,7 +855,7 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             // Serialize creation and drop a duplicate cleanly instead of racing or throwing. The
             // check runs before the identity/account lookups so a late removal also drops cleanly.
             // Resuming a persisted INIT trade on a resend is a follow-up.
-            if (findProtocol(tradeId).isPresent() || tradeExists(tradeId)) {
+            if (findProtocol(tradeId).isPresent() || findOpenTrade(tradeId).isPresent()) {
                 log.warn("Dropping a duplicate MuSig take offer request for an existing trade. tradeId={}",
                         StringUtils.sanitizeForLog(tradeId));
                 return Optional.empty();
