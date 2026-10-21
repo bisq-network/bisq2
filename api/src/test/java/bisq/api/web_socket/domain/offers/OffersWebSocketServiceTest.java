@@ -452,6 +452,28 @@ class OffersWebSocketServiceTest {
     }
 
     @Test
+    void verdictIsNotRecordedWhenTheMakerProfileIsRemovedDuringTheCheck() throws Exception {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        service.initialize().join();
+        sentEvents.clear();
+        setVerdict(message, false);
+        onVerdictCheck = () -> {
+            onVerdictCheck = () -> {
+            };
+            authorsWithoutProfile.add("maker-id");
+        };
+        offerValidityRevision.set(1L);
+        runScheduledPass();
+        assertThat(sentEvents).isEmpty();
+
+        authorsWithoutProfile.clear();
+        offerValidityRevision.set(2L);
+        runScheduledPass();
+        assertThat(sentEvents).hasSize(1);
+        assertSentItem(sentEvents.get(0), "ADDED", "message-a", false);
+    }
+
+    @Test
     void offerAddedWhileItsMakerProfileIsMissingIsSentByThePassAfterTheProfileArrives() throws Exception {
         service.initialize().join();
         authorsWithoutProfile.add("maker-id");

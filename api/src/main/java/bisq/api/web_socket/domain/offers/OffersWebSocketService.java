@@ -263,8 +263,9 @@ public class OffersWebSocketService extends BaseWebSocketService {
                     .forEach(message ->
                             findSellerReputationVerdict(message.getBisqEasyOffer().orElseThrow()).ifPresent(verdict -> {
                                 synchronized (offerUpdateLock) {
-                                    // Removed during the check; resending would revive it in clients
-                                    if (!channel.getChatMessages().contains(message)) {
+                                    // Removed during the check; resending would revive it in clients. Without the
+                                    // profile no item is sent, so the verdict stays unrecorded for the next pass.
+                                    if (!channel.getChatMessages().contains(message) || !hasAuthorProfile(message)) {
                                         return;
                                     }
                                     // Clients replace an item with the same offer ID; REPLACE clears the market
