@@ -160,6 +160,16 @@ public abstract class Fsm<M extends FsmModel> {
         }
     }
 
+    /**
+     * Removes the queued events. The owner of the model calls it when the model will not be handled anymore, for
+     * example when a trade is closed, so that the model does not keep events which it can never apply.
+     */
+    public void clearEventQueue() {
+        synchronized (this) {
+            model.eventQueue.clear();
+        }
+    }
+
     protected abstract void persist();
 
     /**

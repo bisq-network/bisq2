@@ -488,11 +488,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // The closed trade is added before the open trade is removed. A copy of the store for a write between the two steps
     // then contains the trade twice instead of not at all, and prunePersisted removes the open copy at the next start.
     public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
+        // A closed trade has no protocol, so it can never apply its queued events. A queued trade message can carry
+        // private data of the peer, so the closed trade does not keep it (rule 8 of
+        // docs/specifications/trade/queued-trade-messages.md).
+        // A thread which found the protocol before the removal can still pass a message to it after the clear. We do
+        // not handle that case. The desktop app closes a trade only in a final state (doArchiveTrade), and Fsm ignores
+        // every event in a final state. Only the REST call CLOSE_TRADE closes a trade in another state, and the message
+        // would have to arrive at the moment of the close. A closed state of the Fsm besides its transitions would
+        // weaken its design for that case (known limitation "Message during the close of a trade" of the same
+        // specification).
+        BisqEasyProtocol protocol = protocolRegistry.remove(trade.getId());
+        if (protocol != null) {
+            protocol.clearEventQueue();
+        }
         BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
         persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
         persistableStore.getTrades().remove(trade);
 
-        protocolRegistry.remove(trade.getId());
         persist();
     }
 

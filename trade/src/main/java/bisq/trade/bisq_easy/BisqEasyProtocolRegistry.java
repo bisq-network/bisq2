@@ -22,6 +22,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
 import bisq.trade.protocol.messages.PendingTradeMessages;
 import com.google.common.annotations.VisibleForTesting;
 
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -88,9 +89,10 @@ final class BisqEasyProtocolRegistry {
         }
     }
 
-    void remove(String tradeId) {
+    @Nullable
+    BisqEasyProtocol remove(String tradeId) {
         synchronized (lock) {
-            protocolByTradeId.remove(tradeId);
+            return protocolByTradeId.remove(tradeId);
         }
     }
 
