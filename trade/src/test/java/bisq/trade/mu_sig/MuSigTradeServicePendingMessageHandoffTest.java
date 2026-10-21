@@ -60,6 +60,7 @@ import bisq.security.keys.PubKey;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
@@ -131,6 +132,7 @@ class MuSigTradeServicePendingMessageHandoffTest {
 
     private Server server;
     private ServiceProvider serviceProvider;
+    private NetworkService networkService;
     private UserService userService;
     private IdentityService identityService;
     private NetworkId peerNetworkId;
@@ -147,7 +149,7 @@ class MuSigTradeServicePendingMessageHandoffTest {
                 .build()
                 .start();
 
-        NetworkService networkService = mock(NetworkService.class);
+        networkService = mock(NetworkService.class);
         when(networkService.getConfidentialMessageServices()).thenReturn(Set.of());
         when(networkService.confidentialSend(any(), any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new SendMessageResult()));
@@ -343,27 +345,9 @@ class MuSigTradeServicePendingMessageHandoffTest {
     @Test
     void takeOfferRequestPassesThePendingMessagesOfItsTradeToTheProtocol() throws Exception {
         service.initialize().get(5, SECONDS);
-        String accountId = "my-account";
-        String offerId = "take-offer-request-test-offer";
-        AccountOption accountOption = new AccountOption(PAYMENT_METHOD,
-                OfferOptionUtil.createdSaltedAccountId(accountId, offerId),
-                Optional.empty(),
-                List.of(),
-                Optional.empty(),
-                List.of(),
-                new byte[20]);
-        MuSigOffer offer = createOffer(offerId, List.of(new CollateralOption(0.25, 0.25), accountOption));
-        // Another take offer date than the stored trade, so the request creates a new trade
-        MuSigTrade requestedTrade = createSellerAsMakerTrade(offer, trade.getContract().getTakeOfferDate() + 1000);
-        String tradeId = requestedTrade.getId();
-        stubTheMakerOfTheOffer(accountId);
-        SetupTradeMessage_A request = mock(SetupTradeMessage_A.class);
-        when(request.getTradeId()).thenReturn(tradeId);
-        when(request.getSender()).thenReturn(peerNetworkId);
-        when(request.getReceiver()).thenReturn(myNetworkId);
-        when(request.getContract()).thenReturn(requestedTrade.getContract());
+        TakeOfferRequestOfNewTrade request = takeOfferRequestOfNewTrade();
         // A message which the peer sent after the request arrives first
-        PaymentInitiatedMessage_E pendingMessage = paymentInitiatedMessage("pending-message", tradeId);
+        PaymentInitiatedMessage_E pendingMessage = paymentInitiatedMessage("pending-message", request.tradeId());
         service.onMessage(pendingMessage);
         assertThat(service.getPendingTradeMessages().getMessagesInArrivalOrder()).containsExactly(pendingMessage);
 
@@ -371,15 +355,71 @@ class MuSigTradeServicePendingMessageHandoffTest {
         // which created it.
         try (MockedStatic<MuSigTakeOfferRequestValidator> validator =
                      mockStatic(MuSigTakeOfferRequestValidator.class)) {
-            validator.when(() -> MuSigTakeOfferRequestValidator.validateOffer(any(), any())).thenReturn(offer);
-            service.onMessage(request);
+            validator.when(() -> MuSigTakeOfferRequestValidator.validateOffer(any(), any()))
+                    .thenReturn(request.offer());
+            service.onMessage(request.message());
         }
         awaitIdleExecutor();
 
-        assertThat(service.findProtocol(tradeId)).isPresent();
+        assertThat(service.findProtocol(request.tradeId())).isPresent();
         assertThat(service.getPendingTradeMessages().isEmpty())
                 .as("the node passed the pending message to the protocol after the take offer request")
                 .isTrue();
+    }
+
+    // The trade of a rejected request gets no protocol, so the pending messages of the trade are dropped
+    // (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+    @Test
+    void rejectedTakeOfferRequestDropsThePendingMessagesOfItsTrade() throws Exception {
+        service.initialize().get(5, SECONDS);
+        TakeOfferRequestOfNewTrade request = takeOfferRequestOfNewTrade();
+        service.onMessage(paymentInitiatedMessage("pending-message", request.tradeId()));
+        assertThat(service.getPendingTradeMessages().isEmpty()).isFalse();
+
+        try (MockedStatic<MuSigTakeOfferRequestValidator> validator =
+                     mockStatic(MuSigTakeOfferRequestValidator.class)) {
+            validator.when(() -> MuSigTakeOfferRequestValidator.validateOffer(any(), any()))
+                    .thenThrow(new TradeProtocolException("The offer is not available",
+                            TradeProtocolFailure.OFFER_NOT_AVAILABLE));
+            service.onMessage(request.message());
+        }
+
+        verify(networkService).confidentialSend(any(MuSigReportErrorMessage.class), any(), any());
+        assertThat(service.findProtocol(request.tradeId())).isEmpty();
+        assertThat(service.getPendingTradeMessages().isEmpty())
+                .as("the node dropped the pending message of the trade of the rejected request")
+                .isTrue();
+    }
+
+    // A rejected take offer request drops the pending messages of its trade only when the trade has no protocol
+    // (rule 7 of docs/specifications/trade/pending-trade-messages.md). The maker validates a request before it checks
+    // for an existing trade. So it can reject a copy of the request of an existing trade, for example because the offer
+    // was closed when it was taken. In the test, the message became pending before the protocol of the trade existed,
+    // and the protocol has not handled a message since.
+    @Test
+    void rejectedCopyKeepsThePendingMessagesOfTheExistingTrade() throws Exception {
+        PaymentInitiatedMessage_E pendingMessage = paymentInitiatedMessage("pending-message");
+        service.onMessage(pendingMessage);
+        service.initialize().get(5, SECONDS);
+        awaitIdleExecutor();
+        assertThat(service.findProtocol(trade.getId())).isPresent();
+        SetupTradeMessage_A copy = mock(SetupTradeMessage_A.class);
+        when(copy.getTradeId()).thenReturn(trade.getId());
+        when(copy.getSender()).thenReturn(peerNetworkId);
+        when(copy.getReceiver()).thenReturn(myNetworkId);
+        when(copy.getContract()).thenReturn(trade.getContract());
+
+        try (MockedStatic<MuSigTakeOfferRequestValidator> validator =
+                     mockStatic(MuSigTakeOfferRequestValidator.class)) {
+            validator.when(() -> MuSigTakeOfferRequestValidator.validateOffer(any(), any()))
+                    .thenThrow(new TradeProtocolException("The offer was closed when it was taken",
+                            TradeProtocolFailure.OFFER_NOT_AVAILABLE));
+            service.onMessage(copy);
+        }
+
+        assertThat(service.getPendingTradeMessages().getMessagesInArrivalOrder())
+                .as("the pending message waits for the protocol of its trade")
+                .containsExactly(pendingMessage);
     }
 
     // The executor of the service has one thread and a queue, so it runs the tasks one after the other, in the order of
@@ -477,6 +517,33 @@ class MuSigTradeServicePendingMessageHandoffTest {
     private PaymentInitiatedMessage_E paymentInitiatedMessage(String messageId, String tradeId) {
         return new PaymentInitiatedMessage_E(messageId, tradeId, MuSigProtocol.VERSION, peerNetworkId, myNetworkId,
                 new byte[32]);
+    }
+
+    // A take offer request of the peer for a new trade of a new offer. Its take offer date differs from the one of the
+    // stored trade, so the request creates a new trade. The maker finds its identity, its user identity and the account
+    // of the offer, as a real maker does.
+    private TakeOfferRequestOfNewTrade takeOfferRequestOfNewTrade() {
+        String accountId = "my-account";
+        String offerId = "take-offer-request-test-offer";
+        AccountOption accountOption = new AccountOption(PAYMENT_METHOD,
+                OfferOptionUtil.createdSaltedAccountId(accountId, offerId),
+                Optional.empty(),
+                List.of(),
+                Optional.empty(),
+                List.of(),
+                new byte[20]);
+        MuSigOffer offer = createOffer(offerId, List.of(new CollateralOption(0.25, 0.25), accountOption));
+        MuSigTrade requestedTrade = createSellerAsMakerTrade(offer, trade.getContract().getTakeOfferDate() + 1000);
+        stubTheMakerOfTheOffer(accountId);
+        SetupTradeMessage_A request = mock(SetupTradeMessage_A.class);
+        when(request.getTradeId()).thenReturn(requestedTrade.getId());
+        when(request.getSender()).thenReturn(peerNetworkId);
+        when(request.getReceiver()).thenReturn(myNetworkId);
+        when(request.getContract()).thenReturn(requestedTrade.getContract());
+        return new TakeOfferRequestOfNewTrade(request, offer, requestedTrade.getId());
+    }
+
+    private record TakeOfferRequestOfNewTrade(SetupTradeMessage_A message, MuSigOffer offer, String tradeId) {
     }
 
     // The maker of the offer: its identity, an active user identity, and the account which the offer names

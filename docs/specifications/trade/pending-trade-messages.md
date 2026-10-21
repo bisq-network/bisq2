@@ -48,6 +48,10 @@ which the protocol of the trade cannot process yet is a queued trade message (se
    its trade ID whose peer is the sender of the message and whose own user profile is the receiver of the message.
    Otherwise the message is a pending chat message (rule 4). When the node creates a trade, or loads it at startup, it
    processes the pending chat messages of that trade again.
+7. A node drops a trade message of a trade which it created and which is no longer open, for example a closed trade,
+   instead of keeping it as a pending message. When a maker rejects a take offer request whose trade has no protocol,
+   it drops the pending messages of that trade. MuSig keeps no closed trades yet: closing a MuSig trade removes it, so
+   the first part applies to Bisq Easy.
 
 ## Reasons
 
@@ -88,6 +92,14 @@ which the protocol of the trade cannot process yet is a queued trade message (se
   trade, and the trade service fails the trade with a report to the peer. The report would tell the peer that both
   profiles are hosted on one node (see rule 5 of [Sender of a trade message](trade-message-sender.md) for trade
   messages).
+- Rule 7: a trade which is no longer open never gets a protocol again, and the trade of a rejected take offer request
+  gets none. So nothing would pass their messages to a protocol. As pending messages they would take places of the
+  bound of rule 2 until they are pushed out or the node restarts. A late message of a trade is normal, for example a
+  message which the peer sent before it learned that the trade ended. A message which becomes pending after the
+  rejection of a request stays until the bound pushes it out, as the node keeps no list of rejected trade IDs.
+- Rule 7, no protocol: the condition matters for a maker which validates a request before it checks for an existing
+  trade, as the MuSig maker does. Such a maker can reject a copy of the request of an existing trade. The pending
+  messages of that trade wait for its protocol (rule 1).
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
@@ -115,6 +127,20 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 - Rule 6 relies on the trades of the node. The maker stores a trade only for a take offer request which it accepted (see
   [take offer request validation](take-offer-request-validation.md)). A trade which an earlier version stored for a
   rejected request still lets the taker of that request get a channel stored for that trade.
+- **Copies of a take offer request with different results.** Two copies of a request can get different results when
+  the state of the maker changes between their validations. The network layer drops an identical copy (see
+  [Processed confidential messages](../network/processed-confidential-messages.md)). So copies which the maker handles
+  at the same time differ in their content or message ID, and only the taker can send them. When the maker rejects
+  one copy and accepts the other, it can drop the pending messages of the trade (rule 7) before or after the accepted
+  copy registers the protocol. The protocol then does not get these messages.
+  - Why it remains: the maker sends a report for the rejected copy. The protocol of every Bisq Easy and MuSig taker
+    moves from any state to `FAILED_AT_PEER` when it receives a report. So the trade fails at the taker in every order
+    of the steps, and the dropped messages could not let it complete. Coordinating only the drop with the creation of
+    the protocol would not change that.
+  - What would remove it: the maker gives every copy of a request the same result. For example, it keeps a bounded
+    list of the trade IDs of rejected requests, and the MuSig maker checks for an existing trade before it validates a
+    request.
+  - Who decides: the developers.
 
 ## Compatibility
 

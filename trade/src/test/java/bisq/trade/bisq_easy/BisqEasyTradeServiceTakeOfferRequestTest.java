@@ -43,6 +43,7 @@ import bisq.security.SecurityService;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
+import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferResponse;
@@ -94,6 +95,7 @@ import static org.mockito.Mockito.when;
 class BisqEasyTradeServiceTakeOfferRequestTest {
     private static final String REQUEST_THREAD = "take-offer-request";
 
+    private final BisqEasyProtocolRegistry protocolRegistry = new BisqEasyProtocolRegistry();
     private ServiceProvider serviceProvider;
     private IdentityService identityService;
     private BisqEasyTradeService service;
@@ -124,7 +126,7 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         when(serviceProvider.getSettingsService().getMaxTradePriceDeviation()).thenReturn(new Observable<>(0.05));
         when(serviceProvider.getSettingsService().getCloseMyOfferWhenTaken()).thenReturn(new Observable<>(false));
 
-        service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
+        service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP, protocolRegistry);
         // As in the application, the protocol and its handlers get this service from the service provider.
         when(serviceProvider.getBisqEasyTradeService()).thenReturn(service);
         service.initialize().join();
@@ -248,6 +250,25 @@ class BisqEasyTradeServiceTakeOfferRequestTest {
         assertThat(report.getValue().getTradeProtocolFailure()).isEqualTo(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
         // As in the trade messages, the taker stored the network ID of the offer for the maker.
         assertThat(report.getValue().getSender()).isEqualTo(offersNetworkId);
+    }
+
+    // The trade of a rejected request gets no protocol, so the pending messages of the trade are dropped
+    // (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+    @Test
+    void rejectedRequestDropsThePendingMessagesOfItsTrade() throws GeneralSecurityException {
+        removeOffersFromOfferbook();
+        BisqEasyTakeOfferRequest request = takeOfferRequest(contract, offersNetworkId);
+        service.onMessage(new BisqEasyConfirmFiatSentMessage("message-before-the-request",
+                request.getTradeId(),
+                BisqEasyProtocol.VERSION,
+                takerIdentity.getNetworkId(),
+                offersNetworkId));
+        assertThat(protocolRegistry.hasPendingMessages()).isTrue();
+
+        service.onMessage(request);
+
+        assertThat(service.findOpenTrade(request.getTradeId())).isEmpty();
+        assertThat(protocolRegistry.hasPendingMessages()).isFalse();
     }
 
     @Test

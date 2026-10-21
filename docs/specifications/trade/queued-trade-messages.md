@@ -50,6 +50,8 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
    transitions. When the queue holds an event of such a type, the protocol drops a later event of the same type which
    it cannot process yet. The first event stays in the queue.
 7. When an event changes the state of the trade, the protocol removes the other queued events of the same type.
+8. When a trade reaches a final state, the protocol removes the queued events of the trade. When the user closes a
+   trade, the trade service removes them too, also when the trade did not reach a final state.
 
 ## Reasons
 
@@ -89,7 +91,12 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   which the network delivered twice has the same message ID, so it is one event.
 - Rule 7: the protocol does not queue an event of a recorded type (rule 6). A queued event of a recorded type is still
   possible when a new event of its type changes the state before the protocol applies the queued events, for example
-  at startup before rule 3. Without rule 7, the queue would keep that event until the trade reaches a final state.
+  at startup before rule 3. Without rule 7, the queue would keep that event until the trade reaches a final state or
+  the user closes the trade.
+- Rule 8: a trade in a final state ignores every event, and a closed trade has no protocol. So such a trade can never
+  apply a queued event. A queued trade message can carry private data of the trade peer, for example the payment
+  account data. Without rule 8, the store would keep such a message, although it serves no purpose. The user can close
+  a trade which did not reach a final state, so the final state alone does not cover the closed trades.
 
 ## Compatibility
 
@@ -116,7 +123,8 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   does not queue an event of a recorded type. It keeps the recorded types only in memory. So after a restart, it
   queues a copy of a message which it processed before the restart, for example the second copy of a mailbox message,
   and the node persists the copy with the trade. The copy stays in the event queue until the trade reaches a final
-  state. Rule 6 still applies, so the queue holds at most one such copy of each type.
+  state or the user closes the trade (rule 8). Rule 6 still applies, so the queue holds at most one such copy of each
+  type.
   - Why it remains: the change persists only the queued trade messages, which the trade needs to continue.
   - What would remove it: persisting the processed event types together with the trade.
   - Who decides: the developers.
@@ -133,11 +141,28 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   - Who decides: the developers, together with the MuSig protocol.
 - **Redaction of trade data.** The Bisq Easy trade service redacts the payment account data of a trade some days after
   the trade, as the setting for the redaction of trade data defines. The redaction does not cover the queued trade
-  messages. A queued trade message can contain the payment account data of the trade peer. It stays on the disk until
-  the trade reaches a final state, and a trade which never reaches a final state keeps it.
-  - Why it remains: the change is limited to the persistence of the event queue.
-  - What would remove it: the redaction also removes the queued trade messages of a trade whose date for the
-    redaction has passed.
+  messages. A queued trade message can contain the payment account data of the trade peer. It stays on the disk while
+  the trade is open and not in a final state (rule 8), also after the date for the redaction. A write while the
+  protocol moves the trade to a final state can still contain it (see "State and event queue of one write"). The next
+  write leaves it out. If the node stops before that write, the stored trade keeps the message until the user closes
+  the trade.
+  - Why it remains: an open trade could still continue and need the message. Removing it from an open trade needs a
+    rule for that case. The write of the store and the state machine share no lock.
+  - What would remove it: the redaction also removes the queued trade messages with payment account data of an open
+    trade whose date for the redaction has passed, with a rule for a trade which continues later. For the write, a
+    consistent copy of the state and the event queue (see "State and event queue of one write").
+  - Who decides: the developers.
+- **Message during the close of a trade.** The trade service removes the protocol of a trade and then the queued
+  events (rule 8). A thread which handles a message of the trade can have found the protocol before. If the trade is
+  not in a final state and the protocol has no transition for the message, the protocol queues the message again, and
+  the closed trade keeps it. A message with a transition can change the state of the closed trade.
+  - Why it remains: the developers decided on 2026-10-21 not to handle this case. The desktop app offers the close
+    only for a trade in a final state, and the state machine ignores every event in a final state. Only the REST call
+    `CLOSE_TRADE` closes a trade in another state, and then the message must arrive at the moment of the close. The
+    state machine changes only by its transitions. A state outside of the transitions, for example a mark for a
+    closed state machine, would weaken that design for a case which is not realistic.
+  - What would remove it: the trade service closes only a trade in a final state. Then the state machine ignores such
+    a message already.
   - Who decides: the developers.
 - **Restriction at startup.** A queued event which has a transition from the stored state waits during a restriction
   of trading at startup (rule 4). When the restriction ends, the node does not apply the queued events. It applies
