@@ -35,6 +35,7 @@ import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
 import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.common.observable.Observable;
+import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.contract.bisq_easy.BisqEasyContract;
 import bisq.identity.Identity;
@@ -70,12 +71,15 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -85,6 +89,7 @@ class BisqEasyTradeServiceTest {
     private static final PriceQuote PRICE_60K = PriceQuote.fromFiatPrice(60_000, "USD");
     private static Object previousUserProfileServiceInstance;
 
+    private Persistence<?> persistence;
     private BisqEasyTradeService service;
     private NetworkId makerNid;
     private NetworkId takerNid;
@@ -148,7 +153,7 @@ class BisqEasyTradeServiceTest {
 
         PersistenceService persistenceService = mock(PersistenceService.class);
         when(sp.getPersistenceService()).thenReturn(persistenceService);
-        Persistence<?> persistence = mock(Persistence.class);
+        persistence = mock(Persistence.class);
         when(persistence.persistAsync(any())).thenReturn(java.util.concurrent.CompletableFuture.completedFuture(null));
         when(persistenceService.getOrCreatePersistence(any(), any(), any())).thenReturn((Persistence) persistence);
 
@@ -219,6 +224,86 @@ class BisqEasyTradeServiceTest {
                 .noneMatch(ct -> ct.trade().getId().equals(tradeId));
     }
 
+    // Before, the hash code of a trade included its protocol version and its state. The creation of the protocol and
+    // each change of the trade changed it, so the removal from the open trades failed without an error.
+    @Test
+    @DisplayName("closeTrade removes a trade which changed after it was added")
+    void close_trade_removes_a_trade_which_changed() {
+        BisqEasyTrade trade = addTradeDirectly();
+        // The creation of the protocol sets the protocol version of the trade
+        service.initialize().join();
+        trade.setPaymentAccountData(Optional.of("account data"));
+
+        service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
+
+        assertThat(service.findTrade(trade.getId())).isEmpty();
+        assertThat(service.getClosedTrades()).anyMatch(ct -> ct.trade().getId().equals(trade.getId()));
+        assertThat(service.wasOfferAlreadyTaken(offer, takerNid)).isFalse();
+    }
+
+    @Test
+    @DisplayName("closeTrade tells the observers of the open trades that the trade is removed")
+    void close_trade_notifies_the_removal() {
+        BisqEasyTrade trade = addTradeDirectly();
+        service.initialize().join();
+        List<Object> removed = new ArrayList<>();
+        service.getTrades().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(BisqEasyTrade element) {
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                removed.add(element);
+            }
+
+            @Override
+            public void onCleared() {
+            }
+        });
+
+        service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
+
+        assertThat(removed).containsExactly(trade);
+    }
+
+    @Test
+    @DisplayName("deleteTrade removes a closed trade which changed after it was closed")
+    void delete_trade_removes_a_closed_trade_which_changed() {
+        BisqEasyTrade trade = addTradeDirectly();
+        service.initialize().join();
+        service.closeTrade(trade, createUserProfile(10), createUserProfile(20));
+        // The redaction of trade data changes a closed trade
+        trade.setPaymentAccountData(Optional.of("redacted"));
+
+        service.deleteTrade(trade);
+
+        assertThat(service.getClosedTrades()).noneMatch(ct -> ct.trade().getId().equals(trade.getId()));
+    }
+
+    // Earlier versions kept every closed trade also as an open trade, so their stores contain such copies
+    @Test
+    @DisplayName("A stored open trade which is also a closed trade is dropped at the start and gets no protocol")
+    void open_copy_of_a_closed_trade_is_dropped_at_the_start() {
+        BisqEasyContract contract = createContract(takerNid);
+        BisqEasyTrade openCopy = createTrade(contract);
+        BisqEasyTrade closedCopy = createTrade(contract);
+        BisqEasyTrade openTrade = createTrade(createContract(createNetworkId(3)));
+        BisqEasyTradeStore stored = new BisqEasyTradeStore(Set.of(openCopy, openTrade),
+                Set.of(openCopy.getId(), openTrade.getId()),
+                Set.of(new BisqEasyClosedTrade(closedCopy, createUserProfile(10), createUserProfile(20))));
+        doReturn(Optional.of(stored)).when(persistence).read();
+
+        service.readPersisted();
+        service.initialize().join();
+
+        assertThat(service.getTrades()).extracting(BisqEasyTrade::getId).containsExactly(openTrade.getId());
+        assertThat(service.getClosedTrades()).hasSize(1);
+        assertThat(service.tradeExists(openCopy.getId())).isTrue();
+        assertThat(service.findProtocol(openCopy.getId())).isEmpty();
+        assertThat(service.findProtocol(openTrade.getId())).isPresent();
+    }
+
     @Test
     @DisplayName("deleteTrade keeps a trade which is not closed")
     void delete_trade_keeps_open_trade() {
@@ -267,17 +352,24 @@ class BisqEasyTradeServiceTest {
      * full protocol creation flow (which requires deep network infrastructure).
      */
     private BisqEasyTrade addTradeDirectly() {
-        BisqEasyContract contract = new BisqEasyContract(
+        BisqEasyTrade trade = createTrade(createContract(takerNid));
+
+        service.getPersistableStore().addTrade(trade);
+        return trade;
+    }
+
+    private BisqEasyContract createContract(NetworkId takerNid) {
+        return new BisqEasyContract(
                 System.currentTimeMillis(), offer, takerNid,
                 100_000L, 600_000L,
                 new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
                 new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
                 Optional.empty(), new FixPriceSpec(PRICE_60K), PRICE_60K.getValue());
-        BisqEasyTrade trade = new BisqEasyTrade(
-                contract, false, false, makerIdentity, offer, takerNid, makerNid);
+    }
 
-        service.getPersistableStore().addTrade(trade);
-        return trade;
+    private BisqEasyTrade createTrade(BisqEasyContract contract) {
+        return new BisqEasyTrade(
+                contract, false, false, makerIdentity, offer, contract.getTaker().getNetworkId(), makerNid);
     }
 
     private BisqEasyOffer createOffer(NetworkId makerNid) {

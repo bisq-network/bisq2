@@ -123,6 +123,24 @@ public final class BisqEasyTradeStore implements PersistableStore<BisqEasyTradeS
         closedTrades.setAll(persisted.getClosedTrades());
     }
 
+    // An earlier version could not remove a closed trade from the open trades, so a stored trade can be both open and
+    // closed. Only the closing of a trade adds a closed trade, and a trade ID is never used again, so such an open trade
+    // is a copy of the closed trade.
+    BisqEasyTradeStore withoutOpenCopiesOfClosedTrades() {
+        Set<String> closedTradeIds = closedTrades.stream()
+                .map(closedTrade -> closedTrade.trade().getId())
+                .collect(Collectors.toSet());
+        Set<BisqEasyTrade> openTrades = trades.stream()
+                .filter(trade -> !closedTradeIds.contains(trade.getId()))
+                .collect(Collectors.toSet());
+        int numCopies = trades.size() - openTrades.size();
+        if (numCopies == 0) {
+            return this;
+        }
+        log.info("We remove {} open trades which are copies of closed trades", numCopies);
+        return new BisqEasyTradeStore(openTrades, Set.copyOf(tradeIds), Set.copyOf(closedTrades));
+    }
+
     ObservableSet<BisqEasyTrade> getAllTrades() {
         ObservableSet<BisqEasyTrade> allTrades = new ObservableSet<>();
         allTrades.addAll(trades);

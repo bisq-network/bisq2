@@ -29,6 +29,16 @@ contract.
    parsing (rule 1 of [validation at parsing](../network/validation-at-parsing.md)), and the store of the mediator
    skips a persisted case with such a request.
 
+## Identity of a trade
+
+6. A trade is identified by its trade ID. Two trade objects with the same trade ID are the same trade, and the hash
+   code of a trade depends only on its trade ID. The other data of a trade, for example its state and its protocol
+   version, change while the trade runs.
+7. A closed Bisq Easy trade is no longer an open trade. A store of an earlier version can contain a trade both as an
+   open and as a closed trade. When the node loads such a store, it keeps only the closed trade, and the trade gets no
+   protocol. Only the closing of a trade adds a closed trade, and a node creates no second trade with a known trade ID
+   (see [take offer request validation](take-offer-request-validation.md)), so the open trade is a copy.
+
 ## Reasons
 
 - Rule 5: the mediator files a mediation request under its trade ID, and it adds the chat messages of the request to
@@ -42,13 +52,25 @@ contract.
   take offer date of another trade can build a contract with another maker and the same trade ID. Rule 5 binds a
   request to the trade, not to its two traders. The mediator keeps the traders of the first accepted request of a trade
   (see "Not covered" in [mediation request validation](../support/mediation-request-validation.md)).
+- Rule 6: the nodes keep trades in hash sets. Earlier versions included the state, the protocol version and other
+  data which change in the hash code. The creation of the protocol already changed it, so the removal of a trade from
+  such a set failed without an error. Every closed Bisq Easy trade stayed an open trade: it got a protocol at every
+  start, its offer looked taken, the API reported it, and its deletion from the trade history kept its data in the
+  store.
+- Rule 7: earlier versions wrote these copies. Without rule 7, they would stay open trades also after rule 6.
 
 ## Compatibility
 
 - The derivation is unchanged. Rules 4 and 5 change no message format.
+- Rules 6 and 7 change no message and no persisted format. A node of an earlier version reads a store of this version
+  as before.
 - Unmodified nodes send a mediation request with the ID of their trade, so no request of an unmodified node fails
   rule 5. Nodes of version 2.1.13 do not check rule 5.
 
 ## Limitation
 
 - The MuSig mediation and arbitration requests do not check rule 5 yet. MuSig is not released.
+- Rule 7 cannot find the copy of a trade which the user deleted from the trade history with an earlier version,
+  because its trade ID is no longer in the closed trades. Such a copy stays an open trade without a trade channel.
+  - What would remove it: a way to tell such a copy from a real open trade, for example its final state.
+  - Who decides: the developers.
