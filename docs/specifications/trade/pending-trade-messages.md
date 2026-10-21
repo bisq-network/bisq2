@@ -127,6 +127,20 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 - Rule 6 relies on the trades of the node. The maker stores a trade only for a take offer request which it accepted (see
   [take offer request validation](take-offer-request-validation.md)). A trade which an earlier version stored for a
   rejected request still lets the taker of that request get a channel stored for that trade.
+- **Copies of a take offer request with different results.** Two copies of a request can get different results when
+  the state of the maker changes between their validations. The network layer drops an identical copy (see
+  [Processed confidential messages](../network/processed-confidential-messages.md)). So copies which the maker handles
+  at the same time differ in their content or message ID, and only the taker can send them. When the maker rejects
+  one copy and accepts the other, it can drop the pending messages of the trade (rule 7) before or after the accepted
+  copy registers the protocol. The protocol then does not get these messages.
+  - Why it remains: the maker sends a report for the rejected copy. The protocol of every Bisq Easy and MuSig taker
+    moves from any state to `FAILED_AT_PEER` when it receives a report. So the trade fails at the taker in every order
+    of the steps, and the dropped messages could not let it complete. Coordinating only the drop with the creation of
+    the protocol would not change that.
+  - What would remove it: the maker gives every copy of a request the same result. For example, it keeps a bounded
+    list of the trade IDs of rejected requests, and the MuSig maker checks for an existing trade before it validates a
+    request.
+  - Who decides: the developers.
 
 ## Compatibility
 

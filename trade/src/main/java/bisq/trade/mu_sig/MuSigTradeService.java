@@ -413,7 +413,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             // The trade of the request gets no protocol, so nothing would pass its pending messages to a protocol
             // (rule 7 of docs/specifications/trade/pending-trade-messages.md). The validation runs before the check for
             // an existing trade, so the request can also be a copy of the request of a trade which has a protocol. The
-            // pending messages of that trade wait for its protocol.
+            // pending messages of that trade wait for its protocol. A copy which is accepted at the same time can
+            // register its protocol after the check. We do not prevent that: the taker gets our report and fails the
+            // trade from any state (limitation "Copies of a take offer request with different results" of that
+            // specification).
             String tradeId = message.getTradeId();
             if (findProtocol(tradeId).isEmpty()) {
                 pendingTradeMessages.removeMessagesOfTrade(tradeId).forEach(pendingMessage ->

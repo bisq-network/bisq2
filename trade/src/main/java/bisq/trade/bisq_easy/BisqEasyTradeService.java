@@ -586,7 +586,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (rejection.isPresent()) {
             log.warn("We reject the take offer request. tradeId={}", tradeId, rejection.get());
             reportTakeOfferRejection(bisqEasyTrade, rejection.get());
-            // The trade of the request gets no protocol (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+            // The trade of the request gets no protocol (rule 7 of
+            // docs/specifications/trade/pending-trade-messages.md). A copy of the request with other content can still
+            // be accepted, also before this line runs, and then loses these messages. We do not prevent that: the
+            // taker gets our report and fails the trade from any state (limitation "Copies of a take offer request
+            // with different results" of that specification).
             protocolRegistry.removePendingMessagesOfTrade(tradeId).forEach(pendingMessage ->
                     log.info("We drop the pending message of type {} of trade {}, whose request we rejected.",
                             pendingMessage.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId)));
