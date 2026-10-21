@@ -35,7 +35,8 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 
 4. The chats of Bisq Easy open trades and of MuSig open trades keep a chat message whose trade channel does not exist
    yet as a pending chat message. Rules 2 and 3 apply to these pending chat messages as well, with a bound of 100 for
-   each of the two chats.
+   each of the two chats. A chat message whose channel the node creates while the message becomes pending still
+   reaches the channel.
 5. A trader's node keeps the response of a mediator to a Bisq Easy mediation request, whose trade channel does not exist
    yet, as a pending response, only if its sender is a mediator whose bonded role is authorized and not banned. It
    processes the pending responses again when a trade channel is added. Rules 2 and 3 apply to these pending responses
@@ -79,6 +80,11 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 - Rule 4 for MuSig: every node processes chat messages of MuSig open trades, also when MuSig is not activated. Without
   the bound, anybody who knows the network ID of a node could exhaust its memory with chat messages for made-up trade
   IDs.
+- Rule 4, a channel created at the same time: the node receives a chat message in another thread than the one which
+  creates the channel. The creator processes the pending chat messages of the trade right after it added the channel.
+  A message whose lookup found no channel, and which became pending after that, would otherwise wait until the next
+  chat message of the trade. So the MuSig chat looks for the channel again after it kept the message as pending. The
+  Bisq Easy chat processes its pending chat messages again after each received chat message (rule 6).
 - Rule 6: the user does not see a trade channel without a trade and cannot leave it, and the node persists every trade
   channel. If any received chat message with an offer created a channel, anybody could make a node persist channels
   for made-up trade IDs with chat messages alone. The taker's first chat message can arrive before the take offer request which

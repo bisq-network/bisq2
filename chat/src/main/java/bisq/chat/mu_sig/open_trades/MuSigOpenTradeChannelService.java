@@ -252,24 +252,28 @@ public class MuSigOpenTradeChannelService extends PrivateGroupChatChannelService
 
     @Override
     protected void processMessage(MuSigOpenTradeMessage message) {
-        if (canProcessMessage(message)) {
-            findChannel(message)
-                    .or(() -> {
-                        if (message.getChatMessageType() == ChatMessageType.LEAVE) {
-                            log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
-                                    "sent a leave message around the same time as we have closed the channel.");
-                        } else {
-                            pendingMessages.add(message);
-                        }
-                        return Optional.empty();
-                    })
-                    .ifPresent(channel -> {
-                        if (isReceivedMessageOfChannel(channel, message)) {
-                            addMessageAndProcessQueuedReactions(message, channel);
-                        } else {
-                            pendingMessages.remove(message);
-                        }
-                    });
+        if (!canProcessMessage(message)) {
+            return;
+        }
+        Optional<MuSigOpenTradeChannel> channel = findChannel(message);
+        if (channel.isEmpty()) {
+            if (message.getChatMessageType() == ChatMessageType.LEAVE) {
+                log.warn("We received a leave message for a non existing channel. This can happen if the peer " +
+                        "sent a leave message around the same time as we have closed the channel.");
+                return;
+            }
+            pendingMessages.add(message);
+            // The trade service can create the channel after the lookup above, and process the pending messages before
+            // the add. So we look again after the add (rule 4 of docs/specifications/trade/pending-trade-messages.md).
+            channel = findChannel(message);
+            if (channel.isEmpty()) {
+                return;
+            }
+        }
+        if (isReceivedMessageOfChannel(channel.get(), message)) {
+            addMessageAndProcessQueuedReactions(message, channel.get());
+        } else {
+            pendingMessages.remove(message);
         }
     }
 
