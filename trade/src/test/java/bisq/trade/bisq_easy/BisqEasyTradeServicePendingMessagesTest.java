@@ -27,6 +27,7 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.BisqEasyTradeState;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyAccountDataMessage;
@@ -34,6 +35,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmBtcSentMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.exceptions.TradeProtocolFailure;
+import bisq.user.profile.UserProfile;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -127,6 +129,20 @@ class BisqEasyTradeServicePendingMessagesTest {
 
         verify(protocol).handle(accountData);
         verify(protocol).handle(btcSent);
+        assertThat(protocolRegistry.hasPendingMessages()).isFalse();
+    }
+
+    // A closed trade gets no protocol again, so a late message of it is dropped and does not stay pending
+    // (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+    @Test
+    void messageOfAClosedTradeIsDroppedInsteadOfKeptAsPending() {
+        BisqEasyTradeStore store = service.getPersistableStore();
+        store.getTradeIds().add(trade.getId());
+        store.getClosedTrades().add(new BisqEasyClosedTrade(trade, mock(UserProfile.class), mock(UserProfile.class)));
+        service.initialize().join();
+
+        service.onMessage(confirmFiatReceipt());
+
         assertThat(protocolRegistry.hasPendingMessages()).isFalse();
     }
 

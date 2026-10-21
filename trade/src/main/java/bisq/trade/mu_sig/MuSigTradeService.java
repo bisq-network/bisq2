@@ -410,6 +410,16 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
             log.warn("Dropping an invalid MuSig take offer request. tradeId={}",
                     StringUtils.sanitizeForLog(message.getTradeId()));
             reportTakeOfferRejection(networkService, identityService, message, e);
+            // The trade of the request gets no protocol, so nothing would pass its pending messages to a protocol
+            // (rule 7 of docs/specifications/trade/pending-trade-messages.md). The validation runs before the check for
+            // an existing trade, so the request can also be a copy of the request of a trade which has a protocol. The
+            // pending messages of that trade wait for its protocol.
+            String tradeId = message.getTradeId();
+            if (findProtocol(tradeId).isEmpty()) {
+                pendingTradeMessages.removeMessagesOfTrade(tradeId).forEach(pendingMessage ->
+                        log.info("We drop the pending message of type {} of trade {}, whose request we rejected.",
+                                pendingMessage.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId)));
+            }
             return;
         }
     }

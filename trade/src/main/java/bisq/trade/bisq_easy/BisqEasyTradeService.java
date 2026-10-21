@@ -269,6 +269,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
+        // A closed trade gets no protocol again, so its message would only take one of the places of the pending
+        // messages (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+        if (isTradeNoLongerOpen(tradeId)) {
+            log.info("We drop a message of type {} of trade {}, which is no longer open.",
+                    message.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId));
+            return;
+        }
         protocolRegistry.findOrKeepAsPending(message).ifPresentOrElse(protocol -> {
                     if (isMessageOfTradePeer(message, protocol)) {
                         handleBisqEasyTradeMessage(message, protocol);
@@ -579,6 +586,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (rejection.isPresent()) {
             log.warn("We reject the take offer request. tradeId={}", tradeId, rejection.get());
             reportTakeOfferRejection(bisqEasyTrade, rejection.get());
+            // The trade of the request gets no protocol (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+            protocolRegistry.removePendingMessagesOfTrade(tradeId).forEach(pendingMessage ->
+                    log.info("We drop the pending message of type {} of trade {}, whose request we rejected.",
+                            pendingMessage.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId)));
             return Optional.empty();
         }
         persist();
@@ -765,6 +776,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @VisibleForTesting
     boolean wasTradeIdUsed(String tradeId) {
         return persistableStore.wasTradeIdUsed(tradeId);
+    }
+
+    // A trade whose ID was used and which is not an open trade was closed, or deleted from the history. The store adds a
+    // new trade to the open trades before it stores its ID, so a trade which is created right now is not seen as such a
+    // trade.
+    private boolean isTradeNoLongerOpen(String tradeId) {
+        return wasTradeIdUsed(tradeId) && findOpenTrade(tradeId).isEmpty();
     }
 
     private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {

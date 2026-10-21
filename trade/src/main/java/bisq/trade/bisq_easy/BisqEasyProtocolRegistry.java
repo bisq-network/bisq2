@@ -100,13 +100,17 @@ final class BisqEasyProtocolRegistry {
      * Removes the pending messages of the trade and returns them in arrival order. Two callers never get the same
      * message, so each pending message reaches the protocol of its trade once.
      * <p>
-     * Call it only after {@link #add(String, BisqEasyProtocol)} registered the protocol of the trade. A message becomes
-     * pending only while its trade has no protocol, because {@link #findOrKeepAsPending(BisqEasyTradeMessage)} decides
-     * under the lock of the registration. So a call after the registration gets every pending message of the trade. A
-     * call before it could miss a message which becomes pending after the call. A taker and the startup register
-     * protocols without such a call: the peer of a taker learns the trade ID only from the take offer request, which
-     * the taker sends after the registration, and at startup the node registers the protocols of its stored trades
-     * before it subscribes to messages (rule 1 of docs/specifications/trade/pending-trade-messages.md).
+     * To pass the messages to the protocol of the trade, call it only after {@link #add(String, BisqEasyProtocol)}
+     * registered the protocol. A message becomes pending only while its trade has no protocol, because
+     * {@link #findOrKeepAsPending(BisqEasyTradeMessage)} decides under the lock of the registration. So a call after
+     * the registration gets every pending message of the trade. A call before it could miss a message which becomes
+     * pending after the call. A taker and the startup register protocols without such a call: the peer of a taker
+     * learns the trade ID only from the take offer request, which the taker sends after the registration, and at
+     * startup the node registers the protocols of its stored trades before it subscribes to messages (rule 1 of
+     * docs/specifications/trade/pending-trade-messages.md).
+     * <p>
+     * To drop the messages of a trade which gets no protocol, for example after a rejected take offer request, a call
+     * at any time is right (rule 7). A message which becomes pending later stays until the bound pushes it out.
      */
     List<BisqEasyTradeMessage> removePendingMessagesOfTrade(String tradeId) {
         return pendingMessages.removeMessagesOfTrade(tradeId);
