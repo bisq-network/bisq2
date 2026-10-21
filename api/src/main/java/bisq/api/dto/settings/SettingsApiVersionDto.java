@@ -19,9 +19,9 @@ package bisq.api.dto.settings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
-import javax.annotation.Nullable;
+import java.util.Optional;
 
 // imageVersion is only present on containerised distributions (see ImageVersion)
-@JsonInclude(JsonInclude.Include.NON_NULL)
-public record SettingsApiVersionDto(String version, @Nullable String imageVersion) {
+@JsonInclude(JsonInclude.Include.NON_ABSENT)
+public record SettingsApiVersionDto(String version, Optional<String> imageVersion) {
 }
