@@ -1,17 +1,23 @@
-## Copyright (C) 2018 - 2023 ENCRYPTED SUPPORT LP <adrelanos@whonix.org>
+## Copyright (C) 2018 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
 ## See the file COPYING for copying conditions
 
 #### meta start
 #### project Tails
 #### category tor-control
 #### description
-## Shipped but not enabled by default onion-grater profile.
+## Bisq's deb package installs this profile on Tails as /etc/onion-grater.d/bisq.yml.
 #### meta end
 
+# Derived from Whonix's 40_bisq.yml (Whonix/onion-grater 9d78f0ba). It allows only the commands
+# Bisq sends to an external Tor: GETINFO net/listeners/socks, ADD_ONION and HSFETCH. Whonix also
+# allows SETCONF, DEL_ONION and GETINFO status/bootstrap-phase. Bisq sends SETCONF only to its own
+# Tor and never sends the other two, so they are left out. onion-grater appends '$' to a pattern
+# and matches it against all arguments, so a pattern with a trailing wildcard lets a client append
+# more arguments, such as Tor options that reveal the user's IP address.
 ---
 # Match the client by the apparmor-profiles selector with Bisq's executable path. Bisq runs
 # unconfined on Tails (/proc/<pid>/attr/current is "unconfined"), and onion-grater matches an
-# unconfined client through this selector by falling back to its executable path — so the value is
+# unconfined client through this selector by falling back to its executable path, so the value is
 # the launcher path. The newer exe-paths selector is NOT honored by Tails' onion-grater version
 # (verified: with exe-paths the SOCKS GETINFO returned "510 Command filtered" because no profile
 # matched), so apparmor-profiles is the correct selector here.
@@ -23,10 +29,6 @@
     - '*'
   commands:
     GETINFO:
-      - pattern:       'status/bootstrap-phase'
-        response:
-        - pattern:     '250-status/bootstrap-phase=*'
-          replacement: '250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=100 TAG=done SUMMARY="Done"'
       - pattern:       'net/listeners/socks'
     ADD_ONION:
       - pattern:     'NEW:(\S+) Port=9999,(\S+)'
@@ -35,17 +37,8 @@
         replacement: '{} Port={},{client-address}:{}'
       - pattern:     '(\S+):(\S+) Port=9999,(\S+)'
         replacement: '{}:{} Port=9999,{client-address}:{}'
-    DEL_ONION:
-      - '.+'
     HSFETCH:
-      - '.+'
-
-    ## Bisq 2
-    SETCONF:
-      - pattern:       'DisableNetwork.*'
-        response:
-        - pattern:     '250 DisableNetwork=.*'
-          replacement: '250 DisableNetwork=0'
+      - '\S+( SERVER=\S+)*'
   events:
     ## Bisq 2
     SIGNAL:
