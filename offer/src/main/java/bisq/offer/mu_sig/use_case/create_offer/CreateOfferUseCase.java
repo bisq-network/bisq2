@@ -18,10 +18,15 @@
 package bisq.offer.mu_sig.use_case.create_offer;
 
 import bisq.account.AccountService;
+import bisq.account.payment_method.PaymentMethod;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.common.market.Market;
 import bisq.common.monetary.Fiat;
 import bisq.common.observable.Observable;
+import bisq.common.util.StringUtils;
+import bisq.offer.Direction;
+import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.offer.mu_sig.use_case.DraftOfferUseCase;
 import bisq.offer.mu_sig.use_case.create_offer.amount.AmountSelection;
 import bisq.offer.mu_sig.use_case.create_offer.direction.DirectionSelection;
@@ -32,11 +37,18 @@ import bisq.offer.mu_sig.use_case.dependencies.AccountsProvider;
 import bisq.offer.mu_sig.use_case.dependencies.CreateOfferDraftCookieStore;
 import bisq.offer.mu_sig.use_case.dependencies.DefaultAccountsProvider;
 import bisq.offer.mu_sig.use_case.dependencies.DefaultCreateOfferDraftCookieStore;
+import bisq.offer.options.CollateralOption;
+import bisq.offer.options.OfferOption;
+import bisq.offer.options.OfferOptionUtil;
+import bisq.offer.price.spec.PriceSpec;
 import bisq.settings.SettingsService;
-
-import java.util.Optional;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -133,6 +145,65 @@ public class CreateOfferUseCase extends DraftOfferUseCase {
                     && amountSelection.getFixTradeAmount() != null
                     && priceSelection.getPriceQuote() != null;
         }
+    }
+
+    /**
+     * Everything the offer is built from, captured in one synchronized read together with the
+     * snapshot the review displays, so the published offer and the displayed values cannot
+     * diverge.
+     */
+    public record Handoff(String offerId,
+                          Direction direction,
+                          Market market,
+                          AmountSpec amountSpec,
+                          PriceSpec priceSpec,
+                          List<PaymentMethod<?>> paymentMethods,
+                          List<OfferOption> offerOptions,
+                          DraftSnapshot snapshot) {
+        public Handoff {
+            checkNotNull(offerId, "offerId must not be null");
+            checkNotNull(direction, "direction must not be null");
+            checkNotNull(market, "market must not be null");
+            checkNotNull(amountSpec, "amountSpec must not be null");
+            checkNotNull(priceSpec, "priceSpec must not be null");
+            checkNotNull(paymentMethods, "paymentMethods must not be null");
+            checkNotNull(offerOptions, "offerOptions must not be null");
+            checkNotNull(snapshot, "snapshot must not be null");
+        }
+    }
+
+    // Empty while the draft is not ready for review.
+    public Optional<Handoff> getHandoff() {
+        synchronized (draftLock) {
+            if (!isDraftReadyForReview()) {
+                return Optional.empty();
+            }
+            return Optional.of(toHandoff(captureDraftSnapshot(), StringUtils.createUid()));
+        }
+    }
+
+    // A pure function of the snapshot and the offer id, which salts the account data so the
+    // same account is not recognizable across offers.
+    static Handoff toHandoff(DraftSnapshot snapshot, String offerId) {
+        Market market = snapshot.market();
+        List<PaymentMethod<?>> paymentMethods = snapshot.accountByPaymentMethod().keySet().stream()
+                .sorted(Comparator.comparing(PaymentMethod::getPaymentRailName))
+                .toList();
+        List<OfferOption> offerOptions = new ArrayList<>();
+        snapshot.accountByPaymentMethod().values().stream()
+                .sorted(Comparator.comparing(account -> account.getPaymentMethod().getPaymentRailName()))
+                .map(account -> OfferOptionUtil.createAccountOption(account, offerId))
+                .forEach(offerOptions::add);
+        offerOptions.add(new CollateralOption(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT,
+                MuSigOffer.DEFAULT_SELLER_SECURITY_DEPOSIT));
+        return new Handoff(offerId,
+                Direction.displayDirectionToOfferDirection(snapshot.displayDirection(), market),
+                market,
+                snapshot.amountSpec(),
+                snapshot.priceSpec(),
+                paymentMethods,
+                List.copyOf(offerOptions),
+                snapshot);
     }
 
     /**
