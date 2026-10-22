@@ -28,6 +28,7 @@ import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -84,7 +85,7 @@ public class RelayTorrcGeneratorTests {
                 .getRelayKeyFingerprint();
 
         TorrcConfigGenerator relayTorrcGenerator = TestNetworkTorrcGeneratorFactory.relayTorrcGenerator(firstRelay);
-        Map<String, String> torrcConfigs = relayTorrcGenerator.generate();
+        Map<String, List<String>> torrcConfigs = relayTorrcGenerator.generate();
 
         TorNode dirAuth = spy(
                 TorNode.builder()

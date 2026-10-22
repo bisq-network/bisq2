@@ -1,0 +1,51 @@
+#!/bin/sh
+# prerm script for APPLICATION_PACKAGE
+#
+# see: dh_installdeb(1)
+
+set -e
+
+# summary of how this script can be called:
+#        * <prerm> `remove'
+#        * <old-prerm> `upgrade' <new-version>
+#        * <new-prerm> `failed-upgrade' <old-version>
+#        * <conflictor's-prerm> `remove' `in-favour' <package> <new-version>
+#        * <deconfigured's-prerm> `deconfigure' `in-favour'
+#          <package-being-installed> <version> `removing'
+#          <conflicting-package> <version>
+# for details, see https://www.debian.org/doc/debian-policy/ or
+# the debian-policy package
+
+
+package_type=deb
+DESKTOP_SCRIPTS
+LAUNCHER_AS_SERVICE_SCRIPTS
+
+# Remove Bisq's onion-grater profile that postinst installed on Tails. On upgrade
+# postinst reinstalls it afterwards, so this stays idempotent. Non-fatal.
+disable_onion_grater_on_tails() {
+    [ -f /etc/onion-grater.d/bisq.yml ] || return 0
+
+    rm -f /etc/onion-grater.d/bisq.yml || return 0
+    if command -v systemctl >/dev/null 2>&1; then
+        systemctl restart onion-grater.service >/dev/null 2>&1 || true
+    fi
+}
+
+case "$1" in
+    remove|upgrade|deconfigure)
+DESKTOP_COMMANDS_UNINSTALL
+LAUNCHER_AS_SERVICE_COMMANDS_UNINSTALL
+        disable_onion_grater_on_tails || true
+    ;;
+
+    failed-upgrade)
+    ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+    ;;
+esac
+
+exit 0

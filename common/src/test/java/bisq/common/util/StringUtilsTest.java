@@ -283,4 +283,16 @@ public class StringUtilsTest {
         assertEquals("x?WARN forged?line reversed?text?bell?zwsp", StringUtils.sanitizeForLog(injected));
         assertEquals("", StringUtils.sanitizeForLog(null));
     }
+
+    @Test
+    void testUnquoteReturnsUnquotedValue() {
+        assertEquals("value", StringUtils.unquote("\"value\""));
+        assertEquals("value", StringUtils.unquote("'value'"));
+    }
+
+    @Test
+    void testUnquoteLeavesNonMatchingQuotesUntouched() {
+        assertEquals("value", StringUtils.unquote("value"));
+        assertEquals("\"value'", StringUtils.unquote("\"value'"));
+    }
 }

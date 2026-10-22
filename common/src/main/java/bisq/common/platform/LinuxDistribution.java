@@ -18,14 +18,20 @@
 package bisq.common.platform;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Optional;
 
+@Slf4j
 public enum LinuxDistribution {
     DEBIAN("debian"),
     RED_HAT("redhat"),
-    WHONIX("whonix");
+    WHONIX("whonix"),
+    TAILS("tails");
 
     @Getter
     private final String canonicalName;
@@ -40,6 +46,54 @@ public enum LinuxDistribution {
 
     public static boolean isRedHat() {
         return OS.isLinux() && Files.isRegularFile(Paths.get("/etc/redhat-release"));
+    }
+
+    public static boolean isTails() {
+        if (!OS.isLinux()) {
+            return false;
+        }
+        // Official, distribution-agnostic marker: /etc/os-release with ID=tails. Fall back to the
+        // legacy amnesia marker and the tails data directory for older or partially-mounted systems.
+        return osReleaseIdEquals("tails")
+                || Files.isRegularFile(Paths.get("/etc/amnesia_version"))
+                || Files.isDirectory(Paths.get("/usr/share/tails"));
+    }
+
+    /**
+     * Reads the {@code ID} field of {@code /etc/os-release} and compares it case-insensitively.
+     * The value may be quoted (e.g. {@code ID="tails"}); surrounding quotes are stripped.
+     */
+    private static boolean osReleaseIdEquals(String expectedId) {
+        return readOsReleaseId()
+                .map(id -> id.equalsIgnoreCase(expectedId))
+                .orElse(false);
+    }
+
+    private static Optional<String> readOsReleaseId() {
+        Path osReleasePath = Paths.get("/etc/os-release");
+        if (!Files.isRegularFile(osReleasePath)) {
+            return Optional.empty();
+        }
+        try {
+            return Files.readAllLines(osReleasePath).stream()
+                    .map(String::trim)
+                    .filter(line -> line.startsWith("ID="))
+                    .map(line -> line.substring("ID=".length()).trim())
+                    .map(LinuxDistribution::unquote)
+                    .findFirst();
+        } catch (IOException e) {
+            log.warn("Could not read /etc/os-release", e);
+            return Optional.empty();
+        }
+    }
+
+    private static String unquote(String value) {
+        if (value.length() >= 2
+                && (value.startsWith("\"") && value.endsWith("\"")
+                || value.startsWith("'") && value.endsWith("'"))) {
+            return value.substring(1, value.length() - 1);
+        }
+        return value;
     }
 
     public static boolean isWhonix() {

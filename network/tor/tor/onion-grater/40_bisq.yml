@@ -1,4 +1,4 @@
-## Copyright (C) 2018 - 2023 ENCRYPTED SUPPORT LP <adrelanos@whonix.org>
+## Copyright (C) 2018 - 2025 ENCRYPTED SUPPORT LLC <adrelanos@whonix.org>
 ## See the file COPYING for copying conditions
 
 #### meta start
@@ -7,6 +7,9 @@
 #### description
 ## Shipped but not enabled by default onion-grater profile.
 #### meta end
+
+# Copy of usr/share/doc/onion-grater-merger/examples/40_bisq.yml from Whonix/onion-grater at
+# 9d78f0ba, plus GETINFO net/listeners/socks, which Bisq needs to find the SOCKS port.
 
 ---
 - exe-paths:
@@ -19,8 +22,9 @@
     GETINFO:
       - pattern:       'status/bootstrap-phase'
         response:
-        - pattern:     '250-status/bootstrap-phase=*'
+        - pattern:     '250-status/bootstrap-phase=.*'
           replacement: '250-status/bootstrap-phase=NOTICE BOOTSTRAP PROGRESS=100 TAG=done SUMMARY="Done"'
+      - pattern:       'net/listeners/socks'
     ADD_ONION:
       - pattern:     'NEW:(\S+) Port=9999,(\S+)'
         replacement: 'NEW:{} Port=9999,{client-address}:{}'
@@ -29,13 +33,13 @@
       - pattern:     '(\S+):(\S+) Port=9999,(\S+)'
         replacement: '{}:{} Port=9999,{client-address}:{}'
     DEL_ONION:
-      - '.+'
+      - '\S+'
     HSFETCH:
-      - '.+'
+      - '\S+( SERVER=\S+)*'
 
     ## Bisq 2
     SETCONF:
-      - pattern:       'DisableNetwork.*'
+      - pattern:       'DisableNetwork=[01]'
         response:
         - pattern:     '250 DisableNetwork=.*'
           replacement: '250 DisableNetwork=0'

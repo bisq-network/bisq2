@@ -21,6 +21,10 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 @Slf4j
 public class TorControlReader implements AutoCloseable {
+    // Sentinel inserted into the queue when the reader thread terminates so that
+    // any thread blocked in readLine() gets unblocked and can detect the closure.
+    static final String CONNECTION_CLOSED_SENTINEL = "__CONNECTION_CLOSED__";
+
     private final BlockingQueue<String> replies = new LinkedBlockingQueue<>();
     @Getter
     private final List<BootstrapEventListener> bootstrapEventListeners = new CopyOnWriteArrayList<>();
@@ -81,6 +85,11 @@ public class TorControlReader implements AutoCloseable {
                 if (!isStopped) {
                     log.error("Tor control port reader couldn't read reply.", e);
                 }
+            } finally {
+                if (!isStopped) {
+                    log.warn("Tor control connection closed unexpectedly.");
+                }
+                replies.add(CONNECTION_CLOSED_SENTINEL);
             }
         });
         workerThread = Optional.of(thread);
@@ -95,7 +104,13 @@ public class TorControlReader implements AutoCloseable {
 
     public String readLine() {
         try {
-            return replies.take();
+            String line = replies.take();
+            if (CONNECTION_CLOSED_SENTINEL.equals(line)) {
+                // Re-enqueue so subsequent callers also unblock immediately.
+                replies.add(CONNECTION_CLOSED_SENTINEL);
+                throw new TorControlConnectionClosedException("Tor control connection was closed unexpectedly");
+            }
+            return line;
         } catch (InterruptedException e) {
             log.warn("Thread got interrupted at readLine method", e);
             Thread.currentThread().interrupt(); // Restore interrupted state
