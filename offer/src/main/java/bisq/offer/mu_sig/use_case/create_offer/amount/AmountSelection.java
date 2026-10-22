@@ -330,6 +330,41 @@ public class AmountSelection extends LifecycleScope {
         }
     }
 
+    // An edit in progress (the field still has the focus): applied while it keeps the range
+    // ordered, ignored while it would invert it. A typed value passes through prefixes that can
+    // lie on the wrong side of the other endpoint; only the completed edit may drag it along.
+    public void onEditMinTradeAmountFromInputAmount(Monetary inputAmount) {
+        synchronized (draftLock) {
+            checkNotNull(inputAmount, "inputAmount must not be null");
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && market != null && priceQuote != null) {
+                TradeAmount minTradeAmount = amountLimits.clamp(TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount));
+                TradeAmount maxTradeAmount = model.getMaxTradeAmount();
+                if (maxTradeAmount == null || !isAbove(minTradeAmount, maxTradeAmount)) {
+                    setMinTradeAmountAndSliderValue(minTradeAmount);
+                }
+            }
+        }
+    }
+
+    public void onEditMaxTradeAmountFromInputAmount(Monetary inputAmount) {
+        synchronized (draftLock) {
+            checkNotNull(inputAmount, "inputAmount must not be null");
+            Market market = marketSelection.getMarket();
+            PriceQuote priceQuote = priceSelection.getPriceQuote();
+            if (areLimitsAvailable() && market != null && priceQuote != null) {
+                TradeAmount maxTradeAmount = amountLimits.clamp(TradeAmountConversion.toTradeAmount(market, priceQuote, inputAmount));
+                TradeAmount minTradeAmount = model.getMinTradeAmount();
+                if (minTradeAmount == null || !isAbove(minTradeAmount, maxTradeAmount)) {
+                    setMaxTradeAmountAndSliderValue(maxTradeAmount);
+                }
+            }
+        }
+    }
+
+    // A completed edit (the field lost the focus): applied, and the other endpoint is dragged
+    // along if the range would be inverted.
     public void onSetMinTradeAmountFromInputAmount(Monetary inputAmount) {
         synchronized (draftLock) {
             checkNotNull(inputAmount, "inputAmount must not be null");
