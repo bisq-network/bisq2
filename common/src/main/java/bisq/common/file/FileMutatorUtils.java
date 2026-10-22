@@ -28,6 +28,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
@@ -37,6 +38,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
@@ -278,6 +280,35 @@ public class FileMutatorUtils {
             Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING);
         }
         applyDefaultPermissions(targetPath);
+    }
+
+    /**
+     * Writes the content to the temporary file {@code <file name>.tmp} next to path, syncs it to the disk, and then
+     * replaces path with it (see {@link #replaceFile}). Where the file system supports an atomic move, path then holds
+     * either its previous content or the full new content, also after a crash, a power failure or a failed write. A
+     * temporary file which an earlier crash left is overwritten.
+     * <p>
+     * Two calls for the same path use the same temporary file. Callers must not write the same path from several
+     * threads at the same time.
+     */
+    public static void writeToPathAtomically(String content, Path path) throws IOException {
+        Path tempPath = path.resolveSibling(path.getFileName() + ".tmp");
+        try {
+            writeToPath(content, tempPath);
+            // Without the sync, a power failure soon after the rename can leave an empty file on some file systems
+            try (FileChannel channel = FileChannel.open(tempPath, StandardOpenOption.WRITE)) {
+                channel.force(true);
+            }
+            replaceFile(tempPath, path);
+        } finally {
+            // A failure here, for example a file which another program keeps open on Windows, must not hide the
+            // exception of the write
+            try {
+                Files.deleteIfExists(tempPath);
+            } catch (IOException e) {
+                log.warn("Could not delete the temporary file {}", tempPath, e);
+            }
+        }
     }
 
     public static void backupCorruptedFile(Path dirPath, Path storageFilePath, String fileName, String backupFolderName)

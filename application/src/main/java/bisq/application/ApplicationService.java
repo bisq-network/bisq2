@@ -17,6 +17,7 @@
 
 package bisq.application;
 
+import bisq.application.migration.MigrationListener;
 import bisq.application.migration.MigrationService;
 import bisq.common.application.ApplicationVersion;
 import bisq.common.application.DevMode;
@@ -72,7 +73,9 @@ public abstract class ApplicationService implements Service {
                     config.getBoolean("ignoreSignatureVerification"),
                     config.getInt("memoryReportIntervalSec"),
                     config.getBoolean("includeThreadListInMemoryReport"),
-                    config.getBoolean("checkInstanceLock"));
+                    config.getBoolean("checkInstanceLock"),
+                    // The config of the mobile node does not have this key
+                    config.hasPath("startAfterFailedMigration") && config.getBoolean("startAfterFailedMigration"));
         }
 
         private final com.typesafe.config.Config rootConfig;
@@ -87,6 +90,7 @@ public abstract class ApplicationService implements Service {
         private final int memoryReportIntervalSec;
         private final boolean includeThreadListInMemoryReport;
         private final boolean checkInstanceLock;
+        private final boolean startAfterFailedMigration;
 
         public Config(com.typesafe.config.Config rootConfig,
                       Path appDataDirPath,
@@ -99,7 +103,8 @@ public abstract class ApplicationService implements Service {
                       boolean ignoreSignatureVerification,
                       int memoryReportIntervalSec,
                       boolean includeThreadListInMemoryReport,
-                      boolean checkInstanceLock) {
+                      boolean checkInstanceLock,
+                      boolean startAfterFailedMigration) {
             this.rootConfig = rootConfig;
             this.appDataDirPath = appDataDirPath;
             this.appName = appName;
@@ -118,6 +123,7 @@ public abstract class ApplicationService implements Service {
             this.memoryReportIntervalSec = memoryReportIntervalSec;
             this.includeThreadListInMemoryReport = includeThreadListInMemoryReport;
             this.checkInstanceLock = checkInstanceLock;
+            this.startAfterFailedMigration = startAfterFailedMigration;
         }
 
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
@@ -156,7 +162,6 @@ public abstract class ApplicationService implements Service {
     protected final Config config;
     @Getter
     protected final PersistenceService persistenceService;
-    private final MigrationService migrationService;
     // We keep the reference for the lifetime of the application. If the InstanceLock got garbage collected the file
     // lock would be released silently.
     private InstanceLock instanceLock;
@@ -164,6 +169,13 @@ public abstract class ApplicationService implements Service {
     protected final Observable<State> state = new Observable<>(State.INITIALIZE_APP);
 
     public ApplicationService(String configFileName, String[] args, Path userDataDirPath) {
+        this(configFileName, args, userDataDirPath, MigrationListener.NONE);
+    }
+
+    public ApplicationService(String configFileName,
+                              String[] args,
+                              Path userDataDirPath,
+                              MigrationListener migrationListener) {
         programArgConfig = TypesafeConfigUtils.parseArgsToConfig(args);
         jvmConfig = TypesafeConfigUtils.resolveFilteredJvmOptions();
         resourceConfig = ConfigFactory.parseResources(configFileName + ".conf").resolve();
@@ -222,8 +234,13 @@ public abstract class ApplicationService implements Service {
 
         setupLogging(appDataDirPath);
 
+        // The migrations run before any service is created, so they can change any file of the data directory, including
+        // the store files, before it is read. Every app runs them, whichever way it starts its services. They run after
+        // the instance lock check, so that no other instance uses the data directory, and after the setup of the
+        // logging, so that their log lines go to the log file.
+        new MigrationService(appDataDirPath).migrate(migrationListener, config.isStartAfterFailedMigration());
+
         persistenceService = new PersistenceService(appDataDirPath);
-        migrationService = new MigrationService(appDataDirPath);
     }
 
     public CompletableFuture<Void> pruneAllBackups() {
@@ -232,11 +249,6 @@ public abstract class ApplicationService implements Service {
 
     public CompletableFuture<Boolean> readAllPersisted() {
         return persistenceService.readAllPersisted();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return migrationService.initialize();
     }
 
     @Override

@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 
@@ -39,6 +41,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * continues to the end, and the offer stays. The chat of the trade keeps its messages, the citation and the reactions,
  * and it continues in both directions. At the end, the scan of the logs covers the session of each version of the
  * upgraded node, so an entry which the new version skips at load fails the test.
+ * <p>
+ * Each node of this checkout writes its version to the file "version" of its data directory after it ran the
+ * migrations of the data directory. The test checks the file of the upgraded node and of the new seed and api-app
+ * nodes, which started with an empty data directory. A missing file shows that the migrations did not run. Their logs
+ * show that the migrations ran before the stores were read.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
@@ -111,6 +118,8 @@ class UpgradeInPlaceTest {
 
         // The user starts the new version on the same data directory
         network.startOldNodeWithNewVersion();
+        assertVersionFile(network.oldNode.getDataDir(), upgradedNode.version());
+        assertMigratedBeforeStoresAreRead(network.oldNode.getName());
         upgradedNode.acceptTermsAndConditions();
         Trades.awaitTradeState(upgradedNode, tradeId, "the upgraded node gets the fiat confirmation from its mailbox",
                 state -> state.equals("SELLER_RECEIVED_FIAT_SENT_CONFIRMATION"));
@@ -142,5 +151,38 @@ class UpgradeInPlaceTest {
                 "The upgraded node lost its own offer");
         assertTrue(OffersAcrossVersionsTest.findOffer(peer, keptOffer).isPresent(),
                 "The peer lost the offer of the upgraded node");
+    }
+
+    @Test
+    void nodesOfThisCheckoutRunTheMigrationsOfANewDataDirectory() throws Exception {
+        String version = network.newApi.version();
+        assertVersionFile(network.newSeed.getDataDir(), version);
+        assertVersionFile(network.newNode.getDataDir(), version);
+        assertMigratedBeforeStoresAreRead(network.newSeed.getName());
+        assertMigratedBeforeStoresAreRead(network.newNode.getName());
+    }
+
+    // A migration can change store files only if it runs before the stores are read
+    private void assertMigratedBeforeStoresAreRead(String nodeName) throws Exception {
+        List<String> log = network.logOfLastSession(nodeName);
+        int migrated = indexOfLineWith(log, "Migrated the data directory from version");
+        int storesRead = indexOfLineWith(log, "readAllPersisted took");
+        assertTrue(migrated >= 0, nodeName + " did not log the migration of its data directory");
+        assertTrue(storesRead > migrated, nodeName + " read its stores before it migrated its data directory");
+    }
+
+    private static int indexOfLineWith(List<String> lines, String text) {
+        for (int i = 0; i < lines.size(); i++) {
+            if (lines.get(i).contains(text)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    private static void assertVersionFile(Path dataDir, String expectedVersion) throws Exception {
+        Path versionFile = dataDir.resolve("version");
+        assertTrue(Files.exists(versionFile), "The migrations did not run: " + versionFile + " does not exist");
+        assertEquals(expectedVersion, Files.readString(versionFile), "content of " + versionFile);
     }
 }
