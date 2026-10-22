@@ -32,9 +32,14 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.TlsSocketStrategy;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.URIScheme;
+import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
@@ -114,14 +119,23 @@ public class TorHttpClient extends BaseHttpClient {
         InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         // Use this to test with system-wide Tor proxy, or change port for another proxy.
         // SocketAddress socksAddress = new InetSocketAddress("127.0.0.1", 9050);
-        var cm = new PoolingTorHttpClientConnectionManager();
-        cm.setDefaultSocketConfig(SocketConfig.custom()
+        // An HTTP connection over Tor carries one HTTP request only (rule 3 of "Rules for HTTP requests over Tor" in
+        // docs/specifications/network/tor-stream-isolation.md). A reused connection would put two requests on one
+        // Tor circuit. Therefore, the client never keeps a connection alive, and the client and the manager are
+        // built for this request and closed in finally.
+        var cm = new BasicHttpClientConnectionManager(new TorHttpClientConnectionOperator(null,
+                RegistryBuilder.<TlsSocketStrategy>create()
+                        .register(URIScheme.HTTPS.id, DefaultClientTlsStrategy.createDefault())
+                        .build()),
+                null);
+        cm.setSocketConfig(SocketConfig.custom()
                 .setSocksProxyAddress(socksAddress)
                 .setSoTimeout(Timeout.ofSeconds(30))
                 .build());
         try {
             closeableHttpClient = checkNotNull(HttpClients.custom()
                     .setConnectionManager(cm)
+                    .setConnectionReuseStrategy((request, response, context) -> false)
                     .setDefaultRequestConfig(RequestConfig.custom()
                             .setResponseTimeout(Timeout.ofSeconds(30))
                             .build()) // Timeout waiting for response
@@ -155,6 +169,8 @@ public class TorHttpClient extends BaseHttpClient {
                     ". Throwable=" + t.getMessage();
             throw new IOException(message, t);
         } finally {
+            // Close the local manager as well, so that closing it does not depend on the closeableHttpClient field
+            cm.close();
             if (closeableHttpClient != null) {
                 closeableHttpClient.close();
                 closeableHttpClient = null;
