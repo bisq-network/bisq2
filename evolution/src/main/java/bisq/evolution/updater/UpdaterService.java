@@ -102,6 +102,8 @@ public class UpdaterService implements Service {
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");
 
+        maybeUpdateVersionFile(ApplicationVersion.getVersion().toString(), config.getAppDataDirPath());
+
         pins.add(releaseNotificationsService.getReleaseNotifications().addObserver(new CollectionObserver<>() {
             @Override
             public void onAdded(ReleaseNotification releaseNotification) {
@@ -196,6 +198,22 @@ public class UpdaterService implements Service {
     /* --------------------------------------------------------------------- */
     // Private/package static
     /* --------------------------------------------------------------------- */
+
+    // The version file is written by the in-app updater after a download. If the user installed a new version
+    // manually, the file would still contain the old version (or would be missing), so we update it at startup.
+    // The file then holds the version that is running. Currently nothing launches the jar downloaded to the
+    // updates dir. If that is reintroduced, a pending download would be reset by this write.
+    @VisibleForTesting
+    static void maybeUpdateVersionFile(String version, Path appDataDirPath) {
+        if (UpdaterUtils.readVersionFromVersionFile(appDataDirPath).filter(version::equals).isPresent()) {
+            return;
+        }
+        try {
+            FileMutatorUtils.writeToPath(version, appDataDirPath.resolve(VERSION_FILE_NAME));
+        } catch (IOException e) {
+            log.error("Could not write version file to {}", appDataDirPath, e);
+        }
+    }
 
     private void updateVersionForTradingRequirement() {
         minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
