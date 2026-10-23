@@ -55,7 +55,7 @@ public final class Coin extends Monetary {
     }
 
     public static Coin parseBsq(String string) {
-        return Coin.fromValue(parseToValue(string, 12),
+        return Coin.fromValue(parseToValue(string, 2),
                 "BSQ",
                 2);
     }

@@ -155,6 +155,17 @@ public class MonetaryTest {
     }
 
     @Test
+    void testParseBsqUsesTheBsqPrecision() {
+        assertEquals(2, Coin.parseBsq("1").getPrecision());
+        assertEquals(100, Coin.parseBsq("1").getValue());
+        assertEquals(123, Coin.parseBsq("1.23").getValue());
+        assertEquals(Coin.parse("1.23", "BSQ").getValue(), Coin.parseBsq("1.23").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBsq("1.234"));
+        // Moving the point by 12 instead of 2 also put amounts well within the BSQ supply out of range
+        assertEquals(1000000000L, Coin.parseBsq("10000000").getValue());
+    }
+
+    @Test
     void testParseRejectsFractionBeyondPrecision() {
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC", 8));
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC"));
