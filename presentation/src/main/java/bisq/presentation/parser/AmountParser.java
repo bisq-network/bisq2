@@ -18,8 +18,6 @@
 package bisq.presentation.parser;
 
 import bisq.common.asset.Asset;
-import bisq.common.asset.CryptoAsset;
-import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
@@ -33,8 +31,8 @@ public class AmountParser {
         if (Asset.isFiat(code)) {
             return Fiat.parse(normalize(value, Fiat.PRECISION), code);
         } else {
-            CryptoAsset cryptoAsset = CryptoAssetRepository.findOrCreateCustom(code);
-            return Coin.parse(normalize(value, cryptoAsset.getPrecision()), code);
+            int precision = Coin.derivePrecision(code);
+            return Coin.parse(normalize(value, precision), code, precision);
         }
     }
 

@@ -193,7 +193,7 @@ public final class Coin extends Monetary {
 
     // Precision is a property of the crypto asset (see CryptoAsset). For a code not listed in
     // the repository (a custom user crypto whose decimals are unknown) we fall back to 8.
-    private static int derivePrecision(String code) {
+    public static int derivePrecision(String code) {
         return CryptoAssetRepository.find(code)
                 .map(CryptoAsset::getPrecision)
                 .orElse(8);
