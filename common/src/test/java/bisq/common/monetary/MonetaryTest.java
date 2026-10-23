@@ -21,6 +21,7 @@ import bisq.common.asset.FiatCurrencyRepository;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -135,13 +136,11 @@ public class MonetaryTest {
     void testParse() {
         assertEquals(12345678, Coin.parse("0.12345678", "BTC", 8).getValue());
         assertEquals(12345678, Coin.parseBtc("0.12345678").getValue());
-        assertEquals(12345678, Coin.parseBtc("0.123456789").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678", "XMR", 12).getValue());
         assertEquals(123456780000L, Coin.parseXmr("0.12345678").getValue());
 
         assertEquals(1234, Fiat.parse("0.1234", "USD", 4).getValue());
         assertEquals(1234, Fiat.parse("0.1234", "USD").getValue());
-        assertEquals(1234, Fiat.parse("0.12341", "USD").getValue());
 
         FiatCurrencyRepository.setLocale(Locale.US);
         assertEquals(1234567800, Fiat.parse("123456.78 USD").getValue());
@@ -153,6 +152,95 @@ public class MonetaryTest {
         assertEquals(12345678, Coin.parse("0.12345678 UNDEFINED").getValue());
         assertEquals(123456780000L, Coin.parse("0.12345678 XMR").getValue());
         Assertions.assertThrows(IllegalArgumentException.class, () -> assertEquals(1234567800, Coin.parse("123456.78 USD").getValue()));
+    }
+
+    @Test
+    void testParseBsqUsesTheBsqPrecision() {
+        assertEquals(2, Coin.parseBsq("1").getPrecision());
+        assertEquals(100, Coin.parseBsq("1").getValue());
+        assertEquals(123, Coin.parseBsq("1.23").getValue());
+        assertEquals(Coin.parse("1.23", "BSQ").getValue(), Coin.parseBsq("1.23").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBsq("1.234"));
+        // Moving the point by 12 instead of 2 also put amounts well within the BSQ supply out of range
+        assertEquals(1000000000L, Coin.parseBsq("10000000").getValue());
+    }
+
+    @Test
+    void testParseBtcXmrAndBsqTakeThePrecisionFromTheAssetRepository() {
+        assertEquals(8, Coin.parseBtc("1").getPrecision());
+        assertEquals(12, Coin.parseXmr("1").getPrecision());
+        assertEquals(2, Coin.parseBsq("1").getPrecision());
+        assertEquals(100_000_000L, Coin.parseBtc("1").getValue());
+        assertEquals(1_000_000_000_000L, Coin.parseXmr("1").getValue());
+        assertEquals(150, Coin.parseBsq("1.5").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBsq("1.123"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1.123456789"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("1.1234567890123"));
+    }
+
+    @Test
+    void testParseRejectsFractionBeyondPrecision() {
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC", 8));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("0.123456789"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("0.1234567890123"));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("0.12341", "USD", 4));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("0.12341", "USD"));
+
+        // Trailing zeros beyond the precision do not lose value and are accepted
+        assertEquals(12345678, Coin.parseBtc("0.1234567800").getValue());
+        assertEquals(1234, Fiat.parse("0.123400", "USD").getValue());
+    }
+
+    @Test
+    void testParseHandlesLongRunsOfTrailingZerosQuickly() {
+        String zeros = "0".repeat(200_000);
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertEquals(100_000_000, Coin.parseBtc("1." + zeros).getValue()));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1." + zeros + "1")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertEquals(10_000, Fiat.parse("1." + zeros, "USD").getValue()));
+    }
+
+    @Test
+    void testParseRejectsTinyExponentsQuickly() {
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E-99999999")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("-1E-99999999")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1E-99999999", "USD")));
+        assertEquals(0, Coin.parseBtc("0E-99999999").getValue());
+        assertEquals(100_000_000, Coin.parseBtc("100000000E-8").getValue());
+    }
+
+    @Test
+    void testParseRejectsOverflow() {
+        // 2^64 + 1 in the smallest unit, which wraps around to 1 if converted with BigDecimal.longValue()
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC", 8));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("184467440737.09551617"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("18446744.073709551617"));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1844674407370955.1617", "USD", 4));
+        assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1844674407370955.1617", "USD"));
+
+        assertEquals(Long.MAX_VALUE, Coin.parseBtc("92233720368.54775807").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("92233720368.54775808"));
+        assertEquals(Long.MIN_VALUE, Coin.parseBtc("-92233720368.54775808").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("-92233720368.54775809"));
+        // Huge exponents are rejected before movePointRight, which would overflow the scale or build a huge number
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E2147483647"));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E100000000")));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("123456789012345678901234567890"));
+    }
+
+    @Test
+    void testParseRejectsMalformedInput() {
+        assertThrows(NumberFormatException.class, () -> Coin.parseBtc("abc"));
+        assertThrows(NumberFormatException.class, () -> Coin.parseBtc(""));
+        assertThrows(NumberFormatException.class, () -> Fiat.parse("1.2.3", "USD"));
     }
 
     @Test

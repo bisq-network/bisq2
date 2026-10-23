@@ -72,6 +72,7 @@ public class MoneroFormController extends FormController<MoneroFormView, MoneroF
         Optional<Integer> autoConfNumConfirmations = Optional.ofNullable(model.getAutoConfNumConfirmations().get())
                 .map(Integer::valueOf);
         Optional<Long> autoConfMaxTradeAmount = Optional.ofNullable(model.getAutoConfMaxTradeAmount().get())
+                .filter(e -> model.getIsAutoConf().get() && !e.isBlank())
                 .map(e -> AmountParser.parse(e, "BTC").getValue());
         Optional<String> autoConfExplorerUrls = Optional.ofNullable(model.getAutoConfExplorerUrls().get());
 

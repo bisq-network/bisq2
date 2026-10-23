@@ -164,7 +164,11 @@ public class BigNumberAmountInputBox implements AmountNumberBox {
 
         private void updateAmountIfNotFocused(String value) {
             if (!model.hasFocus) {
-                model.amount.set(AmountParser.parse(value, model.code.get()));
+                try {
+                    model.amount.set(AmountParser.parse(value, model.code.get()));
+                } catch (IllegalArgumentException e) {
+                    handleInvalidValue();
+                }
             }
         }
 

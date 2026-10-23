@@ -30,15 +30,16 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 public final class Fiat extends Monetary {
+    public static final int PRECISION = 4;
 
     public static Fiat parse(String string, String code) {
-        return Fiat.fromValue(new BigDecimal(string).movePointRight(4).longValue(),
+        return Fiat.fromValue(parseToValue(string, PRECISION),
                 code,
-                4);
+                PRECISION);
     }
 
     public static Fiat parse(String string, String code, int precision) {
-        return Fiat.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Fiat.fromValue(parseToValue(string, precision),
                 code,
                 precision);
     }
@@ -55,14 +56,14 @@ public final class Fiat extends Monetary {
     }
 
     public static Fiat fromValue(long value, String code) {
-        return new Fiat(value, code, 4);
+        return new Fiat(value, code, PRECISION);
     }
 
     /**
      * @param faceValue Fiat value as face value. E.g. 123.45 USD
      */
     public static Fiat fromFaceValue(double faceValue, String code) {
-        return new Fiat(faceValue, code, 4);
+        return new Fiat(faceValue, code, PRECISION);
     }
 
     /**

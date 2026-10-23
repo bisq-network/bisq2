@@ -50,8 +50,9 @@ public class OtherFormController extends FormController<OtherFormView, OtherForm
                 ? Optional.empty()
                 : Optional.of(Integer.valueOf(model.getAutoConfNumConfirmations().get()));
         Optional<Long> autoConfMaxTradeAmount = Optional.empty();
-        if (model.getAutoConfMaxTradeAmount().get() != null) {
-            Monetary amount = AmountParser.parse(model.getAutoConfMaxTradeAmount().get(), "BTC");
+        String maxTradeAmount = model.getAutoConfMaxTradeAmount().get();
+        if (model.getIsAutoConf().get() && maxTradeAmount != null && !maxTradeAmount.isBlank()) {
+            Monetary amount = AmountParser.parse(maxTradeAmount, "BTC");
             autoConfMaxTradeAmount = Optional.of(amount.getValue());
         }
         return new OtherCryptoAssetAccountPayload(model.getId(),

@@ -37,27 +37,21 @@ public final class Coin extends Monetary {
     }
 
     public static Coin parse(String string, String code, int precision) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(precision).longValue(),
+        return Coin.fromValue(parseToValue(string, precision),
                 code,
                 precision);
     }
 
     public static Coin parseBtc(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(8).longValue(),
-                "BTC",
-                8);
+        return parse(string, "BTC");
     }
 
     public static Coin parseXmr(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
-                "XMR",
-                12);
+        return parse(string, "XMR");
     }
 
     public static Coin parseBsq(String string) {
-        return Coin.fromValue(new BigDecimal(string).movePointRight(12).longValue(),
-                "BSQ",
-                2);
+        return parse(string, "BSQ");
     }
 
     // Unsafe method. We do not know the currency and the precision, just that it is not a fiat currency.
@@ -96,7 +90,7 @@ public final class Coin extends Monetary {
     }
 
     /**
-     * @param faceValue Coin value as face value. E.g. 1.123456789012 XMR
+     * @param faceValue Coin value as face value. E.g. 1.12 BSQ
      */
     public static Coin asBsqFromFaceValue(double faceValue) {
         return new Coin(faceValue, "BSQ", 2);
@@ -199,7 +193,7 @@ public final class Coin extends Monetary {
 
     // Precision is a property of the crypto asset (see CryptoAsset). For a code not listed in
     // the repository (a custom user crypto whose decimals are unknown) we fall back to 8.
-    private static int derivePrecision(String code) {
+    public static int derivePrecision(String code) {
         return CryptoAssetRepository.find(code)
                 .map(CryptoAsset::getPrecision)
                 .orElse(8);

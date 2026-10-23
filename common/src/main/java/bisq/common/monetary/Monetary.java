@@ -29,6 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -44,6 +45,36 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
             throw new ArithmeticException("Provided value would lead to an overflow");
         }
         return BigDecimal.valueOf(faceValue).movePointRight(precision).longValue();
+    }
+
+    /**
+     * Parses a face value string into the smallest unit by moving the decimal point by `precision` places.
+     * Rejects input with more fraction digits than `precision` and input outside the long range,
+     * instead of silently truncating or wrapping around.
+     */
+    static long parseToValue(String string, int precision) {
+        BigDecimal parsed = new BigDecimal(string);
+        // A long has at most 19 digits. Checking the digit count first also keeps movePointRight from
+        // building a huge number or overflowing the scale for input like "1E1000000000".
+        checkArgument((long) parsed.precision() - parsed.scale() + precision <= 19,
+                "Amount %s is out of range", string);
+        BigDecimal value = parsed.movePointRight(precision);
+        // A non-zero value with more fraction digits than significant digits cannot be a whole number.
+        // Rejecting it here keeps setScale from building a huge power of ten for input like "1E-99999999".
+        checkArgument(value.signum() == 0 || value.scale() <= value.precision(),
+                "Amount %s has more than %s decimal places", string, precision);
+        // setScale with UNNECESSARY throws if a non-zero digit would be dropped and accepts trailing zeros.
+        // stripTrailingZeros is much slower for input with many trailing zeros.
+        try {
+            value = value.setScale(0, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException(
+                    String.format("Amount %s has more than %s decimal places", string, precision), e);
+        }
+        checkArgument(value.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) <= 0 &&
+                        value.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) >= 0,
+                "Amount %s is out of range", string);
+        return value.longValueExact();
     }
 
     public static double toFaceValue(Monetary monetary, int precision) {

@@ -22,16 +22,39 @@ import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
-import bisq.presentation.formatters.DefaultNumberFormatter;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class AmountParser {
     public static Monetary parse(String value, String code) {
-        value = DefaultNumberFormatter.reformat(value);
-        value = StringUtils.removeAllWhitespaces(value);
         if (Asset.isFiat(code)) {
-            return Fiat.parse(value, code);
+            return Fiat.parse(normalize(value, Fiat.PRECISION), code);
         } else {
-            return Coin.parse(value, code);
+            int precision = Coin.derivePrecision(code);
+            return Coin.parse(normalize(value, precision), code, precision);
         }
+    }
+
+    /**
+     * Brings a number string in the user input format (grouping whitespaces, comma or point as
+     * decimal separator) into the format the Monetary parse methods expect and drops the fraction
+     * digits the asset cannot represent. The cut follows the precision of the asset: cutting every
+     * asset at 8 digits dropped the 4 lowest digits of an XMR amount, which has a precision of 12.
+     */
+    private static String normalize(String value, int precision) {
+        String cleaned = StringUtils.removeAllWhitespaces(value).replace(",", ".");
+        BigDecimal parsed = new BigDecimal(cleaned);
+        if (parsed.scale() <= precision) {
+            // Input which needs no cut stays untouched. Expanding input like 1E1000000000 would build a
+            // huge number; it is out of range anyway and the Monetary parse methods reject it without expanding it.
+            return cleaned;
+        }
+        // The value is below one smallest unit and cuts down to zero. Shrinking input like 1E-1000000000
+        // with setScale would divide by a power of ten with a billion digits.
+        if ((long) parsed.precision() - parsed.scale() + precision <= 0) {
+            return "0";
+        }
+        return parsed.setScale(precision, RoundingMode.DOWN).toPlainString();
     }
 }

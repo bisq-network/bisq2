@@ -21,6 +21,7 @@ import bisq.account.payment_method.DigitalAssetPaymentMethod;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.desktop.common.view.Model;
+import bisq.desktop.components.controls.validator.AmountRangeValidator;
 import bisq.desktop.components.controls.validator.NumberValidator;
 import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
 import bisq.desktop.components.controls.validator.ValidatorBase;
@@ -41,7 +42,7 @@ public abstract class FormModel implements Model {
 
     //todo
     protected final NumberValidator autoConfNumConfirmationsValidator = new NumberValidator(1, 10);
-    protected final NumberValidator autoConfMaxTradeAmountValidator = new NumberValidator(0.001, 1);
+    protected final AmountRangeValidator autoConfMaxTradeAmountValidator = new AmountRangeValidator("BTC", "0.001", "1");
     protected final TextMinMaxLengthValidator autoConfExplorerUrlsValidator = new TextMinMaxLengthValidator(10, 200);
 
     protected final BooleanProperty runValidation = new SimpleBooleanProperty();
