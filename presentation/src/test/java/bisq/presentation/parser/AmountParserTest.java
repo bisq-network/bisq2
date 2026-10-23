@@ -19,8 +19,11 @@ package bisq.presentation.parser;
 
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 public class AmountParserTest {
     @Test
@@ -40,6 +43,20 @@ public class AmountParserTest {
         assertEquals(-12345678, AmountParser.parse("-0.123456789", "BTC").getValue());
         assertEquals(123, AmountParser.parse("1.239", "BSQ").getValue());
         assertEquals(11234, AmountParser.parse("1.12349", "USD").getValue());
+    }
+
+    @Test
+    void testInputBelowTheSmallestUnitIsCutToZeroQuickly() {
+        assertTimeoutPreemptively(Duration.ofSeconds(5), () -> {
+            assertEquals(0, AmountParser.parse("1E-1000000000", "BTC").getValue());
+            assertEquals(0, AmountParser.parse("-1E-1000000000", "BTC").getValue());
+            assertEquals(0, AmountParser.parse("1E-1000000000", "XMR").getValue());
+            assertEquals(0, AmountParser.parse("1E-1000000000", "USD").getValue());
+            assertEquals(0, AmountParser.parse("-1E-1000000000", "USD").getValue());
+            assertEquals(0, AmountParser.parse("9.99E-99999999", "BTC").getValue());
+        });
+        assertEquals(0, AmountParser.parse("0.000000009", "BTC").getValue());
+        assertEquals(1, AmountParser.parse("0.000000019", "BTC").getValue());
     }
 
     @Test

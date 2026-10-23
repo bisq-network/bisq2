@@ -47,11 +47,16 @@ public class AmountParser {
     private static String normalize(String value, int precision) {
         String cleaned = StringUtils.removeAllWhitespaces(value).replace(",", ".");
         BigDecimal parsed = new BigDecimal(cleaned);
-        // Only ever reduce the scale, and leave input which needs no cut untouched. Expanding input
-        // like 1E1000000000 would build a huge number; it is out of range anyway and the Monetary
-        // parse methods reject it without expanding it.
-        return parsed.scale() > precision
-                ? parsed.setScale(precision, RoundingMode.DOWN).toPlainString()
-                : cleaned;
+        if (parsed.scale() <= precision) {
+            // Input which needs no cut stays untouched. Expanding input like 1E1000000000 would build a
+            // huge number; it is out of range anyway and the Monetary parse methods reject it without expanding it.
+            return cleaned;
+        }
+        // The value is below one smallest unit and cuts down to zero. Shrinking input like 1E-1000000000
+        // with setScale would divide by a power of ten with a billion digits.
+        if ((long) parsed.precision() - parsed.scale() + precision <= 0) {
+            return "0";
+        }
+        return parsed.setScale(precision, RoundingMode.DOWN).toPlainString();
     }
 }
