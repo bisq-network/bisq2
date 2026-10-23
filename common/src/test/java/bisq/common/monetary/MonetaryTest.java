@@ -180,6 +180,17 @@ public class MonetaryTest {
     }
 
     @Test
+    void testParseHandlesLongRunsOfTrailingZerosQuickly() {
+        String zeros = "0".repeat(200_000);
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertEquals(100_000_000, Coin.parseBtc("1." + zeros).getValue()));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1." + zeros + "1")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertEquals(10_000, Fiat.parse("1." + zeros, "USD").getValue()));
+    }
+
+    @Test
     void testParseRejectsOverflow() {
         // 2^64 + 1 in the smallest unit, which wraps around to 1 if converted with BigDecimal.longValue()
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC", 8));

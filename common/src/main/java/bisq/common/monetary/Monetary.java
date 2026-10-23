@@ -29,6 +29,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
@@ -58,8 +59,14 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         checkArgument((long) parsed.precision() - parsed.scale() + precision <= 19,
                 "Amount %s is out of range", string);
         BigDecimal value = parsed.movePointRight(precision);
-        checkArgument(value.stripTrailingZeros().scale() <= 0,
-                "Amount %s has more than %s decimal places", string, precision);
+        // setScale with UNNECESSARY throws if a non-zero digit would be dropped and accepts trailing zeros.
+        // stripTrailingZeros is much slower for input with many trailing zeros.
+        try {
+            value = value.setScale(0, RoundingMode.UNNECESSARY);
+        } catch (ArithmeticException e) {
+            throw new IllegalArgumentException(
+                    String.format("Amount %s has more than %s decimal places", string, precision), e);
+        }
         checkArgument(value.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) <= 0 &&
                         value.compareTo(BigDecimal.valueOf(Long.MIN_VALUE)) >= 0,
                 "Amount %s is out of range", string);
