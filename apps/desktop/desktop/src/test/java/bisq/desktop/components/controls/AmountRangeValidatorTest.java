@@ -53,8 +53,13 @@ class AmountRangeValidatorTest {
     }
 
     @Test
-    void shouldAcceptBlankAndAmountsWithinTheRange() {
-        assertTrue(isValid(""));
+    void shouldRejectBlank() {
+        assertFalse(isValid(""));
+        assertFalse(isValid(" "));
+    }
+
+    @Test
+    void shouldAcceptAmountsWithinTheRange() {
         assertTrue(isValid("0.001"));
         assertTrue(isValid("0.5"));
         assertTrue(isValid("1"));

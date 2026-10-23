@@ -80,10 +80,17 @@ class FormControllerValidateTest {
     }
 
     @Test
+    void validateRejectsBlankMaxTradeAmountWhenAutoConfIsOn() {
+        // The account details expect a max trade amount whenever auto-confirm is on
+        assertFalse(validateWithAutoConf(true, ""));
+        assertFalse(validateWithAutoConf(true, " "));
+        assertTrue(validateWithAutoConf(false, ""));
+    }
+
+    @Test
     void validateAcceptsMaxTradeAmountTheParserHandles() {
         assertTrue(validateWithAutoConf(true, "0.5"));
         assertTrue(validateWithAutoConf(true, "0.123456789"));
-        assertTrue(validateWithAutoConf(true, ""));
     }
 
     @Test

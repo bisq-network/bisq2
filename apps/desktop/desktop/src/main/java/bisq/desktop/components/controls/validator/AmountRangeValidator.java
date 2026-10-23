@@ -24,7 +24,8 @@ import javafx.scene.control.TextInputControl;
 
 /**
  * Validates an amount text with the same parser the payload creation uses, so that text which the
- * validator accepts cannot make the parse throw later. Blank text is valid.
+ * validator accepts cannot make the parse throw later. Blank text is invalid: a field which needs this
+ * validator needs a value.
  */
 public class AmountRangeValidator extends ValidatorBase {
     private final String code;
@@ -49,7 +50,7 @@ public class AmountRangeValidator extends ValidatorBase {
         }
         String text = control.getText();
         if (text == null || text.isBlank()) {
-            hasErrors.set(false);
+            hasErrors.set(true);
             return;
         }
         try {
