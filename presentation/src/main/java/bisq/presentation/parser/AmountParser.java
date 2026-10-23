@@ -18,20 +18,40 @@
 package bisq.presentation.parser;
 
 import bisq.common.asset.Asset;
+import bisq.common.asset.CryptoAsset;
+import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.monetary.Coin;
 import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.util.StringUtils;
-import bisq.presentation.formatters.DefaultNumberFormatter;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public class AmountParser {
     public static Monetary parse(String value, String code) {
-        value = DefaultNumberFormatter.reformat(value);
-        value = StringUtils.removeAllWhitespaces(value);
         if (Asset.isFiat(code)) {
-            return Fiat.parse(value, code);
+            return Fiat.parse(normalize(value, Fiat.PRECISION), code);
         } else {
-            return Coin.parse(value, code);
+            CryptoAsset cryptoAsset = CryptoAssetRepository.findOrCreateCustom(code);
+            return Coin.parse(normalize(value, cryptoAsset.getPrecision()), code);
         }
+    }
+
+    /**
+     * Brings a number string in the user input format (grouping whitespaces, comma or point as
+     * decimal separator) into the format the Monetary parse methods expect and drops the fraction
+     * digits the asset cannot represent. The cut follows the precision of the asset: cutting every
+     * asset at 8 digits dropped the 4 lowest digits of an XMR amount, which has a precision of 12.
+     */
+    private static String normalize(String value, int precision) {
+        String cleaned = StringUtils.removeAllWhitespaces(value).replace(",", ".");
+        BigDecimal parsed = new BigDecimal(cleaned);
+        // Only ever reduce the scale, and leave input which needs no cut untouched. Expanding input
+        // like 1E1000000000 would build a huge number; it is out of range anyway and the Monetary
+        // parse methods reject it without expanding it.
+        return parsed.scale() > precision
+                ? parsed.setScale(precision, RoundingMode.DOWN).toPlainString()
+                : cleaned;
     }
 }

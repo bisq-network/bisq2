@@ -30,11 +30,12 @@ import static com.google.common.base.Preconditions.checkArgument;
 
 @EqualsAndHashCode(callSuper = true)
 public final class Fiat extends Monetary {
+    public static final int PRECISION = 4;
 
     public static Fiat parse(String string, String code) {
-        return Fiat.fromValue(parseToValue(string, 4),
+        return Fiat.fromValue(parseToValue(string, PRECISION),
                 code,
-                4);
+                PRECISION);
     }
 
     public static Fiat parse(String string, String code, int precision) {
