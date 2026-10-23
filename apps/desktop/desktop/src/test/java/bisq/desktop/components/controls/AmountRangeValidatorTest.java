@@ -18,28 +18,17 @@
 package bisq.desktop.components.controls;
 
 import bisq.desktop.components.controls.validator.AmountRangeValidator;
-import bisq.i18n.Res;
-import javafx.application.Platform;
-import org.junit.jupiter.api.BeforeAll;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(JavaFxToolkitExtension.class)
 class AmountRangeValidatorTest {
     private MaterialTextField textField;
-
-    @BeforeAll
-    static void initFx() {
-        try {
-            Platform.startup(() -> {
-            });
-        } catch (IllegalStateException ignored) {
-            // JavaFX already initialized.
-        }
-        Res.setAndApplyLanguageTag("en");
-    }
 
     @BeforeEach
     void setUp() {

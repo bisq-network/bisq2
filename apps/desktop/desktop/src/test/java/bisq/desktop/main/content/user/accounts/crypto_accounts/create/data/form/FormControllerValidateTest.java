@@ -20,13 +20,12 @@ package bisq.desktop.main.content.user.accounts.crypto_accounts.create.data.form
 import bisq.account.payment_method.crypto.CryptoPaymentMethod;
 import bisq.common.observable.Observable;
 import bisq.desktop.common.Transitions;
-import bisq.i18n.Res;
+import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
-import javafx.application.Platform;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
@@ -35,20 +34,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
 class FormControllerValidateTest {
     private OtherFormController controller;
-
-    @BeforeAll
-    static void initFx() {
-        try {
-            Platform.startup(() -> {
-            });
-        } catch (IllegalStateException ignored) {
-            // JavaFX already initialized.
-        }
-        Res.setAndApplyLanguageTag("en");
-    }
 
     @BeforeEach
     void setUp() {
