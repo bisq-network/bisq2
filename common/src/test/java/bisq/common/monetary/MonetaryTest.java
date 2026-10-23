@@ -204,6 +204,18 @@ public class MonetaryTest {
     }
 
     @Test
+    void testParseRejectsTinyExponentsQuickly() {
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1E-99999999")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("-1E-99999999")));
+        assertTimeoutPreemptively(Duration.ofSeconds(5),
+                () -> assertThrows(IllegalArgumentException.class, () -> Fiat.parse("1E-99999999", "USD")));
+        assertEquals(0, Coin.parseBtc("0E-99999999").getValue());
+        assertEquals(100_000_000, Coin.parseBtc("100000000E-8").getValue());
+    }
+
+    @Test
     void testParseRejectsOverflow() {
         // 2^64 + 1 in the smallest unit, which wraps around to 1 if converted with BigDecimal.longValue()
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("184467440737.09551617", "BTC", 8));

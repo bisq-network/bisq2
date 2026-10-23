@@ -59,6 +59,10 @@ public abstract class Monetary implements Comparable<Monetary>, PersistableProto
         checkArgument((long) parsed.precision() - parsed.scale() + precision <= 19,
                 "Amount %s is out of range", string);
         BigDecimal value = parsed.movePointRight(precision);
+        // A non-zero value with more fraction digits than significant digits cannot be a whole number.
+        // Rejecting it here keeps setScale from building a huge power of ten for input like "1E-99999999".
+        checkArgument(value.signum() == 0 || value.scale() <= value.precision(),
+                "Amount %s has more than %s decimal places", string, precision);
         // setScale with UNNECESSARY throws if a non-zero digit would be dropped and accepts trailing zeros.
         // stripTrailingZeros is much slower for input with many trailing zeros.
         try {
