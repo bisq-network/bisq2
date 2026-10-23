@@ -71,6 +71,9 @@ public class AmountParserTest {
         assertThrows(IllegalArgumentException.class, () -> AmountParser.parse("92233720368.54775808", "BTC"));
         assertThrows(IllegalArgumentException.class, () -> AmountParser.parse("1E1000000000", "BTC"));
         assertThrows(NumberFormatException.class, () -> AmountParser.parse("abc", "BTC"));
+        // A double parser accepts these, the amount parser does not
+        assertThrows(NumberFormatException.class, () -> AmountParser.parse("NaN", "BTC"));
+        assertThrows(NumberFormatException.class, () -> AmountParser.parse("0.5d", "BTC"));
         assertThrows(NumberFormatException.class, () -> AmountParser.parse("", "BTC"));
     }
 }

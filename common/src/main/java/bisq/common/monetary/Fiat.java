@@ -56,14 +56,14 @@ public final class Fiat extends Monetary {
     }
 
     public static Fiat fromValue(long value, String code) {
-        return new Fiat(value, code, 4);
+        return new Fiat(value, code, PRECISION);
     }
 
     /**
      * @param faceValue Fiat value as face value. E.g. 123.45 USD
      */
     public static Fiat fromFaceValue(double faceValue, String code) {
-        return new Fiat(faceValue, code, 4);
+        return new Fiat(faceValue, code, PRECISION);
     }
 
     /**
