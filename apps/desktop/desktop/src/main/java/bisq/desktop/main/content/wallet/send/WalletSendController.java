@@ -71,6 +71,9 @@ public class WalletSendController implements Controller {
         String address = model.getAddress().get();
         Coin amount;
         try {
+            if (value == null || value.isBlank()) {
+                throw new IllegalArgumentException("No amount entered");
+            }
             amount = Coin.parseBtc(value);
         } catch (IllegalArgumentException e) {
             log.info("Invalid send amount {}: {}", value, e.getMessage());
