@@ -43,21 +43,15 @@ public final class Coin extends Monetary {
     }
 
     public static Coin parseBtc(String string) {
-        return Coin.fromValue(parseToValue(string, 8),
-                "BTC",
-                8);
+        return parse(string, "BTC");
     }
 
     public static Coin parseXmr(String string) {
-        return Coin.fromValue(parseToValue(string, 12),
-                "XMR",
-                12);
+        return parse(string, "XMR");
     }
 
     public static Coin parseBsq(String string) {
-        return Coin.fromValue(parseToValue(string, 2),
-                "BSQ",
-                2);
+        return parse(string, "BSQ");
     }
 
     // Unsafe method. We do not know the currency and the precision, just that it is not a fiat currency.
@@ -96,7 +90,7 @@ public final class Coin extends Monetary {
     }
 
     /**
-     * @param faceValue Coin value as face value. E.g. 1.123456789012 XMR
+     * @param faceValue Coin value as face value. E.g. 1.12 BSQ
      */
     public static Coin asBsqFromFaceValue(double faceValue) {
         return new Coin(faceValue, "BSQ", 2);

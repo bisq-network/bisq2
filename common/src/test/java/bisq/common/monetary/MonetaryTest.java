@@ -166,6 +166,19 @@ public class MonetaryTest {
     }
 
     @Test
+    void testParseBtcXmrAndBsqTakeThePrecisionFromTheAssetRepository() {
+        assertEquals(8, Coin.parseBtc("1").getPrecision());
+        assertEquals(12, Coin.parseXmr("1").getPrecision());
+        assertEquals(2, Coin.parseBsq("1").getPrecision());
+        assertEquals(100_000_000L, Coin.parseBtc("1").getValue());
+        assertEquals(1_000_000_000_000L, Coin.parseXmr("1").getValue());
+        assertEquals(150, Coin.parseBsq("1.5").getValue());
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBsq("1.123"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseBtc("1.123456789"));
+        assertThrows(IllegalArgumentException.class, () -> Coin.parseXmr("1.1234567890123"));
+    }
+
+    @Test
     void testParseRejectsFractionBeyondPrecision() {
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC", 8));
         assertThrows(IllegalArgumentException.class, () -> Coin.parse("0.123456789", "BTC"));
