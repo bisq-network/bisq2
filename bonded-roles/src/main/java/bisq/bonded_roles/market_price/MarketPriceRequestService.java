@@ -177,7 +177,7 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
                     String quoteCurrencyCode = isFiat ? currencyCode : "BTC";
                     PriceQuote priceQuote = PriceQuote.fromPrice(price, baseCurrencyCode, quoteCurrencyCode);
                     MarketPriceProvider marketPriceProvider = MarketPriceProvider.fromName(provider);
-                    MarketPriceProviderInfo marketPriceProviderInfo = new MarketPriceProviderInfo(marketPriceProvider, marketPriceProvider.getDisplayName().orElse(provider));
+                    MarketPriceProviderInfo marketPriceProviderInfo = new MarketPriceProviderInfo(marketPriceProvider, provider);
                     MarketPrice marketPrice = new MarketPrice(priceQuote,
                             timestamp,
                             marketPriceProviderInfo);

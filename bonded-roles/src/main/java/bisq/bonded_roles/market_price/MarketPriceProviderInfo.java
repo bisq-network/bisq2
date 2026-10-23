@@ -22,20 +22,33 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
-@Getter
+import java.util.Optional;
+
 @EqualsAndHashCode
 @ToString
 public class MarketPriceProviderInfo {
+    @Getter
     private final MarketPriceProvider marketPriceProvider;
-    private final String displayName;
+    // The name which a price node reported for a provider that MarketPriceProvider does not know. MarketPrice does not
+    // serialize it, so a market price from the network or from the persisted store does not have it.
+    private final Optional<String> unknownProviderName;
 
 
     public MarketPriceProviderInfo(MarketPriceProvider marketPriceProvider) {
-        this(marketPriceProvider, marketPriceProvider.getDisplayName().orElseGet(() -> Res.get("data.na")));
+        this.marketPriceProvider = marketPriceProvider;
+        this.unknownProviderName = Optional.empty();
     }
 
-    public MarketPriceProviderInfo(MarketPriceProvider marketPriceProvider, String displayName) {
+    public MarketPriceProviderInfo(MarketPriceProvider marketPriceProvider, String reportedProviderName) {
         this.marketPriceProvider = marketPriceProvider;
-        this.displayName = displayName;
+        this.unknownProviderName = marketPriceProvider == MarketPriceProvider.OTHER
+                ? Optional.of(reportedProviderName)
+                : Optional.empty();
+    }
+
+    public String getDisplayName() {
+        return marketPriceProvider.getDisplayName()
+                .or(() -> unknownProviderName)
+                .orElseGet(() -> Res.get("data.na"));
     }
 }
