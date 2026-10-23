@@ -72,9 +72,9 @@ public class WalletSendController implements Controller {
         Coin amount;
         try {
             amount = Coin.parseBtc(value);
-        } catch (RuntimeException e) {
-            log.warn("Invalid send amount {}", value, e);
-            UIThread.run(() -> new Popup().warning(Res.get("validation.invalidNumber")).show());
+        } catch (IllegalArgumentException e) {
+            log.info("Invalid send amount {}: {}", value, e.getMessage());
+            new Popup().warning(Res.get("validation.invalidNumber")).show();
             return;
         }
         walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount.getValue())
