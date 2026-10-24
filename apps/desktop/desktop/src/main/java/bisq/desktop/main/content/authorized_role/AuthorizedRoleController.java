@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.authorized_role;
 
-import bisq.bisq_easy.BisqEasyNotificationsService;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRole;
 import bisq.bonded_roles.bonded_role.AuthorizedBondedRolesService;
@@ -36,6 +35,9 @@ import bisq.desktop.main.content.authorized_role.moderator.ModeratorController;
 import bisq.desktop.main.content.authorized_role.release_manager.ReleaseManager;
 import bisq.desktop.main.content.authorized_role.security_manager.SecurityManager;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.notifications.Notification;
+import bisq.support.notifications.SupportNotification;
+import bisq.support.notifications.SupportNotificationsService;
 import bisq.user.identity.UserIdentity;
 import bisq.user.identity.UserIdentityService;
 import lombok.Getter;
@@ -51,9 +53,9 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
     private final AuthorizedRoleView view;
     private final AuthorizedBondedRolesService authorizedBondedRolesService;
     private final UserIdentityService userIdentityService;
-    private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private final SupportNotificationsService supportNotificationsService;
     private final ChatNotificationService chatNotificationService;
-    private Pin changedChatNotificationPin, bondedRolesPin, selectedUserIdentityPin;
+    private Pin changedChatNotificationPin, changedSupportNotificationPin, bondedRolesPin, selectedUserIdentityPin;
 
     public AuthorizedRoleController(ServiceProvider serviceProvider) {
         super(new AuthorizedRoleModel(List.of(BondedRoleType.values())), NavigationTarget.AUTHORIZED_ROLE, serviceProvider);
@@ -61,7 +63,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         authorizedBondedRolesService = serviceProvider.getBondedRolesService().getAuthorizedBondedRolesService();
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
-        bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        supportNotificationsService = serviceProvider.getSupportService().getSupportNotificationsService();
 
         view = new AuthorizedRoleView(model, this);
 
@@ -75,8 +77,13 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
         changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
 
+        supportNotificationsService.getNotConsumedNotifications().forEach(this::handleNotification);
+        changedSupportNotificationPin = supportNotificationsService.getChangedNotification().addObserver(this::handleNotification);
+
         bondedRolesPin = authorizedBondedRolesService.getBondedRoles().addObserver(this::onBondedRolesChanged);
         selectedUserIdentityPin = userIdentityService.getSelectedUserIdentityObservable().addObserver(e -> onBondedRolesChanged());
+
+        refreshMediatorNotifications();
     }
 
     @Override
@@ -84,6 +91,7 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         super.onDeactivate();
 
         changedChatNotificationPin.unbind();
+        changedSupportNotificationPin.unbind();
         bondedRolesPin.unbind();
         selectedUserIdentityPin.unbind();
     }
@@ -118,17 +126,33 @@ public class AuthorizedRoleController extends ContentTabController<AuthorizedRol
         });
     }
 
-    private void handleNotification(ChatNotification notification) {
-        if (notification == null) {
-            return;
-        }
+    private void handleNotification(Notification notification) {
         UIThread.run(() -> {
-            long numNotifications = bisqEasyNotificationsService.isMediatorsNotification(notification) ?
-                    bisqEasyNotificationsService.getMediatorsNotConsumedNotifications().count() :
-                    0;
+            if (notification instanceof ChatNotification) {
+                refreshMediatorNotifications();
+            }
 
+            if (notification instanceof SupportNotification supportNotification) {
+                switch (supportNotification.getType()) {
+                    case MODERATOR_NOTIFICATION -> {
+                        long num = supportNotificationsService.getNotConsumedModeratorNotifications().count();
+                        findTabButton(NavigationTarget.MODERATOR).ifPresent(tabButton ->
+                                tabButton.setNumNotifications(num));
+
+                    }
+                    case BISQ_EASY_MEDIATOR_NOTIFICATION, MU_SIG_MEDIATOR_NOTIFICATION -> {
+                        refreshMediatorNotifications();
+                    }
+                }
+            }
+        });
+    }
+
+    private void refreshMediatorNotifications() {
+        UIThread.run(() -> {
+            long numSupportNotifications = supportNotificationsService.getNotConsumedMediatorNotifications().count();
             findTabButton(NavigationTarget.MEDIATOR).ifPresent(tabButton ->
-                    tabButton.setNumNotifications(numNotifications));
+                    tabButton.setNumNotifications(numSupportNotifications));
         });
     }
 
