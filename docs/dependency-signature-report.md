@@ -24,8 +24,8 @@ Refresh the metadata before regenerating this report:
 | Modules using checksum-only artifacts only | 7 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 295 |
-| PGP-signed artifacts | 279 |
+| Verified artifacts | 299 |
+| PGP-signed artifacts | 283 |
 | Checksum-only artifacts | 16 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
@@ -273,12 +273,12 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `org.mockito:mockito-junit-jupiter:5.23.0` | direct | PGP signed | 1 signed / 0 checksum | `147B691A19097624902F4EA9689CBE64F4BC997F`<br>Szczepan Faber<br>`szczepiq@gmail.com`<br>created 2021-02-14 |
 | `org.objenesis:objenesis:3.3` | transitive | PGP signed | 2 signed / 0 checksum | `E85AED155021AF8A6C6B7A4A7C7D8456294423BA`<br>created 2010-05-13 |
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
-| `org.openjfx:javafx-base:21.0.11` | transitive | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-controls:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-graphics:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
-| `org.openjfx:javafx-media:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-base:21.0.13` | transitive | PGP signed | 2 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-controls:21.0.13` | direct | PGP signed | 2 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-graphics:21.0.13` | direct | PGP signed | 2 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-media:21.0.13` | direct | PGP signed | 2 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | checksum fallback | 0 signed / 3 checksum | - |
-| `org.openjfx:javafx-swing:21.0.11` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
+| `org.openjfx:javafx-swing:21.0.13` | direct | PGP signed | 1 signed / 0 checksum | `81CCDC71C7D61C179B27002D6A9FBE152D4C64D1`<br>created 2013-08-12 |
 | `org.opentest4j:opentest4j:1.3.0` | transitive | PGP signed | 1 signed / 0 checksum | `FF6E2C001948C5F2F38B0CC385911F425EC61B51`<br>Marc Philipp<br>`marc@junit.org`<br>created 2018-04-08 |
 | `org.osgi:org.osgi.core:6.0.0` | transitive | PGP signed | 1 signed / 0 checksum | `1AF010D408C1852AB6EFD4B651CDB4A9DAAC1CBC`<br>Raymond Auge (I love OSS!)<br>`rotty3000@gmail.com`<br>created 2014-07-09 |
 | `org.projectlombok:lombok:1.18.46` | direct | PGP signed | 1 signed / 0 checksum | `D421D1DF4570BFB13E485D0BF95ADD0A28D2F139`<br>created 2011-03-08 |
