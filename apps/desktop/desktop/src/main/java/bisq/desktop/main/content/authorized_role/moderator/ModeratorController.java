@@ -17,18 +17,23 @@
 
 package bisq.desktop.main.content.authorized_role.moderator;
 
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.main.content.authorized_role.info.RoleInfo;
+import bisq.support.SupportService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class ModeratorController implements Controller {
+    private final SupportService supportService;
     @Getter
     private final ModeratorView view;
+    private Pin changedModeratorNotificationPin;
 
     public ModeratorController(ServiceProvider serviceProvider) {
+        supportService = serviceProvider.getSupportService();
         ReportToModeratorTable reportToModeratorTable = new ReportToModeratorTable(serviceProvider);
         BannedUserProfileTable bannedUserProfileTable = new BannedUserProfileTable(serviceProvider);
         RoleInfo roleInfo = new RoleInfo(serviceProvider);
@@ -38,9 +43,17 @@ public class ModeratorController implements Controller {
 
     @Override
     public void onActivate() {
+        supportService.getSupportNotificationsService().consumeModeratorNotifications();
+
+        changedModeratorNotificationPin = supportService.getSupportNotificationsService().getChangedNotification().addObserver(notification -> {
+            if (notification != null && notification.isModeratorNotification() && notification.isNotConsumed()) {
+                supportService.getSupportNotificationsService().consumeNotification(notification);
+            }
+        });
     }
 
     @Override
     public void onDeactivate() {
+        changedModeratorNotificationPin.unbind();
     }
 }
