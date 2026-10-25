@@ -27,8 +27,6 @@ import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
@@ -92,13 +90,5 @@ public class BootstrapService extends BootstrapEventListener {
         if (torBootstrapEvent.isDoneEvent()) {
             countDownLatch.countDown();
         }
-    }
-
-    //todo Why do we check for the last timestamp at timeouts?
-    private boolean isBootstrapTimeoutTriggered() {
-        TorBootstrapEvent torBootstrapEvent = this.bootstrapEvent.get();
-        Instant timestamp = torBootstrapEvent.getTimestamp();
-        Instant bootstrapTimeoutAgo = Instant.now().minus(timeout, ChronoUnit.MILLIS);
-        return bootstrapTimeoutAgo.isAfter(timestamp);
     }
 }
