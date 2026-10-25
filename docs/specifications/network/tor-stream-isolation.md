@@ -126,7 +126,8 @@ Separate circuits prevent the attacks above. They do not remove every way to lin
   own circuit to that peer. Users with several profiles therefore create more circuits. Each HTTP
   connection also needs its own circuit.
 - **Configuration:** The SOCKS port flag `NoIsolateSOCKSAuth` disables this protection. It can be
-  set in the configuration of an external Tor or with a `torrc` override.
+  set in the configuration of an external Tor. The Tor library ignores a `torrc` override of
+  `SocksPort` for the embedded Tor, so the override cannot set it there.
 
 ## Compatibility and connection failures
 
