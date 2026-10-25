@@ -8,21 +8,47 @@ fun readPropertiesFile(filePath: String): Properties {
 }
 
 plugins {
-    id("bisq.java-library")
+    id("bisq.java-conventions")
     id("bisq.java-integration-tests")
     id("bisq.gradle.tor_binary.BisqTorBinaryPlugin")
 }
 
 val properties = readPropertiesFile("../../../gradle.properties")
-val bisqVersion: String = properties.getProperty("version", "unspecified")
+
+val torVersion: String = properties.getProperty("tor.version")
+    ?: throw GradleException("Tor version is not defined in gradle.properties")
 
 tor {
-    val torVersion = properties.getProperty("tor.version", "unspecified")
     version.set(torVersion)
+}
+
+/**
+ * Generates TorBuildVersion with the Tor version of gradle.properties. TorInstaller uses it to detect whether the
+ * installed Tor files are outdated.
+ */
+val generateTorBuildVersionClass by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/source/torBuildVersion")
+    inputs.property("torVersion", torVersion)
+    outputs.dir(outputDir)
+
+    doLast {
+        val versionFile = outputDir.get().file("bisq/network/tor/installer/TorBuildVersion.java").asFile
+        versionFile.parentFile.mkdirs()
+        versionFile.writeText("""
+            package bisq.network.tor.installer;
+
+            final class TorBuildVersion {
+                static final String TOR_VERSION = "$torVersion";
+            }
+        """.trimIndent())
+    }
 }
 
 sourceSets {
     main {
+        java {
+            srcDir(generateTorBuildVersionClass)
+        }
         resources {
             srcDir(layout.buildDirectory.file("generated/src/main/resources"))
         }
@@ -30,9 +56,9 @@ sourceSets {
 }
 
 dependencies {
-    implementation(project(":tor-common"))
+    api(platform("bisq:platform:${libs.versions.bisq.get()}"))
 
-    implementation("bisq:security:$bisqVersion")
+    implementation(project(":tor-common"))
 
     implementation(libs.typesafe.config)
 

@@ -17,7 +17,6 @@
 
 package bisq.network.tor.installer;
 
-import bisq.common.application.BuildVersion;
 import bisq.network.tor.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
@@ -28,7 +27,7 @@ import java.nio.file.Path;
 @Slf4j
 public class TorInstaller {
     // Internal marker for the installed bundle. Bump the suffix when bundled Tor packaging changes without a tor.version bump.
-    private static final String INSTALLATION_VERSION = BuildVersion.TOR_VERSION + "-bundle-1";
+    private static final String INSTALLATION_VERSION = TorBuildVersion.TOR_VERSION + "-bundle-1";
     private final Path torDirPath;
     private final Path versionFilePath;
 

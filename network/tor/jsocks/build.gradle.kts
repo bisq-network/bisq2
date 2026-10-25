@@ -1,3 +1,7 @@
 plugins {
-    id("bisq.java-library")
+    id("bisq.java-conventions")
+}
+
+dependencies {
+    api(platform("bisq:platform:${libs.versions.bisq.get()}"))
 }
