@@ -35,11 +35,19 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.zip.DeflaterOutputStream;
+import java.util.zip.InflaterInputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
+
+    // A cache file in the compressed format starts with this marker, followed by the deflate compressed output of
+    // imageToByteArray. A file in the older uncompressed format starts with the image width, which is never 0. So the
+    // first byte tells the two formats apart.
+    private static final byte[] COMPRESSED_FORMAT_MARKER = new byte[]{0, 1};
 
     public static Image composeImage(String[] paths, double size) {
         return composeImage(paths, size, size);
@@ -73,14 +81,45 @@ public class CatHashImageUtil {
     }
 
     public static Image readRawImage(Path filePath) throws IOException {
-        byte[] rawData = Files.readAllBytes(filePath);
-        checkArgument(rawData.length > 0, "rawData must not be empty at readRawImage");
-        return byteArrayToImage(rawData);
+        byte[] fileData = Files.readAllBytes(filePath);
+        checkArgument(fileData.length > 0, "fileData must not be empty at readRawImage");
+        if (isCompressedFormat(fileData)) {
+            return byteArrayToImage(decompress(fileData));
+        }
+
+        Image image = byteArrayToImage(fileData);
+        // Replace a file in the older uncompressed format, so that an existing cache also shrinks.
+        writeRawImage(image, filePath);
+        return image;
     }
 
     public static void writeRawImage(Image image, Path filePath) throws IOException {
         byte[] rawData = imageToByteArray(image);
-        FileMutatorUtils.writeToPath(rawData, filePath);
+        FileMutatorUtils.writeToPath(compress(rawData), filePath);
+    }
+
+    static boolean isCompressedFormat(byte[] fileData) {
+        return fileData.length > COMPRESSED_FORMAT_MARKER.length &&
+                Arrays.equals(fileData, 0, COMPRESSED_FORMAT_MARKER.length,
+                        COMPRESSED_FORMAT_MARKER, 0, COMPRESSED_FORMAT_MARKER.length);
+    }
+
+    static byte[] compress(byte[] rawData) throws IOException {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        byteArrayOutputStream.write(COMPRESSED_FORMAT_MARKER);
+        try (DeflaterOutputStream deflaterOutputStream = new DeflaterOutputStream(byteArrayOutputStream)) {
+            deflaterOutputStream.write(rawData);
+        }
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    static byte[] decompress(byte[] fileData) throws IOException {
+        ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(fileData,
+                COMPRESSED_FORMAT_MARKER.length,
+                fileData.length - COMPRESSED_FORMAT_MARKER.length);
+        try (InflaterInputStream inflaterInputStream = new InflaterInputStream(byteArrayInputStream)) {
+            return inflaterInputStream.readAllBytes();
+        }
     }
 
     public static Image byteArrayToImage(byte[] data) {
