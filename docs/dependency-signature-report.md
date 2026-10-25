@@ -1,6 +1,6 @@
 # Dependency Signature Report
 
-Generated from `gradle/verification-metadata.xml` after resolving 724 configurations.
+Generated from `gradle/verification-metadata.xml` after resolving 714 configurations.
 
 Signer metadata is loaded from `gradle/verification-keyring.keys`; names and emails come from the first OpenPGP user ID, and creation dates come from the public key packet.
 
@@ -19,19 +19,19 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 224 |
-| Modules with PGP-signed artifacts only | 217 |
+| Resolved external modules | 223 |
+| Modules with PGP-signed artifacts only | 216 |
 | Modules using checksum-only artifacts only | 7 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 329 |
-| PGP-signed artifacts | 313 |
+| Verified artifacts | 328 |
+| PGP-signed artifacts | 312 |
 | Checksum-only artifacts | 16 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
-| Signer keys found in exported keyring | 82 / 82 |
-| Signer keys with name or email | 51 / 82 |
-| Signer keys with creation date | 82 / 82 |
+| Signer keys found in exported keyring | 81 / 81 |
+| Signer keys with name or email | 50 / 81 |
+| Signer keys with creation date | 81 / 81 |
 
 ## Handling Transitive Dependencies
 
@@ -282,6 +282,5 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `org.testfx:openjfx-monocle:21.0.2` | direct | checksum fallback | 0 signed / 4 checksum | - |
 | `org.testfx:testfx-core:4.0.18` | transitive | checksum fallback | 0 signed / 3 checksum | - |
 | `org.testfx:testfx-junit5:4.0.18` | direct | checksum fallback | 0 signed / 3 checksum | - |
-| `org.tukaani:xz:1.12` | direct | PGP signed | 1 signed / 0 checksum | `3690C240CE51B4670D30AD1C38EE757D69184620`<br>Lasse Collin<br>`lasse.collin@tukaani.org`<br>created 2010-10-24 |
 | `org.vafer:jdependency:2.15` | transitive | PGP signed | 1 signed / 0 checksum | `79156E0351AF8604DE9B186B09A79E1E15A04694`<br>Torsten Curdt (Code Signing Key)<br>`tcurdt@vafer.org`<br>created 2021-02-10 |
 | `org.yaml:snakeyaml:2.6` | transitive | PGP signed | 1 signed / 0 checksum | `2FC53E6B1F681184F4CCD637F5C81DE10A0B8ECC`<br>created 2024-05-11 |

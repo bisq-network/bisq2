@@ -52,43 +52,4 @@ public class TorBootstrapEvent {
     public boolean isDoneEvent() {
         return tag.equals(DONE_TAG) || this.equals(CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
     }
-
-    public static boolean isBootstrapMessage(String type, String message) {
-        return type.equals(EventType.STATUS_CLIENT.name()) && message.contains("BOOTSTRAP");
-    }
-
-    public static TorBootstrapEvent fromEventMessage(String message) {
-        String[] keyValuePairs = message.split(" ");
-
-        int progress = -1;
-        String tag = "";
-        String summary = "";
-        for (String item : keyValuePairs) {
-            if (!item.contains("=")) {
-                continue;
-            }
-
-            String[] parts = item.split("=");
-            if (parts.length != 2) {
-                throw new IllegalStateException("Tor event key value pair has more than two '=' signs.");
-            }
-
-            String key = parts[0];
-            String value = parts[1];
-
-            switch (key) {
-                case "PROGRESS":
-                    progress = Integer.parseInt(value);
-                    break;
-                case "TAG":
-                    tag = value;
-                    break;
-                case "SUMMARY":
-                    summary = value;
-                    break;
-            }
-        }
-
-        return new TorBootstrapEvent(progress, tag, summary);
-    }
 }

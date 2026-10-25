@@ -34,12 +34,6 @@ dependencies {
 
     implementation("bisq:security:$bisqVersion")
 
-    implementation("network:network-identity:$bisqVersion")
-    implementation("network:socks5-socket-channel:$bisqVersion")
-
-    implementation(libs.bouncycastle)
-    implementation(libs.failsafe)
-    implementation(libs.tukaani)
     implementation(libs.typesafe.config)
 
     api(project(":jsocks"))
