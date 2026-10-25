@@ -30,8 +30,6 @@ import java.time.Instant;
 @EqualsAndHashCode
 public class TorBootstrapEvent {
     private static final String DONE_TAG = "done";
-    public static final TorBootstrapEvent CONNECT_TO_EXTERNAL_TOR = new TorBootstrapEvent(0, "", "Connect to external Tor");
-    public static final TorBootstrapEvent CONNECTION_TO_EXTERNAL_TOR_COMPLETED = new TorBootstrapEvent(20, "", "Connection to external Tor completed");
 
     private final int progress;
     private final String tag;
@@ -50,6 +48,6 @@ public class TorBootstrapEvent {
     }
 
     public boolean isDoneEvent() {
-        return tag.equals(DONE_TAG) || this.equals(CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
+        return tag.equals(DONE_TAG);
     }
 }

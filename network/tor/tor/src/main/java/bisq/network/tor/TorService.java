@@ -17,22 +17,18 @@
 
 package bisq.network.tor;
 
-import bisq.common.application.Service;
-import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
-import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
 import bisq.network.tor.controller.TorController;
-import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.installer.TorInstaller;
+import bisq.network.tor.onionservice.OnionServiceKey;
 import bisq.network.tor.process.EmbeddedTorProcess;
 import bisq.network.tor.process.control_port.ControlPortFileParser;
-import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -53,18 +49,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static bisq.network.tor.common.torrc.Torrc.Keys.CONTROL_PORT;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTHENTICATION;
 import static bisq.network.tor.common.torrc.Torrc.Keys.COOKIE_AUTH_FILE;
 import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
-public class TorService implements Service {
+public class TorService {
     private static final int RANDOM_PORT = 0;
     private static final long CONTROL_PORT_FILE_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(30);
     private static final long CONTROL_PORT_FILE_POLL_INTERVAL_MS = 100;
@@ -72,26 +68,26 @@ public class TorService implements Service {
     public static final String TOR_SKIP_LAUNCH = "TOR_SKIP_LAUNCH";
 
     private final TorTransportConfig transportConfig;
+    private final PlatformServices platformServices;
     private final Path torDataDirPath;
 
     private TorController torController;
     private final Set<String> publishedOnionServices = new CopyOnWriteArraySet<>();
+    // Written by initialize, read by the user interface
     @Getter
-    private final Observable<TorBootstrapEvent> bootstrapEvent = new Observable<>();
-    @Getter
-    private final Observable<Boolean> useExternalTor = new Observable<>();
+    private volatile boolean useExternalTor;
     private final AtomicBoolean isRunning = new AtomicBoolean();
 
     private Optional<EmbeddedTorProcess> torProcess = Optional.empty();
     private Optional<TorSocksProxyFactory> torSocksProxyFactory = Optional.empty();
     private final Map<String, String> externalTorConfigMap = new HashMap<>();
 
-    public TorService(TorTransportConfig transportConfig) {
+    public TorService(TorTransportConfig transportConfig, PlatformServices platformServices) {
         this.transportConfig = transportConfig;
+        this.platformServices = platformServices;
         this.torDataDirPath = transportConfig.getDataDirPath();
     }
 
-    @Override
     public CompletableFuture<Boolean> initialize() {
         boolean isNotRunning = isRunning.compareAndSet(false, true);
         if (!isNotRunning) {
@@ -102,10 +98,8 @@ public class TorService implements Service {
 
         readExternalTorConfigMap();
 
-        useExternalTor.set(evaluateUseExternalTor());
-        if (useExternalTor.get()) {
-            bootstrapEvent.set(TorBootstrapEvent.CONNECT_TO_EXTERNAL_TOR);
-
+        useExternalTor = evaluateUseExternalTor();
+        if (useExternalTor) {
             if (connectedToExternalTor(externalTorConfigMap)) {
                 log.info("External Tor will be used");
                 return CompletableFuture.completedFuture(true);
@@ -115,7 +109,7 @@ public class TorService implements Service {
                         "Please check the Bisq external_tor.config and the system Tor torrc config.");
             } else {
                 // In case connectedToExternalTor failed we try embedded Tor (if not running on Whonix)
-                useExternalTor.set(false);
+                useExternalTor = false;
             }
         }
 
@@ -136,7 +130,7 @@ public class TorService implements Service {
         if (torController != null) {
             torController.shutdown();
         }
-        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
+        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout());
 
         PasswordDigest hashedControlPassword = PasswordDigest.generateDigest();
         Map<String, String> torrcConfigMap = createTorrcConfigFile(torDataDirPath, hashedControlPassword);
@@ -151,7 +145,7 @@ public class TorService implements Service {
             throw new RuntimeException("Failed to delete tor control port file", e);
         }
 
-        var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath);
+        var embeddedTorProcess = new EmbeddedTorProcess(torBinaryPath, torDataDirPath, platformServices.getMyPid());
         torProcess = Optional.of(embeddedTorProcess);
         embeddedTorProcess.start();
 
@@ -185,7 +179,6 @@ public class TorService implements Service {
     }
 
     private boolean evaluateUseExternalTor() {
-        boolean useExternalTor = false;
         if (LinuxDistribution.isWhonix()) {
             log.info("Bisq runs on a Whonix system and use the Whonix system Tor");
             return true;
@@ -210,7 +203,6 @@ public class TorService implements Service {
         }
     }
 
-    @Override
     public CompletableFuture<Boolean> shutdown() {
         log.info("shutdown");
         return CompletableFuture.supplyAsync(() -> {
@@ -224,16 +216,16 @@ public class TorService implements Service {
             publishedOnionServices.clear();
             externalTorConfigMap.clear();
             return true;
-        }, commonForkJoinPool());
+        }, ForkJoinPool.commonPool());
     }
 
-    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
+    public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, OnionServiceKey onionServiceKey) {
         long ts = System.currentTimeMillis();
         try {
-            String onionAddress = torKeyPair.getOnionAddress();
+            String onionAddress = onionServiceKey.getOnionAddress();
             log.info("Publish onion service for address {}:{} (localPort={})", onionAddress, onionServicePort, localPort);
             if (!publishedOnionServices.contains(onionAddress)) {
-                torController.publish(torKeyPair, onionServicePort, localPort);
+                torController.publish(onionServiceKey, onionServicePort, localPort);
                 publishedOnionServices.add(onionAddress);
             }
 
@@ -247,18 +239,18 @@ public class TorService implements Service {
         }
     }
 
-    public CompletableFuture<ServerSocket> publishOnionServiceAndCreateServerSocket(int port, TorKeyPair torKeyPair) {
+    public CompletableFuture<ServerSocket> publishOnionServiceAndCreateServerSocket(int port, OnionServiceKey onionServiceKey) {
         long ts = System.currentTimeMillis();
         try {
             InetAddress bindAddress = !LinuxDistribution.isWhonix() ? Inet4Address.getLoopbackAddress()
                     : Inet4Address.getByName("0.0.0.0");
             var localServerSocket = new ServerSocket(RANDOM_PORT, 50, bindAddress);
 
-            String onionAddress = torKeyPair.getOnionAddress();
+            String onionAddress = onionServiceKey.getOnionAddress();
             log.info("Publish onion service for onion address {}:{}", onionAddress, port);
             if (!publishedOnionServices.contains(onionAddress)) {
                 int localPort = localServerSocket.getLocalPort();
-                torController.publish(torKeyPair, port, localPort);
+                torController.publish(onionServiceKey, port, localPort);
                 publishedOnionServices.add(onionAddress);
             }
 
@@ -304,7 +296,7 @@ public class TorService implements Service {
         if (torController != null) {
             torController.shutdown();
         }
-        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout(), bootstrapEvent);
+        torController = new TorController(transportConfig.getBootstrapTimeout(), transportConfig.getHsUploadTimeout());
         torController.initialize(controlPort);
 
         boolean isAuthenticated = false;
@@ -348,10 +340,7 @@ public class TorService implements Service {
             }
         }
 
-        // We do not call torController.bootstrap as we do not need to bootstrap Tor. Instead, we set the event to
-        // trigger the application state update.
-        bootstrapEvent.set(TorBootstrapEvent.CONNECTION_TO_EXTERNAL_TOR_COMPLETED);
-
+        // We do not call torController.bootstrap as we do not need to bootstrap Tor.
         int port = torController.getSocksPort();
         log.info("Tor control provided SOCKS port: {}", port);
         torSocksProxyFactory = Optional.of(new TorSocksProxyFactory(port));
@@ -448,7 +437,7 @@ public class TorService implements Service {
     }
 
     private boolean isTorRunning(String absoluteTorBinaryPath) {
-        return FacadeProvider.getJdkFacade().getProcessCommandStream().anyMatch(e -> e.equals(absoluteTorBinaryPath));
+        return platformServices.getProcessCommandStream().anyMatch(e -> e.equals(absoluteTorBinaryPath));
     }
 
     private void installTorIfNotUpToDate() {

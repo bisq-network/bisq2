@@ -17,8 +17,7 @@
 
 package bisq.network.tor.controller;
 
-import bisq.security.keys.TorKeyGeneration;
-import bisq.security.keys.TorKeyPair;
+import bisq.network.tor.onionservice.OnionServiceKey;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
@@ -82,12 +81,12 @@ class TorControlProtocolLoggingTest {
 
     @Test
     void addOnionDoesNotLogThePrivateKey() {
-        TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
-        String secretScalar = torKeyPair.getBase64SecretScalar();
-        String serviceId = torKeyPair.getOnionAddress().replace(".onion", "");
+        OnionServiceKey onionServiceKey = TestKeys.randomOnionServiceKey();
+        String secretScalar = onionServiceKey.getBase64SecretScalar();
+        String serviceId = onionServiceKey.getOnionAddress().replace(".onion", "");
         startControlServer(command -> "250-ServiceID=" + serviceId + "\r\n250 OK\r\n");
 
-        torControlProtocol.addOnion(torKeyPair, 9999, 12345);
+        torControlProtocol.addOnion(onionServiceKey, 9999, 12345);
 
         List<String> messages = loggedMessages();
         assertThat(messages).noneMatch(message -> message.contains(secretScalar));
@@ -98,15 +97,15 @@ class TorControlProtocolLoggingTest {
 
     @Test
     void replyWithPrivateKeyIsNotLogged() {
-        TorKeyPair torKeyPair = TorKeyGeneration.generateKeyPair();
-        String serviceId = torKeyPair.getOnionAddress().replace(".onion", "");
+        OnionServiceKey onionServiceKey = TestKeys.randomOnionServiceKey();
+        String serviceId = onionServiceKey.getOnionAddress().replace(".onion", "");
         // Tor sends a PrivateKey line if it generates the key (ADD_ONION NEW:...)
-        String generatedSecretScalar = TorKeyGeneration.generateKeyPair().getBase64SecretScalar();
+        String generatedSecretScalar = TestKeys.randomBase64SecretScalar();
         startControlServer(command -> "250-ServiceID=" + serviceId + "\r\n" +
                 "250-PrivateKey=ED25519-V3:" + generatedSecretScalar + "\r\n" +
                 "250 OK\r\n");
 
-        torControlProtocol.addOnion(torKeyPair, 9999, 12345);
+        torControlProtocol.addOnion(onionServiceKey, 9999, 12345);
 
         List<String> messages = loggedMessages();
         assertThat(messages).noneMatch(message -> message.contains(generatedSecretScalar));

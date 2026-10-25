@@ -31,8 +31,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import static bisq.common.facades.FacadeProvider.getJdkFacade;
-
 @Slf4j
 public class EmbeddedTorProcess {
     public static final String ARG_OWNER_PID = "__OwningControllerProcess";
@@ -43,11 +41,13 @@ public class EmbeddedTorProcess {
     private final Path torrcPath;
     private final Path stdoutLogPath;
     private final Path stderrLogPath;
+    private final String ownerPid;
     private Optional<Process> process = Optional.empty();
 
-    public EmbeddedTorProcess(Path torBinaryPath, Path torDataDirPath) {
+    public EmbeddedTorProcess(Path torBinaryPath, Path torDataDirPath, String ownerPid) {
         this.torBinaryPath = torBinaryPath;
         this.torDataDirPath = torDataDirPath;
+        this.ownerPid = ownerPid;
         this.torrcPath = torDataDirPath.resolve("torrc");
         this.stdoutLogPath = torDataDirPath.resolve("tor-stdout.log");
         this.stderrLogPath = torDataDirPath.resolve("tor-stderr.log");
@@ -57,7 +57,6 @@ public class EmbeddedTorProcess {
         createTorControlDirectory();
         String absoluteTorrcPathAsString = torrcPath.toAbsolutePath().toString();
 
-        String ownerPid = getJdkFacade().getMyPid();
         var processBuilder = new ProcessBuilder(
                 torBinaryPath.toAbsolutePath().toString(),
                 "--torrc-file", absoluteTorrcPathAsString,

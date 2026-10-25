@@ -4,7 +4,7 @@ import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescEventListener;
 import bisq.network.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.network.tor.controller.exceptions.CannotSendCommandToTorException;
-import bisq.security.keys.TorKeyPair;
+import bisq.network.tor.onionservice.OnionServiceKey;
 import com.google.common.io.BaseEncoding;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
@@ -122,8 +122,8 @@ public class TorControlProtocol implements AutoCloseable {
         }
     }
 
-    public void addOnion(TorKeyPair torKeyPair, int onionPort, int localPort) {
-        String base64SecretScalar = torKeyPair.getBase64SecretScalar();
+    public void addOnion(OnionServiceKey onionServiceKey, int onionPort, int localPort) {
+        String base64SecretScalar = onionServiceKey.getBase64SecretScalar();
         String command = "ADD_ONION " + "ED25519-V3:" + base64SecretScalar + " Port=" + onionPort + "," + localPort + "\r\n";
 
         sendCommand(command);
