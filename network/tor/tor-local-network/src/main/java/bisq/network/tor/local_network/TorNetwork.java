@@ -17,8 +17,7 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.common.file.FileMutatorUtils;
-import bisq.common.util.NetworkUtils;
+import bisq.network.tor.common.file.FileUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
@@ -64,8 +63,8 @@ public class TorNetwork {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname(nickname)
                 .dataDirPath(nodeDataDirPath)
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
                 .build();
         dirAuthFactory.createDirectoryAuthority(dirAuth, passphrase);
         directoryAuthorities.add(dirAuth);
@@ -84,8 +83,8 @@ public class TorNetwork {
                 .nickname(nickname)
                 .dataDirPath(nodeDataDirPath)
 
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
 
                 .build();
         relays.add(firstRelay);
@@ -103,8 +102,8 @@ public class TorNetwork {
                 .nickname(nickname)
                 .dataDirPath(nodeDataDirPath)
 
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
 
                 .build();
         clients.add(firstClient);
@@ -123,7 +122,7 @@ public class TorNetwork {
         }
 
         try {
-            FileMutatorUtils.createDirectory(nodeDataDirPath);
+            FileUtils.createDirectory(nodeDataDirPath);
         } catch (IOException e) {
             throw new IllegalStateException("Couldn't create data directory: " + nodeDataDirPath.toAbsolutePath(), e);
         }

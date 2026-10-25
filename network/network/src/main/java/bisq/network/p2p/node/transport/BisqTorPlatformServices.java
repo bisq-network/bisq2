@@ -17,13 +17,14 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.facades.FacadeProvider;
+import bisq.common.file.FileMutatorUtils;
 import bisq.network.tor.PlatformServices;
 
 import java.util.stream.Stream;
 
 /**
- * Passes the platform settings of the Bisq application to the Tor build. The JDK facade is read at each call, as
- * TorService did before, because the application sets it at startup.
+ * Passes the platform settings of the Bisq application to the Tor build. The settings are read at each call, as
+ * TorService did before, because the application sets them at startup.
  */
 class BisqTorPlatformServices implements PlatformServices {
     @Override
@@ -34,5 +35,10 @@ class BisqTorPlatformServices implements PlatformServices {
     @Override
     public Stream<String> getProcessCommandStream() {
         return FacadeProvider.getJdkFacade().getProcessCommandStream();
+    }
+
+    @Override
+    public boolean supportsPosixPermissions() {
+        return FileMutatorUtils.supportsPosixPermissions();
     }
 }

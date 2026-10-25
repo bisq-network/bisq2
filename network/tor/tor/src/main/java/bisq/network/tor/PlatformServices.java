@@ -29,4 +29,10 @@ public interface PlatformServices {
      * @return the executable paths of all running processes
      */
     Stream<String> getProcessCommandStream();
+
+    /**
+     * @return false if the Tor build must not set POSIX file permissions for the files and directories which it
+     * creates in the data directory of the host
+     */
+    boolean supportsPosixPermissions();
 }

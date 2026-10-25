@@ -17,7 +17,6 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.common.util.NetworkUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
@@ -43,8 +42,8 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDirPath(tempDirPath)
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
                 .build();
         new DirectoryAuthorityFactory().createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
@@ -61,8 +60,8 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_1")
                 .dataDirPath(firstDaDataDirPath)
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
                 .build();
         dirAuthFactory.createDirectoryAuthority(firstDirectoryAuthority, PASSPHRASE);
 
@@ -71,8 +70,8 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_2")
                 .dataDirPath(secondDaDataDirPath)
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
                 .build();
         dirAuthFactory.createDirectoryAuthority(secondDirectoryAuthority, PASSPHRASE);
 
@@ -81,8 +80,8 @@ public class DirectoryAuthorityTests {
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)
                 .nickname("DA_3")
                 .dataDirPath(thirdDaDataDirPath)
-                .orPort(NetworkUtils.findFreeSystemPort())
-                .dirPort(NetworkUtils.findFreeSystemPort())
+                .orPort(FreePorts.find())
+                .dirPort(FreePorts.find())
                 .build();
         dirAuthFactory.createDirectoryAuthority(thirdDirectoryAuthority, PASSPHRASE);
 

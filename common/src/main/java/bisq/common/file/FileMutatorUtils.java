@@ -82,6 +82,14 @@ public class FileMutatorUtils {
     }
 
     /**
+     * @return the setting of setup, or true if setup was not called. POSIX permissions are only set if the file
+     * system also supports them.
+     */
+    public static boolean supportsPosixPermissions() {
+        return supportsPosixPermissions;
+    }
+
+    /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
      * thus leading to a memory leak.
      * See: <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633">...</a>

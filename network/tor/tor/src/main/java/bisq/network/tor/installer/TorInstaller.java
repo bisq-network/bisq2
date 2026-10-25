@@ -18,8 +18,7 @@
 package bisq.network.tor.installer;
 
 import bisq.common.application.BuildVersion;
-import bisq.common.file.FileMutatorUtils;
-import bisq.common.file.FileReaderUtils;
+import bisq.network.tor.common.file.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -61,7 +60,7 @@ public class TorInstaller {
         if (!Files.exists(versionFilePath)) {
             return false;
         }
-        String storedInstallationVersion = FileReaderUtils.readUTF8String(versionFilePath);
+        String storedInstallationVersion = FileUtils.readUTF8String(versionFilePath);
         return INSTALLATION_VERSION.equals(storedInstallationVersion);
     }
 
@@ -71,7 +70,7 @@ public class TorInstaller {
             log.info("Tor files installed to {}", torDirPath.toAbsolutePath());
             // Only if we have successfully extracted all files we write our version file which is used to
             // check if we need to call installFiles.
-            FileMutatorUtils.writeToPath(INSTALLATION_VERSION, versionFilePath);
+            FileUtils.writeToPath(INSTALLATION_VERSION, versionFilePath);
         } catch (IOException e) {
             deleteVersionFile();
             throw e;
