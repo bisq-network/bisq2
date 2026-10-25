@@ -18,7 +18,7 @@
 package bisq.network.tor.controller;
 
 import bisq.common.threading.ExecutorFactory;
-import bisq.common.util.StringUtils;
+import bisq.network.tor.common.util.StringUtils;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
 import bisq.network.tor.controller.events.listener.FilteredHsDescEventListener;

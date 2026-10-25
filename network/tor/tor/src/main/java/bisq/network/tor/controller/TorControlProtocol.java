@@ -1,11 +1,11 @@
 package bisq.network.tor.controller;
 
-import bisq.common.encoding.Hex;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
 import bisq.network.tor.controller.events.listener.HsDescEventListener;
 import bisq.network.tor.controller.exceptions.CannotConnectWithTorException;
 import bisq.network.tor.controller.exceptions.CannotSendCommandToTorException;
 import bisq.security.keys.TorKeyPair;
+import com.google.common.io.BaseEncoding;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -92,7 +92,7 @@ public class TorControlProtocol implements AutoCloseable {
 
     public void authenticate(PasswordDigest passwordDigest) {
         byte[] secret = passwordDigest.getSecret();
-        String secretHex = Hex.encode(secret);
+        String secretHex = BaseEncoding.base16().lowerCase().encode(secret);
         String command = "AUTHENTICATE " + secretHex + "\r\n";
 
         sendCommand(command);
@@ -108,7 +108,7 @@ public class TorControlProtocol implements AutoCloseable {
     }
 
     public void authenticate(byte[] authCookie) {
-        String authCookieAsHex = Hex.encode(authCookie);
+        String authCookieAsHex = BaseEncoding.base16().lowerCase().encode(authCookie);
         String command = "AUTHENTICATE " + authCookieAsHex + "\r\n";
         sendCommand(command);
         String reply = receiveReply().findFirst().orElseThrow();
