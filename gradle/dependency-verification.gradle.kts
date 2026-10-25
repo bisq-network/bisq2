@@ -3,7 +3,9 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier
 import org.gradle.api.artifacts.verification.DependencyVerificationMode
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
+import org.gradle.kotlin.dsl.newInstance
 import org.gradle.kotlin.dsl.register
+import org.gradle.process.ExecOperations
 import org.w3c.dom.Element
 import org.w3c.dom.NodeList
 import java.io.File
@@ -14,11 +16,18 @@ import java.util.Base64
 import java.util.Locale
 import java.util.TreeMap
 import java.util.TreeSet
+import javax.inject.Inject
 import javax.xml.XMLConstants
 import javax.xml.parsers.DocumentBuilderFactory
 
 val accessExternalDtd = "http://javax.xml.XMLConstants/property/accessExternalDTD"
 val accessExternalSchema = "http://javax.xml.XMLConstants/property/accessExternalSchema"
+
+// Gradle 9 removed Project.exec. A script gets ExecOperations only through an object which Gradle creates.
+interface InjectedExecOperations {
+    @get:Inject
+    val execOperations: ExecOperations
+}
 
 data class OpenPgpPacket(val tag: Int, val body: ByteArray)
 data class ResolvableConfiguration(val projectPath: String, val configuration: Configuration)
@@ -709,10 +718,11 @@ if (isBisqRepositoryRootBuild) {
         inputs.file(dependencyVerificationMetadata)
         outputs.file(dependencyVerificationKeyring)
         outputs.upToDateWhen { false }
+        val execOperations = objects.newInstance<InjectedExecOperations>().execOperations
 
         doLast {
             val previousModified = if (dependencyVerificationKeyring.exists()) dependencyVerificationKeyring.lastModified() else 0L
-            val result = project.exec {
+            val result = execOperations.exec {
                 workingDir = bisqRepositoryRoot
                 commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
                 isIgnoreExitValue = true
