@@ -1,9 +1,7 @@
 package bisq.network.tor.controller;
 
-import bisq.common.observable.Observable;
-import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.exceptions.TorBootstrapFailedException;
-import bisq.security.keys.TorKeyPair;
+import bisq.network.tor.onionservice.OnionServiceKey;
 import lombok.extern.slf4j.Slf4j;
 import net.freehaven.tor.control.PasswordDigest;
 
@@ -18,17 +16,15 @@ public class TorController {
     private final TorControlProtocol torControlProtocol = new TorControlProtocol();
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
-    private final Observable<TorBootstrapEvent> bootstrapEvent;
     private final long isOnlineTimeout = TimeUnit.SECONDS.toMillis(30); // in ms
     private final Map<String, PublishOnionAddressService> publishOnionAddressServiceMap = new ConcurrentHashMap<>();
     private final Map<String, OnionServiceOnlineStateService> onionServiceOnlineStateServiceMap = new ConcurrentHashMap<>();
     private Optional<BootstrapService> bootstrapService = Optional.empty();
     private volatile boolean isShutdownInProgress;
 
-    public TorController(int bootstrapTimeout, int hsUploadTimeout, Observable<TorBootstrapEvent> bootstrapEvent) {
+    public TorController(int bootstrapTimeout, int hsUploadTimeout) {
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;
-        this.bootstrapEvent = bootstrapEvent;
     }
 
     public void initialize(int controlPort) {
@@ -84,29 +80,29 @@ public class TorController {
             return bootstrapService.get().getFuture().get();
         }
 
-        BootstrapService service = new BootstrapService(torControlProtocol, bootstrapTimeout, bootstrapEvent);
+        BootstrapService service = new BootstrapService(torControlProtocol, bootstrapTimeout);
         bootstrapService = Optional.of(service);
         CompletableFuture<Void> future = service.bootstrap();
         future.whenComplete((nil, throwable) -> bootstrapService = Optional.empty());
         return future;
     }
 
-    public void publish(TorKeyPair torKeyPair, int onionServicePort, int localPort) throws InterruptedException {
+    public void publish(OnionServiceKey onionServiceKey, int onionServicePort, int localPort) throws InterruptedException {
         if (isShutdownInProgress) {
             return;
         }
-        publishAsync(torKeyPair, onionServicePort, localPort).join();
+        publishAsync(onionServiceKey, onionServicePort, localPort).join();
     }
 
-    public CompletableFuture<Void> publishAsync(TorKeyPair torKeyPair,
+    public CompletableFuture<Void> publishAsync(OnionServiceKey onionServiceKey,
                                                 int onionServicePort,
                                                 int localPort) {
-        String onionAddress = torKeyPair.getOnionAddress();
+        String onionAddress = onionServiceKey.getOnionAddress();
         if (publishOnionAddressServiceMap.containsKey(onionAddress) && publishOnionAddressServiceMap.get(onionAddress).getFuture().isPresent()) {
             return publishOnionAddressServiceMap.get(onionAddress).getFuture().get();
         }
 
-        PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, torKeyPair);
+        PublishOnionAddressService publishOnionAddressService = new PublishOnionAddressService(torControlProtocol, hsUploadTimeout, onionServiceKey);
         CompletableFuture<Void> future = publishOnionAddressService.publish(onionServicePort, localPort);
         future.whenComplete((nil, throwable) -> publishOnionAddressServiceMap.remove(onionAddress));
         publishOnionAddressServiceMap.put(onionAddress, publishOnionAddressService);

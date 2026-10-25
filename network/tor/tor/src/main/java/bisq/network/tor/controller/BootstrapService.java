@@ -17,7 +17,6 @@
 
 package bisq.network.tor.controller;
 
-import bisq.common.observable.Observable;
 import bisq.network.tor.controller.events.events.TorBootstrapEvent;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.listener.BootstrapEventListener;
@@ -39,17 +38,13 @@ public class BootstrapService extends BootstrapEventListener {
     private final TorControlProtocol torControlProtocol;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     private final long timeout;
-    private final Observable<TorBootstrapEvent> bootstrapEvent;
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
-    public BootstrapService(TorControlProtocol torControlProtocol,
-                            long timeout,
-                            Observable<TorBootstrapEvent> bootstrapEvent) {
+    public BootstrapService(TorControlProtocol torControlProtocol, long timeout) {
         super(EventType.STATUS_CLIENT);
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
-        this.bootstrapEvent = bootstrapEvent;
     }
 
     public CompletableFuture<Void> bootstrap() {
@@ -86,7 +81,6 @@ public class BootstrapService extends BootstrapEventListener {
     @Override
     public void onBootstrapStatusEvent(TorBootstrapEvent torBootstrapEvent) {
         log.info("Tor bootstrap event: {}", torBootstrapEvent);
-        this.bootstrapEvent.set(torBootstrapEvent);
         if (torBootstrapEvent.isDoneEvent()) {
             countDownLatch.countDown();
         }

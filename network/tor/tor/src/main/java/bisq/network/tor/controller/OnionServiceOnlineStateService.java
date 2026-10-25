@@ -17,13 +17,13 @@
 
 package bisq.network.tor.controller;
 
-import bisq.common.threading.DiscardOldestPolicy;
-import bisq.common.threading.ExecutorFactory;
 import bisq.network.tor.common.util.StringUtils;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
 import bisq.network.tor.controller.events.events.HsDescFailedEvent;
 import bisq.network.tor.controller.events.listener.FilteredHsDescEventListener;
+import com.google.common.util.concurrent.MoreExecutors;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,6 +32,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
@@ -51,15 +52,12 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
         this.torControlProtocol = torControlProtocol;
         this.onionAddress = onionAddress;
         this.timeout = timeout;
-        int maxPoolSize = 10;
         String name = "OnionServiceOnlineStateService-" + StringUtils.truncate(onionAddress, 12);
-        int queueCapacity = 20;
-        executor = ExecutorFactory.boundedCachedPool(name,
-                1,
-                maxPoolSize,
-                5,
-                queueCapacity,
-                new DiscardOldestPolicy(name, queueCapacity, maxPoolSize));
+        executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                .setNameFormat(name + "-%d")
+                .setDaemon(true)
+                .setPriority(Thread.NORM_PRIORITY)
+                .build());
     }
 
     public CompletableFuture<Boolean> isOnionServiceOnlineAsync() {
@@ -86,6 +84,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
                 }, executor)
                 .whenComplete((isOnline, throwable) -> {
                     torControlProtocol.removeHsDescEventListener(this);
+                    executor.shutdown();
                 }));
         return future.get();
     }
@@ -95,7 +94,7 @@ public class OnionServiceOnlineStateService extends FilteredHsDescEventListener 
         if (countDownLatch.getCount() > 0) {
             countDownLatch.countDown();
         }
-        ExecutorFactory.shutdownAndAwaitTermination(executor);
+        MoreExecutors.shutdownAndAwaitTermination(executor, 100, TimeUnit.MILLISECONDS);
     }
 
     @Override

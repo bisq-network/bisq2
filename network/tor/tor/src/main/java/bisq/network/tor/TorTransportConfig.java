@@ -17,7 +17,6 @@
 
 package bisq.network.tor;
 
-import bisq.common.network.TransportConfig;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import com.typesafe.config.ConfigList;
 import com.typesafe.config.ConfigValue;
@@ -37,19 +36,15 @@ import java.util.concurrent.TimeUnit;
 @Getter
 @ToString
 @EqualsAndHashCode
-public class TorTransportConfig implements TransportConfig {
+public class TorTransportConfig {
     public static TorTransportConfig from(Path dataDirPath, com.typesafe.config.Config config) {
         return new TorTransportConfig(
                 dataDirPath,
-                config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("bootstrapTimeout")),
                 (int) TimeUnit.SECONDS.toMillis(config.getInt("hsUploadTimeout")),
-                (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                 config.getBoolean("testNetwork"),
                 parseDirectoryAuthorities(config.getList("directoryAuthorities")),
                 parseTorrcOverrideConfig(config.getConfig("torrcOverrides")),
-                config.getInt("sendMessageThrottleTime"),
-                config.getInt("receiveMessageThrottleTime"),
                 config.getBoolean("useExternalTor")
         );
     }
@@ -88,38 +83,26 @@ public class TorTransportConfig implements TransportConfig {
     }
 
     private final Path dataDirPath;
-    private final int defaultNodePort;
     private final int bootstrapTimeout; // in ms
     private final int hsUploadTimeout; // in ms
-    private final int socketTimeout; // in ms
     private final boolean isTestNetwork;
     private final Set<DirectoryAuthority> directoryAuthorities;
     private final Map<String, String> torrcOverrides;
-    private final int sendMessageThrottleTime;
-    private final int receiveMessageThrottleTime;
     private final boolean useExternalTor;
 
     public TorTransportConfig(Path dataDirPath,
-                              int defaultNodePort,
                               int bootstrapTimeout,
                               int hsUploadTimeout,
-                              int socketTimeout,
                               boolean isTestNetwork,
                               Set<DirectoryAuthority> directoryAuthorities,
                               Map<String, String> torrcOverrides,
-                              int sendMessageThrottleTime,
-                              int receiveMessageThrottleTime,
                               boolean useExternalTor) {
         this.dataDirPath = dataDirPath;
-        this.defaultNodePort = defaultNodePort;
         this.bootstrapTimeout = bootstrapTimeout;
         this.hsUploadTimeout = hsUploadTimeout;
-        this.socketTimeout = socketTimeout;
         this.isTestNetwork = isTestNetwork;
         this.directoryAuthorities = directoryAuthorities;
         this.torrcOverrides = torrcOverrides;
-        this.sendMessageThrottleTime = sendMessageThrottleTime;
-        this.receiveMessageThrottleTime = receiveMessageThrottleTime;
         this.useExternalTor = useExternalTor;
     }
 }

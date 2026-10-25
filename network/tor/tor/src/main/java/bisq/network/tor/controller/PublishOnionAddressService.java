@@ -17,13 +17,13 @@
 
 package bisq.network.tor.controller;
 
-import bisq.common.threading.ExecutorFactory;
 import bisq.network.tor.common.util.StringUtils;
 import bisq.network.tor.controller.events.events.EventType;
 import bisq.network.tor.controller.events.events.HsDescEvent;
 import bisq.network.tor.controller.events.listener.FilteredHsDescEventListener;
 import bisq.network.tor.controller.exceptions.HsDescUploadFailedException;
-import bisq.security.keys.TorKeyPair;
+import bisq.network.tor.onionservice.OnionServiceKey;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,31 +32,36 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 @Slf4j
 public class PublishOnionAddressService extends FilteredHsDescEventListener {
     private final TorControlProtocol torControlProtocol;
     private final int timeout;
-    private final TorKeyPair torKeyPair;
+    private final OnionServiceKey onionServiceKey;
     private final CountDownLatch countDownLatch = new CountDownLatch(1);
     @Getter
     private Optional<CompletableFuture<Void>> future = Optional.empty();
 
-    public PublishOnionAddressService(TorControlProtocol torControlProtocol, int timeout, TorKeyPair torKeyPair) {
-        super(EventType.HS_DESC, torKeyPair.getOnionAddress(), Set.of(HsDescEvent.Action.UPLOAD));
+    public PublishOnionAddressService(TorControlProtocol torControlProtocol, int timeout, OnionServiceKey onionServiceKey) {
+        super(EventType.HS_DESC, onionServiceKey.getOnionAddress(), Set.of(HsDescEvent.Action.UPLOAD));
 
         this.torControlProtocol = torControlProtocol;
         this.timeout = timeout;
-        this.torKeyPair = torKeyPair;
+        this.onionServiceKey = onionServiceKey;
     }
 
     public CompletableFuture<Void> publish(int onionServicePort, int localPort) {
-        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("PublishOnionAddressService");
+        ExecutorService executor = Executors.newSingleThreadExecutor(new ThreadFactoryBuilder()
+                .setNameFormat("PublishOnionAddressService")
+                .setDaemon(true)
+                .setPriority(Thread.NORM_PRIORITY)
+                .build());
         future = Optional.of(CompletableFuture.runAsync(() -> {
                     torControlProtocol.addHsDescEventListener(this);
 
-                    torControlProtocol.addOnion(torKeyPair, onionServicePort, localPort);
+                    torControlProtocol.addOnion(onionServiceKey, onionServicePort, localPort);
 
                     boolean isSuccess;
                     try {
@@ -73,7 +78,7 @@ public class PublishOnionAddressService extends FilteredHsDescEventListener {
                 }, executor)
                 .whenComplete((nil, throwable) -> {
                             torControlProtocol.removeHsDescEventListener(this);
-                            ExecutorFactory.shutdownAndAwaitTermination(executor);
+                            executor.shutdown();
                         }
                 ));
         return future.get();

@@ -17,7 +17,6 @@
 
 package bisq.network.tor.controller;
 
-import bisq.security.keys.TorKeyGeneration;
 import com.google.common.io.BaseEncoding;
 import net.freehaven.tor.control.PasswordDigest;
 import org.junit.jupiter.api.Test;
@@ -28,7 +27,7 @@ class TorControlLogFormatTest {
     @Test
     void addOnionHidesPrivateKeyAndKeepsPortMapping() {
         // The base64 form of the 64 byte secret scalar ends with "==", so a parser which splits at '=' would leak it
-        String secretScalar = TorKeyGeneration.generateKeyPair().getBase64SecretScalar();
+        String secretScalar = TestKeys.randomBase64SecretScalar();
         String command = "ADD_ONION ED25519-V3:" + secretScalar + " Port=9999,12345\r\n";
 
         String loggable = TorControlLogFormat.toLoggableCommand(command);
@@ -100,7 +99,7 @@ class TorControlLogFormatTest {
 
     @Test
     void replyDataWithOtherKeysIsHidden() {
-        String secretScalar = TorKeyGeneration.generateKeyPair().getBase64SecretScalar();
+        String secretScalar = TestKeys.randomBase64SecretScalar();
 
         assertThat(TorControlLogFormat.toLoggableReply("250-PrivateKey=ED25519-V3:" + secretScalar))
                 .isEqualTo("250-PrivateKey=[hidden]");
