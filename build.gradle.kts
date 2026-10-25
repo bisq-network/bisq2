@@ -30,7 +30,8 @@ data class CompositeBuild(
 val compositeBuilds = listOf(
     CompositeBuild(file("build-logic"), ":build-logic"),
     CompositeBuild(file("network"), ":network"),
-    CompositeBuild(file("network/tor"), ":network:tor"),
+    CompositeBuild(file("tor"), ":tor"),
+    CompositeBuild(file("tor/build-logic"), ":tor:build-logic"),
     CompositeBuild(file("apps"), ":apps"),
     CompositeBuild(file("apps/desktop"), ":apps:desktop"),
 )
@@ -1632,7 +1633,7 @@ tasks.register("publishAll") {
             ":i18n:publishToMavenLocal",
             ":identity:publishToMavenLocal",
             ":network:publishToMavenLocal",
-            ":network:tor:publishToMavenLocal",
+            ":tor:publishToMavenLocal",
             ":notifications:publishToMavenLocal",
             ":offer:publishToMavenLocal",
             ":persistence:publishToMavenLocal",

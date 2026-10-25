@@ -2,7 +2,7 @@ pluginManagement {
     repositories {
         gradlePluginPortal()
     }
-    includeBuild("../../build-logic")
+    includeBuild("build-logic")
 }
 
 plugins {
@@ -22,17 +22,16 @@ toolchainManagement {
 dependencyResolutionManagement {
     versionCatalogs {
         create("libs") {
-            from(files("../../gradle/libs.versions.toml"))
+            from(files("../gradle/libs.versions.toml"))
         }
     }
 }
-
-includeBuild("../..")
 
 include("tor-common")
 include("jsocks")
 include("jtorctl")
 include("tor")
 include("tor-local-network")
+include("tor-platform")
 
 rootProject.name = "tor"

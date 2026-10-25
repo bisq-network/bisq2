@@ -38,7 +38,7 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
 
 - The bundle of Tor 15.0.25 is signed by subkey `022DA248432D2A0E0F54E65E316C1FACD62D07D9`, which is bound for signing
   and not revoked, so its verification passes. The procedure for a new Tor version and key refresh is in
-  `build-logic/tor-binary/README.md`.
+  `tor/build-logic/tor-binary/README.md`.
 
 ## Known limitations
 

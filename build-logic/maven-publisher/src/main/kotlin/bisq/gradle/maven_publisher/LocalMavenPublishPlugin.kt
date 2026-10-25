@@ -19,7 +19,7 @@ import java.util.*
 class LocalMavenPublishPlugin : Plugin<Project> {
     companion object {
         const val DEFAULT_GROUP = "bisq"
-        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("tor", "network")
+        val COMPOSITE_PROJECTS_TO_INCLUDE = listOf("network")
     }
 
     private var rootVersion = "unspecified"
@@ -167,12 +167,6 @@ class LocalMavenPublishPlugin : Plugin<Project> {
     }
 
     private fun getRootGradlePropertiesFile(project: Project): File {
-        if (COMPOSITE_PROJECTS_TO_INCLUDE.contains(project.name) && project.childProjects.isNotEmpty()) {
-            return when (project.name) {
-                "tor" -> project.projectDir.parentFile.parentFile
-                else -> project.projectDir.parentFile
-            }
-        }
         return project.projectDir.parentFile
     }
 
