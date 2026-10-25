@@ -17,7 +17,7 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.common.file.FileMutatorUtils;
+import bisq.network.tor.common.file.FileUtils;
 import bisq.network.tor.local_network.da.keygen.process.DirectoryAuthorityKeyGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -31,7 +31,7 @@ public class DirectoryAuthorityKeyGenerationTests {
     @Test
     public void generateKeys(@TempDir Path dataDirPath) throws IOException, InterruptedException {
         Path keysPath = dataDirPath.resolve("keys");
-        FileMutatorUtils.createDirectories(keysPath);
+        FileUtils.createDirectories(keysPath);
 
         var directoryAuthority = TorNode.builder()
                 .type(TorNode.Type.DIRECTORY_AUTHORITY)

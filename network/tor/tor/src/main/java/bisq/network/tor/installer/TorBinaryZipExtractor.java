@@ -17,9 +17,9 @@
 
 package bisq.network.tor.installer;
 
-import bisq.common.archive.ZipFileExtractionFailedException;
-import bisq.common.archive.ZipFileExtractor;
-import bisq.common.platform.OS;
+import bisq.network.tor.common.archive.ZipFileExtractionFailedException;
+import bisq.network.tor.common.archive.ZipFileExtractor;
+import bisq.network.tor.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;

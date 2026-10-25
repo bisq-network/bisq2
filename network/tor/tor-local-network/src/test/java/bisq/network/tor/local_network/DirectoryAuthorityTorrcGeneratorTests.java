@@ -17,7 +17,7 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.common.file.FileMutatorUtils;
+import bisq.network.tor.common.file.FileUtils;
 import bisq.network.tor.common.torrc.DirectoryAuthority;
 import bisq.network.tor.common.torrc.TorrcConfigGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
@@ -42,7 +42,7 @@ public class DirectoryAuthorityTorrcGeneratorTests {
     @Test
     void basicTest(@TempDir Path tempDirPath) throws IOException {
         Path daAPath = tempDirPath.resolve("DA_A");
-        FileMutatorUtils.createDirectory(daAPath);
+        FileUtils.createDirectory(daAPath);
 
         TorNode firstDirAuth = spy(
                 TorNode.builder()
