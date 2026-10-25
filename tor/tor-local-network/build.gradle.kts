@@ -9,7 +9,7 @@ application {
 }
 
 dependencies {
-    api(platform("bisq:platform:${libs.versions.bisq.get()}"))
+    api(platform(project(":tor-platform")))
 
     implementation(project(":tor-common"))
     implementation(project(":tor"))

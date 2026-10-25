@@ -109,8 +109,8 @@ and run Bisq's verifier on the bundle for the build machine's platform:
 
 ```bash
 cp "$tor_key_dir/tor-key.asc" \
-    'build-logic/tor-binary/src/main/resources/Tor_Browser_Developers_(signing_key).asc'
-./gradlew :network:tor:tor:verifyTorBinary
+    'tor/build-logic/tor-binary/src/main/resources/Tor_Browser_Developers_(signing_key).asc'
+./gradlew :tor:tor:verifyTorBinary
 ```
 
 The Gradle task must finish successfully. Keep the pinned primary fingerprint

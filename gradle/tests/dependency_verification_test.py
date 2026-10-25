@@ -13,12 +13,13 @@ import zipfile
 
 REPOSITORY = Path(__file__).resolve().parents[2]
 BUILDS = {
-    "": ["build-logic", "apps", "network"],
+    "": ["build-logic", "apps", "network", "tor"],
     "build-logic": [],
     "apps": ["..", "desktop"],
     "apps/desktop": ["../.."],
-    "network": ["..", "tor"],
-    "network/tor": ["../.."],
+    "network": [".."],
+    "tor": ["build-logic"],
+    "tor/build-logic": [],
 }
 RESOLVER = "resolveAndVerifyDependenciesForCurrentBuild"
 

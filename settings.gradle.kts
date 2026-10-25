@@ -53,3 +53,4 @@ include("wallet")
 
 includeBuild("apps")
 includeBuild("network")
+includeBuild("tor")

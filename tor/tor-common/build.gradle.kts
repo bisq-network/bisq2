@@ -4,5 +4,5 @@ plugins {
 }
 
 dependencies {
-    api(platform("bisq:platform:${libs.versions.bisq.get()}"))
+    api(platform(project(":tor-platform")))
 }

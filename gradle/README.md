@@ -39,7 +39,7 @@ The committed verification files are:
 - `gradle/dependency-checksum-fallback-allowlist.tsv`
 
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
-including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `network/tor` included builds.
+including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `tor` included builds.
 
 The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
 `.gradle/dependency-verification/inventory.tsv` relative to its build root. These inventories survive `clean` and
