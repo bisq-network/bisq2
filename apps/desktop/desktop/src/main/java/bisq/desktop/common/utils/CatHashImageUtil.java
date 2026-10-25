@@ -28,6 +28,7 @@ import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.image.WritablePixelFormat;
 import javafx.scene.paint.Color;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -41,6 +42,7 @@ import java.util.zip.InflaterInputStream;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
+@Slf4j
 public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
 
@@ -89,7 +91,12 @@ public class CatHashImageUtil {
 
         Image image = byteArrayToImage(fileData);
         // Replace a file in the older uncompressed format, so that an existing cache also shrinks.
-        writeRawImage(image, filePath);
+        // If that fails (e.g. the disk is full), we still return the image we have already read.
+        try {
+            writeRawImage(image, filePath);
+        } catch (IOException e) {
+            log.warn("Converting cat hash cache file to the compressed format failed: path={}", filePath, e);
+        }
         return image;
     }
 
