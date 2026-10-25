@@ -18,6 +18,7 @@
 package bisq.common.util;
 
 import bisq.common.data.Pair;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -65,8 +66,14 @@ public class NetworkUtils {
         }
     }
 
+    // Port 0 is not a valid port. As virtual port of an onion service, Tor would refuse it.
     public static int selectRandomPort() {
-        return new Random().nextInt(65_536); // 2^16
+        return selectRandomPort(new Random());
+    }
+
+    @VisibleForTesting
+    static int selectRandomPort(Random random) {
+        return 1 + random.nextInt(65_535);
     }
 
     public static boolean isPortInUse(String host, int port) {
