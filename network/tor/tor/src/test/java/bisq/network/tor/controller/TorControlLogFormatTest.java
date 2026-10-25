@@ -17,8 +17,8 @@
 
 package bisq.network.tor.controller;
 
-import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyGeneration;
+import com.google.common.io.BaseEncoding;
 import net.freehaven.tor.control.PasswordDigest;
 import org.junit.jupiter.api.Test;
 
@@ -49,8 +49,8 @@ class TorControlLogFormatTest {
 
     @Test
     void authenticateHidesPasswordAndAuthCookie() {
-        String password = Hex.encode(PasswordDigest.generateDigest().getSecret());
-        String authCookie = Hex.encode(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
+        String password = BaseEncoding.base16().lowerCase().encode(PasswordDigest.generateDigest().getSecret());
+        String authCookie = BaseEncoding.base16().lowerCase().encode(new byte[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16});
 
         assertThat(TorControlLogFormat.toLoggableCommand("AUTHENTICATE " + password + "\r\n"))
                 .isEqualTo("AUTHENTICATE [hidden]");

@@ -17,12 +17,12 @@
 
 package bisq.network.tor.controller;
 
-import bisq.common.encoding.Hex;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.security.keys.TorKeyPair;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.google.common.io.BaseEncoding;
 import net.freehaven.tor.control.PasswordDigest;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -116,7 +116,7 @@ class TorControlProtocolLoggingTest {
     @Test
     void authenticateDoesNotLogThePassword() {
         PasswordDigest passwordDigest = PasswordDigest.generateDigest();
-        String password = Hex.encode(passwordDigest.getSecret());
+        String password = BaseEncoding.base16().lowerCase().encode(passwordDigest.getSecret());
         startControlServer(command -> "250 OK\r\n");
 
         torControlProtocol.authenticate(passwordDigest);

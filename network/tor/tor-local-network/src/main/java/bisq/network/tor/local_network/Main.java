@@ -17,8 +17,6 @@
 
 package bisq.network.tor.local_network;
 
-import bisq.common.data.Pair;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -28,12 +26,12 @@ public class Main {
     private static final String PASSPHRASE = "my_passphrase";
 
     public static void main(String[] args) throws IOException, InterruptedException {
-        Pair<Path, Boolean> dataDirPathAndStartArg = parseArgs(args);
-        if (!dataDirPathAndStartArg.getSecond()) {
+        Args parsedArgs = parseArgs(args);
+        if (!parsedArgs.isStartCommand()) {
             System.out.println("--start argument is missing.");
         }
 
-        Path dataDirPath = dataDirPathAndStartArg.getFirst();
+        Path dataDirPath = parsedArgs.dataDirPath();
         new TorNetwork(dataDirPath)
                 .addDirAuth(PASSPHRASE)
                 .addDirAuth(PASSPHRASE)
@@ -51,7 +49,7 @@ public class Main {
                 .start();
     }
 
-    private static Pair<Path, Boolean> parseArgs(String[] allArgs) {
+    private static Args parseArgs(String[] allArgs) {
         Optional<Path> dataDirPath = Optional.empty();
         boolean isStartCommand = false;
 
@@ -70,6 +68,9 @@ public class Main {
             }
         }
 
-        return new Pair<>(dataDirPath.orElseThrow(), isStartCommand);
+        return new Args(dataDirPath.orElseThrow(), isStartCommand);
+    }
+
+    private record Args(Path dataDirPath, boolean isStartCommand) {
     }
 }

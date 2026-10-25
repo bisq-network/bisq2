@@ -18,14 +18,12 @@
 package bisq.network.tor;
 
 import bisq.common.application.Service;
-import bisq.common.data.Pair;
 import bisq.common.facades.FacadeProvider;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
 import bisq.common.observable.Observable;
 import bisq.common.platform.LinuxDistribution;
 import bisq.common.platform.OS;
-import bisq.common.util.StringUtils;
 import bisq.network.tor.common.torrc.BaseTorrcGenerator;
 import bisq.network.tor.common.torrc.TorrcFileGenerator;
 import bisq.network.tor.controller.TorControlAuthenticationFailed;
@@ -194,7 +192,7 @@ public class TorService implements Service {
         } else {
             // If environment variable is set we take that.
             String torSkipLaunch = System.getenv(TOR_SKIP_LAUNCH);
-            if (StringUtils.isNotEmpty(torSkipLaunch)) {
+            if (torSkipLaunch != null && !torSkipLaunch.trim().isEmpty()) {
                 log.info("Environment variable 'TOR_SKIP_LAUNCH' is set to '{}'", torSkipLaunch);
                 return torSkipLaunch.equals("1") ||
                         torSkipLaunch.equalsIgnoreCase("true") ||
@@ -294,9 +292,9 @@ public class TorService implements Service {
     }
 
     private boolean connectedToExternalTor(Map<String, String> torConfigMap) {
-        Pair<String, Integer> controlHostAndPort = getControlHostAndPort(torConfigMap);
-        String controlHost = controlHostAndPort.getFirst();
-        int controlPort = controlHostAndPort.getSecond();
+        ControlHostAndPort controlHostAndPort = getControlHostAndPort(torConfigMap);
+        String controlHost = controlHostAndPort.host();
+        int controlPort = controlHostAndPort.port();
         if (!isTorControlAvailable(controlHost, controlPort)) {
             log.warn("Couldn't connect to external Tor control server. " +
                     "This could happen if the control port is not correctly set up in 'external_tor.config' file.");
@@ -360,7 +358,7 @@ public class TorService implements Service {
         return true;
     }
 
-    private Pair<String, Integer> getControlHostAndPort(Map<String, String> externalTorConfigMap) {
+    private ControlHostAndPort getControlHostAndPort(Map<String, String> externalTorConfigMap) {
         String controlPortString = externalTorConfigMap.get(CONTROL_PORT);
         String[] tokens = controlPortString.split(":");
         String controlHost;
@@ -374,7 +372,7 @@ public class TorService implements Service {
             controlHost = "127.0.0.1";
             controlPort = Integer.parseInt(tokens[0]);
         }
-        return new Pair<>(controlHost, controlPort);
+        return new ControlHostAndPort(controlHost, controlPort);
     }
 
     private void readExternalTorConfigMap() {
@@ -475,5 +473,8 @@ public class TorService implements Service {
                 transportConfig.getDirectoryAuthorities());
         torrcFileGenerator.generate();
         return torrcConfigMap;
+    }
+
+    private record ControlHostAndPort(String host, int port) {
     }
 }
