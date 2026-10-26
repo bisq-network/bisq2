@@ -161,13 +161,18 @@ public class ResourcesController implements Controller {
                         }
                         try {
                             // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
+                            // The rotated log of Tor (tor-stdout.log.1) has another extension, so it is excluded by name.
                             // We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
                             // the file descriptor, thus reading the file for the copy would release our own lock and disable the
                             // single instance protection for the rest of the session.
+                            // The data directory of Tor holds only Tor's cache. Tor runs in a sandbox and can write there, so
+                            // Bisq must not open its files (a link or a named pipe there could make the copy read other files
+                            // or block).
                             FileMutatorUtils.copyDirectory(appDataDirPath,
                                     destinationPath,
                                     Set.of("log"),
-                                    Set.of(InstanceLock.LOCK_FILE_NAME));
+                                    Set.of(InstanceLock.LOCK_FILE_NAME, "tor-stdout.log.1"),
+                                    Set.of(Paths.get("tor", "data")));
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();

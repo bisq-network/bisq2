@@ -46,7 +46,7 @@ import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class FileMutatorUtils {
@@ -384,35 +384,79 @@ public class FileMutatorUtils {
                                      Path destinationDirPath,
                                      Set<String> extensionsToSkip,
                                      Set<String> fileNamesToSkip) throws IOException {
-        AtomicReference<IOException> exception = new AtomicReference<>();
-        try (Stream<Path> stream = Files.walk(sourceDirPath)) {
-            stream.forEach(source -> {
-                boolean shouldSkip = false;
-                if (!Files.isDirectory(source)) {
-                    String fileName = source.getFileName().toString();
-                    shouldSkip = fileNamesToSkip.contains(fileName);
-                    int lastDotIndex = fileName.lastIndexOf('.');
-                    if (!shouldSkip && lastDotIndex > 0) {
-                        String extension = fileName.substring(lastDotIndex + 1);
-                        shouldSkip = extensionsToSkip.contains(extension);
-                    }
-                }
+        copyDirectory(sourceDirPath, destinationDirPath, extensionsToSkip, fileNamesToSkip, Set.of());
+    }
 
-                if (!shouldSkip) {
-                    Path relativePath = sourceDirPath.relativize(source);
-                    Path destinationPath = destinationDirPath.resolve(relativePath);
-                    try {
-                        Files.copy(source, destinationPath);
-                        applyDefaultPermissions(destinationPath);
-                    } catch (IOException e) {
-                        exception.set(e);
-                    }
+    /**
+     * Like {@link #copyDirectory(Path, Path, Set, Set)}.
+     *
+     * @param dirPathsToSkip Directories, relative to sourceDirPath, which are not copied. No file in them is opened.
+     *                       Use this for directories which another program writes, for example the data directory of
+     *                       the sandboxed Tor.
+     */
+    public static void copyDirectory(Path sourceDirPath,
+                                     Path destinationDirPath,
+                                     Set<String> extensionsToSkip,
+                                     Set<String> fileNamesToSkip,
+                                     Set<Path> dirPathsToSkip) throws IOException {
+        Set<Path> absoluteDirPathsToSkip = dirPathsToSkip.stream()
+                .map(sourceDirPath::resolve)
+                .collect(Collectors.toSet());
+        AtomicReference<IOException> exception = new AtomicReference<>();
+        Files.walkFileTree(sourceDirPath, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+                // A skipped directory is not entered: the walker opens it but reads no entry of it, so no file in it is
+                // listed or opened. A junction (isOther) is not entered either, because it leads elsewhere.
+                if (attributes.isOther() || isSkippedDir(dir)) {
+                    return FileVisitResult.SKIP_SUBTREE;
                 }
-            });
-        }
+                copy(dir);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                if (!isSkipped(file.getFileName().toString(), extensionsToSkip, fileNamesToSkip)) {
+                    copy(file);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                // A skipped directory which cannot be opened does not matter
+                if (!isSkippedDir(file)) {
+                    exception.set(e);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            private boolean isSkippedDir(Path path) {
+                return absoluteDirPathsToSkip.stream().anyMatch(path::startsWith);
+            }
+
+            private void copy(Path source) {
+                Path destinationPath = destinationDirPath.resolve(sourceDirPath.relativize(source));
+                try {
+                    Files.copy(source, destinationPath);
+                    applyDefaultPermissions(destinationPath);
+                } catch (IOException e) {
+                    exception.set(e);
+                }
+            }
+        });
         if (exception.get() != null) {
             throw exception.get();
         }
+    }
+
+    private static boolean isSkipped(String fileName, Set<String> extensionsToSkip, Set<String> fileNamesToSkip) {
+        if (fileNamesToSkip.contains(fileName)) {
+            return true;
+        }
+        int lastDotIndex = fileName.lastIndexOf('.');
+        return lastDotIndex > 0 && extensionsToSkip.contains(fileName.substring(lastDotIndex + 1));
     }
 
     public static void copyResourceDirectory(String resourceDir,
