@@ -161,6 +161,7 @@ public class BisqEasyMediatorController implements Controller {
 
         mediationCaseListItemPin.unbind();
         selectedChannelPin.unbind();
+        selectionService.selectChannel(null);
         searchPredicatePin.unsubscribe();
         closedCasesPredicatePin.unsubscribe();
     }

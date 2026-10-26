@@ -134,6 +134,8 @@ public class MuSigMediatorController implements Controller {
         closedCasesPredicatePin.unsubscribe();
 
         clearSelectedItemChannelPin();
+        selectionService.selectChannel(null);
+
     }
 
     void onSelectItem(MuSigMediationCaseListItem item) {
