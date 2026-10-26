@@ -265,6 +265,25 @@ application {
 }
 ```
 
+Bridges for the Tor which Bisq starts (see `docs/specifications/network/tor-startup.md`) are set in the same way, with
+either the built-in bridges of one type of the bundled Tor or bridge lines, for example from
+https://bridges.torproject.org:
+
+```
+application {
+    network {
+        configByTransportType {
+            tor {
+                # The built-in bridges of one type: "obfs4", "snowflake" or "meek"
+                builtInBridges = "obfs4"
+                # Or bridge lines. Set at most one of builtInBridges and bridges.
+                bridges = []
+            }
+        }
+    }
+}
+```
+
 Only change entries which are clear to you as inappropriate values could lead to issues.
 
 ## Run developer setup

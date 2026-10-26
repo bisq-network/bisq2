@@ -110,7 +110,7 @@ docker run -d --name bisq2-web --network container:bisq2-api -v bisq2-api-data:/
 | `JAVA_OPTS` | — | Extra `-Dapplication.*` overrides, appended. |
 | `TOR_CONTROL_PORT` | — | If set, use an external Tor instead of the bundled one (see below). |
 | `TOR_CONTROL_HOST` | `127.0.0.1` | External Tor control host. |
-| `TOR_SOCKS_PORT` / `TOR_SOCKS_HOST` | — / `127.0.0.1` | External Tor SOCKS endpoint. |
+| `TOR_SOCKS_PORT` / `TOR_SOCKS_HOST` | not set | Not used. Bisq uses the SOCKS port which the external Tor reports, on `TOR_CONTROL_HOST`. |
 | `TOR_COOKIE_AUTH_FILE` | — | Path to the external Tor control auth cookie. |
 
 > **Security:** `JAVA_OPTS` and the `TOR_*` variables are a host-operator trust boundary —
@@ -122,12 +122,15 @@ docker run -d --name bisq2-web --network container:bisq2-api -v bisq2-api-data:/
 Setting `TOR_CONTROL_PORT` makes the entrypoint write `${BISQ_DATA_DIR}/tor/external_tor.config`
 and enable external-Tor mode (`TOR_SKIP_LAUNCH=1`).
 
-> FIXME(external-tor): bisq2's external-Tor mode talks to Tor's **control port** (with
-> cookie auth) and discovers the SOCKS port from it — it does not just consume a SOCKS
-> port. `TorSocksProxyFactory` also hardcodes `127.0.0.1`, so the external Tor must be
-> reachable on the container's loopback. Reusing a host/shared Tor needs its control
-> port + auth cookie exposed on loopback inside the container; this is wired up when
-> integrating with the target self-hosting platform's bundled Tor.
+bisq2's external-Tor mode talks to Tor's **control port** on `TOR_CONTROL_HOST`. With
+`TOR_COOKIE_AUTH_FILE` it authenticates with SAFECOOKIE, in which Tor proves that it knows the
+cookie before Bisq sends anything. It uses the SOCKS port which that Tor reports, on
+`TOR_CONTROL_HOST` as well. If the external Tor cannot be used, the start fails; the bundled
+Tor is not started instead.
+
+> FIXME(external-tor): Tor publishes the onion services of Bisq with targets on `127.0.0.1` of
+> its own host, so a Tor in another container reaches them only in a shared network namespace.
+> This is wired up when integrating with the target self-hosting platform's bundled Tor.
 
 ## Publishing the images (interim — manual)
 

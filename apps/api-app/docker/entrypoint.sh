@@ -35,13 +35,13 @@ JAVA_OPTS="${JAVA_OPTS} -Dapplication.api.pairing.ttlInSeconds=${PAIRING_TTL_SEC
 # Default is the bundled (system) Tor, so a plain `docker run` works standalone.
 # Set TOR_CONTROL_PORT to enable external-Tor mode.
 #
-# FIXME(external-tor): bisq2's external-Tor mode connects to Tor's CONTROL port with
-# cookie auth and discovers the SOCKS port from the control server (see TorService);
-# it does not simply consume a SOCKS port. TorSocksProxyFactory also hardcodes
-# 127.0.0.1, so the external Tor must be reachable on the container's loopback.
-# Reusing a host/shared Tor therefore requires its control port + auth cookie to be
-# made reachable on loopback inside the container — wire that up when integrating
-# with the target self-hosting platform's bundled Tor.
+# bisq2's external-Tor mode connects to Tor's CONTROL port on TOR_CONTROL_HOST, authenticates
+# with SAFECOOKIE if a cookie file is given, and uses the SOCKS port which that Tor reports, on
+# TOR_CONTROL_HOST as well. If the external Tor cannot be used, the start fails; the bundled Tor
+# is not started instead.
+# FIXME(external-tor): Tor publishes the onion services of Bisq with targets on 127.0.0.1 of its
+# own host. A Tor in another container reaches them only in a shared network namespace. Wire that
+# up when integrating with the target self-hosting platform's bundled Tor.
 if [ -n "${TOR_CONTROL_PORT:-}" ]; then
     TOR_DIR="${DATA_DIR}/tor"
     mkdir -p "${TOR_DIR}"
@@ -53,9 +53,6 @@ if [ -n "${TOR_CONTROL_PORT:-}" ]; then
             echo "CookieAuthFile ${TOR_COOKIE_AUTH_FILE}"
         else
             echo "CookieAuthentication 0"
-        fi
-        if [ -n "${TOR_SOCKS_PORT:-}" ]; then
-            echo "SocksPort ${TOR_SOCKS_HOST:-127.0.0.1}:${TOR_SOCKS_PORT}"
         fi
     } >"${TOR_DIR}/external_tor.config"
     export TOR_SKIP_LAUNCH=1
