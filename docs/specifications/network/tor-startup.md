@@ -125,9 +125,9 @@ bridge, so the Tor log of the node and the log zip of the error popup contain th
 ### Sandbox
 
 The node runs the Tor which it starts in the sandbox of the operating system with sandy, unless `sandbox.enabled` of
-the configuration of the Tor transport is `false`. Without that value the sandbox is on. The desktop application sets
-it to `true`; the seed node, oracle node, API and node monitor applications set it to `false`. Every build contains the
-sandy binary of its platform, which the Tor build checks against its pinned SHA-256 hash.
+the configuration of the Tor transport is `false`. Without that value the sandbox is on, and the desktop, seed node,
+oracle node, API and node monitor applications set it to `true`. Every build contains the sandy binary of its
+platform, which the Tor build checks against its pinned SHA-256 hash.
 
 The base level of the sandbox is the maximum lockdown. Tor may read its torrc and the bundle and write only its data
 directory; on Linux and macOS every other path looks missing to it. Tor has a network of its own: the node reaches the
