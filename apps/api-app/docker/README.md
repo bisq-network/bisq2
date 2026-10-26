@@ -51,7 +51,7 @@ packages into the api-app distribution: on amd64 the stable bundle of `tor.versi
 arm64 the bundle of the alpha release `tor.bundleVersion.linux_arm64`, because no stable
 release has one for Linux ARM64 (both in `tor/gradle.properties`). The image installs no
 `tor` package. At its start the node installs the bundle into `/data/tor/bin` and runs
-Tor from `/data/tor`, so `/data` must not be mounted with `noexec`. The bundled
+Tor and sandy from `/data/tor`, so `/data` must not be mounted with `noexec`. The bundled
 tor needs the glibc and `libz.so.1` of the base image; the image build fails if the base
 image lacks `libz.so.1`. Each start logs the version of the running Tor:
 
