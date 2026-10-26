@@ -34,10 +34,14 @@ import java.net.SocketTimeoutException;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.startsWith;
@@ -182,6 +186,21 @@ class HttpRequestServiceTest {
         verify(fallbackClient, times(2)).get(anyString(), any());
     }
 
+    @Test
+    void shutdownStopsTheExecutorAlsoWhenTheClientFailsToShutDown() throws IOException {
+        // TorHttpClient fails its shutdown after 500 ms with a TimeoutException.
+        when(client.get(anyString(), any())).thenReturn("ok");
+        when(client.shutdown()).thenReturn(CompletableFuture.failedFuture(new TimeoutException("timeout")));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        createService(HttpRequest.get("path"), false, Set.of(provider("https://first.example", "first")), Set.of(),
+                executor);
+        assertEquals("ok", service.request("request").join());
+
+        assertFalse(service.shutdown().join());
+        assertTrue(executor.isShutdown());
+        service = null;
+    }
+
     private static HttpRequest post(boolean retryOnServerError) {
         return HttpRequest.post("path", "body", new Pair<>("Content-Type", "application/json"), retryOnServerError);
     }
@@ -200,8 +219,16 @@ class HttpRequestServiceTest {
                                boolean failParsing,
                                Set<HttpRequestUrlProvider> providers,
                                Set<HttpRequestUrlProvider> fallbackProviders) {
+        createService(request, failParsing, providers, fallbackProviders, Executors.newSingleThreadExecutor());
+    }
+
+    private void createService(HttpRequest request,
+                               boolean failParsing,
+                               Set<HttpRequestUrlProvider> providers,
+                               Set<HttpRequestUrlProvider> fallbackProviders,
+                               ExecutorService executor) {
         HttpRequestServiceConfig config = new HttpRequestServiceConfig(30, providers, fallbackProviders);
-        service = new HttpRequestService<>(config, networkService, Executors.newSingleThreadExecutor()) {
+        service = new HttpRequestService<>(config, networkService, executor) {
             @Override
             protected String parseResult(String json) {
                 if (failParsing) {
