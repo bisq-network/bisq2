@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 public class FileMutatorUtilsTest {
@@ -70,6 +71,31 @@ public class FileMutatorUtilsTest {
         assertThat(tempDirPath).doesNotExist();
         assertThat(subDirPath1).doesNotExist();
         assertThat(nestedPath).doesNotExist();
+    }
+
+    @Test
+    void testDeleteFileOrDirectoryDeletesLinksButNotTheirTargets(@TempDir Path tempDirPath) throws IOException {
+        Path outsideDirPath = tempDirPath.resolve("outside");
+        Path outsideFilePath = outsideDirPath.resolve("keep.txt");
+        FileMutatorUtils.createDirectories(outsideDirPath);
+        FileMutatorUtils.writeToPath("keep", outsideFilePath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath.resolve("sub"));
+        Path rootLinkPath = tempDirPath.resolve("rootLink");
+        try {
+            Files.createSymbolicLink(dirPath.resolve("sub").resolve("linkToOutside"), outsideDirPath);
+            Files.createSymbolicLink(dirPath.resolve("linkToFile"), outsideFilePath);
+            Files.createSymbolicLink(rootLinkPath, outsideDirPath);
+        } catch (UnsupportedOperationException | IOException e) {
+            assumeTrue(false, "Symbolic links are not supported here: " + e);
+        }
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+        FileMutatorUtils.deleteFileOrDirectory(rootLinkPath);
+
+        assertThat(dirPath).doesNotExist();
+        assertThat(rootLinkPath).doesNotExist();
+        assertThat(outsideFilePath).exists();
     }
 
     @Test
