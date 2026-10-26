@@ -130,7 +130,7 @@ public final class NetworkServiceConfig {
         Path transportDirPath;
         return switch (transportType) {
             case TOR -> {
-                transportDirPath = appDataDirPath.resolve("tor");
+                transportDirPath = appDataDirPath.resolve(TorTransportService.TOR_DIR_NAME);
                 yield TorTransportService.Config.from(transportDirPath, transportConfig);
             }
             case I2P -> {
