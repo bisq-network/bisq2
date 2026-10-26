@@ -1,6 +1,6 @@
 # Tor bundle verification
 
-The build downloads the Tor expert bundle of the pinned Tor version (`tor.version` in `gradle.properties`) and its
+The build downloads the Tor expert bundle of the pinned Tor version (`tor.version` in `tor/gradle.properties`) and its
 detached signature, and packages the bundle into the desktop app for macOS and Windows. Every user of these apps runs
 the bundled `tor`. The build must therefore accept a bundle only if the Tor Browser developers signed it.
 

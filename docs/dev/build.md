@@ -2,11 +2,14 @@
 
 1. **Clone Bisq 2**
    ```bash
-   git clone https://github.com/bisq-network/bisq2.git
+   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
    ```
    ```bash
    cd bisq2
    ```
+   The directory `tor/` is the Git submodule [tor](https://github.com/bisq-network/tor). In a clone without
+   `--recurse-submodules`, run `git submodule update --init`. Run `git pull --recurse-submodules` to update, so that
+   `tor/` follows the commit which Bisq 2 records. See [Tor Submodule](../../README.md#tor-submodule).
 
 2. **Install Dependencies:**
    Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
@@ -33,7 +36,7 @@
 
 3. **Update to latest GitHub version:**
    ```bash
-   git pull
+   git pull --recurse-submodules
    ```
 
 4. **Build Bisq**
