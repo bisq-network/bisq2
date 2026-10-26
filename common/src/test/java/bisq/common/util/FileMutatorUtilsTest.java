@@ -11,12 +11,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
@@ -213,6 +216,47 @@ public class FileMutatorUtilsTest {
         FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of("instance.lock"));
         assertTrue(Files.exists(destDirPath.resolve("file.txt")));
         assertFalse(Files.exists(destDirPath.resolve("instance.lock")));
+    }
+
+    @Test
+    void testCopyDirectoryWithDirPathsToSkip(@TempDir Path tempDirPath) throws IOException {
+        Path srcDirPath = tempDirPath.resolve("srcdir4");
+        Path destDirPath = tempDirPath.resolve("destdir4");
+        FileMutatorUtils.createDirectories(srcDirPath.resolve("tor").resolve("data"));
+        FileMutatorUtils.createDirectories(srcDirPath.resolve("db").resolve("data"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("torrc"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("data").resolve("state"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("db").resolve("data").resolve("store"));
+        FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of(), Set.of(Paths.get("tor", "data")));
+        assertTrue(Files.exists(destDirPath.resolve("tor").resolve("torrc")));
+        assertFalse(Files.exists(destDirPath.resolve("tor").resolve("data")));
+        assertTrue(Files.exists(destDirPath.resolve("db").resolve("data").resolve("store")));
+    }
+
+    @Test
+    void testCopyDirectoryDoesNotEnterASkippedDirectory(@TempDir Path tempDirPath) throws IOException {
+        Path srcDirPath = tempDirPath.resolve("srcdir5");
+        Path destDirPath = tempDirPath.resolve("destdir5");
+        Path skippedDirPath = srcDirPath.resolve("tor").resolve("data");
+        FileMutatorUtils.createDirectories(skippedDirPath);
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("torrc"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), skippedDirPath.resolve("state"));
+        try {
+            // Unreadable: listing the directory would fail the copy
+            Files.setPosixFilePermissions(skippedDirPath, Set.of());
+        } catch (UnsupportedOperationException e) {
+            assumeTrue(false, "POSIX permissions are not supported here");
+        }
+        assumeFalse(Files.isReadable(skippedDirPath), "The directory stays readable, for example for root");
+
+        try {
+            FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of(), Set.of(Paths.get("tor", "data")));
+        } finally {
+            Files.setPosixFilePermissions(skippedDirPath, PosixFilePermissions.fromString("rwx------"));
+        }
+
+        assertTrue(Files.exists(destDirPath.resolve("tor").resolve("torrc")));
+        assertFalse(Files.exists(destDirPath.resolve("tor").resolve("data")));
     }
 
     @Test
