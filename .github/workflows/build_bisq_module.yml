@@ -28,6 +28,7 @@ jobs:
         with:
           fetch-depth: 1
           persist-credentials: false
+          submodules: true
 
       - name: Verify Gradle wrapper checksums
         shell: bash
