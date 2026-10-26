@@ -253,7 +253,9 @@ application {
 
 Bridges for the Tor which Bisq starts (see `docs/specifications/network/tor-startup.md`) are set in the same way, with
 either the built-in bridges of one type of the bundled Tor or bridge lines, for example from
-https://bridges.torproject.org:
+https://bridges.torproject.org. The built-in bridges, and bridge lines which name a transport such as obfs4, need
+pluggable transports, which the Tor sandbox allows only with `allowPluggableTransports`. On Windows Tor cannot start
+them in its sandbox, so they need `sandbox.enabled = false` there instead:
 
 ```
 application {
@@ -264,6 +266,10 @@ application {
                 builtInBridges = "obfs4"
                 # Or bridge lines. Set at most one of builtInBridges and bridges.
                 bridges = []
+                # Lets Tor start the pluggable transports of the bridges in its sandbox
+                sandbox {
+                    allowPluggableTransports = true
+                }
             }
         }
     }
@@ -271,6 +277,17 @@ application {
 ```
 
 Only change entries which are clear to you as inappropriate values could lead to issues.
+
+### Tor sandbox build
+
+The Tor which Bisq starts runs in the sandy sandbox (see `docs/specifications/network/tor-startup.md`). The included
+build `tor` packages the sandy binary of the platform of the build from `tor/tor/sandy/`, and fails if the binary does
+not have the SHA-256 hash which it pins. The Gradle property `sandy.package=false` builds without sandy; a sandboxed
+start of Tor then fails:
+
+```sh
+./gradlew :apps:desktop:desktop-app:installDist -Psandy.package=false
+```
 
 ## Run developer setup
 
