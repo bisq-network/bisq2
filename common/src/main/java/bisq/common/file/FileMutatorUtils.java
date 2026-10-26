@@ -33,6 +33,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -41,7 +42,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -115,25 +115,53 @@ public class FileMutatorUtils {
     }
 
     /**
-     * Recursively delete a file or directory. If the path does not exist, do nothing.
+     * Recursively delete a file or directory. If the path does not exist, do nothing. A symbolic link and, on Windows,
+     * a junction are deleted themselves, never what they point to, also inside the directory. A process which can
+     * write the directory, such as the sandboxed Tor in its data directory, then cannot make the caller delete files
+     * elsewhere, as long as it does not write the directory during the deletion.
      *
      * @param path The path to delete
      * @throws IOException if an I/O error occurs
      */
     public static void deleteFileOrDirectory(Path path) throws IOException {
-        if (Files.exists(path)) {
-            // Use try-with-resources to ensure the walk stream is closed
-            try (var stream = Files.walk(path)) {
-                stream.sorted(Comparator.reverseOrder()) // delete children before parents
-                        .forEach(p -> {
-                            try {
-                                Files.delete(p);
-                            } catch (IOException e) {
-                                throw new RuntimeException("Failed to delete: " + p, e);
-                            }
-                        });
-            }
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return;
         }
+        if (isLinkOrJunction(path)) {
+            Files.delete(path);
+            return;
+        }
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) throws IOException {
+                if (attributes.isOther()) {
+                    // A junction: Files.walkFileTree reports it as a directory and would enter it.
+                    Files.delete(dir);
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exception) throws IOException {
+                if (exception != null) {
+                    throw exception;
+                }
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static boolean isLinkOrJunction(Path path) throws IOException {
+        BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        return attributes.isSymbolicLink() || (attributes.isDirectory() && attributes.isOther());
     }
 
     /**
