@@ -51,7 +51,7 @@ LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
 # The node runs the Tor of the Tor expert bundle which the build packages into the
 # distribution (amd64: the stable bundle of tor.version; arm64: the bundle of the alpha
 # release tor.bundleVersion.linux_arm64, as no stable release has one for Linux ARM64;
-# both in tor/gradle.properties). The node installs the bundle into /data/tor at its
+# both in tor/gradle.properties). The node installs the bundle into /data/tor/bin at its
 # start, so the image needs no tor package. That tor brings libevent and OpenSSL, but it
 # needs the glibc and libz.so.1 of this image: fail the build if a base image lacks libz.so.1.
 RUN ldconfig -p | grep -q 'libz\.so\.1 '

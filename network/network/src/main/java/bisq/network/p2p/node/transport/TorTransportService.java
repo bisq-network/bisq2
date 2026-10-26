@@ -11,6 +11,7 @@ import bisq.network.p2p.node.ConnectionException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorDirectories;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
@@ -68,6 +69,9 @@ public class TorTransportService implements TransportService {
             this.torTransportConfig = torTransportConfig;
         }
     }
+
+    // The directory of the embedded Tor below the data directory of the application
+    public static final String TOR_DIR_NAME = "tor";
 
     private static TorService torService;
 
@@ -182,6 +186,22 @@ public class TorTransportService implements TransportService {
      */
     public InetAddress getOnionServiceBindAddress() {
         return torService.getOnionServiceBindAddress();
+    }
+
+    /**
+     * @return the log of the embedded Tor of the application with this data directory: Tor logs to its standard
+     * output, which the Tor library writes to this file. The Tor library names it.
+     */
+    public static Path getTorLogPath(Path appDataDirPath) {
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getStdoutLogPath();
+    }
+
+    /**
+     * @return the earlier log of the embedded Tor of the application with this data directory, which the Tor library
+     * moves aside when the log exceeds its size limit. The Tor library names it.
+     */
+    public static Path getRotatedTorLogPath(Path appDataDirPath) {
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedStdoutLogPath();
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {

@@ -124,7 +124,7 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(appDataDirPath.resolve("tor").resolve("debug.log"));
+        PlatformUtils.open(TorTransportService.getTorLogPath(appDataDirPath));
     }
 
     void onOpenDataDir() {
@@ -171,7 +171,8 @@ public class ResourcesController implements Controller {
                             FileMutatorUtils.copyDirectory(appDataDirPath,
                                     destinationPath,
                                     Set.of("log"),
-                                    Set.of(InstanceLock.LOCK_FILE_NAME, "tor-stdout.log.1"),
+                                    Set.of(InstanceLock.LOCK_FILE_NAME,
+                        TorTransportService.getRotatedTorLogPath(appDataDirPath).getFileName().toString()),
                                     Set.of(Paths.get("tor", "data")));
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
