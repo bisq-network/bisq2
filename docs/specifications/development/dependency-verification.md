@@ -15,6 +15,10 @@ Plugin resolution must not search MavenLocal. Local build-logic plugins come fro
 dependencies come from the configured remote repositories. This prevents unsigned or incomplete local Maven entries
 from shadowing signed publications, including Kotlin dependencies requested during IDE import.
 
+Verification metadata must cover artifacts requested during IDE import, including sources and metadata for libraries
+embedded in the pinned Gradle distribution. Compilation and dependency inventory tasks do not necessarily request
+those artifacts.
+
 Checksum fallbacks must have exact, reviewed allowlist entries with a rationale. Missing, duplicate, unsorted, or
 stale entries must fail the policy check. Resolved executable artifacts must have explicit verification metadata;
 metadata for older, unresolved versions of those tools must fail the policy check.
