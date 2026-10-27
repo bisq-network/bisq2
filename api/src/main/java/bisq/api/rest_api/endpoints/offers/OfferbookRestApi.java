@@ -21,6 +21,8 @@ import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
+import bisq.bisq_easy.BisqEasyOfferbookMessageService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bisq_easy.BisqEasyServiceUtil;
 import bisq.bonded_roles.market_price.MarketPriceService;
 import bisq.chat.ChatService;
@@ -32,6 +34,8 @@ import bisq.common.market.MarketRepository;
 import bisq.api.dto.DtoMappings;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
+import bisq.api.offerbook.OfferVisibility;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.offer.Direction;
 import bisq.offer.amount.spec.AmountSpec;
@@ -84,17 +88,23 @@ public class OfferbookRestApi extends RestApiBase {
     private final UserIdentityService userIdentityService;
     private final UserProfileService userProfileService;
     private final ReputationService reputationService;
+    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
+    private final RecordedOfferItems recordedOffers;
 
 
     public OfferbookRestApi(ChatService chatService,
                             MarketPriceService marketPriceService,
-                            UserService userService
+                            UserService userService,
+                            BisqEasyService bisqEasyService,
+                            RecordedOfferItems recordedOffers
     ) {
         this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
         this.marketPriceService = marketPriceService;
         userIdentityService = userService.getUserIdentityService();
         userProfileService = userService.getUserProfileService();
         reputationService = userService.getReputationService();
+        bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
+        this.recordedOffers = recordedOffers;
     }
 
     @DELETE
@@ -324,13 +334,15 @@ public class OfferbookRestApi extends RestApiBase {
         }
     }
 
+    // The recorded offers, so that the list matches the OFFERS snapshot and NUM_OFFERS. Without the WebSocket, nothing
+    // records the offers, so the list applies the rule of the OFFERS topic itself.
     private Optional<List<OfferItemPresentationDto>> findOffer(String marketCodes) {
         return MarketRepository.findAnyFiatMarketByMarketCodes(marketCodes)
                 .flatMap(market -> bisqEasyOfferbookChannelService.findChannel(market)
                         .map(channel -> channel.getChatMessages()
                                 .stream()
                                 .filter(BisqEasyOfferbookMessage::hasBisqEasyOffer)
-                                .map(this::createOfferListItemDto)
+                                .map(recordedOffers.isTracking() ? recordedOffers::snapshotItem : this::findVisibleItem)
                                 .filter(Optional::isPresent)
                                 .map(Optional::get)
                                 .collect(Collectors.toList())
@@ -338,19 +350,30 @@ public class OfferbookRestApi extends RestApiBase {
                 );
     }
 
-    private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
-        try {
-            return OfferItemPresentationDtoFactory.create(userProfileService,
-                    userIdentityService,
-                    reputationService,
-                    marketPriceService,
-                    bisqEasyOfferbookMessage);
-        } catch (RuntimeException e) {
-            // A single offer whose amounts cannot be converted at its price (an overflowing
-            // amount reaches longValueExact) must not abort the whole market listing with a
-            // 500. It is skipped like the WebSocket path already does for its own send.
-            log.warn("Skipping an offer that could not be mapped to a presentation dto", e);
-            return Optional.empty();
-        }
+    private Optional<OfferItemPresentationDto> findVisibleItem(BisqEasyOfferbookMessage message) {
+        return OfferVisibility.find(bisqEasyOfferbookMessageService, userProfileService, userIdentityService, message)
+                .filter(OfferVisibility::shown)
+                .flatMap(visibility -> {
+                    try {
+                        return createOfferListItemDto(message, visibility.hasSellerSufficientReputation());
+                    } catch (RuntimeException e) {
+                        // A single offer whose amounts cannot be converted at its price (an overflowing
+                        // amount reaches longValueExact) must not abort the whole market listing with a
+                        // 500. The WebSocket path retries the item with the next pass. Without the
+                        // WebSocket nothing retries, so the offer is skipped.
+                        log.warn("Skipping an offer that could not be mapped to a presentation dto", e);
+                        return Optional.empty();
+                    }
+                });
+    }
+
+    private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage message,
+                                                                      boolean hasSellerSufficientReputation) {
+        return OfferItemPresentationDtoFactory.create(userProfileService,
+                userIdentityService,
+                reputationService,
+                marketPriceService,
+                hasSellerSufficientReputation,
+                message);
     }
 }

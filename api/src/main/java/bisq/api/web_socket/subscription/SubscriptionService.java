@@ -21,6 +21,7 @@ package bisq.api.web_socket.subscription;
 import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.chat.common.PublicChatChannels;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.trade_restricting_alert.TradeRestrictingAlertWebSocketService;
@@ -101,14 +102,15 @@ public class SubscriptionService implements Service {
                                NetworkService networkService,
                                OpenTradeItemsService openTradeItemsService,
                                PermissionService permissionService,
-                               boolean authorizationRequired) {
+                               boolean authorizationRequired,
+                               RecordedOfferItems recordedOfferItems) {
         this.permissionService = permissionService;
         this.authorizationRequired = authorizationRequired;
         subscriberRepository = new SubscriberRepository();
 
         marketPriceWebSocketService = new MarketPriceWebSocketService(subscriberRepository, bondedRolesService);
-        numOffersWebSocketService = new NumOffersWebSocketService(subscriberRepository, chatService, userService, bisqEasyService);
-        offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService);
+        numOffersWebSocketService = new NumOffersWebSocketService(subscriberRepository, recordedOfferItems);
+        offersWebSocketService = new OffersWebSocketService(subscriberRepository, chatService, userService, bondedRolesService, bisqEasyService, recordedOfferItems);
         tradesWebSocketService = new TradesWebSocketService(subscriberRepository, openTradeItemsService);
         tradePropertiesWebSocketService = new TradePropertiesWebSocketService(subscriberRepository, tradeService);
         tradeChatMessagesWebSocketService = new TradeChatMessagesWebSocketService(subscriberRepository,

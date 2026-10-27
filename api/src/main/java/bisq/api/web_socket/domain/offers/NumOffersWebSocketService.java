@@ -17,92 +17,28 @@
 
 package bisq.api.web_socket.domain.offers;
 
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.Topic;
-import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.BisqEasyService;
-import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannelService;
 import bisq.common.observable.Pin;
 import bisq.common.observable.map.ObservableHashMap;
-import bisq.user.UserService;
-import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Nullable;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CopyOnWriteArraySet;
 
-@Slf4j
+// The count of the offers which the OFFERS topic sends, per market. OffersWebSocketService records those offers and
+// publishes their count, so that the two topics describe the same set.
 public class NumOffersWebSocketService extends SimpleObservableWebSocketService<ObservableHashMap<String, Integer>, HashMap<String, Integer>> {
-    private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
+    private final RecordedOfferItems recordedOffers;
 
-    private final ObservableHashMap<String, Integer> numOffersByCurrencyCode = new ObservableHashMap<>();
-    private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
-    private final Set<Pin> pins = new CopyOnWriteArraySet<>();
-    @Nullable
-    private Pin channelsPin, offerValidityRevisionPin;
-
-    public NumOffersWebSocketService(SubscriberRepository subscriberRepository,
-                                     ChatService chatService,
-                                     UserService userService,
-                                     BisqEasyService bisqEasyService) {
+    public NumOffersWebSocketService(SubscriberRepository subscriberRepository, RecordedOfferItems recordedOffers) {
         super(subscriberRepository, Topic.NUM_OFFERS);
-        this.bisqEasyOfferbookChannelService = chatService.getBisqEasyOfferbookChannelService();
-        bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> initialize() {
-        return super.initialize()
-                .thenApply(result -> {
-                    if (!result) {
-                        return false;
-                    }
-                    channelsPin = bisqEasyOfferbookChannelService.getChannels().addObserver(() -> {
-                        pins.forEach(Pin::unbind);
-                        pins.clear();
-                        bisqEasyOfferbookChannelService.getChannels().forEach(channel ->
-                                pins.add(channel.getChatMessages().addObserver(() -> updateNumOffers(channel))));
-                    });
-                    offerValidityRevisionPin = bisqEasyOfferbookMessageService.getOfferValidityRevision()
-                            .addObserver(revision -> bisqEasyOfferbookChannelService.getChannels().forEach(this::updateNumOffers));
-                    return true;
-                });
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        return super.shutdown()
-                .thenApply(result -> {
-                    if (channelsPin != null) {
-                        channelsPin.unbind();
-                        channelsPin = null;
-                    }
-                    if (offerValidityRevisionPin != null) {
-                        offerValidityRevisionPin.unbind();
-                        offerValidityRevisionPin = null;
-                    }
-                    pins.forEach(Pin::unbind);
-                    pins.clear();
-                    return result;
-                });
-    }
-
-    private synchronized void updateNumOffers(BisqEasyOfferbookChannel channel) {
-        String code = channel.getMarket().getQuoteCurrencyCode();
-        int numOffers = (int) bisqEasyOfferbookMessageService.getOffers(channel).count();
-        if (!Integer.valueOf(numOffers).equals(numOffersByCurrencyCode.get(code))) {
-            numOffersByCurrencyCode.put(code, numOffers);
-        }
+        this.recordedOffers = recordedOffers;
     }
 
     @Override
     protected ObservableHashMap<String, Integer> getObservable() {
-        return numOffersByCurrencyCode;
+        return recordedOffers.getNumOffersByQuoteCurrencyCode();
     }
 
     @Override
