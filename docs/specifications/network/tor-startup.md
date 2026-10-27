@@ -38,6 +38,11 @@ backup of the data directory skips `tor/data`.
 The node chooses the ports of the control and SOCKS listeners itself and checks with the hash of the control password,
 and after the bootstrap with the SOCKS listener, that it talks to the Tor of this start.
 
+The node starts its Tor, or sandy with Tor, in a session of its own with the `setsid` program of the system, if the
+system has one, as Linux does. A Ctrl+C in the terminal which started the node then reaches only the node, whose
+shutdown can still use Tor, and which stops Tor at its end. macOS has no `setsid`: there Tor stays in the process
+group of the node, and a Ctrl+C in the terminal ends Tor at once.
+
 ### Torrc overrides and files of the Tor of the node
 
 The configuration of the Tor transport can add entries to the torrc of the Tor which the node starts
@@ -127,28 +132,32 @@ sandy binary of its platform, which the Tor build checks against its pinned SHA-
 The base level of the sandbox is the maximum lockdown. Tor may read its torrc and the bundle and write only its data
 directory; on Linux and macOS every other path looks missing to it. Tor has a network of its own: the node reaches the
 control and SOCKS listeners through ports which sandy relays, Tor reaches the onion services of the node only through
-ports which sandy forwards (`sandbox.onionServicePortPoolSize` limits how many onion services can receive
-connections), and Tor connects out only through the egress broker of sandy, which reaches public addresses only. Tor
-cannot start other processes, cannot signal processes outside the sandbox, and ends when the node ends. Where the
-system cannot enforce the base level, sandy selects a weaker level of the policy: below Linux 6.12 a PID namespace
-isolates the signals of Tor, and where unprivileged user namespaces are restricted or off, Tor gets the network of the
-system. The node logs the level, with a warning for a level with the network of the system or without isolated
-signals.
+ports which sandy forwards (`sandbox.onionServicePortPoolSize`, from 1 to 256, limits how many onion services can
+receive connections; the node refuses another value), and Tor connects out only through the egress broker of sandy,
+which reaches public addresses only. Tor cannot start other processes, cannot signal processes outside the sandbox,
+and ends when the node ends. Where the system cannot enforce the base level, sandy selects a weaker level of the
+policy: below Linux 6.12 a PID namespace isolates the signals of Tor, and where unprivileged user namespaces are
+restricted or off, Tor gets the network of the system. The node logs the level, with a warning for a level with the
+network of the system or without isolated signals.
 
 Pluggable transports are programs which Tor starts for bridges. The sandbox lets Tor start them only if
-`sandbox.allowPluggableTransports` is `true`; it is `false` by default. Then Tor may start the programs of the
-transports of the configured bridges, and they end with Tor. On Linux, obfs4 keeps the network of the sandbox and
-connects through the egress broker; with meek, webtunnel, snowflake or conjure, Tor and its transports get the network
-of the system. On macOS every transport gets the network of the system. On Windows Tor cannot start pluggable
-transports in its sandbox.
+`sandbox.allowPluggableTransports` is `true`; it is `false` by default. The network settings of the desktop
+application have a switch for it, which asks for a confirmation before it allows them, writes only this value into
+`bisq.conf` of the data directory, and takes effect after a restart; the switch is disabled while the sandbox is off
+and on Windows. With the value `true`, Tor may start the programs of the transports of the configured bridges, and
+they end with Tor. On Linux, obfs4 keeps the network of the sandbox and connects through the egress broker; with meek,
+webtunnel, snowflake or conjure, Tor and its transports get the network of the system. On macOS every transport gets
+the network of the system, and the sandbox lets Tor and its transports reach the certificate verifier of the system
+(the Mach service `com.apple.trustd.agent`), with which webtunnel verifies its server. On Windows Tor cannot start
+pluggable transports in its sandbox.
 
 If the sandbox is on, the start fails with an error which names the reason and how to turn the sandbox off, and the
 node never starts Tor without the sandbox instead, when:
 
 - the bridges need pluggable transports and `sandbox.allowPluggableTransports` is not `true`, or the system is
   Windows;
-- a torrc override sets a proxy option, or without configured bridges sets `ClientTransportPlugin` or
-  `ServerTransportPlugin`;
+- a torrc override sets a proxy option or `ServerTransportPlugin`, or without configured bridges sets
+  `ClientTransportPlugin`, also as an abbreviation of the option name, which Tor accepts;
 - the system can enforce no level of the sandbox, for example Linux without Landlock, or the build contains no sandy;
 - sandy cannot tell now whether the system enforces the sandbox.
 
@@ -186,7 +195,8 @@ transports, reaches the network of the system, including its local services.
 - At a level with the network of the system, and with pluggable transports other than obfs4 on Linux, the sandbox does
   not keep Tor from connecting to local services of the user, for example the API of the node; their own
   authentication protects them. Tor cannot read the cookie and key files of the node.
-- Bridges with pluggable transports need the sandbox off on Windows. On macOS webtunnel fails in the sandbox, because
-  it verifies its server with the certificate service of the system, which sandy does not let programs reach.
+- Bridges with pluggable transports need the sandbox off on Windows.
+- On Windows Tor runs in its sandbox only in a desktop session. In session 0, where services and logins over SSH run,
+  Tor ends at once when it starts in its sandbox; the report of sandy in the log of the node says so.
 - The Tor log in the log zip names the bridges which Tor used. A user with private bridges has to remove these lines
   before sharing the zip; whether the node should remove them is an open decision.
