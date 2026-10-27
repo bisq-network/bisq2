@@ -203,9 +203,7 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
             return;
         }
 
-        boolean isMyMediationChannel = supportService.getBisqEasyMediatorService()
-                .findMyMediatorUserIdentity(chatChannel.getMediator()).isPresent();
-        if(isMyMediationChannel) {
+        if(isMyMediatorChannel(chatChannel)) {
             getNotConsumedBisqEasyMediatorNotifications().forEach(notification-> {
                 if(notification.getChannelId().isPresent()
                         && notification.getChannelId().get().equals(chatChannel.getId())) {
@@ -220,9 +218,7 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
             return;
         }
 
-        boolean isMyMediationChannel = supportService.getMuSigMediatorService()
-                .findMyMediatorUserIdentity(chatChannel.getMediator()).isPresent();
-        if (isMyMediationChannel) {
+        if (isMyMediatorChannel(chatChannel)) {
             getNotConsumedMusigMediatorNotifications().forEach(notification-> {
                 if(notification.getChannelId().isPresent()
                         && notification.getChannelId().get().equals(chatChannel.getId())) {
@@ -308,6 +304,7 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
             }
         }
         if (wasRemoved) {
+            // notifications are already consumed on moderator page, no need to trigger change
             persist();
         }
     }

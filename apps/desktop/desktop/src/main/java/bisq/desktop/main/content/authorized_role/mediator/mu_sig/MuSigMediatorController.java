@@ -135,7 +135,6 @@ public class MuSigMediatorController implements Controller {
 
         clearSelectedItemChannelPin();
         selectionService.selectChannel(null);
-
     }
 
     void onSelectItem(MuSigMediationCaseListItem item) {
