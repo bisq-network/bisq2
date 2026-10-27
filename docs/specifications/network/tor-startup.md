@@ -33,7 +33,9 @@ which Tor writes. Tor writes its log to its standard output, which the node writ
 it moves the log to `tor-stdout.log.1` before the next start. The resources page opens this log, and the log zip
 contains a copy without the home directory. Before a start of its own Tor, the node moves the state of Tor of the
 layout before into `data/`, deletes only the files of the old layout which it knows, and keeps everything else. The
-backup of the data directory skips `tor/data`.
+backup of the data directory skips `tor/data`, and `tor/bin` and `tor/sandy`, which the node installs again at its
+next start of Tor. The backup contains `external_tor.config`, also when it holds the password of an external Tor
+(`ControlPassword`) in plain text.
 
 The node chooses the ports of the control and SOCKS listeners itself and checks with the hash of the control password,
 and after the bootstrap with the SOCKS listener, that it talks to the Tor of this start.
