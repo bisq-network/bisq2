@@ -1619,10 +1619,57 @@ tasks.register("verifyGithubActionsSecurity") {
     }
 }
 
+tasks.register("verifyDockerJavaVersion") {
+    group = "verification"
+    description = "Verifies Docker images use the Azul Zulu release of releaseBuild.javaVersion, pinned by digest."
+
+    val dockerFiles = fileTree("apps") {
+        include("**/Dockerfile")
+        exclude("**/build/**")
+    }
+
+    inputs.files(dockerFiles)
+    inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
+        val violations = mutableListOf<String>()
+        // The digest pins the image. The tag only shows its version to reviewers and to this check, so both
+        // must change together when the JDK is updated.
+        val zuluImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*azul/zulu-openjdk(\S*)""", RegexOption.IGNORE_CASE)
+        val pinnedZuluImageRegex = Regex(""":(\d+\.\d+\.\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
+
+        dockerFiles.files.sortedBy { it.path }.forEach { dockerFile ->
+            val dockerPath = rootProject.relativePath(dockerFile)
+            dockerFile.readLines(StandardCharsets.UTF_8).forEachIndexed { index, line ->
+                val imageMatch = zuluImageRegex.find(line) ?: return@forEachIndexed
+                val pinnedMatch = pinnedZuluImageRegex.matchEntire(imageMatch.groupValues[1])
+                if (pinnedMatch == null) {
+                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<version>[-jre]@sha256:<digest>"
+                } else if (pinnedMatch.groupValues[1] != expectedJavaVersion) {
+                    violations += "$dockerPath:${index + 1} uses Java version ${pinnedMatch.groupValues[1]} " +
+                            "but releaseBuild.javaVersion is $expectedJavaVersion"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            throw GradleException(
+                "Docker Java version verification failed:\n" +
+                    violations.joinToString(separator = "\n") { "  - $it" }
+            )
+        }
+
+        logger.lifecycle("Verified ${dockerFiles.files.size} Dockerfiles.")
+    }
+}
+
 tasks.named("check") {
     dependsOn("verifyBuildEnvironment")
     dependsOn("verifyGradleWrapperSecurity")
     dependsOn("verifyGithubActionsSecurity")
+    dependsOn("verifyDockerJavaVersion")
     dependsOn("verifyDependencySignaturePolicy")
 }
 
