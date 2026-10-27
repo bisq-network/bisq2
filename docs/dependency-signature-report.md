@@ -19,18 +19,18 @@ Refresh the metadata before regenerating this report:
 
 | Metric | Count |
 | --- | ---: |
-| Resolved external modules | 223 |
-| Modules with PGP-signed artifacts only | 216 |
+| Resolved external modules | 228 |
+| Modules with PGP-signed artifacts only | 221 |
 | Modules using checksum-only artifacts only | 7 |
 | Modules with mixed signed/checksum-only artifacts | 0 |
 | Modules missing verification metadata | 0 |
-| Verified artifacts | 328 |
-| PGP-signed artifacts | 312 |
+| Verified artifacts | 295 |
+| PGP-signed artifacts | 279 |
 | Checksum-only artifacts | 16 |
 | Resolved executable artifacts missing explicit metadata | 0 |
 | Stale executable metadata entries for unresolved versions | 0 |
 | Signer keys found in exported keyring | 81 / 81 |
-| Signer keys with name or email | 50 / 81 |
+| Signer keys with name or email | 49 / 81 |
 | Signer keys with creation date | 81 / 81 |
 
 ## Handling Transitive Dependencies
@@ -42,7 +42,7 @@ Treat transitive dependencies the same as direct dependencies. Gradle verifies t
 | Dependency | Scope | Checksum-only artifacts and review rationale |
 | --- | --- | --- |
 | `com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1` | direct | `com.gradleup.shadow.gradle.plugin-9.4.1.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
-| `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | `org.gradle.kotlin.kotlin-dsl.gradle.plugin-4.4.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
+| `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:6.2.0` | direct | `org.gradle.kotlin.kotlin-dsl.gradle.plugin-6.2.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.openjfx.javafxplugin:org.openjfx.javafxplugin.gradle.plugin:0.1.0` | direct | `org.openjfx.javafxplugin.gradle.plugin-0.1.0.pom`<br>Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256. |
 | `org.openjfx:javafx-plugin:0.1.0` | transitive | `javafx-plugin-0.1.0-sources.jar`<br>Publisher does not provide a detached PGP signature for this Gradle plugin source artifact; source artifact is pinned by SHA-256.<br><br>`javafx-plugin-0.1.0.jar`<br>Publisher does not provide a detached PGP signature for this Gradle plugin artifact; artifact is pinned by SHA-256.<br><br>`javafx-plugin-0.1.0.module`<br>Publisher does not provide a detached PGP signature for this Gradle module metadata; module metadata is pinned by SHA-256. |
 | `org.testfx:openjfx-monocle:21.0.2` | direct | `openjfx-monocle-21.0.2-javadoc.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2-sources.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2.jar`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256.<br><br>`openjfx-monocle-21.0.2.pom`<br>Signed with key 61651257058D3757, which is not available from the key servers; artifact is pinned by SHA-256. |
@@ -78,8 +78,10 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `com.google.android:annotations:4.1.1.4` | transitive | PGP signed | 2 signed / 0 checksum | `0F07D1201BDDAB67CFB84EB479752DB6C966F0B8`<br>Rob Manning<br>`robert.m.manning@gmail.com`<br>created 2009-08-28<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.api.grpc:proto-google-common-protos:2.64.1` | transitive | PGP signed | 1 signed / 0 checksum | `47504B76CF89C15C0512D9AFE16AB52D79FD224F`<br>created 2013-04-30<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
 | `com.google.code.findbugs:jsr305:3.0.2` | direct | PGP signed | 2 signed / 0 checksum | `7616EB882DAF57A11477AAF559A252FB1199D873`<br>Tagir Valeev<br>`lany@ngs.ru`<br>created 2015-03-12<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
+| `com.google.code.gson:gson:2.11.0` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>created 2016-06-10 |
 | `com.google.code.gson:gson:2.13.2` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>created 2016-06-10 |
 | `com.google.code.gson:gson:2.14.0` | direct | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`C7BE5BCC9FEC15518CFDA882B0F3710FA64900E7`<br>created 2016-06-10 |
+| `com.google.errorprone:error_prone_annotations:2.27.0` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`EE0CA873074092F806F59B65D364ABAA39A47320`<br>created 2022-01-28 |
 | `com.google.errorprone:error_prone_annotations:2.47.0` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`EE0CA873074092F806F59B65D364ABAA39A47320`<br>created 2022-01-28 |
 | `com.google.errorprone:error_prone_annotations:2.49.0` | transitive | PGP signed | 1 signed / 0 checksum | `BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16<br><br>`EE0CA873074092F806F59B65D364ABAA39A47320`<br>created 2022-01-28 |
 | `com.google.gradle:osdetector-gradle-plugin:1.7.3` | transitive | PGP signed | 2 signed / 0 checksum | `1DBB44E80F61493D6369B5FB95C15058A5EDA4F1`<br>Eric Anderson (Maven Central)<br>`ejona@google.com`<br>created 2015-03-17<br><br>`BDB5FA4FE719D787FB3D3197F6D4A1D411E9D1AE`<br>Christopher Povirk<br>`cpovirk@google.com`<br>created 2012-02-16 |
@@ -106,6 +108,7 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `de.jensd:fontawesomefx:8.0.0` | direct | PGP signed | 2 signed / 0 checksum | `D98E48D9AB0116441BBC16CD0F64F95CEF5F0629`<br>Jens Deters<br>`mail@jensd.de`<br>created 2013-07-29<br><br>`E6A6566630749F995E4703542C3097C79005FF30`<br>Jens Deters<br>`mail@jensd.de`<br>created 2017-03-27 |
 | `dev.failsafe:failsafe:3.3.2` | direct | PGP signed | 3 signed / 0 checksum | `C0ED5428ABA8C44ED059C5D408A167AD13E23BEF`<br>Jonathan Halterman<br>`jhalterman@gmail.com`<br>created 2022-02-15<br><br>`CDE577234159E222BC56E50F9C61220417AAA02E`<br>Jonathan Halterman<br>`jhalterman@gmail.com`<br>created 2023-03-20 |
 | `io.github.classgraph:classgraph:4.8.184` | transitive | PGP signed | 1 signed / 0 checksum | `1F47744C9B6E14F2049C2857F1F111AF65925306`<br>Luke Hutchison<br>`luke.hutch@gmail.com`<br>created 2015-01-14 |
+| `io.github.java-diff-utils:java-diff-utils:4.12` | transitive | PGP signed | 1 signed / 0 checksum | `D477D51812E692011DB11E66A6EA2E2BF22E0543`<br>created 2013-10-05 |
 | `io.grpc:grpc-api:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-context:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
 | `io.grpc:grpc-core:1.81.0` | transitive | PGP signed | 1 signed / 0 checksum | `B02335AA54CCF21E52BBF9ABD9C565AA72BA2FDD`<br>created 2018-04-27 |
@@ -209,50 +212,52 @@ Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
 | `org.glassfish.jersey.ext:jersey-entity-filtering:4.0.2` | transitive | PGP signed | 1 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.inject:jersey-hk2:4.0.2` | direct | PGP signed | 1 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
 | `org.glassfish.jersey.media:jersey-media-json-jackson:4.0.2` | direct | PGP signed | 1 signed / 0 checksum | `0B743A794876D3C78AB542A118D239B1CBCD2236`<br>created 2018-10-03 |
-| `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:4.4.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
-| `org.gradle.kotlin:gradle-kotlin-dsl-plugins:4.4.0` | transitive | PGP signed | 2 signed / 0 checksum | `1BD97A6A154E7810EE0BC832E2F38302C8075E3D`<br>Gradle Inc.<br>`maven-publishing@gradle.com`<br>created 2022-12-29 |
+| `org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:6.2.0` | direct | checksum fallback | 0 signed / 1 checksum | - |
+| `org.gradle.kotlin:gradle-kotlin-dsl-plugins:6.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `1BD97A6A154E7810EE0BC832E2F38302C8075E3D`<br>Gradle Inc.<br>`maven-publishing@gradle.com`<br>created 2022-12-29 |
 | `org.hamcrest:hamcrest-core:1.3` | transitive | PGP signed | 2 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14 |
 | `org.hamcrest:hamcrest:3.0` | direct | PGP signed | 1 signed / 0 checksum | `4DB1A49729B053CAF015CEE9A6ADFC93EF34893E`<br>created 2012-05-14<br><br>`E3A9F95079E84CE201F7CF60BEDE11EAF1164480`<br>created 2018-11-21 |
 | `org.javassist:javassist:3.30.2-GA` | transitive | PGP signed | 2 signed / 0 checksum | `E5C3B1929191DF06136CCB2B164779204E106A76`<br>Shigeru Chiba (Javassist Developer)<br>`chiba@javassist.org`<br>created 2021-05-07 |
 | `org.jcommander:jcommander:1.85` | transitive | PGP signed | 3 signed / 0 checksum | `1D85469D8559C2E1DF5F925131D2D79DF7E85DD3`<br>Markus KARG<br>`markus@headcrashing.eu`<br>created 2023-08-04 |
 | `org.jdom:jdom2:2.0.6.1` | transitive | PGP signed | 2 signed / 0 checksum | `78DF98EF7F95578FD545B9A159A7C2A1BD98C013`<br>Jason Hunter<br>`jhunter@servlets.com`<br>created 2021-12-06 |
-| `org.jetbrains.intellij.deps:trove4j:1.0.20200330` | transitive | PGP signed | 2 signed / 0 checksum | `8756C4F765C9AC3CB6B85D62379CE192D401AB61`<br>Bintray (by JFrog)<br>`bintray@bintray.com`<br>created 2015-02-17 |
-| `org.jetbrains.kotlin:kotlin-android-extensions:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-assignment-compiler-plugin-embeddable:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-assignment:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-build-common:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-build-tools-api:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-build-tools-impl:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-compiler-embeddable:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-compiler-runner:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-daemon-client:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-daemon-embeddable:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin-api:1.9.23` | transitive | PGP signed | 3 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin-idea:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin-model:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-gradle-plugins-bom:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-klib-commonizer-api:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-klib-commonizer-embeddable:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:abi-tools-api:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:abi-tools:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:fus-statistics-gradle-plugin:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-assignment-compiler-plugin-embeddable:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-assignment:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-build-statistics:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-build-tools-api:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-build-tools-impl:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-compiler-embeddable:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-compiler-runner:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-daemon-client:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-daemon-embeddable:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin-annotations:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin-api:2.2.0` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin-idea-proto:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin-idea:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin-model:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-gradle-plugins-bom:2.2.0` | transitive | PGP signed | 0 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-klib-commonizer-api:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-klib-commonizer-embeddable:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-metadata-jvm:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
 | `org.jetbrains.kotlin:kotlin-metadata-jvm:2.3.20` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-native-utils:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-project-model:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-native-utils:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
 | `org.jetbrains.kotlin:kotlin-reflect:1.6.10` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-reflect:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-sam-with-receiver-compiler-plugin-embeddable:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-sam-with-receiver:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-script-runtime:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-scripting-common:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:1.9.23` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-scripting-jvm:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-stdlib:1.9.23` | direct | PGP signed | 4 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-tooling-core:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-util-io:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlin:kotlin-util-klib:1.9.23` | transitive | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
-| `org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.5.0` | transitive | PGP signed | 2 signed / 0 checksum | `E7DC75FC24FB3C8DFE8086AD3D5839A2262CBBFB`<br>created 2020-12-09 |
+| `org.jetbrains.kotlin:kotlin-reflect:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-sam-with-receiver-compiler-plugin-embeddable:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-sam-with-receiver:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-script-runtime:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-scripting-common:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-scripting-compiler-embeddable:2.2.0` | direct | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-scripting-compiler-impl-embeddable:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-scripting-jvm:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-stdlib:2.2.0` | direct | PGP signed | 2 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-tooling-core:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-util-io:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-util-klib-metadata:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlin:kotlin-util-klib:2.2.0` | transitive | PGP signed | 1 signed / 0 checksum | `6F538074CCEBF35F28AF9B066A0975F8B1127B83`<br>Kotlin Release<br>`kt-a@jetbrains.com`<br>created 2019-06-01 |
+| `org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:1.8.0` | transitive | PGP signed | 1 signed / 0 checksum | `E7DC75FC24FB3C8DFE8086AD3D5839A2262CBBFB`<br>created 2020-12-09 |
 | `org.jetbrains:annotations:13.0` | direct | PGP signed | 2 signed / 0 checksum | `2E3A1AFFE42B5F53AF19F780BCF4173966770193`<br>IntelliJ IDEA Sign Key<br>`intellij-idea-sign-key-noreply@jetbrains.com`<br>created 2013-12-10 |
 | `org.jetbrains:annotations:26.1.0` | direct | PGP signed | 1 signed / 0 checksum | `33FD4BFD33554634053D73C0C2148900BCD3C2AF`<br>Download<br>`download@jetbrains.com`<br>created 2021-03-15 |
 | `org.jspecify:jspecify:1.0.0` | transitive | PGP signed | 3 signed / 0 checksum | `41CD49B4EF5876F9E9F691DABAC30622339994C4`<br>Chris Povirk<br>`cpovirk@google.com`<br>created 2017-06-22 |
