@@ -262,9 +262,10 @@ message SupportNotification {
   SupportNotificationType supportNotificationType = 1;
   string id = 2;
   optional string channelId = 3;
-  string title = 4;
-  string message = 5;
-  bool isConsumed = 6;
+  optional string senderUserProfileId = 4;
+  string title = 5;
+  string message = 6;
+  bool isConsumed = 7;
 }
 
 message SupportNotificationsStore {

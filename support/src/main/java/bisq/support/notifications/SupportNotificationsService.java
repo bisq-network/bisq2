@@ -261,8 +261,7 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         boolean wasAdded = false;
         synchronized (persistableStore) {
             if (!persistableStore.getNotifications().contains(notification)) {
-                persistableStore.getNotifications().add(notification);
-                wasAdded = true;
+                wasAdded = persistableStore.getNotifications().add(notification);
             }
         }
         if (wasAdded) {
@@ -319,6 +318,14 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         if (wasRemoved) {
             persist();
         }
+    }
+
+    public long getNotConsumedMuSigChannelNotificationsBySenderId(String channelId, String senderUserProfileId) {
+        return getNotConsumedNotifications().filter(notification ->
+                notification.getSenderUserProfileId().isPresent()
+                        && notification.getChannelId().get().equals(channelId)
+                        && notification.getSenderUserProfileId().get().equals(senderUserProfileId))
+                .count();
     }
 
     @Override

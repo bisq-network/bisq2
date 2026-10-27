@@ -37,8 +37,9 @@ import java.util.Optional;
 public class SupportNotification implements PersistableProto, NetworkProto, Notification {
 
     private final String id;
-    private final Optional<String> channelId;
     private final SupportNotificationType type;
+    private final Optional<String> channelId;
+    private final Optional<String> senderUserProfileId;
     private final String title;
     private final String message;
     @EqualsAndHashCode.Exclude
@@ -46,8 +47,9 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
 
     public SupportNotification(ReportToModeratorMessage message) {
         this.id = createId(message);
-        this.channelId = Optional.empty();
         this.type = SupportNotificationType.MODERATOR_NOTIFICATION;
+        this.channelId = Optional.empty();
+        this.senderUserProfileId = Optional.empty();
         this.title = "User Report";
         this.message = message.getMessage();
         this.setConsumed(false);
@@ -55,8 +57,9 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
 
     public SupportNotification(BisqEasyOpenTradeMessage message) {
         this.id = message.getId();
-        this.channelId = Optional.of(message.getChannelId());
         this.type = SupportNotificationType.BISQ_EASY_MEDIATOR_NOTIFICATION;
+        this.channelId = Optional.of(message.getChannelId());
+        this.senderUserProfileId = Optional.of(message.getAuthorUserProfileId());
         this.title = "Bisq Easy Trade Message";
         this.message = message.getText().orElse("");
         this.setConsumed(false);
@@ -64,24 +67,27 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
 
     public SupportNotification(MuSigOpenTradeMessage message) {
         this.id = message.getId();
-        this.channelId = Optional.of(message.getChannelId());
         this.type = SupportNotificationType.MU_SIG_MEDIATOR_NOTIFICATION;
+        this.channelId = Optional.of(message.getChannelId());
+        this.senderUserProfileId = Optional.of(message.getAuthorUserProfileId());
         this.title = "Mu-Sig Trade Message";
         this.message = message.getText().orElse("");
         this.setConsumed(false);
     }
 
     public SupportNotification(
-            bisq.support.protobuf.SupportNotificationType supportNotificationType,
             String id,
+            bisq.support.protobuf.SupportNotificationType supportNotificationType,
             Optional<String> channelId,
-            String message,
+            Optional<String> senderUserProfileId,
             String title,
+            String message,
             boolean isConsumed
     ) {
         this.type = SupportNotificationType.fromProtoEnum(supportNotificationType);
         this.id = id;
         this.channelId = channelId;
+        this.senderUserProfileId = senderUserProfileId;
         this.title = title;
         this.message = message;
         this.isConsumed.set(isConsumed);
@@ -114,11 +120,12 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
 
     public static SupportNotification fromProto(bisq.support.protobuf.SupportNotification proto) {
         return new SupportNotification(
-                proto.getSupportNotificationType(),
                 proto.getId(),
+                proto.getSupportNotificationType(),
                 proto.hasChannelId() ? Optional.of(proto.getChannelId()) : Optional.empty(),
-                proto.getMessage(),
+                proto.hasSenderUserProfileId() ? Optional.of(proto.getSenderUserProfileId()) : Optional.empty(),
                 proto.getTitle(),
+                proto.getMessage(),
                 proto.getIsConsumed()
         );
     }
@@ -136,6 +143,7 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
                 .setSupportNotificationType(type.toProtoEnum())
                 .setIsConsumed(isConsumed.get());
         getChannelId().ifPresent(builder::setChannelId);
+        getSenderUserProfileId().ifPresent(builder::setSenderUserProfileId);
         return builder;
     }
 
