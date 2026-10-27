@@ -4,6 +4,6 @@ plugins {
 }
 
 javafx {
-    version = "21.0.13"
+    version = libs.versions.javafx.get()
     modules = listOf("javafx.graphics")
 }
