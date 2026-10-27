@@ -32,9 +32,14 @@ import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 import org.apache.hc.client5.http.config.RequestConfig;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.io.BasicHttpClientConnectionManager;
+import org.apache.hc.client5.http.ssl.DefaultClientTlsStrategy;
+import org.apache.hc.client5.http.ssl.TlsSocketStrategy;
 import org.apache.hc.core5.http.ClassicHttpResponse;
 import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
+import org.apache.hc.core5.http.URIScheme;
+import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.util.Timeout;
@@ -54,6 +59,7 @@ public class TorHttpClient extends BaseHttpClient {
     private final Socks5ProxyProvider socks5ProxyProvider;
     private CloseableHttpClient closeableHttpClient;
     private volatile boolean shutdownStarted;
+    private volatile HttpUriRequestBase pendingRequest;
 
     public TorHttpClient(String baseUrl, String logBaseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
         super(baseUrl, logBaseUrl, userAgent);
@@ -63,7 +69,9 @@ public class TorHttpClient extends BaseHttpClient {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        if (closeableHttpClient == null) {
+        // The volatile pendingRequest is read first: doRequest writes it after closeableHttpClient, so a
+        // pendingRequest seen here also makes the client of that request visible to this thread
+        if (pendingRequest == null && closeableHttpClient == null) {
             hasPendingRequest = false;
             return CompletableFuture.completedFuture(true);
         }
@@ -71,6 +79,13 @@ public class TorHttpClient extends BaseHttpClient {
         CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
                     try {
                         try {
+                            // Cancelling the request closes its connection without the lock which
+                            // BasicHttpClientConnectionManager holds while the SOCKS handshake waits for Tor to
+                            // build the circuit. Closing the client alone would wait for that lock.
+                            HttpUriRequestBase request = pendingRequest;
+                            if (request != null) {
+                                request.cancel();
+                            }
                             if (closeableHttpClient != null) {
                                 closeableHttpClient.close();
                                 closeableHttpClient = null;
@@ -114,14 +129,24 @@ public class TorHttpClient extends BaseHttpClient {
         InetSocketAddress socksAddress = new InetSocketAddress(socks5Proxy.getInetAddress(), socks5Proxy.getPort());
         // Use this to test with system-wide Tor proxy, or change port for another proxy.
         // SocketAddress socksAddress = new InetSocketAddress("127.0.0.1", 9050);
-        var cm = new PoolingTorHttpClientConnectionManager();
-        cm.setDefaultSocketConfig(SocketConfig.custom()
+        // The client and its manager are built for this request and closed in finally, so a pooling manager never
+        // got the chance to reuse a connection for a later request
+        var cm = new BasicHttpClientConnectionManager(new TorHttpClientConnectionOperator(null,
+                RegistryBuilder.<TlsSocketStrategy>create()
+                        .register(URIScheme.HTTPS.id, DefaultClientTlsStrategy.createDefault())
+                        .build()),
+                null);
+        cm.setSocketConfig(SocketConfig.custom()
                 .setSocksProxyAddress(socksAddress)
                 .setSoTimeout(Timeout.ofSeconds(30))
                 .build());
         try {
             closeableHttpClient = checkNotNull(HttpClients.custom()
                     .setConnectionManager(cm)
+                    // An HTTP connection over Tor carries one HTTP request only (the rules for HTTP requests over
+                    // Tor in docs/specifications/network/tor-stream-isolation.md). A connection kept alive would
+                    // carry a redirect or a retry of this request on the circuit of the request itself.
+                    .setConnectionReuseStrategy((request, response, context) -> false)
                     .setDefaultRequestConfig(RequestConfig.custom()
                             .setResponseTimeout(Timeout.ofSeconds(30))
                             .build()) // Timeout waiting for response
@@ -148,6 +173,7 @@ public class TorHttpClient extends BaseHttpClient {
             }
 
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
+            pendingRequest = request;
             var target = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
             return closeableHttpClient.execute(target, request, response -> processResponse(response, safeParam, ts));
         } catch (Throwable t) {
@@ -155,6 +181,7 @@ public class TorHttpClient extends BaseHttpClient {
                     ". Throwable=" + t.getMessage();
             throw new IOException(message, t);
         } finally {
+            pendingRequest = null;
             if (closeableHttpClient != null) {
                 closeableHttpClient.close();
                 closeableHttpClient = null;
