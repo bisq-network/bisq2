@@ -180,6 +180,39 @@ Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must al
 executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
 version of the same tool.
 
+### Trusted key of java-diff-utils
+
+The key `D477D51812E692011DB11E66A6EA2E2BF22E0543` has no user ID in the keyring, so it cannot be attributed to anyone.
+The metadata trusts it only for `io.github.java-diff-utils:java-diff-utils` and `java-diff-utils-parent` in the version
+which the build resolves, not for the whole group. When `--write-verification-metadata` records a new version of these
+artifacts, Gradle can trust the key for the whole group again. Replace such an entry with `trusting` entries for the
+new version.
+
+### Pinned JavaFX artifacts
+
+The JavaFX platform jars contain native libraries. The `org.openjfx` trusted key accepts every artifact which this key
+signs, so the metadata also pins the exact bytes of the JavaFX artifacts with `sha256` entries. Gradle checks the
+signature and the checksum. These entries cover the platform jars of all release platforms (`linux`, `linux-aarch64`,
+`mac`, `mac-aarch64`, `win`), the plain jars and the POMs.
+
+In `pgp,sha256` mode, Gradle writes no checksum for an artifact which a trusted key covers, so these entries need a
+separate run. After a JavaFX update (`javafx` in `gradle/libs.versions.toml`), remove the components of the old
+version and run:
+
+```bash
+v=21.0.13
+./gradlew resolveAndVerifyDependencies :resolveIdeArtifactsForVerification \
+  --init-script gradle/resolve-ide-artifacts.gradle \
+  -PverificationDependency=org.openjfx:javafx-base:$v,org.openjfx:javafx-controls:$v,org.openjfx:javafx-graphics:$v,org.openjfx:javafx-media:$v,org.openjfx:javafx-swing:$v \
+  -PverificationClassifiers=linux,linux-aarch64,mac,mac-aarch64,win \
+  --write-verification-metadata sha256
+```
+
+In `sha256` mode, Gradle writes a checksum for every resolved artifact. Keep only the new `org.openjfx` components,
+for example with `git add -p gradle/verification-metadata.xml`, and discard the other changes. Then run the same
+command without `--write-verification-metadata sha256`. This run checks the signatures and the new checksums of all
+platform jars, also of the platforms which the host does not use. Finally run `dependencySignatureReport`.
+
 The audit's functional checks use isolated composite builds and a local Maven repository. With Python 3 and the
 Gradle wrapper distribution already available, run them without accessing remote artifact repositories:
 
