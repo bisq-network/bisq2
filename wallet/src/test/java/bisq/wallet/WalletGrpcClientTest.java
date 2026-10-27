@@ -37,21 +37,40 @@ import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.protobuf.Transaction;
 import bisq.wallet.protobuf.WalletGrpc;
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.google.common.util.concurrent.MoreExecutors;
+import io.grpc.Context;
 import io.grpc.ManagedChannel;
+import io.grpc.Server;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
-import io.grpc.testing.GrpcCleanupRule;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -59,27 +78,32 @@ import static org.mockito.Mockito.doAnswer;
 @ExtendWith(MockitoExtension.class)
 class WalletGrpcClientTest {
 
-    public final GrpcCleanupRule grpcCleanup = new GrpcCleanupRule();
+    private final List<ManagedChannel> channels = new ArrayList<>();
 
     @Mock(answer = Answers.CALLS_REAL_METHODS)
     private WalletGrpc.WalletImplBase serviceImpl;
 
+    private String serverName;
+    private Server server;
     private WalletGrpcClient client;
 
     @BeforeEach
     void setUp() throws Exception {
-        String serverName = InProcessServerBuilder.generateName();
-
-        grpcCleanup.register(InProcessServerBuilder.forName(serverName)
+        serverName = InProcessServerBuilder.generateName();
+        server = InProcessServerBuilder.forName(serverName)
                 .directExecutor()
                 .addService(serviceImpl)
                 .build()
-                .start());
+                .start();
 
-        ManagedChannel channel = grpcCleanup.register(
-                InProcessChannelBuilder.forName(serverName).directExecutor().build());
-        client = new WalletGrpcClient(channel);
+        client = new WalletGrpcClient(createChannel(serverName));
         client.initialize();
+    }
+
+    @AfterEach
+    void tearDown() {
+        channels.forEach(ManagedChannel::shutdownNow);
+        server.shutdownNow();
     }
 
     @Test
@@ -229,5 +253,197 @@ class WalletGrpcClientTest {
         var request = SendToAddressRequest.newBuilder().build();
         var result = client.sendToAddress(request).get();
         assertEquals("sent_tx_id", result.getTxId());
+    }
+
+    @Test
+    void closedWalletFailsWithWalletNotOpen() {
+        doAnswer(invocation -> {
+            StreamObserver<GetBalanceResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.FAILED_PRECONDITION
+                    .withDescription("wallet is not open; call OpenOrCreateWallet first")
+                    .asRuntimeException());
+            return null;
+        }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
+
+        WalletException exception = getWalletException(client.requestBalance());
+
+        assertEquals(WalletException.Reason.WALLET_NOT_OPEN, exception.getReason());
+        StatusRuntimeException cause = assertInstanceOf(StatusRuntimeException.class, exception.getCause());
+        assertEquals(Status.Code.FAILED_PRECONDITION, cause.getStatus().getCode());
+    }
+
+    @Test
+    void rejectedPasswordFailsWithWrongPassword() {
+        doAnswer(invocation -> {
+            StreamObserver<SendToAddressResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.PERMISSION_DENIED
+                    .withDescription("invalid wallet password")
+                    .asRuntimeException());
+            return null;
+        }).when(serviceImpl).sendToAddress(any(SendToAddressRequest.class), any());
+
+        var request = SendToAddressRequest.newBuilder().setPassphrase("wrong").build();
+        WalletException exception = getWalletException(client.sendToAddress(request));
+
+        assertEquals(WalletException.Reason.WRONG_PASSWORD, exception.getReason());
+    }
+
+    @Test
+    void internalDaemonErrorFailsWithDaemonError() {
+        doAnswer(invocation -> {
+            StreamObserver<ListTransactionsResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.INTERNAL.withDescription("sync failed").asRuntimeException());
+            return null;
+        }).when(serviceImpl).listTransactions(any(ListTransactionsRequest.class), any());
+
+        WalletException exception = getWalletException(client.listTransactions());
+
+        assertEquals(WalletException.Reason.DAEMON_ERROR, exception.getReason());
+    }
+
+    @Test
+    void unreachableDaemonFailsWithDaemonUnavailable() {
+        WalletGrpcClient unreachableClient = new WalletGrpcClient(createChannel(InProcessServerBuilder.generateName()));
+        unreachableClient.initialize();
+
+        WalletException exception = getWalletException(unreachableClient.requestBalance());
+
+        assertEquals(WalletException.Reason.DAEMON_UNAVAILABLE, exception.getReason());
+    }
+
+    @Test
+    void callRemovedOnTheDaemonFailsWithUnsupportedCall() {
+        WalletException exception = assertThrows(WalletException.class, () -> client.encryptWallet("password"));
+
+        assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
+    }
+
+    @Test
+    void asyncCallRemovedOnTheDaemonFailsWithUnsupportedCall() {
+        WalletException exception = getWalletException(client.getNewAddress());
+
+        assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
+    }
+
+    @Test
+    void blockingDecryptRemovedOnTheDaemonFailsWithUnsupportedCall() {
+        WalletException exception = assertThrows(WalletException.class, () -> client.decryptWallet("password"));
+
+        assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
+    }
+
+    @Test
+    void callsBeforeInitializeFailWithClientNotReady() {
+        WalletGrpcClient uninitializedClient = new WalletGrpcClient(createChannel(serverName));
+
+        assertEquals(WalletException.Reason.CLIENT_NOT_READY,
+                getWalletException(uninitializedClient.requestBalance()).getReason());
+        assertEquals(WalletException.Reason.CLIENT_NOT_READY,
+                assertThrows(WalletException.class, () -> uninitializedClient.encryptWallet("password")).getReason());
+    }
+
+    @Test
+    void callsAfterShutdownFailWithClientNotReady() {
+        client.shutdown();
+
+        assertEquals(WalletException.Reason.CLIENT_NOT_READY,
+                getWalletException(client.requestBalance()).getReason());
+        assertEquals(WalletException.Reason.CLIENT_NOT_READY,
+                assertThrows(WalletException.class, () -> client.decryptWallet("password")).getReason());
+    }
+
+    @Test
+    void cancellingTheReturnedFutureCancelsTheCall() throws InterruptedException {
+        CountDownLatch callCancelled = new CountDownLatch(1);
+        doAnswer(invocation -> {
+            Context.current().addListener(context -> callCancelled.countDown(), MoreExecutors.directExecutor());
+            return null;
+        }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
+
+        CompletableFuture<GetBalanceResponse> future = client.requestBalance();
+        future.cancel(true);
+
+        assertTrue(future.isCancelled());
+        assertTrue(callCancelled.await(5, TimeUnit.SECONDS));
+    }
+
+    @Test
+    void cancelledStatusFromTheDaemonFailsWithDaemonError() {
+        doAnswer(invocation -> {
+            StreamObserver<GetBalanceResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.CANCELLED.asRuntimeException());
+            return null;
+        }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
+
+        CompletableFuture<GetBalanceResponse> future = client.requestBalance();
+
+        assertEquals(WalletException.Reason.DAEMON_ERROR, getWalletException(future).getReason());
+        assertFalse(future.isCancelled());
+    }
+
+    @Test
+    void dependentStagesSeeTheWalletExceptionAsCause() {
+        doAnswer(invocation -> {
+            StreamObserver<GetBalanceResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.FAILED_PRECONDITION.asRuntimeException());
+            return null;
+        }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
+
+        CompletableFuture<Long> balance = client.requestBalance().thenApply(GetBalanceResponse::getBalance);
+
+        CompletionException exception = assertThrows(CompletionException.class, balance::join);
+        WalletException walletException = assertInstanceOf(WalletException.class, exception.getCause());
+        assertEquals(WalletException.Reason.WALLET_NOT_OPEN, walletException.getReason());
+    }
+
+    @Test
+    void eachFailedCallLogsOneWarningWithoutTheRequest() {
+        doAnswer(invocation -> {
+            StreamObserver<SendToAddressResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.PERMISSION_DENIED.withDescription("invalid wallet password").asRuntimeException());
+            return null;
+        }).when(serviceImpl).sendToAddress(any(SendToAddressRequest.class), any());
+        doAnswer(invocation -> {
+            StreamObserver<GetBalanceResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onNext(GetBalanceResponse.newBuilder().setBalance(1000L).build());
+            responseObserver.onCompleted();
+            return null;
+        }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
+        doAnswer(invocation -> null).when(serviceImpl).isWalletEncrypted(any(IsWalletEncryptedRequest.class), any());
+
+        Logger logger = (Logger) LoggerFactory.getLogger(WalletGrpcClient.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            var request = SendToAddressRequest.newBuilder().setPassphrase("secret-passphrase").setAddress("bcrt1qaddress").build();
+            getWalletException(client.sendToAddress(request));
+            client.requestBalance().join();
+            client.isWalletEncrypted().cancel(true);
+            getWalletException(client.sendToAddress(request));
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        List<String> warnings = appender.list.stream()
+                .filter(event -> event.getLevel() == Level.WARN)
+                .map(ILoggingEvent::getFormattedMessage)
+                .toList();
+        assertEquals(2, warnings.size());
+        warnings.forEach(warning -> {
+            assertTrue(warning.contains("SendToAddress"));
+            assertFalse(warning.contains("secret-passphrase"));
+        });
+    }
+
+    private ManagedChannel createChannel(String name) {
+        ManagedChannel channel = InProcessChannelBuilder.forName(name).directExecutor().build();
+        channels.add(channel);
+        return channel;
+    }
+
+    private static WalletException getWalletException(CompletableFuture<?> future) {
+        ExecutionException executionException = assertThrows(ExecutionException.class, future::get);
+        return assertInstanceOf(WalletException.class, executionException.getCause());
     }
 }
