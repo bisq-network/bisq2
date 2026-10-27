@@ -19,11 +19,14 @@ package bisq.wallet;
 
 import lombok.Getter;
 
+import java.util.Optional;
+
 @Getter
 public class WalletException extends RuntimeException {
     public enum Reason {
         WALLET_NOT_OPEN,
         WRONG_PASSWORD,
+        INVALID_REQUEST,
         DAEMON_UNAVAILABLE,
         UNSUPPORTED_CALL,
         CLIENT_NOT_READY,
@@ -31,9 +34,11 @@ public class WalletException extends RuntimeException {
     }
 
     private final Reason reason;
+    private final Optional<String> detail;
 
-    public WalletException(Reason reason, String message, Throwable cause) {
+    public WalletException(Reason reason, String message, Optional<String> detail, Throwable cause) {
         super(message, cause);
         this.reason = reason;
+        this.detail = detail;
     }
 }

@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import java.util.List;
 
@@ -38,12 +39,15 @@ public class SetupWalletWizardBackupController implements Controller {
     @Getter
     private final SetupWalletWizardBackupView view;
     private final Runnable onBackHandler;
+    private final Supplier<String> walletPassword;
     private final WalletService walletService;
 
     public SetupWalletWizardBackupController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
-                                             Runnable onBackHandler) {
+                                             Runnable onBackHandler,
+                                             Supplier<String> walletPassword) {
         this.onBackHandler = onBackHandler;
+        this.walletPassword = walletPassword;
         model = new SetupWalletWizardBackupModel();
         view = new SetupWalletWizardBackupView(model, this, navigationButtonsVisibleHandler);
 
@@ -77,7 +81,7 @@ public class SetupWalletWizardBackupController implements Controller {
 
     private void loadSeedWordsAsync(WalletService walletService) {
         model.getSeedState().set(SeedState.LOADING);
-        walletService.getSeedWords()
+        walletService.getSeedWords(walletPassword.get())
                 .thenAccept(seedWords ->
                         UIThread.run(() -> {
                             setSeedWords(seedWords);

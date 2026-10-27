@@ -17,6 +17,8 @@
 
 package bisq.wallet;
 
+import bisq.wallet.protobuf.ChangePasswordRequest;
+import bisq.wallet.protobuf.ChangePasswordResponse;
 import bisq.wallet.protobuf.GetBalanceRequest;
 import bisq.wallet.protobuf.GetBalanceResponse;
 import bisq.wallet.protobuf.GetSeedWordsRequest;
@@ -25,14 +27,15 @@ import bisq.wallet.protobuf.GetUnusedAddressRequest;
 import bisq.wallet.protobuf.GetUnusedAddressResponse;
 import bisq.wallet.protobuf.GetWalletAddressesRequest;
 import bisq.wallet.protobuf.GetWalletAddressesResponse;
-import bisq.wallet.protobuf.IsWalletEncryptedRequest;
-import bisq.wallet.protobuf.IsWalletEncryptedResponse;
 import bisq.wallet.protobuf.IsWalletReadyRequest;
 import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.ListTransactionsRequest;
 import bisq.wallet.protobuf.ListTransactionsResponse;
 import bisq.wallet.protobuf.ListUtxosRequest;
 import bisq.wallet.protobuf.ListUtxosResponse;
+import bisq.wallet.protobuf.OpenOrCreateWalletRequest;
+import bisq.wallet.protobuf.OpenOrCreateWalletResponse;
+import bisq.wallet.protobuf.PubAddressInfo;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.protobuf.Transaction;
@@ -55,12 +58,14 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CountDownLatch;
@@ -74,6 +79,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class WalletGrpcClientTest {
@@ -109,7 +115,7 @@ class WalletGrpcClientTest {
     @Test
     void getUnusedAddress() throws ExecutionException, InterruptedException {
         var response = GetUnusedAddressResponse.newBuilder()
-                .setAddress("test_address")
+                .setAddress(PubAddressInfo.newBuilder().setAddress("test_address"))
                 .build();
         doAnswer(invocation -> {
             StreamObserver<GetUnusedAddressResponse> responseObserver = invocation.getArgument(1);
@@ -119,7 +125,7 @@ class WalletGrpcClientTest {
         }).when(serviceImpl).getUnusedAddress(any(GetUnusedAddressRequest.class), any());
 
         var result = client.getUnusedAddress().get();
-        assertEquals("test_address", result.getAddress());
+        assertEquals("test_address", result.getAddress().getAddress());
     }
 
     @Test
@@ -139,22 +145,6 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void isWalletEncrypted() throws ExecutionException, InterruptedException {
-        var response = IsWalletEncryptedResponse.newBuilder()
-                .setEncrypted(true)
-                .build();
-        doAnswer(invocation -> {
-            StreamObserver<IsWalletEncryptedResponse> responseObserver = invocation.getArgument(1);
-            responseObserver.onNext(response);
-            responseObserver.onCompleted();
-            return null;
-        }).when(serviceImpl).isWalletEncrypted(any(IsWalletEncryptedRequest.class), any());
-
-        var result = client.isWalletEncrypted().get();
-        assertTrue(result.getEncrypted());
-    }
-
-    @Test
     void getSeedWords() throws ExecutionException, InterruptedException {
         var response = GetSeedWordsResponse.newBuilder()
                 .addSeedWords("word1")
@@ -167,7 +157,10 @@ class WalletGrpcClientTest {
             return null;
         }).when(serviceImpl).getSeedWords(any(GetSeedWordsRequest.class), any());
 
-        var result = client.getSeedWords().get();
+        var result = client.getSeedWords("Wallet-Pa55!").get();
+        ArgumentCaptor<GetSeedWordsRequest> request = ArgumentCaptor.forClass(GetSeedWordsRequest.class);
+        verify(serviceImpl).getSeedWords(request.capture(), any());
+        assertEquals("Wallet-Pa55!", request.getValue().getPassword());
         assertEquals(2, result.getSeedWordsList().size());
         assertEquals("word1", result.getSeedWords(0));
         assertEquals("word2", result.getSeedWords(1));
@@ -210,8 +203,8 @@ class WalletGrpcClientTest {
     @Test
     void requestWalletAddresses() throws ExecutionException, InterruptedException {
         var response = GetWalletAddressesResponse.newBuilder()
-                .addAddresses("address1")
-                .addAddresses("address2")
+                .addAddresses(PubAddressInfo.newBuilder().setAddress("address1"))
+                .addAddresses(PubAddressInfo.newBuilder().setAddress("address2"))
                 .build();
         doAnswer(invocation -> {
             StreamObserver<GetWalletAddressesResponse> responseObserver = invocation.getArgument(1);
@@ -222,8 +215,43 @@ class WalletGrpcClientTest {
 
         var result = client.requestWalletAddresses().get();
         assertEquals(2, result.getAddressesList().size());
-        assertEquals("address1", result.getAddresses(0));
-        assertEquals("address2", result.getAddresses(1));
+        assertEquals("address1", result.getAddresses(0).getAddress());
+        assertEquals("address2", result.getAddresses(1).getAddress());
+    }
+
+    @Test
+    void openOrCreateWalletSendsThePassword() throws ExecutionException, InterruptedException {
+        doAnswer(invocation -> {
+            StreamObserver<OpenOrCreateWalletResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onNext(OpenOrCreateWalletResponse.newBuilder().setSuccess(true).build());
+            responseObserver.onCompleted();
+            return null;
+        }).when(serviceImpl).openOrCreateWallet(any(OpenOrCreateWalletRequest.class), any());
+
+        var result = client.openOrCreateWallet("Wallet-Pa55!").get();
+
+        ArgumentCaptor<OpenOrCreateWalletRequest> request = ArgumentCaptor.forClass(OpenOrCreateWalletRequest.class);
+        verify(serviceImpl).openOrCreateWallet(request.capture(), any());
+        assertEquals("Wallet-Pa55!", request.getValue().getPassword());
+        assertTrue(result.getSuccess());
+    }
+
+    @Test
+    void changePasswordSendsBothPasswords() throws ExecutionException, InterruptedException {
+        doAnswer(invocation -> {
+            StreamObserver<ChangePasswordResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onNext(ChangePasswordResponse.newBuilder().setSuccess(true).build());
+            responseObserver.onCompleted();
+            return null;
+        }).when(serviceImpl).changePassword(any(ChangePasswordRequest.class), any());
+
+        var result = client.changePassword("Old-Pa55!", "New-Pa55!").get();
+
+        ArgumentCaptor<ChangePasswordRequest> request = ArgumentCaptor.forClass(ChangePasswordRequest.class);
+        verify(serviceImpl).changePassword(request.capture(), any());
+        assertEquals("Old-Pa55!", request.getValue().getOldPassword());
+        assertEquals("New-Pa55!", request.getValue().getNewPassword());
+        assertTrue(result.getSuccess());
     }
 
     @Test
@@ -289,6 +317,22 @@ class WalletGrpcClientTest {
     }
 
     @Test
+    void refusedRequestFailsWithInvalidRequestAndTheDaemonsReason() {
+        doAnswer(invocation -> {
+            StreamObserver<OpenOrCreateWalletResponse> responseObserver = invocation.getArgument(1);
+            responseObserver.onError(Status.INVALID_ARGUMENT
+                    .withDescription("password must be at least 8 characters")
+                    .asRuntimeException());
+            return null;
+        }).when(serviceImpl).openOrCreateWallet(any(OpenOrCreateWalletRequest.class), any());
+
+        WalletException exception = getWalletException(client.openOrCreateWallet("weak"));
+
+        assertEquals(WalletException.Reason.INVALID_REQUEST, exception.getReason());
+        assertEquals(Optional.of("password must be at least 8 characters"), exception.getDetail());
+    }
+
+    @Test
     void internalDaemonErrorFailsWithDaemonError() {
         doAnswer(invocation -> {
             StreamObserver<ListTransactionsResponse> responseObserver = invocation.getArgument(1);
@@ -299,6 +343,7 @@ class WalletGrpcClientTest {
         WalletException exception = getWalletException(client.listTransactions());
 
         assertEquals(WalletException.Reason.DAEMON_ERROR, exception.getReason());
+        assertEquals(Optional.of("sync failed"), exception.getDetail());
     }
 
     @Test
@@ -312,23 +357,8 @@ class WalletGrpcClientTest {
     }
 
     @Test
-    void callRemovedOnTheDaemonFailsWithUnsupportedCall() {
-        WalletException exception = assertThrows(WalletException.class, () -> client.encryptWallet("password"));
-
-        assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
-    }
-
-    @Test
-    void asyncCallRemovedOnTheDaemonFailsWithUnsupportedCall() {
-        WalletException exception = getWalletException(client.getNewAddress());
-
-        assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
-    }
-
-    @Test
-    void blockingDecryptRemovedOnTheDaemonFailsWithUnsupportedCall() {
-        WalletException exception = assertThrows(WalletException.class, () -> client.decryptWallet("password"));
-
+    void unstubbedCallFailsWithUnsupportedCall() {
+        WalletException exception = getWalletException(client.changePassword("Old-Pa55!", "New-Pa55!"));
         assertEquals(WalletException.Reason.UNSUPPORTED_CALL, exception.getReason());
     }
 
@@ -339,7 +369,7 @@ class WalletGrpcClientTest {
         assertEquals(WalletException.Reason.CLIENT_NOT_READY,
                 getWalletException(uninitializedClient.requestBalance()).getReason());
         assertEquals(WalletException.Reason.CLIENT_NOT_READY,
-                assertThrows(WalletException.class, () -> uninitializedClient.encryptWallet("password")).getReason());
+                getWalletException(uninitializedClient.openOrCreateWallet("Wallet-Pa55!")).getReason());
     }
 
     @Test
@@ -349,7 +379,7 @@ class WalletGrpcClientTest {
         assertEquals(WalletException.Reason.CLIENT_NOT_READY,
                 getWalletException(client.requestBalance()).getReason());
         assertEquals(WalletException.Reason.CLIENT_NOT_READY,
-                assertThrows(WalletException.class, () -> client.decryptWallet("password")).getReason());
+                getWalletException(client.openOrCreateWallet("Wallet-Pa55!")).getReason());
     }
 
     @Test
@@ -409,17 +439,20 @@ class WalletGrpcClientTest {
             responseObserver.onCompleted();
             return null;
         }).when(serviceImpl).getBalance(any(GetBalanceRequest.class), any());
-        doAnswer(invocation -> null).when(serviceImpl).isWalletEncrypted(any(IsWalletEncryptedRequest.class), any());
+        doAnswer(invocation -> null).when(serviceImpl).isWalletReady(any(IsWalletReadyRequest.class), any());
 
         Logger logger = (Logger) LoggerFactory.getLogger(WalletGrpcClient.class);
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
         logger.addAppender(appender);
         try {
-            var request = SendToAddressRequest.newBuilder().setPassphrase("secret-passphrase").setAddress("bcrt1qaddress").build();
+            var request = SendToAddressRequest.newBuilder()
+                    .setPassphrase("secret-passphrase")
+                    .setAddress(PubAddressInfo.newBuilder().setAddress("bcrt1qaddress"))
+                    .build();
             getWalletException(client.sendToAddress(request));
             client.requestBalance().join();
-            client.isWalletEncrypted().cancel(true);
+            client.isWalletReady().cancel(true);
             getWalletException(client.sendToAddress(request));
         } finally {
             logger.detachAppender(appender);

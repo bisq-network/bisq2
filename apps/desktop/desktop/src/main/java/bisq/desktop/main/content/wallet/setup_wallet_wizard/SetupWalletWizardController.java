@@ -68,12 +68,14 @@ public class SetupWalletWizardController extends NavigationController {
                 this::setMainButtonsVisibleState);
         setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
-                this::onBack);
+                this::onBack,
+                setupWalletWizardProtectController::getPassword);
         setupWalletWizardVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,
-                this::onBack);
+                this::onBack,
+                setupWalletWizardProtectController::getPassword);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -155,10 +157,9 @@ public class SetupWalletWizardController extends NavigationController {
                     return;
                 }
 
-                // Only encrypt if the user actually set a password (i.e., did not skip)
                 if (!setupWalletWizardProtectController.getModel().isSkipProtectStep()) {
                     String password = setupWalletWizardProtectController.getPassword();
-                    walletService.encryptWallet(password);
+                    walletService.openOrCreateWallet(password);
                 }
             }
             model.setAnimateRightOut(false);
