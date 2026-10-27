@@ -22,8 +22,8 @@
 # pre-built `installDist` artifact instead of rebuilding from source each time.
 #
 # Pinned by MULTI-ARCH INDEX digest so the build is reproducible AND buildx can resolve both
-# amd64 and arm64 from it (the floating :21 tag moves). Bump when intentionally updating the JDK.
-FROM azul/zulu-openjdk:21@sha256:fa2396e3484ca23385063ad05d5bccdf6408a0736f196e3891b9917c8f37eeb2 AS build
+# amd64 and arm64 from it (Azul rebuilds the tags). Bump the tag and the digest with releaseBuild.javaVersion.
+FROM azul/zulu-openjdk:21.0.13@sha256:d8dfc321e3c9f1eb4ad89a990e9e945fbcced250f7d9715fe247495862f95e3c AS build
 WORKDIR /src
 COPY . .
 # installDist builds the api-app launcher plus every sibling module it depends on.
@@ -40,8 +40,8 @@ RUN --mount=type=cache,target=/root/.gradle \
 
 # ── Runtime stage: minimal JRE + system Tor + the built distribution ───────────
 # Azul Zulu JRE to match the build JDK vendor (and bisq1's runtime), pinned by MULTI-ARCH
-# INDEX digest for reproducibility + arm64. Bump when intentionally updating the runtime JRE.
-FROM azul/zulu-openjdk:21-jre@sha256:1c037894a0959926d02d7715f20bd31d7f6a492fc5c2055539800d1e03771761
+# INDEX digest for reproducibility + arm64. Bump the tag and the digest with the build stage JDK.
+FROM azul/zulu-openjdk:21.0.13-jre@sha256:ce3861478cfc6abac68ed3fc39a8488fe2c0f1600209bafa9306dae6a758cdc4
 
 LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
       org.opencontainers.image.description="Headless Bisq2 node exposing the api-app REST/WebSocket API, e.g. for mobile clients" \

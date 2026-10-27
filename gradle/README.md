@@ -24,6 +24,17 @@ checksum file to match an unreviewed file.
 
 See [the specification](../docs/specifications/development/gradle-wrapper-verification.md).
 
+## Docker Base Image Java Version
+
+`verifyDockerJavaVersion` (part of the root `check`) requires every `azul/zulu-openjdk` base image in a Dockerfile
+under `apps/` to use the tag of `releaseBuild.javaVersion` (`<version>` or `<version>-jre`) together with the image
+index digest. The digest selects the image. The tag shows the version to reviewers and to the check, which cannot read
+the version from the digest.
+
+When `releaseBuild.javaVersion` changes, update the tag and the digest in the same change. The index digest of a tag
+is the `Docker-Content-Digest` header of the registry manifest request for that tag. Azul rebuilds the tags, so the
+digest of a tag changes over time.
+
 ## Dependency Verification
 
 Bisq 2 uses Gradle dependency verification with:
