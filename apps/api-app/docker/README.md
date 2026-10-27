@@ -59,6 +59,14 @@ image lacks `libz.so.1`. Each start logs the version of the running Tor:
 docker logs <container> 2>&1 | grep 'runs with the binary'
 ```
 
+The node starts this Tor in the sandbox of sandy (`sandbox.enabled=true` in `api_app.conf`; the rules are in
+`docs/specifications/network/tor-startup.md`, section "Sandbox"). sandy refuses to run as root or with capabilities,
+and Linux without Landlock cannot enforce the sandbox; in a container, its seccomp profile and capabilities decide
+too. If the sandbox cannot run, the node does not start Tor and logs the reason; it never starts Tor without the
+sandbox by itself. To run Tor without the sandbox, pass
+`-e JAVA_OPTS="-Dapplication.network.configByTransportType.tor.sandbox.enabled=false"`. An external Tor
+(`TOR_CONTROL_PORT`, below) runs without the sandbox of the node.
+
 > Always pass a named `-v <name>:/data` mount (as above). The image declares
 > `VOLUME /data`, so running without `-v` creates a fresh **anonymous** volume on
 > every `docker run` — your node identity/state is lost between runs and orphaned
