@@ -254,8 +254,9 @@ application {
 Bridges for the Tor which Bisq starts (see `docs/specifications/network/tor-startup.md`) are set in the same way, with
 either the built-in bridges of one type of the bundled Tor or bridge lines, for example from
 https://bridges.torproject.org. The built-in bridges, and bridge lines which name a transport such as obfs4, need
-pluggable transports, which the Tor sandbox allows only with `allowPluggableTransports`. On Windows Tor cannot start
-them in its sandbox, so they need `sandbox.enabled = false` there instead:
+pluggable transports, which the Tor sandbox allows only with `allowPluggableTransports` (also a switch in the network
+settings of the desktop application). On Windows Tor cannot start them in its sandbox, so they need
+`sandbox.enabled = false` there instead:
 
 ```
 application {

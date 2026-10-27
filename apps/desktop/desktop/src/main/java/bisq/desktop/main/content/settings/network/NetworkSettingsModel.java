@@ -56,6 +56,11 @@ class NetworkSettingsModel implements Model {
     private final BooleanProperty shutdownButtonVisible = new SimpleBooleanProperty();
     private final BooleanProperty clearOnlyVisible = new SimpleBooleanProperty();
 
+    private final BooleanProperty allowPluggableTransports = new SimpleBooleanProperty();
+    // Why the switch has no effect here, or empty if it has
+    private final StringProperty allowPluggableTransportsUnavailableText = new SimpleStringProperty("");
+    private final BooleanProperty torShutdownButtonVisible = new SimpleBooleanProperty();
+
     private final AddressStringConverter i2cpAddressConverter = new AddressStringConverter(DEFAULT_I2CP_ADDRESS);
     private final AddressStringConverter bi2pGrpcAddressConverter = new AddressStringConverter(DEFAULT_BI2P_GRPC_ADDRESS);
 
