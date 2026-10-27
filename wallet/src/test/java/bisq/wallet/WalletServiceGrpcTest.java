@@ -17,7 +17,10 @@
 
 package bisq.wallet;
 
+import bisq.common.monetary.Coin;
 import bisq.persistence.PersistenceService;
+import bisq.wallet.protobuf.GetBalanceRequest;
+import bisq.wallet.protobuf.GetBalanceResponse;
 import bisq.wallet.protobuf.GetSeedWordsRequest;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.GetUnusedAddressRequest;
@@ -37,6 +40,7 @@ import bisq.wallet.protobuf.TransactionOutput;
 import bisq.wallet.protobuf.Utxo;
 import bisq.wallet.protobuf.WalletGrpc;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
+import bisq.wallet.vo.BalanceBreakdown;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
 import io.grpc.inprocess.InProcessChannelBuilder;
@@ -51,9 +55,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -121,6 +127,27 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void aFeeRateGoesOutOnlyWhenGiven() throws ExecutionException, InterruptedException {
+        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(750L)).get();
+        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
+
+        SendToAddressRequest withFeeRate = (SendToAddressRequest) requests.get(0);
+        SendToAddressRequest withoutFeeRate = (SendToAddressRequest) requests.get(1);
+        assertTrue(withFeeRate.hasFeeRatePerKwu());
+        assertEquals(750L, withFeeRate.getFeeRatePerKwu());
+        assertFalse(withoutFeeRate.hasFeeRatePerKwu());
+    }
+
+    @Test
+    void requestBalanceKeepsTheSpendableTotalAndPublishesTheBreakdown() throws ExecutionException, InterruptedException {
+        Coin total = walletService.requestBalance().get();
+
+        assertEquals(2000L, total.getValue());
+        assertEquals(Coin.asBtcFromValue(2000), walletService.getBalance().get());
+        assertEquals(new BalanceBreakdown(2000, 1500, 500, 7, 3), walletService.getBalanceBreakdown().get());
+    }
+
+    @Test
     void anAbsentPassphraseIsSentEmpty() throws ExecutionException, InterruptedException {
         walletService.sendToAddress(Optional.empty(), "bcrt1qreceiver", 1234L).get();
 
@@ -184,6 +211,18 @@ class WalletServiceGrpcTest {
         public void getSeedWords(GetSeedWordsRequest request, StreamObserver<GetSeedWordsResponse> responseObserver) {
             requests.add(request);
             reply(responseObserver, GetSeedWordsResponse.newBuilder().addSeedWords("word1").addSeedWords("word2").build());
+        }
+
+        @Override
+        public void getBalance(GetBalanceRequest request, StreamObserver<GetBalanceResponse> responseObserver) {
+            requests.add(request);
+            reply(responseObserver, GetBalanceResponse.newBuilder()
+                    .setBalance(2000)
+                    .setConfirmed(1500)
+                    .setTrustedPending(500)
+                    .setUntrustedPending(7)
+                    .setImmature(3)
+                    .build());
         }
 
         @Override
