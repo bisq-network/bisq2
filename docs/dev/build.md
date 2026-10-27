@@ -163,6 +163,17 @@ Tor after configuring these overrides: it overwrites both local URLs with the UR
    Bisq developers use by default the IntelliJ development IDE (Community edition is free to use).
    If running from the IDE one need to enable `annotation processing` (search for that in the settings).
    The `Protocol Buffers` plugin need to be installed as well.
+   When IntelliJ builds the project itself, it runs no Gradle task. Only Gradle creates the Tor bundle `tor.zip` and
+   the sandy binary, which the `tor` build packages as resources. Run these tasks once after a checkout, and again
+   after a change of the Tor version or of the sandy binary:
+
+   ```sh
+   ./gradlew :tor:tor:packageTorBinary :tor:tor:packageSandyBinary
+   ```
+
+   Alternatively, let IntelliJ delegate the build to Gradle (Settings > Build, Execution, Deployment > Build Tools >
+   Gradle: set "Build and run using" to "Gradle"). Without these resources, a start from the IDE fails with "Couldn't
+   open resource: tor.zip" or "This build of Bisq contains no sandy binary for the platform ...".
 
 ## Running Bisq
 
