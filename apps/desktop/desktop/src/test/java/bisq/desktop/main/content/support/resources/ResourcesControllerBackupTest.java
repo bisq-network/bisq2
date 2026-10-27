@@ -17,6 +17,8 @@
 
 package bisq.desktop.main.content.support.resources;
 
+import bisq.application.InstanceLock;
+import bisq.network.p2p.node.transport.TorTransportService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -69,6 +71,28 @@ class ResourcesControllerBackupTest {
         assertThat(backupDirPath.resolve("tor/torrc")).exists();
         // It can hold the password of an external Tor; docs/specifications/network/tor-startup.md says so
         assertThat(backupDirPath.resolve("tor/external_tor.config")).exists();
+    }
+
+    // The rotated log of Tor has the extension "1", so the rule for ".log" files does not leave it out. The Tor library
+    // names both logs of Tor. Copying the instance lock would release the lock of the running node on POSIX systems.
+    @Test
+    void backupLeavesOutTheLogsWithTheRotatedTorLogAndTheInstanceLock() throws IOException {
+        Path torLogPath = TorTransportService.getTorLogPath(appDataDirPath);
+        Path rotatedTorLogPath = TorTransportService.getRotatedTorLogPath(appDataDirPath);
+        writeFile(appDataDirPath.resolve("bisq.log"));
+        writeFile(torLogPath);
+        writeFile(rotatedTorLogPath);
+        writeFile(appDataDirPath.resolve(InstanceLock.LOCK_FILE_NAME));
+
+        ResourcesController.copyDataDirectory(appDataDirPath, backupDirPath);
+
+        assertThat(torLogPath.getParent()).isEqualTo(appDataDirPath.resolve("tor"));
+        assertThat(rotatedTorLogPath.getParent()).isEqualTo(appDataDirPath.resolve("tor"));
+        assertThat(backupDirPath.resolve("bisq.log")).doesNotExist();
+        assertThat(backupDirPath.resolve(appDataDirPath.relativize(torLogPath))).doesNotExist();
+        assertThat(backupDirPath.resolve(appDataDirPath.relativize(rotatedTorLogPath))).doesNotExist();
+        assertThat(backupDirPath.resolve(InstanceLock.LOCK_FILE_NAME)).doesNotExist();
+        assertThat(backupDirPath.resolve("tor/torrc")).exists();
     }
 
     private static void writeFile(Path path) throws IOException {
