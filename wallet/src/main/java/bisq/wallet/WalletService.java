@@ -35,12 +35,14 @@ import bisq.wallet.receive_address.ReceiveAddressService;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.Utxo;
 import bisq.wallet.vo.AddressBalance;
+import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
@@ -50,6 +52,7 @@ public class WalletService implements Service {
     private final WalletGrpcClient client;
     protected final ReceiveAddressService receiveAddressService;
     protected final Observable<Coin> balance = new Observable<>();
+    protected final Observable<BalanceBreakdown> balanceBreakdown = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
     protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
@@ -196,14 +199,22 @@ public class WalletService implements Service {
     }
 
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+        return sendToAddress(passphrase, address, amount, OptionalLong.empty());
+    }
+
+    // Without a fee rate the daemon applies its default rate.
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase,
+                                                   String address,
+                                                   long amount,
+                                                   OptionalLong feeRatePerKwu) {
         // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
         var request = SendToAddressRequest.newBuilder()
                 .setPassphrase(passphrase.orElse(""))
                 .setAddress(PubAddressInfo.newBuilder().setAddress(address))
-                .setAmount(amount)
-                .build();
+                .setAmount(amount);
+        feeRatePerKwu.ifPresent(request::setFeeRatePerKwu);
 
-        return client.sendToAddress(request)
+        return client.sendToAddress(request.build())
                 .thenApply(SendToAddressResponse::getTxId);
     }
 
@@ -217,6 +228,11 @@ public class WalletService implements Service {
                 .thenApply(response -> {
                     var newBalance = Coin.asBtcFromValue(response.getBalance());
                     balance.set(newBalance);
+                    balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
+                            response.getConfirmed(),
+                            response.getTrustedPending(),
+                            response.getUntrustedPending(),
+                            response.getImmature()));
                     return newBalance;
                 });
     }
@@ -242,6 +258,10 @@ public class WalletService implements Service {
 
     public ReadOnlyObservable<Coin> getBalance() {
         return balance;
+    }
+
+    public ReadOnlyObservable<BalanceBreakdown> getBalanceBreakdown() {
+        return balanceBreakdown;
     }
 
     public ReadOnlyObservableSet<Transaction> getTransactions() {
