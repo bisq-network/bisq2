@@ -32,6 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Slf4j
 public class SetupWalletWizardVerifyController implements Controller {
@@ -42,15 +43,18 @@ public class SetupWalletWizardVerifyController implements Controller {
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final Runnable onBackHandler;
+    private final Supplier<String> walletPassword;
     private final WalletService walletService;
 
     public SetupWalletWizardVerifyController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
                                              Consumer<NavigationTarget> closeAndNavigateToHandler,
-                                             Runnable onBackHandler) {
+                                             Runnable onBackHandler,
+                                             Supplier<String> walletPassword) {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         this.onBackHandler = onBackHandler;
+        this.walletPassword = walletPassword;
 
         model = new SetupWalletWizardVerifyModel();
         view = new SetupWalletWizardVerifyView(model, this);
@@ -119,7 +123,7 @@ public class SetupWalletWizardVerifyController implements Controller {
     }
 
     private void loadSeedWordsAsync(WalletService walletService) {
-        walletService.getSeedWords().thenAccept(seedWords -> UIThread.run(() -> {
+        walletService.getSeedWords(walletPassword.get()).thenAccept(seedWords -> UIThread.run(() -> {
             setSeedWords(seedWords);
         })).exceptionally(ex -> {
             Throwable cause = ex.getCause() != null ? ex.getCause() : ex;

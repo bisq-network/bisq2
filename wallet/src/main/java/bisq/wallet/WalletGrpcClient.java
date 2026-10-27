@@ -18,26 +18,24 @@
 package bisq.wallet;
 
 import bisq.common.application.Service;
-import bisq.wallet.protobuf.DecryptWalletRequest;
-import bisq.wallet.protobuf.EncryptWalletRequest;
+import bisq.wallet.protobuf.ChangePasswordRequest;
+import bisq.wallet.protobuf.ChangePasswordResponse;
 import bisq.wallet.protobuf.GetBalanceRequest;
 import bisq.wallet.protobuf.GetBalanceResponse;
 import bisq.wallet.protobuf.GetSeedWordsRequest;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.GetUnusedAddressRequest;
 import bisq.wallet.protobuf.GetUnusedAddressResponse;
-import bisq.wallet.protobuf.GetNewAddressRequest;
-import bisq.wallet.protobuf.GetNewAddressResponse;
 import bisq.wallet.protobuf.GetWalletAddressesRequest;
 import bisq.wallet.protobuf.GetWalletAddressesResponse;
-import bisq.wallet.protobuf.IsWalletEncryptedRequest;
-import bisq.wallet.protobuf.IsWalletEncryptedResponse;
 import bisq.wallet.protobuf.IsWalletReadyRequest;
 import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.ListTransactionsRequest;
 import bisq.wallet.protobuf.ListTransactionsResponse;
 import bisq.wallet.protobuf.ListUtxosRequest;
 import bisq.wallet.protobuf.ListUtxosResponse;
+import bisq.wallet.protobuf.OpenOrCreateWalletRequest;
+import bisq.wallet.protobuf.OpenOrCreateWalletResponse;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.protobuf.WalletGrpc;
@@ -48,6 +46,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
@@ -57,7 +56,6 @@ import static bisq.common.util.CompletableFutureUtils.toCompletableFuture;
 @Slf4j
 public class WalletGrpcClient implements Service {
     private ManagedChannel managedChannel;
-    private WalletGrpc.WalletBlockingStub blockingStub;
     private WalletGrpc.WalletFutureStub futureStub;
     private final String host;
     private final int port;
@@ -83,7 +81,6 @@ public class WalletGrpcClient implements Service {
                     // .useTransportSecurity() //Todo turn this on in prod env
                     .build();
         }
-        this.blockingStub = WalletGrpc.newBlockingStub(managedChannel);
         this.futureStub = WalletGrpc.newFutureStub(managedChannel);
 
         return CompletableFuture.completedFuture(true);
@@ -105,23 +102,25 @@ public class WalletGrpcClient implements Service {
             }
             managedChannel = null;
             futureStub = null;
-            blockingStub = null;
         }
         return CompletableFuture.completedFuture(true);
     }
 
-    public void encryptWallet(String password) {
-        var request = EncryptWalletRequest.newBuilder().setPassword(password).build();
-        callBlocking("EncryptWallet", stub -> stub.encryptWallet(request));
+    public CompletableFuture<OpenOrCreateWalletResponse> openOrCreateWallet(String password) {
+        var request = OpenOrCreateWalletRequest.newBuilder().setPassword(password).build();
+        return call("OpenOrCreateWallet", stub -> stub.openOrCreateWallet(request));
     }
 
-    public void decryptWallet(String password) {
-        var request = DecryptWalletRequest.newBuilder().setPassword(password).build();
-        callBlocking("DecryptWallet", stub -> stub.decryptWallet(request));
+    public CompletableFuture<ChangePasswordResponse> changePassword(String oldPassword, String newPassword) {
+        var request = ChangePasswordRequest.newBuilder()
+                .setOldPassword(oldPassword)
+                .setNewPassword(newPassword)
+                .build();
+        return call("ChangePassword", stub -> stub.changePassword(request));
     }
 
-    public CompletableFuture<GetSeedWordsResponse> getSeedWords() {
-        var request = GetSeedWordsRequest.newBuilder().build();
+    public CompletableFuture<GetSeedWordsResponse> getSeedWords(String password) {
+        var request = GetSeedWordsRequest.newBuilder().setPassword(password).build();
         return call("GetSeedWords", stub -> stub.getSeedWords(request));
     }
 
@@ -133,11 +132,6 @@ public class WalletGrpcClient implements Service {
     public CompletableFuture<GetUnusedAddressResponse> getUnusedAddress() {
         var request = GetUnusedAddressRequest.newBuilder().build();
         return call("GetUnusedAddress", stub -> stub.getUnusedAddress(request));
-    }
-
-    public CompletableFuture<GetNewAddressResponse> getNewAddress() {
-        var request = GetNewAddressRequest.newBuilder().build();
-        return call("GetNewAddress", stub -> stub.getNewAddress(request));
     }
 
     public CompletableFuture<GetWalletAddressesResponse> requestWalletAddresses() {
@@ -157,11 +151,6 @@ public class WalletGrpcClient implements Service {
 
     public CompletableFuture<SendToAddressResponse> sendToAddress(SendToAddressRequest request) {
         return call("SendToAddress", stub -> stub.sendToAddress(request));
-    }
-
-    public CompletableFuture<IsWalletEncryptedResponse> isWalletEncrypted() {
-        var request = IsWalletEncryptedRequest.newBuilder().build();
-        return call("IsWalletEncrypted", stub -> stub.isWalletEncrypted(request));
     }
 
     public CompletableFuture<GetBalanceResponse> requestBalance() {
@@ -199,22 +188,10 @@ public class WalletGrpcClient implements Service {
         return result;
     }
 
-    private <T> T callBlocking(String rpcName, Function<WalletGrpc.WalletBlockingStub, T> invocation) {
-        WalletGrpc.WalletBlockingStub stub = blockingStub;
-        if (stub == null) {
-            throw clientNotReady(rpcName);
-        }
-        try {
-            return invocation.apply(stub);
-        } catch (RuntimeException e) {
-            throw toWalletException(rpcName, e);
-        }
-    }
-
     private static WalletException clientNotReady(String rpcName) {
         String message = rpcName + " called while the wallet client is not initialized";
         log.warn(message);
-        return new WalletException(WalletException.Reason.CLIENT_NOT_READY, message, null);
+        return new WalletException(WalletException.Reason.CLIENT_NOT_READY, message, Optional.empty(), null);
     }
 
     private static WalletException toWalletException(String rpcName, Throwable throwable) {
@@ -222,13 +199,14 @@ public class WalletGrpcClient implements Service {
         WalletException.Reason reason = switch (status.getCode()) {
             case FAILED_PRECONDITION -> WalletException.Reason.WALLET_NOT_OPEN;
             case PERMISSION_DENIED -> WalletException.Reason.WRONG_PASSWORD;
+            case INVALID_ARGUMENT -> WalletException.Reason.INVALID_REQUEST;
             case UNAVAILABLE -> WalletException.Reason.DAEMON_UNAVAILABLE;
             case UNIMPLEMENTED -> WalletException.Reason.UNSUPPORTED_CALL;
             default -> WalletException.Reason.DAEMON_ERROR;
         };
-        String message = rpcName + " failed with " + status.getCode() +
-                (status.getDescription() == null ? "" : ": " + status.getDescription());
+        Optional<String> detail = Optional.ofNullable(status.getDescription());
+        String message = rpcName + " failed with " + status.getCode() + detail.map(d -> ": " + d).orElse("");
         log.warn(message);
-        return new WalletException(reason, message, throwable);
+        return new WalletException(reason, message, detail, throwable);
     }
 }
