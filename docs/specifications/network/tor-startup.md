@@ -38,6 +38,29 @@ backup of the data directory skips `tor/data`.
 The node chooses the ports of the control and SOCKS listeners itself and checks with the hash of the control password,
 and after the bootstrap with the SOCKS listener, that it talks to the Tor of this start.
 
+### Torrc overrides and files of the Tor of the node
+
+The configuration of the Tor transport can add entries to the torrc of the Tor which the node starts
+(`torrcOverrides`). The node ignores an override of a key which it sets for its own Tor: `ControlPort`,
+`ControlPortWriteToFile`, `SocksPort`, `DataDirectory`, `HashedControlPassword` and `DisableNetwork`, in any letter
+case and also as an abbreviation of the option name, which Tor accepts. An override of another key replaces the entry
+of the node with that key, in any letter case. Every entry stays one entry of the torrc, as Tor reads it. A key is
+the name of a Tor option: a letter followed by letters and digits, after one or two underscores for a hidden option.
+So it cannot carry the forms `+Key`, `/Key`, `Key#comment` and `%include` of the torrc syntax. A value contains no
+line break and no control character other than a tab. It is either one quoted string, in which a backslash escapes the
+next character, or it contains no `#`, which would start a comment, and does not end with a backslash, which would join
+the next line to the value. The rule applies to the overrides, to the entries of the node and to the bridge lines. The
+start fails for an entry which breaks it. This includes a path which the node writes into the torrc, all of them below
+the data directory of the application, when the path contains a `#`: the node writes its paths without quotes.
+
+The node sets `AvoidDiskWrites 1`; an override can change it. Tor reads its GeoIP files from the bundle and gets an
+empty OpenSSL configuration file, so that it reads no file below `/var/tmp/dist`, the build path of the bundle, where
+another user of the system could place files.
+
+The node publishes an onion service only if the onion address which Tor reports for the key is the address of the
+key. The control connection reads lines of at most 16 KiB and replies of at most 1 MiB; a longer line or reply ends
+the connection.
+
 ### External Tor
 
 The node uses an external Tor instead of its own if it runs on Whonix, if the environment variable `TOR_SKIP_LAUNCH`
@@ -45,8 +68,9 @@ is `1`, `true` or `yes`, if `external_tor.config` in the Tor directory sets `Use
 configuration sets `useExternalTor`. The first of these conditions which applies decides: on Whonix the node always
 uses the external Tor; otherwise a set `TOR_SKIP_LAUNCH` decides alone, and a value other than `1`, `true` or `yes`
 means no external Tor; otherwise `UseExternalTor` of `external_tor.config` decides when it is set; otherwise the
-configuration. `external_tor.config` sets the host and port of the control port and the authentication. The node uses
-the SOCKS port which the external Tor reports, on the host of the control port.
+configuration. `external_tor.config` sets the host and port of the control port and the authentication. As in a
+torrc, a `#` after a value starts a comment, unless the value is a quoted string; other text after the closing quote
+fails the start. The node uses the SOCKS port which the external Tor reports, on the host of the control port.
 
 - With `CookieAuthentication 1`, the node authenticates with the SAFECOOKIE method: Tor first proves that it knows the
   cookie of `CookieAuthFile`, and the node never sends the cookie. A process which listens on the control port instead
