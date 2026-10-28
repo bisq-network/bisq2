@@ -47,7 +47,7 @@ public class ModeratorController implements Controller {
 
         changedModeratorNotificationPin = supportService.getSupportNotificationsService().getChangedNotification().addObserver(notification -> {
             if (notification != null && notification.isModeratorNotification() && notification.isNotConsumed()) {
-                supportService.getSupportNotificationsService().consumeNotification(notification);
+                supportService.getSupportNotificationsService().consumeModeratorNotification(notification);
             }
         });
     }

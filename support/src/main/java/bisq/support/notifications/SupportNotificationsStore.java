@@ -45,6 +45,11 @@ public final class SupportNotificationsStore implements PersistableStore<Support
     }
 
     @Override
+    public void applyPersisted(SupportNotificationsStore persisted) {
+        notifications.setAll(persisted.notifications);
+    }
+
+    @Override
     public bisq.support.protobuf.SupportNotificationsStore.Builder getBuilder(boolean serializeForHash) {
         return bisq.support.protobuf.SupportNotificationsStore.newBuilder()
                 .addAllSupportNotifications(notifications.stream()
@@ -55,11 +60,6 @@ public final class SupportNotificationsStore implements PersistableStore<Support
     @Override
     public bisq.support.protobuf.SupportNotificationsStore toProto(boolean serializeForHash) {
         return unsafeToProto(serializeForHash);
-    }
-
-    @Override
-    public void applyPersisted(SupportNotificationsStore persisted) {
-        notifications.setAll(persisted.notifications);
     }
 
     public static PersistableStore<?> fromProto(bisq.support.protobuf.SupportNotificationsStore proto) {

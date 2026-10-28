@@ -29,7 +29,6 @@ import bisq.common.observable.Pin;
 import bisq.common.observable.collection.CollectionObserver;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.persistence.DbSubDirectory;
-import bisq.persistence.PersistableStore;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.RateLimitedPersistenceClient;
@@ -43,12 +42,17 @@ import java.util.HashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
+/**
+ * Handles notifications for mediator and moderator roles
+ */
 @Slf4j
 public class SupportNotificationsService extends RateLimitedPersistenceClient<SupportNotificationsStore> implements Service {
+    @Getter
+    final SupportNotificationsStore persistableStore = new SupportNotificationsStore();
+    @Getter
     private final Persistence<SupportNotificationsStore> persistence;
     private final ChatService chatService;
     private final SupportService supportService;
-    final SupportNotificationsStore persistableStore = new SupportNotificationsStore();
     Pin moderatorObserver, bisqEasyChannelSelectionObserver, bisqEasyChannelsObserver, musigChannelSelectionObserver, musigChannelsObserver;
     HashMap<String, Pin> bisqEasyMediatorObservers = new HashMap<>();
     HashMap<String, Pin> muSigMediatorObservers = new HashMap<>();
@@ -198,7 +202,28 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         return CompletableFuture.completedFuture(true);
     }
 
-    public void selectedChannelChanged(BisqEasyOpenTradeChannel chatChannel) {
+    @Override
+    public CompletableFuture<Boolean> shutdown() {
+        moderatorObserver.unbind();
+        bisqEasyChannelSelectionObserver.unbind();
+        bisqEasyChannelsObserver.unbind();
+        musigChannelSelectionObserver.unbind();
+        musigChannelsObserver.unbind();
+        bisqEasyMediatorObservers.values().forEach(Pin::unbind);
+        bisqEasyMediatorObservers.clear();
+        muSigMediatorObservers.values().forEach(Pin::unbind);
+        muSigMediatorObservers.clear();
+
+        changedNotification.set(null);
+        return CompletableFuture.completedFuture(true);
+    }
+
+
+    /* --------------------------------------------------------------------- */
+    // Channel Operations
+    /* --------------------------------------------------------------------- */
+
+    private void selectedChannelChanged(BisqEasyOpenTradeChannel chatChannel) {
         if (chatChannel == null) {
             return;
         }
@@ -213,7 +238,7 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         }
     }
 
-    public void selectedChannelChanged(MuSigOpenTradeChannel chatChannel) {
+    private void selectedChannelChanged(MuSigOpenTradeChannel chatChannel) {
         if (chatChannel == null) {
             return;
         }
@@ -228,10 +253,23 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         }
     }
 
-    public void consumeModeratorNotifications() {
-         getNotConsumedNotifications().filter(SupportNotification::isModeratorNotification)
-                .forEach(this::consumeNotification);
+    private boolean isMyMediatorChannel(BisqEasyOpenTradeChannel channel) {
+        if (channel.isInMediation() && channel.getMediator().isPresent()) {
+            return supportService.getBisqEasyMediatorService().findMyMediatorUserIdentity(channel.getMediator()).isPresent();
+        }
+        return false;
     }
+
+    private boolean isMyMediatorChannel(MuSigOpenTradeChannel channel) {
+        if (channel.getMediator().isPresent()) {
+            return supportService.getMuSigMediatorService().findMyMediatorUserIdentity(channel.getMediator()).isPresent();
+        }
+        return false;
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Get notifications
+    /* --------------------------------------------------------------------- */
 
     public ObservableSet<SupportNotification> getNotifications() {
         return persistableStore.getNotifications();
@@ -257,6 +295,18 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         return getNotConsumedNotifications().filter(SupportNotification::isModeratorNotification);
     }
 
+    public long getNotConsumedMuSigChannelNotificationsBySenderId(String channelId, String senderUserProfileId) {
+        return getNotConsumedNotifications().filter(notification ->
+                        notification.getSenderUserProfileId().isPresent()
+                                && notification.getChannelId().get().equals(channelId)
+                                && notification.getSenderUserProfileId().get().equals(senderUserProfileId))
+                .count();
+    }
+
+    /* --------------------------------------------------------------------- */
+    // Mutate notifications
+    /* --------------------------------------------------------------------- */
+
     private void addNotification(SupportNotification notification) {
         boolean wasAdded = false;
         synchronized (persistableStore) {
@@ -270,7 +320,16 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         }
     }
 
-    public void consumeNotification(SupportNotification notification) {
+    public void consumeModeratorNotification(SupportNotification notification) {
+        consumeNotification(notification);
+    }
+
+    public void consumeModeratorNotifications() {
+        getNotConsumedNotifications().filter(SupportNotification::isModeratorNotification)
+                .forEach(this::consumeNotification);
+    }
+
+    private void consumeNotification(SupportNotification notification) {
         boolean hadChange;
         synchronized (persistableStore) {
             if (!persistableStore.getNotifications().contains(notification)) {
@@ -318,53 +377,5 @@ public class SupportNotificationsService extends RateLimitedPersistenceClient<Su
         if (wasRemoved) {
             persist();
         }
-    }
-
-    public long getNotConsumedMuSigChannelNotificationsBySenderId(String channelId, String senderUserProfileId) {
-        return getNotConsumedNotifications().filter(notification ->
-                notification.getSenderUserProfileId().isPresent()
-                        && notification.getChannelId().get().equals(channelId)
-                        && notification.getSenderUserProfileId().get().equals(senderUserProfileId))
-                .count();
-    }
-
-    @Override
-    public CompletableFuture<Boolean> shutdown() {
-        moderatorObserver.unbind();
-        bisqEasyChannelSelectionObserver.unbind();
-        bisqEasyChannelsObserver.unbind();
-        musigChannelSelectionObserver.unbind();
-        musigChannelsObserver.unbind();
-        bisqEasyMediatorObservers.values().forEach(Pin::unbind);
-        bisqEasyMediatorObservers.clear();
-        muSigMediatorObservers.values().forEach(Pin::unbind);
-        muSigMediatorObservers.clear();
-        
-        changedNotification.set(null);
-        return CompletableFuture.completedFuture(true);
-    }
-
-    @Override
-    public Persistence<SupportNotificationsStore> getPersistence() {
-        return persistence;
-    }
-
-    @Override
-    public PersistableStore<SupportNotificationsStore> getPersistableStore() {
-        return persistableStore;
-    }
-
-    public boolean isMyMediatorChannel(BisqEasyOpenTradeChannel channel) {
-        if (channel.isInMediation() && channel.getMediator().isPresent()) {
-            return supportService.getBisqEasyMediatorService().findMyMediatorUserIdentity(channel.getMediator()).isPresent();
-        }
-        return false;
-    }
-
-    public boolean isMyMediatorChannel(MuSigOpenTradeChannel channel) {
-        if (channel.getMediator().isPresent()) {
-            return supportService.getMuSigMediatorService().findMyMediatorUserIdentity(channel.getMediator()).isPresent();
-        }
-        return false;
     }
 }
