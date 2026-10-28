@@ -67,7 +67,7 @@ class TorTransportServiceTest {
         }
     }
 
-    // On Linux the running Tor is the tor of the system, so the user interface shows its version, not the bundle's
+    // An external Tor can be any Tor of the user, so the user interface shows the running version, not the bundle's
     @Test
     void torVersionIsTheVersionWhichTheRunningTorReports() {
         TorTransportService.Config config = mock(TorTransportService.Config.class);

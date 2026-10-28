@@ -1,8 +1,13 @@
 # Tor bundle verification
 
 The build downloads the Tor expert bundle of the pinned Tor version (`tor.version` in `tor/gradle.properties`) and its
-detached signature, and packages the bundle into the desktop app for macOS and Windows. Every user of these apps runs
-the bundled `tor`. The build must therefore accept a bundle only if the Tor Browser developers signed it.
+detached signature, and packages the bundle into the apps. The stable releases have no expert bundle for Linux ARM64,
+so a build on Linux ARM64 takes the bundle of the alpha release `tor.bundleVersion.linux_arm64`. Every user of the apps
+on macOS, Windows and Linux runs the bundled `tor`, and users of bridges run its pluggable transports `lyrebird` and
+`conjure-client`, unless they use an external Tor. The build must therefore accept a bundle only if the Tor Browser
+developers signed it. The build also compares each bundle with the SHA-256 hash which `tor/gradle.properties` pins for
+its platform, and checks that its tor has the version `tor.binaryVersion`, so that the alpha bundle of Linux ARM64
+contains the same tor as the stable bundles.
 
 ## Rules
 
@@ -37,12 +42,12 @@ the bundled `tor`. The build must therefore accept a bundle only if the Tor Brow
 ## Compatibility
 
 - The bundle of Tor 15.0.25 is signed by subkey `022DA248432D2A0E0F54E65E316C1FACD62D07D9`, which is bound for signing
-  and not revoked, so its verification passes. The procedure for a new Tor version and key refresh is in
-  `tor/build-logic/tor-binary/README.md`.
+  and not revoked, so its verification passes. The Linux ARM64 bundle of the alpha release 16.0a14 is signed by the
+  same subkey. The procedure for a new Tor version and key refresh is in `tor/build-logic/tor-binary/README.md`.
 
 ## Known limitations
 
 - The build does not check whether a subkey had expired when it signed a bundle. A signature of an expired subkey
-  passes. The pinned version is signed by a subkey which is valid until 2028.
+  passes. The pinned versions are signed by a subkey which is valid until 2028.
 - The build logic has no unit tests. The rules were checked with the verification task against the bundle of the
   pinned version.

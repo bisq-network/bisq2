@@ -12,27 +12,13 @@
    `tor/` follows the commit which Bisq 2 records. See [Tor Submodule](../../README.md#tor-submodule).
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
+   Bisq requires JDK 21. You do not need to install Tor: on every operating system, also on Linux, Bisq runs the Tor
+   of the Tor expert bundle which the build packages (see `docs/specifications/network/tor-startup.md`). On Linux this
+   Tor needs `libz.so.1` of the system. Every Debian and Ubuntu system has it in the package `zlib1g`.
 
-   Please see the official [Tor installation instructions](https://support.torproject.org/little-t-tor/getting-started/installing/).
-   The TLDR for Debian-based distros:
-   ```bash
-    sudo apt update
-    sudo apt install apt-transport-https curl
-
-    # Add the Tor Project GPG key
-    curl https://deb.torproject.org/torproject.org/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/tor-archive-keyring.gpg
-
-    # Add Tor repository
-    echo "deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] \
-    https://deb.torproject.org/torproject.org $(lsb_release -cs) main" \
-    | sudo tee /etc/apt/sources.list.d/tor.list
-
-    # Install Tor
-    sudo apt update
-    sudo apt install tor
-
-   ```
+   Bisq 2.1.3 to 2.1.14 ran the `tor` of the system on Linux, and their packages depend on the `tor` package. An update
+   of Bisq leaves that package installed. On Debian and Ubuntu its service `tor@default` keeps running until you remove
+   the package, for example with `sudo apt remove tor` if no other program uses it.
 
 3. **Update to latest GitHub version:**
    ```bash

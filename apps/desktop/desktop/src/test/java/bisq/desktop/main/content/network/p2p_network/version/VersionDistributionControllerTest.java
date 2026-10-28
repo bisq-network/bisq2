@@ -40,8 +40,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * On Linux Bisq runs the tor of the system, and with an external Tor any Tor of the user, so the local version info
- * shows the version which the running Tor reports. Only without it, it shows the Tor bundle of the build.
+ * With an external Tor Bisq uses any Tor of the user, so the local version info shows the version which the running
+ * Tor reports. Only without it, it shows the Tor bundle of the build.
  */
 @ExtendWith(JavaFxToolkitExtension.class)
 class VersionDistributionControllerTest {

@@ -46,13 +46,17 @@ docker exec <container> cat /data/pairing_qr_code.txt
 
 Do not paste the content of this file into bug reports.
 
-On Linux bisq2 runs the system `tor` binary, so the image installs it from the Tor
-Project's apt repository rather than Ubuntu's (which lags Tor security releases) and
-the build fails if the installed version is older than the `TOR_MIN_VERSION` build
-arg. Check what an image ships with:
+As on every system, the node runs the Tor of the Tor expert bundle which the build
+packages into the api-app distribution: on amd64 the stable bundle of `tor.version`, on
+arm64 the bundle of the alpha release `tor.bundleVersion.linux_arm64`, because no stable
+release has one for Linux ARM64 (both in `tor/gradle.properties`). The image installs no
+`tor` package. At its start the node installs the bundle into `/data/tor` and runs
+Tor from `/data/tor`, so `/data` must not be mounted with `noexec`. The bundled
+tor needs the glibc and `libz.so.1` of the base image; the image build fails if the base
+image lacks `libz.so.1`. Each start logs the version of the running Tor:
 
 ```bash
-docker run --rm --entrypoint tor bisq2-api --version
+docker logs <container> 2>&1 | grep 'runs with the binary'
 ```
 
 > Always pass a named `-v <name>:/data` mount (as above). The image declares

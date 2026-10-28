@@ -32,7 +32,7 @@ JAVA_OPTS="${JAVA_OPTS:-} -Dapplication.baseDir=${DATA_DIR}"
 JAVA_OPTS="${JAVA_OPTS} -Dapplication.api.pairing.ttlInSeconds=${PAIRING_TTL_SECONDS:-86400}"
 
 # ── Optional: use an external Tor process instead of the bundled one ───────────
-# Default is the bundled (system) Tor, so a plain `docker run` works standalone.
+# Default is the bundled Tor, so a plain `docker run` works standalone.
 # Set TOR_CONTROL_PORT to enable external-Tor mode.
 #
 # bisq2's external-Tor mode connects to Tor's CONTROL port on TOR_CONTROL_HOST, authenticates
