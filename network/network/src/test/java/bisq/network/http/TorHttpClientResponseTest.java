@@ -19,6 +19,7 @@ package bisq.network.http;
 
 import bisq.common.util.ExceptionUtil;
 import bisq.network.http.utils.HttpException;
+import bisq.network.http.utils.ResponseBodyTooLargeException;
 import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -28,11 +29,14 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 class TorHttpClientResponseTest {
+    private static final int MAX_RESPONSE_BODY_BYTES = 1024;
 
     @Test
     void loggableBody_neutralizesControlCharactersAndCapsLength() {
@@ -46,7 +50,7 @@ class TorHttpClientResponseTest {
 
     @Test
     void readBody_returnsContent_whenEntityPresent() throws IOException {
-        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", 1024, null);
         BasicClassicHttpResponse response = new BasicClassicHttpResponse(400);
         response.setEntity(new StringEntity("{\"wasAccepted\":false}", StandardCharsets.UTF_8));
 
@@ -57,7 +61,7 @@ class TorHttpClientResponseTest {
     void readBody_normalizesMissingEntityToEmptyBody() throws IOException {
         // Responses without a body (204, some error responses) have a null entity; the
         // status code must still reach httpResponseFailure instead of an NPE in the handler.
-        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", 1024, null);
 
         assertThat(client.readBody(new BasicClassicHttpResponse(500))).isEmpty();
     }
@@ -66,7 +70,7 @@ class TorHttpClientResponseTest {
     void processResponse_keepsTheStatusWhenTheErrorBodyIsUnreadable() {
         // A failed body read must not demote a server answer to a retriable transport
         // failure: the 400 still surfaces as an HttpException so retry gating holds.
-        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", 1024, null);
         BasicClassicHttpResponse response = new BasicClassicHttpResponse(400);
         response.setEntity(new InputStreamEntity(new InputStream() {
             @Override
@@ -85,7 +89,7 @@ class TorHttpClientResponseTest {
     void processResponse_keepsAnUnreadableSuccessBodyTransportLevel() {
         // A 2xx with an unreadable body has no result to return; it stays an IOException
         // (transport-level) rather than fabricating an HTTP failure.
-        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", null);
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent", 1024, null);
         BasicClassicHttpResponse response = new BasicClassicHttpResponse(200);
         response.setEntity(new InputStreamEntity(new InputStream() {
             @Override
@@ -98,6 +102,59 @@ class TorHttpClientResponseTest {
 
         assertThat(thrown).isInstanceOf(IOException.class);
         assertThat(ExceptionUtil.getRootCause(thrown)).isNotInstanceOf(HttpException.class);
+    }
+
+    @Test
+    void readBody_returnsABodyOfExactlyTheLimit() throws IOException {
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent",
+                MAX_RESPONSE_BODY_BYTES, null);
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(200);
+        response.setEntity(new StringEntity("a".repeat(MAX_RESPONSE_BODY_BYTES), StandardCharsets.UTF_8));
+
+        assertThat(client.readBody(response)).hasSize(MAX_RESPONSE_BODY_BYTES);
+    }
+
+    // A provider controls the size of its responses. The client stops at the limit instead of reading an endless body.
+    @Test
+    void readBody_stopsAtTheLimitOfAnEndlessBody() {
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent",
+                MAX_RESPONSE_BODY_BYTES, null);
+        AtomicLong numBytesServed = new AtomicLong();
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(200);
+        response.setEntity(new InputStreamEntity(endlessBody(numBytesServed), ContentType.APPLICATION_JSON));
+
+        Throwable thrown = catchThrowable(() -> client.readBody(response));
+
+        assertThat(thrown).isInstanceOf(ResponseBodyTooLargeException.class);
+        // At most the limit and one buffer of the reader
+        assertThat(numBytesServed.get()).isLessThan(64 * 1024);
+    }
+
+    @Test
+    void processResponse_failsASuccessBodyAboveTheLimitAtTransportLevel() {
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent",
+                MAX_RESPONSE_BODY_BYTES, null);
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(200);
+        response.setEntity(new StringEntity("a".repeat(MAX_RESPONSE_BODY_BYTES + 1), StandardCharsets.UTF_8));
+
+        Throwable thrown = catchThrowable(() -> client.processResponse(response, "param", 0));
+
+        assertThat(ExceptionUtil.getRootCause(thrown)).isInstanceOf(ResponseBodyTooLargeException.class);
+    }
+
+    @Test
+    void processResponse_keepsTheStatusWhenTheErrorBodyIsAboveTheLimit() {
+        TorHttpClient client = new TorHttpClient("http://x.onion", "http://x.onion", "test-agent",
+                MAX_RESPONSE_BODY_BYTES, null);
+        BasicClassicHttpResponse response = new BasicClassicHttpResponse(503);
+        response.setEntity(new InputStreamEntity(endlessBody(new AtomicLong()), ContentType.TEXT_HTML));
+
+        Throwable thrown = catchThrowable(() -> client.processResponse(response, "param", 0));
+
+        assertThat(ExceptionUtil.getRootCause(thrown)).isInstanceOfSatisfying(HttpException.class, httpException -> {
+            assertThat(httpException.getResponseCode()).isEqualTo(503);
+            assertThat(httpException.getBody()).isEmpty();
+        });
     }
 
     @Test
@@ -134,5 +191,22 @@ class TorHttpClientResponseTest {
         assertThat(rootCause).isInstanceOf(HttpException.class);
         assertThat(((HttpException) rootCause).getResponseCode()).isEqualTo(500);
         assertThat(rootCause.getMessage()).isEqualTo("overloaded");
+    }
+
+    private static InputStream endlessBody(AtomicLong numBytesServed) {
+        return new InputStream() {
+            @Override
+            public int read() {
+                numBytesServed.incrementAndGet();
+                return 'a';
+            }
+
+            @Override
+            public int read(byte[] buffer, int offset, int length) {
+                Arrays.fill(buffer, offset, offset + length, (byte) 'a');
+                numBytesServed.addAndGet(length);
+                return length;
+            }
+        };
     }
 }

@@ -53,6 +53,9 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class MarketPriceRequestService extends HttpRequestService<Void, Map<Market, MarketPrice>> {
+    // The price node answers getAllMarketPrices with about 12 KB for 77 markets
+    private static final int MAX_RESPONSE_BODY_BYTES = 1024 * 1024;
+
     @Getter
     private final ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
     private final long interval;
@@ -67,7 +70,8 @@ public class MarketPriceRequestService extends HttpRequestService<Void, Map<Mark
     public MarketPriceRequestService(MarketPriceRequestService.Config conf, NetworkService networkService) {
         super(conf,
                 networkService,
-                getExecutorService());
+                getExecutorService(),
+                MAX_RESPONSE_BODY_BYTES);
 
         interval = conf.getInterval();
     }

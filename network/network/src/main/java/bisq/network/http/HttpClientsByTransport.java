@@ -49,18 +49,21 @@ public class HttpClientsByTransport {
      *               and exception messages. Pass the same value as {@code url}
      *               when there is nothing to redact (e.g. provider URL with no
      *               sensitive path segments).
+     * @param maxResponseBodyBytes The largest response body which the client reads. A larger body fails the request.
      */
     public BaseHttpClient getHttpClient(String url,
                                         String logUrl,
                                         String userAgent,
-                                        TransportType transportType) {
-        return getHttpClient(url, logUrl, userAgent, transportType, Optional.empty(), Optional.empty());
+                                        TransportType transportType,
+                                        int maxResponseBodyBytes) {
+        return getHttpClient(url, logUrl, userAgent, transportType, maxResponseBodyBytes, Optional.empty(), Optional.empty());
     }
 
     public BaseHttpClient getHttpClient(String url,
                                         String logUrl,
                                         String userAgent,
                                         TransportType transportType,
+                                        int maxResponseBodyBytes,
                                         Optional<Socks5Proxy> socksProxy,
                                         Optional<String> socks5ProxyAddress) {
         return switch (transportType) {
@@ -69,17 +72,17 @@ public class HttpClientsByTransport {
                         .map(Socks5ProxyProvider::new)
                         .orElseGet(() -> socksProxy.map(Socks5ProxyProvider::new)
                                 .orElseThrow(() -> new RuntimeException("No socks5ProxyAddress provided and no Tor socksProxy available.")));
-                yield new TorHttpClient(url, logUrl, userAgent, socks5ProxyProvider);
+                yield new TorHttpClient(url, logUrl, userAgent, maxResponseBodyBytes, socks5ProxyProvider);
             }
 
             case I2P -> {
                 I2PTransportService.Config config = (I2PTransportService.Config) configByTransportType.get(TransportType.I2P);
                 Address address = new ClearnetAddress(config.getHttpProxyHost(), config.getHttpProxyPort());
                 Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(address.getHost(), address.getPort()));
-                yield new ClearNetHttpClient(url, logUrl, userAgent, proxy);
+                yield new ClearNetHttpClient(url, logUrl, userAgent, maxResponseBodyBytes, proxy);
             }
 
-            case CLEAR -> new ClearNetHttpClient(url, logUrl, userAgent);
+            case CLEAR -> new ClearNetHttpClient(url, logUrl, userAgent, maxResponseBodyBytes);
         };
     }
 }
