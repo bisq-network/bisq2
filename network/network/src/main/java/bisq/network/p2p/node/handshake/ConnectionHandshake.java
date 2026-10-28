@@ -262,8 +262,8 @@ public final class ConnectionHandshake {
 
             responseNetworkEnvelope.verifyVersion();
             if (!(responseNetworkEnvelope.getEnvelopePayloadMessage() instanceof Response response)) {
-                throw new ConnectionException("ResponseEnvelope.message() not type of Response. responseEnvelope=" +
-                        responseNetworkEnvelope);
+                throw new ConnectionException("ResponseEnvelope.message() not type of Response. Type=" +
+                        responseNetworkEnvelope.getEnvelopePayloadMessage().getClass().getSimpleName());
             }
             Address address = response.getCapability().getAddress();
             if (banList.isBanned(address)) {
@@ -279,7 +279,8 @@ public final class ConnectionHandshake {
                     myAddress.getFullAddress());
 
             if (!isAuthorized) {
-                throw new ConnectionException(AUTHORIZATION_FAILED, "ConnectionHandshake.Response authorization failed at outbound connection attempt. AuthorizationToken=" + responseNetworkEnvelope.getAuthorizationToken());
+                throw new ConnectionException(AUTHORIZATION_FAILED, "ConnectionHandshake.Response authorization failed at outbound connection attempt. Token type=" +
+                        responseNetworkEnvelope.getAuthorizationToken().getClass().getSimpleName());
             }
 
             connectionMetrics.onReceived(responseNetworkEnvelope, deserializeTime);
@@ -350,7 +351,8 @@ public final class ConnectionHandshake {
                         receivedMessageCounters,
                         myAddress.getFullAddress());
                 if (!isAuthorized) {
-                    throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. AuthorizationToken=" + requestToken);
+                    throw new ConnectionException(AUTHORIZATION_FAILED, "Authorization of inbound connection request failed. Token type=" +
+                            requestToken.getClass().getSimpleName());
                 }
             }
 
