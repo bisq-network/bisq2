@@ -12,8 +12,10 @@ import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
 import bisq.network.tor.process.TorDirectories;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
+import com.google.common.base.Throwables;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -25,6 +27,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -202,6 +205,19 @@ public class TorTransportService implements TransportService {
      */
     public static Path getRotatedTorLogPath(Path appDataDirPath) {
         return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedStdoutLogPath();
+    }
+
+    /**
+     * @return the pluggable transports of the configured bridges, if Tor did not start because the configuration of
+     * its sandbox does not let Tor start them. The user can then allow them, remove the bridges or turn the sandbox
+     * off, which the generic message of the refusal does not say in the terms of Bisq 2.
+     */
+    public static Optional<List<String>> findPluggableTransportsNotAllowed(Throwable startFailure) {
+        return Throwables.getCausalChain(startFailure).stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(PluggableTransportsNotAllowedException.class::cast)
+                .map(PluggableTransportsNotAllowedException::getTransportNames)
+                .findFirst();
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {
