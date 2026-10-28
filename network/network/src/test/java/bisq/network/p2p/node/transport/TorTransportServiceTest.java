@@ -18,6 +18,7 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.TorAddress;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
@@ -100,6 +101,48 @@ class TorTransportServiceTest {
         Throwable startFailure = new CompletionException(new SandboxUnavailableException("reason", "hint"));
 
         assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure)).isEmpty();
+    }
+
+    // A user who turned the sandbox off, or who uses an external Tor, gets no notice about weaknesses of the sandbox
+    @Test
+    void torWithoutTheSandboxHasNoSandboxWeaknesses() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.DISABLED)).isEmpty();
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.EXTERNAL_TOR)).isEmpty();
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.NOT_STARTED)).isEmpty();
+    }
+
+    @Test
+    void baseLevelWithANetworkOfItsOwnHasNoSandboxWeaknesses() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("base", true, true))).isEmpty();
+    }
+
+    // The base level has the network of the host only for pluggable transports which need it
+    @Test
+    void baseLevelWithTheNetworkOfTheHostUsesItForTheTransports() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("base", false, true)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_FOR_TRANSPORTS);
+    }
+
+    @Test
+    void weakerLevelsUseTheNetworkOfTheHostBecauseOfTheSystem() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("host-network", false, true)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
+        assertThat(TorTransportService.toSandboxWeaknesses(
+                TorSandboxStatus.sandboxed("host-network-signals", false, false)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM, TorSandboxWeakness.SIGNALS_NOT_ISOLATED);
+    }
+
+    @Test
+    void sandboxWeaknessesComeFromTheStatusOfTheRunningTor() {
+        TorTransportService.Config config = mock(TorTransportService.Config.class);
+        when(config.getTorTransportConfig()).thenReturn(mock(TorTransportConfig.class));
+        try (MockedConstruction<TorService> torServices = mockConstruction(TorService.class,
+                (torService, context) -> when(torService.getSandboxStatus())
+                        .thenReturn(TorSandboxStatus.sandboxed("host-network", false, true)))) {
+            TorTransportService transportService = new TorTransportService(config);
+
+            assertThat(transportService.getSandboxWeaknesses()).containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
+        }
     }
 
     private static void setStaticTorService(TorService torService) throws Exception {
