@@ -55,14 +55,14 @@ public class RecordedOfferItems {
     // market sends one event.
     @Getter
     private final ObservableHashMap<String, Integer> numOffersByQuoteCurrencyCode = new ObservableHashMap<>();
-    // Set once the existing offers are recorded, so that the REST list reads the record instead of checking
-    @Getter
-    @Setter
-    private volatile boolean tracking;
     private final UserProfileService userProfileService;
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final MarketPriceService marketPriceService;
+    // Set once the existing offers are recorded, so that the REST list reads the record instead of checking
+    @Getter
+    @Setter
+    private volatile boolean tracking;
 
     public RecordedOfferItems(UserService userService, BondedRolesService bondedRolesService) {
         userProfileService = userService.getUserProfileService();

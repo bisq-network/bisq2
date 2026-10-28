@@ -83,13 +83,13 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final ScheduledExecutorService resendExecutor;
     private final AtomicBoolean isResendScheduled = new AtomicBoolean();
     private final LongSupplier nanoTime;
-    // Written before isResendScheduled is reset, so that the revision which schedules the next pass reads it
-    private volatile long lastPassStartNanos;
     private final RecordedOfferItems recordedOffers;
     // Messages whose item failed to build. Accessed only under offerUpdateLock.
     private final Set<BisqEasyOfferbookMessage> messagesWithFailedItem = new HashSet<>();
     // Messages whose visibility check failed. The pass checks outside the lock, so the set is concurrent.
     private final Set<BisqEasyOfferbookMessage> messagesWithFailedVisibility = ConcurrentHashMap.newKeySet();
+    // Written before isResendScheduled is reset, so that the revision which schedules the next pass reads it
+    private volatile long lastPassStartNanos;
 
     public OffersWebSocketService(SubscriberRepository subscriberRepository,
                                   ChatService chatService,
@@ -129,6 +129,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
         marketPriceService = bondedRolesService.getMarketPriceService();
         bisqEasyOfferbookMessageService = bisqEasyService.getBisqEasyOfferbookMessageService();
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Lifecycle
+    /* --------------------------------------------------------------------- */
 
     @Override
     public CompletableFuture<Boolean> initialize() {
@@ -194,6 +199,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
         return CompletableFuture.completedFuture(true);
     }
 
+
+    /* --------------------------------------------------------------------- */
+    // Snapshot
+    /* --------------------------------------------------------------------- */
+
     @Override
     public Optional<String> canonicalizeParameter(Optional<String> parameter) {
         return parameter.map(p -> p.trim().toUpperCase(Locale.ROOT)).filter(p -> !p.isEmpty());
@@ -227,6 +237,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 .collect(Collectors.toCollection(ArrayList::new));
         return toJson(payload);
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Pass
+    /* --------------------------------------------------------------------- */
 
     // Revisions come in bursts and each pass checks all offers, so passes start at most once per interval. The pass
     // runs on its own thread, not on the thread which changed the price or the score.
@@ -284,6 +299,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
             log.error("Failed to resend offer {}", offerIdForLog(message), e);
         }
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Record
+    /* --------------------------------------------------------------------- */
 
     // Checks under the lock, as additions are few. One failing offer must not stop the others of an onAllAdded.
     private void updateOffer(BisqEasyOfferbookChannel channel,
@@ -358,6 +378,11 @@ public class OffersWebSocketService extends BaseWebSocketService {
             send(quoteCurrencyCode, item, ModificationType.ADDED);
         });
     }
+
+
+    /* --------------------------------------------------------------------- */
+    // Send
+    /* --------------------------------------------------------------------- */
 
     private void send(String quoteCurrencyCode, OfferItemPresentationDto item, ModificationType modificationType) {
         try {
