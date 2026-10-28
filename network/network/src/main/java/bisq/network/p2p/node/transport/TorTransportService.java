@@ -20,6 +20,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
@@ -172,6 +173,15 @@ public class TorTransportService implements TransportService {
 
     public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
         return torService.publishOnionService(localPort, onionServicePort, toOnionServiceKey(torKeyPair));
+    }
+
+    /**
+     * @return the address on which a server which {@link #publishOnionService} publishes has to listen, because Tor,
+     * or the relay of the sandbox in front of Tor, connects there. It belongs to the running Tor, so it is known once
+     * the transport has initialized.
+     */
+    public InetAddress getOnionServiceBindAddress() {
+        return torService.getOnionServiceBindAddress();
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {

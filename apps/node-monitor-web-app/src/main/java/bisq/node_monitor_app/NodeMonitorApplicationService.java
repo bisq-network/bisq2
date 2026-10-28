@@ -202,19 +202,21 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                     networkService,
                     nodeMonitorService);
 
-            apiAccessTransportService = Optional.of(new ApiAccessTransportService(apiConfig,
+            ApiAccessTransportService transportService = new ApiAccessTransportService(apiConfig,
                     config.getAppDataDirPath(),
                     networkService,
                     securityService.getKeyBundleService(),
                     apiConfig.getBindPort(),
-                    apiConfig.getOnionServicePort()));
+                    apiConfig.getOnionServicePort());
+            apiAccessTransportService = Optional.of(transportService);
 
 
             httpServerBootstrapService = Optional.of(new HttpServerBootstrapService(apiConfig,
                     resourceConfig,
                     Optional.empty(),
                     sessionAuthenticationService,
-                    tlsContextService));
+                    tlsContextService,
+                    transportService));
         }
     }
 
