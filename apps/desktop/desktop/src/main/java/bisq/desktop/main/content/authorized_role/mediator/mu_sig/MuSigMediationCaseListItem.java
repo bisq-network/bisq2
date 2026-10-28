@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.authorized_role.mediator.mu_sig;
 
 import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
-import bisq.chat.notifications.ChatNotification;
 import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.observable.Pin;
 import bisq.contract.mu_sig.MuSigContract;
@@ -35,6 +34,8 @@ import bisq.presentation.formatters.TimeFormatter;
 import bisq.support.mediation.mu_sig.MuSigMediationCase;
 import bisq.support.mediation.mu_sig.MuSigMediationRequest;
 import bisq.support.mediation.mu_sig.MuSigMediationResult;
+import bisq.support.notifications.SupportNotification;
+import bisq.support.notifications.SupportNotificationsService;
 import bisq.trade.mu_sig.MuSigTradeFormatter;
 import bisq.trade.mu_sig.MuSigTradeUtils;
 import bisq.user.profile.UserProfile;
@@ -63,6 +64,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final ObjectProperty<Optional<MuSigOpenTradeChannel>> channel = new SimpleObjectProperty<>(Optional.empty());
     private final ChatNotificationService chatNotificationService;
     private final ReputationService reputationService;
+    private final SupportNotificationsService supportNotificationsService;
 
     private final Trader maker, taker;
     private final long date, price, btcAmount, nonBtcAmount;
@@ -76,7 +78,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
     private final StringProperty closeCaseTimeString = new SimpleStringProperty("");
 
     private Pin mediatorHasLeftChatPin;
-    private Pin changedChatNotificationPin;
+    private Pin changedSupportNotificationPin;
     private Pin muSigMediationResultPin;
 
     MuSigMediationCaseListItem(ServiceProvider serviceProvider,
@@ -87,6 +89,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
 
         reputationService = serviceProvider.getUserService().getReputationService();
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        supportNotificationsService = serviceProvider.getSupportService().getSupportNotificationsService();
         MuSigMediationRequest mediationRequest = muSigMediationCase.getMuSigMediationRequest();
         MuSigContract contract = mediationRequest.getContract();
         MuSigOffer offer = contract.getOffer();
@@ -128,8 +131,8 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
         muSigMediationResultPin = muSigMediationCase.muSigMediationResultObservable().addObserver(optionalResult ->
                 UIThread.run(() -> applyCloseCaseDate(optionalResult.map(MuSigMediationResult::getDate))));
 
-        chatNotificationService.getNotConsumedNotifications().forEach(this::handleNotification);
-        changedChatNotificationPin = chatNotificationService.getChangedNotification().addObserver(this::handleNotification);
+        supportNotificationsService.getNotConsumedMusigMediatorNotifications().forEach(this::handleNotification);
+        changedSupportNotificationPin = supportNotificationsService.getChangedNotification().addObserver(this::handleNotification);
     }
 
     @Override
@@ -142,7 +145,7 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
             muSigMediationResultPin.unbind();
             muSigMediationResultPin = null;
         }
-        changedChatNotificationPin.unbind();
+        changedSupportNotificationPin.unbind();
     }
 
     public Optional<MuSigOpenTradeChannel> getChannel() {
@@ -185,29 +188,25 @@ public class MuSigMediationCaseListItem implements ActivatableTableItem, DateTab
         closeCaseTimeString.set(optionalCloseCaseDate.map(DateFormatter::formatTime).orElse(""));
     }
 
-    private void handleNotification(ChatNotification notification) {
+    private void handleNotification(SupportNotification notification) {
         Optional<MuSigOpenTradeChannel> currentChannel = channel.get();
-        if (notification == null || currentChannel.isEmpty() || !notification.getChatChannelId().equals(currentChannel.orElseThrow().getId())) {
+        if (notification == null
+                || currentChannel.isEmpty()
+                || notification.getChannelId().isEmpty()
+                || !notification.isMuSigMediatorNotification()
+                || !notification.getChannelId().get().equals(currentChannel.orElseThrow().getId())) {
             return;
         }
         UIThread.run(() -> {
-            long numNotificationsFromMaker = getNumNotifications(maker.getUserProfile());
-            makersBadge.setText(numNotificationsFromMaker > 0 ?
+            long numNotificationsFromMaker = supportNotificationsService.getNotConsumedMuSigChannelNotificationsBySenderId(channel.get().orElseThrow().getId(), maker.getUserProfile().getId());
+            makersBadge.setText( numNotificationsFromMaker > 0 ?
                     String.valueOf(numNotificationsFromMaker) :
                     "");
-            long numNotificationsFromTaker = getNumNotifications(taker.getUserProfile());
+            long numNotificationsFromTaker = supportNotificationsService.getNotConsumedMuSigChannelNotificationsBySenderId(channel.get().orElseThrow().getId(), taker.getUserProfile().getId());
             takersBadge.setText(numNotificationsFromTaker > 0 ?
                     String.valueOf(numNotificationsFromTaker) :
                     "");
         });
-    }
-
-    private long getNumNotifications(UserProfile userProfile) {
-        return channel.get().map(chatNotificationService::getNotConsumedNotifications)
-                .orElseGet(java.util.stream.Stream::empty)
-                .filter(notification -> notification.getSenderUserProfile().isPresent())
-                .filter(notification -> notification.getSenderUserProfile().get().equals(userProfile))
-                .count();
     }
 
     @Getter
