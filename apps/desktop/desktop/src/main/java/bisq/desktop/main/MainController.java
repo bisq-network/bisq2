@@ -20,7 +20,10 @@ package bisq.desktop.main;
 import bisq.application.ApplicationService;
 import bisq.bonded_roles.release.ReleaseNotification;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
+import bisq.common.platform.OS;
 import bisq.common.platform.Version;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIScheduler;
@@ -40,6 +43,10 @@ import bisq.desktop.overlay.restore.RestoreFromBackupController;
 import bisq.desktop.overlay.unreadable_store_files.UnreadableStoreFilesController;
 import bisq.evolution.updater.UpdaterService;
 import bisq.evolution.updater.UpdaterUtils;
+import bisq.i18n.Res;
+import bisq.network.p2p.ServiceNode;
+import bisq.network.p2p.node.transport.TorTransportService;
+import bisq.network.p2p.node.transport.TransportService;
 import bisq.persistence.UnreadableStoreArchive;
 import bisq.persistence.backup.RestoreService;
 import lombok.Getter;
@@ -60,6 +67,8 @@ public class MainController extends NavigationController {
     private final RestoreService restoreService;
     private final UnreadableStoreArchive unreadableStoreArchive;
     private final ApplicationService.Config config;
+    private Pin torTransportStatePin;
+    private boolean isTorSandboxNoticeHandled;
 
     public MainController(ServiceProvider serviceProvider) {
         super(NavigationTarget.MAIN);
@@ -109,6 +118,10 @@ public class MainController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        if (torTransportStatePin != null) {
+            torTransportStatePin.unbind();
+            torTransportStatePin = null;
+        }
     }
 
     @SuppressWarnings("SwitchStatementWithTooFewBranches")
@@ -131,20 +144,52 @@ public class MainController extends NavigationController {
             // The next overlay and the updater wait for the restore dialog to close, so that they do not replace it
             Runnable closeHandler = showUnreadableStoreFiles
                     ? this::showUnreadableStoreFiles
-                    : this::addUpdaterServiceObservers;
+                    : this::onStartupOverlaysClosed;
             RestoreFromBackupController.InitData initData = new RestoreFromBackupController.InitData(closeHandler);
             UIScheduler.run(() -> Navigation.navigateTo(NavigationTarget.RESTORE_FROM_BACKUP, initData)).after(500);
         } else if (showUnreadableStoreFiles) {
             UIScheduler.run(this::showUnreadableStoreFiles).after(500);
         } else {
-            addUpdaterServiceObservers();
+            onStartupOverlaysClosed();
         }
     }
 
     private void showUnreadableStoreFiles() {
         // The updater observers start after this overlay closes, so that the updater does not replace it
         Navigation.navigateTo(NavigationTarget.UNREADABLE_STORE_FILES,
-                new UnreadableStoreFilesController.InitData(this::addUpdaterServiceObservers));
+                new UnreadableStoreFilesController.InitData(this::onStartupOverlaysClosed));
+    }
+
+    private void onStartupOverlaysClosed() {
+        addUpdaterServiceObservers();
+        observeTorSandbox();
+    }
+
+    // The level of the sandbox is known once the Tor of the start answers, before the Tor transport has initialized.
+    // The network service completes with its first initialized transport, so with several transports Tor can come later.
+    private void observeTorSandbox() {
+        serviceProvider.getNetworkService().findServiceNode(TransportType.TOR)
+                .map(ServiceNode::getTransportService)
+                .map(TorTransportService.class::cast)
+                .ifPresent(torTransportService -> torTransportStatePin = torTransportService.getTransportState()
+                        .addObserver(transportState -> {
+                            if (transportState == TransportService.TransportState.INITIALIZED) {
+                                UIThread.run(() -> maybeShowTorSandboxNotice(torTransportService));
+                            }
+                        }));
+    }
+
+    // Once per start: the user can turn the notice off with the check box of the popup
+    private void maybeShowTorSandboxNotice(TorTransportService torTransportService) {
+        if (isTorSandboxNoticeHandled) {
+            return;
+        }
+        isTorSandboxNoticeHandled = true;
+        TorSandboxNotice.find(torTransportService.getSandboxWeaknesses(), OS.getOS())
+                .ifPresent(notice -> new Popup().headline(Res.get("network.torSandbox.notice.headline"))
+                        .information(notice.message())
+                        .dontShowAgainId(notice.dontShowAgainId())
+                        .show());
     }
 
     private void addUpdaterServiceObservers() {

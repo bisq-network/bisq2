@@ -8,6 +8,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
@@ -15,6 +16,7 @@ import bisq.network.tor.process.TorDirectories;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Throwables;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
@@ -27,8 +29,11 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -75,6 +80,9 @@ public class TorTransportService implements TransportService {
 
     // The directory of the embedded Tor below the data directory of the application
     public static final String TOR_DIR_NAME = "tor";
+    // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
+    // for (tor/README.md, the levels of the sandbox). Its weaker levels have other names.
+    private static final String BASE_SANDBOX_LEVEL = "base";
 
     private static TorService torService;
 
@@ -205,6 +213,34 @@ public class TorTransportService implements TransportService {
      */
     public static Path getRotatedTorLogPath(Path appDataDirPath) {
         return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedStdoutLogPath();
+    }
+
+    /**
+     * @return what the sandbox of the running Tor cannot do on this system. Empty while Tor runs in the full sandbox,
+     * and without the sandbox: when the configuration turns it off, with an external Tor, and before the Tor of the
+     * start answers on its control port.
+     */
+    public Set<TorSandboxWeakness> getSandboxWeaknesses() {
+        return toSandboxWeaknesses(torService.getSandboxStatus());
+    }
+
+    @VisibleForTesting
+    static Set<TorSandboxWeakness> toSandboxWeaknesses(TorSandboxStatus sandboxStatus) {
+        if (!sandboxStatus.isSandboxed()) {
+            return Set.of();
+        }
+        Set<TorSandboxWeakness> weaknesses = EnumSet.noneOf(TorSandboxWeakness.class);
+        if (sandboxStatus.isHostNetwork()) {
+            // The base level gives Tor a network of its own, unless the pluggable transports of the bridges need the
+            // network of the host. A weaker level takes the network of the host where the system cannot give one.
+            weaknesses.add(BASE_SANDBOX_LEVEL.equals(sandboxStatus.getLevel()) ?
+                    TorSandboxWeakness.HOST_NETWORK_FOR_TRANSPORTS :
+                    TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
+        }
+        if (sandboxStatus.isSignalsNotIsolated()) {
+            weaknesses.add(TorSandboxWeakness.SIGNALS_NOT_ISOLATED);
+        }
+        return Collections.unmodifiableSet(weaknesses);
     }
 
     /**
