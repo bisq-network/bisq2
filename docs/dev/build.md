@@ -108,7 +108,8 @@ For a quick full cleanup/rebuild you can use
    ./gradlew dependencySignatureReport
    ```
 
-   See `gradle/README.md` for the checksum fallback allowlist and report workflow.
+   The metadata turns the key servers off. See `gradle/README.md` for the runs which need them, and for the checksum
+   fallback allowlist and report workflow.
 
 
 ### Tor submodule

@@ -84,6 +84,22 @@ Review the generated diff and verify new signatures or checksums before committi
 downloaded artifacts; it does not independently establish their trustworthiness. The helper handles only the listed
 dependencies; `resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
 
+### Key servers
+
+The metadata turns the key servers off (`<key-servers enabled="false"/>`). Gradle then verifies signatures only with
+the keys in `gradle/verification-keyring.keys` and never waits for a key server; a lookup at `pgp.mit.edu` once took
+more than 20 minutes. A key which the keyring lacks fails the verification instead of being downloaded, so a
+successful `resolveAndVerifyDependencies` shows that the keyring has every key which the builds need.
+
+Runs which download keys need the key servers:
+
+- `refreshDependencyVerificationKeyring` turns them on for its own Gradle run and restores the metadata afterwards.
+- For a new dependency whose signing key is not in the keyring, remove the line `<key-servers enabled="false"/>` for
+  the metadata generation and add `--export-keys`, so that Gradle writes the downloaded keys into the keyring. Put the
+  line back afterwards: Gradle keeps it when it rewrites the metadata with the key servers off, but omits it when they
+  are on. `verifyDependencySignaturePolicy` fails while the line is missing or turns the key servers on. Then run
+  `resolveAndVerifyDependencies` with the line, which fails if the keyring still lacks a key.
+
 ### Verifying and refreshing build dependencies
 
 To verify the current metadata without rewriting it:
@@ -106,7 +122,7 @@ Refresh the keyring first so newly available signing keys are present before Gra
 `gradle/verification-metadata.xml`. This avoids adding checksum fallbacks for artifacts whose signatures can now be
 verified.
 
-`refreshDependencyVerificationKeyring` wraps:
+`refreshDependencyVerificationKeyring` wraps the following command, which it runs with the key servers on:
 
 ```bash
 ./gradlew help --refresh-keys --export-keys
