@@ -20,13 +20,17 @@ package bisq.network.http;
 import bisq.common.data.Pair;
 import bisq.common.util.StringUtils;
 import bisq.network.http.utils.HttpMethod;
+import bisq.network.http.utils.ResponseBodyTooLargeException;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Optional;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public abstract class BaseHttpClient implements HttpClient {
@@ -41,13 +45,17 @@ public abstract class BaseHttpClient implements HttpClient {
     public final String logBaseUrl;
     public final String userAgent;
     protected final String uid;
+    // The largest response body which the request service reads for its endpoint
+    protected final int maxResponseBodyBytes;
 
     public boolean hasPendingRequest;
 
-    public BaseHttpClient(String baseUrl, String logBaseUrl, String userAgent) {
+    public BaseHttpClient(String baseUrl, String logBaseUrl, String userAgent, int maxResponseBodyBytes) {
+        checkArgument(maxResponseBodyBytes > 0, "maxResponseBodyBytes must be positive");
         this.baseUrl = baseUrl;
         this.logBaseUrl = logBaseUrl;
         this.userAgent = userAgent;
+        this.maxResponseBodyBytes = maxResponseBodyBytes;
 
         uid = StringUtils.createUid();
     }
@@ -81,8 +89,15 @@ public abstract class BaseHttpClient implements HttpClient {
                                         HttpMethod httpMethod,
                                         Optional<Pair<String, String>> optionalHeader) throws IOException;
 
+    /**
+     * Reads the body, but throws {@link ResponseBodyTooLargeException} once it has more than
+     * {@link #maxResponseBodyBytes} bytes. The limit counts the bytes which the client reads from the stream of the body,
+     * after the transfer and content decoding, so a compressed body cannot grow past it. After the limit the stream is
+     * not closed, see {@link LimitedInputStream#close()}: the client has to discard the connection.
+     */
     protected String inputStreamToString(InputStream inputStream) throws IOException {
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
+        InputStream limitedInputStream = new LimitedInputStream(inputStream, maxResponseBodyBytes);
+        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(limitedInputStream))) {
             StringBuilder stringBuilder = new StringBuilder();
             String line;
             while ((line = bufferedReader.readLine()) != null) {
@@ -94,5 +109,60 @@ public abstract class BaseHttpClient implements HttpClient {
 
     protected boolean isSuccess(int statusCode) {
         return statusCode >= 200 && statusCode < 300;
+    }
+
+    private static final class LimitedInputStream extends FilterInputStream {
+        private final long maxBytes;
+        private long numBytesRead;
+        private boolean isLimitExceeded;
+
+        private LimitedInputStream(InputStream inputStream, long maxBytes) {
+            super(inputStream);
+            this.maxBytes = maxBytes;
+        }
+
+        @Override
+        public int read() throws IOException {
+            int value = super.read();
+            if (value >= 0) {
+                count(1);
+            }
+            return value;
+        }
+
+        @Override
+        public int read(byte[] buffer, int offset, int length) throws IOException {
+            int numBytes = super.read(buffer, offset, length);
+            if (numBytes > 0) {
+                count(numBytes);
+            }
+            return numBytes;
+        }
+
+        @Override
+        public long skip(long length) throws IOException {
+            long numBytes = super.skip(length);
+            if (numBytes > 0) {
+                count(numBytes);
+            }
+            return numBytes;
+        }
+
+        // Closing the body of an Apache response reads the rest of the body, so that the connection can be reused,
+        // also a body without end. Above the limit the stream stays open, and the client discards the connection.
+        @Override
+        public void close() throws IOException {
+            if (!isLimitExceeded) {
+                super.close();
+            }
+        }
+
+        private void count(long numBytes) throws ResponseBodyTooLargeException {
+            numBytesRead += numBytes;
+            if (numBytesRead > maxBytes) {
+                isLimitExceeded = true;
+                throw new ResponseBodyTooLargeException(maxBytes);
+            }
+        }
     }
 }

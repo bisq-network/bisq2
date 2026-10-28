@@ -41,6 +41,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -215,7 +216,7 @@ class HttpRequestServiceClassificationTest {
                                               StubResponse stubResponse) {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.CLEAR));
-        when(networkService.getHttpClient(any(), any(), any(), any()))
+        when(networkService.getHttpClient(any(), any(), any(), any(), anyInt()))
                 .thenAnswer(invocation -> new StubHttpClient(attempts, stubResponse));
         // Two providers so a failover is observable as a second attempt.
         HttpRequestServiceConfig conf = new HttpRequestServiceConfig(60L,
@@ -237,7 +238,7 @@ class HttpRequestServiceClassificationTest {
         private final StubResponse stubResponse;
 
         StubHttpClient(AtomicInteger attempts, StubResponse stubResponse) {
-            super("https://stub.example", "https://stub.example", "test-agent");
+            super("https://stub.example", "https://stub.example", "test-agent", 1024);
             this.attempts = attempts;
             this.stubResponse = stubResponse;
         }
@@ -265,7 +266,7 @@ class HttpRequestServiceClassificationTest {
                                NetworkService networkService,
                                HttpMethod method,
                                boolean retryOnServerError) {
-            super(conf, networkService, Executors.newSingleThreadExecutor());
+            super(conf, networkService, Executors.newSingleThreadExecutor(), 1024);
             this.method = method;
             this.retryOnServerError = retryOnServerError;
         }
