@@ -39,6 +39,10 @@ public class SeedNodeApp extends Executable<SeedNodeApplicationService> {
 
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
+        if (hasStartFailed(result, throwable)) {
+            shutdownAfterFailedStart();
+            return;
+        }
         AddressByTransportTypeMap addressByTransportTypeMap =
                 applicationService.getIdentityService().getOrCreateDefaultIdentity().getNetworkId().getAddressByTransportTypeMap();
         String json = new GsonBuilder().setPrettyPrinting().create().toJson(addressByTransportTypeMap);
