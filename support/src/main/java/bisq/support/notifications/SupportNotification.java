@@ -35,12 +35,11 @@ import java.util.Optional;
 @Getter
 @EqualsAndHashCode
 public class SupportNotification implements PersistableProto, NetworkProto, Notification {
-
     private final String id;
+    private final String title;
     private final SupportNotificationType type;
     private final Optional<String> channelId;
     private final Optional<String> senderUserProfileId;
-    private final String title;
     private final String message;
     @EqualsAndHashCode.Exclude
     private final Observable<Boolean> isConsumed = new Observable<>();
@@ -93,31 +92,6 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
         this.isConsumed.set(isConsumed);
     }
 
-    public void setConsumed(boolean consumed) {
-        this.isConsumed.set(consumed);
-    }
-
-    public boolean isNotConsumed() {
-        return isConsumed.get() == false;
-    }
-
-    public boolean isMediatorNotification(){
-        return type == SupportNotificationType.BISQ_EASY_MEDIATOR_NOTIFICATION
-                || type == SupportNotificationType.MU_SIG_MEDIATOR_NOTIFICATION;
-    }
-
-    public boolean isBisqEasyMediatorNotification(){
-        return type == SupportNotificationType.BISQ_EASY_MEDIATOR_NOTIFICATION;
-    }
-
-    public boolean isMuSigMediatorNotification(){
-        return type == SupportNotificationType.MU_SIG_MEDIATOR_NOTIFICATION;
-    }
-
-    public boolean isModeratorNotification(){
-        return type == SupportNotificationType.MODERATOR_NOTIFICATION;
-    }
-
     public static SupportNotification fromProto(bisq.support.protobuf.SupportNotification proto) {
         return new SupportNotification(
                 proto.getId(),
@@ -147,22 +121,37 @@ public class SupportNotification implements PersistableProto, NetworkProto, Noti
         return builder;
     }
 
+    @Override
+    public void verify() {
+        NetworkDataValidation.validateId(channelId);
+    }
+
     public static String createId(ReportToModeratorMessage message) {
         return message.getDate() + "." + message.getReporterUserProfileId();
     }
 
-    @Override
-    public String getId() {
-        return id;
+    public void setConsumed(boolean consumed) {
+        this.isConsumed.set(consumed);
     }
 
-    @Override
-    public String getTitle() {
-        return title;
+    public boolean isNotConsumed() {
+        return isConsumed.get() == false;
     }
 
-    @Override
-    public void verify() {
-        NetworkDataValidation.validateId(channelId);
+    public boolean isMediatorNotification(){
+        return type == SupportNotificationType.BISQ_EASY_MEDIATOR_NOTIFICATION
+                || type == SupportNotificationType.MU_SIG_MEDIATOR_NOTIFICATION;
+    }
+
+    public boolean isBisqEasyMediatorNotification(){
+        return type == SupportNotificationType.BISQ_EASY_MEDIATOR_NOTIFICATION;
+    }
+
+    public boolean isMuSigMediatorNotification(){
+        return type == SupportNotificationType.MU_SIG_MEDIATOR_NOTIFICATION;
+    }
+
+    public boolean isModeratorNotification(){
+        return type == SupportNotificationType.MODERATOR_NOTIFICATION;
     }
 }
