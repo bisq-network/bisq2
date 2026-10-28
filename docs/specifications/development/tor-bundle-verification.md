@@ -9,21 +9,30 @@ developers signed it. The build also compares each bundle with the SHA-256 hash 
 its platform, and checks that its tor has the version `tor.binaryVersion`, so that the alpha bundle of Linux ARM64
 contains the same tor as the stable bundles.
 
+These rules do not cover the sandy binary, which runs Tor in its sandbox and does not come from the bundle. The build
+pins it by its SHA-256 hash for each platform and fails for another binary, as the section "Packaging" of
+`tor/tor/src/main/resources/sandy/README.md` describes. Before the pins move to a new release of sandy, its signed tag
+is verified, the release is built again from that tag and compared with the binary of the release, and the source
+diff since the pinned release is reviewed, as the section "Updating sandy" of the same README describes.
+
 ## Rules
 
 1. The build trusts the public key file of the Tor Browser developers which the repository contains, and only if the
-   fingerprint of its primary key equals the pinned fingerprint and the file contains no revocation signature for the
-   primary key. Otherwise the build fails.
-2. A subkey of this key can sign a bundle only if:
-   - the key file contains no revocation signature for it, and
-   - the primary key binds it with a subkey binding signature which verifies, and the key flags of the newest such
-     binding signature allow signing data. If several of them have the newest creation time, all of them must allow
-     signing data.
+   file contains exactly one primary key, the fingerprint of that key equals the pinned fingerprint, and the file
+   contains no revocation signature for it. An armored key file must hold its key block alone: it begins with the
+   armor header line of the block and holds nothing but white space after the tail line of the block. Otherwise the
+   build fails.
+2. The primary key, or a subkey which it binds, can sign a bundle only if the key was valid for signing at the creation
+   time of the signature:
+   - the self-signature of the primary key verifies, and for a subkey its binding signature by the primary key and its
+     back-signature (type 0x19) by the subkey verify;
+   - the signed key flags allow signing data;
+   - neither the key nor the primary key had expired at that time.
 
-   Other subkeys are not trusted. An error while the build verifies a binding signature makes that binding count as not
-   verified.
-3. The build accepts a bundle only if its detached signature has the type of a binary document, was made by the primary
-   key or by a trusted subkey, and verifies over the bytes of the bundle. Otherwise the build fails.
+   A subkey for which the key file contains a revocation signature is not trusted, whatever the reason and the time of
+   the revocation. Other keys are not trusted.
+3. The build accepts a bundle only if its detached signature has the type of a binary document, was made by a key which
+   rule 2 accepts, and verifies over the bytes of the bundle. Otherwise the build fails.
 
 ## Reasons
 
@@ -34,20 +43,30 @@ contains the same tor as the stable bundles.
 - Before rule 2, an error while verifying a binding signature counted as a valid binding. A later key file with such a
   subkey would have been trusted without a check.
 - Rule 1: a revocation of the primary key retires all its subkeys. The procedure for a key refresh downloads the key
-  from Tor, so a refreshed key file would contain such a revocation, and the build must not trust any of its keys.
-- Rule 2: a newer binding signature replaces an older one. If the primary key binds a subkey again without the right to
-  sign, an older binding which allowed it must not count.
+  from Tor, so a refreshed key file would contain such a revocation, and the build must not trust any of its keys. A
+  file with a second primary key would let the build trust a key whose fingerprint it did not check. The parser of an
+  armored file reads only its first key block, so text or a second key block before or after it was ignored without a
+  word: whoever appends a new key of the Tor Browser developers to the file, or a reviewer who sees one there, would
+  assume that the build uses it.
+- Rule 2: the build evaluates the key at the creation time of the signature, so that the bundle of an older release,
+  signed with a subkey which has expired since, can be built again. A revocation counts for every time, because the
+  signer states the creation time, and the build cannot tell an older signature from one with an earlier time.
 - Rule 3: a signature of another type, for example a key certification, does not sign the bytes of a file.
 
 ## Compatibility
 
 - The bundle of Tor 15.0.25 is signed by subkey `022DA248432D2A0E0F54E65E316C1FACD62D07D9`, which is bound for signing
   and not revoked, so its verification passes. The Linux ARM64 bundle of the alpha release 16.0a14 is signed by the
-  same subkey. The procedure for a new Tor version and key refresh is in `tor/build-logic/tor-binary/README.md`.
+  same subkey. Bundles of earlier releases which subkey `157432CF78A65729` signed still verify, although it expired on
+  2026-10-26, because their signatures were made before it expired. The procedure for a new Tor version and key refresh
+  is in `tor/build-logic/tor-binary/README.md`.
 
 ## Known limitations
 
-- The build does not check whether a subkey had expired when it signed a bundle. A signature of an expired subkey
-  passes. The pinned versions are signed by a subkey which is valid until 2028.
-- The build logic has no unit tests. The rules were checked with the verification task against the bundle of the
-  pinned version.
+- The signer states the creation time of a signature. Whoever holds the private key of an expired subkey can therefore
+  still make a signature with an earlier time, which passes. A check at the current time instead would refuse the
+  bundles of older releases once their subkey expires. The SHA-256 pin of each bundle limits the risk to bundles whose
+  hashes a maintainer has pinned.
+- The build reads the detached signature file of a bundle through its first armored block and ignores what follows
+  it. Every signature of that block must pass rule 3, and the bundle is pinned by its SHA-256 hash, so this does not
+  weaken the check.
