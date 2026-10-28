@@ -54,6 +54,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -87,6 +88,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final RecordedOfferItems recordedOffers;
     // Messages whose item failed to build. Accessed only under offerUpdateLock.
     private final Set<BisqEasyOfferbookMessage> messagesWithFailedItem = new HashSet<>();
+    // Messages whose visibility check failed. The pass checks outside the lock, so the set is concurrent.
+    private final Set<BisqEasyOfferbookMessage> messagesWithFailedVisibility = ConcurrentHashMap.newKeySet();
 
     public OffersWebSocketService(SubscriberRepository subscriberRepository,
                                   ChatService chatService,
@@ -162,6 +165,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                             recordedOffers.remove(message).ifPresent(recorded ->
                                     send(quoteCurrencyCode, recorded.item(), ModificationType.REMOVED));
                             messagesWithFailedItem.remove(message);
+                            messagesWithFailedVisibility.remove(message);
                             recordedOffers.publishCount(quoteCurrencyCode);
                         }
                     }
@@ -306,8 +310,24 @@ public class OffersWebSocketService extends BaseWebSocketService {
         }
     }
 
+    // The pass retries a failing check until it passes, so only the first failure is a warning
     private Optional<OfferVisibility> findVisibility(BisqEasyOfferbookMessage message) {
-        return OfferVisibility.find(bisqEasyOfferbookMessageService, userProfileService, userIdentityService, message);
+        try {
+            Optional<OfferVisibility> visibility = OfferVisibility.find(bisqEasyOfferbookMessageService,
+                    userProfileService,
+                    userIdentityService,
+                    message);
+            messagesWithFailedVisibility.remove(message);
+            return visibility;
+        } catch (RuntimeException e) {
+            String offerId = offerIdForLog(message);
+            if (messagesWithFailedVisibility.add(message)) {
+                log.warn("Could not check the visibility of offer {}: {}: {}",
+                        offerId, e.getClass().getName(), StringUtils.sanitizeForLog(e.getMessage()));
+            }
+            log.debug("Could not check the visibility of offer {}", offerId, e);
+            return Optional.empty();
+        }
     }
 
     // Recorded before the subscriber lookup, so that a subscriber which registers meanwhile reads it in its snapshot.

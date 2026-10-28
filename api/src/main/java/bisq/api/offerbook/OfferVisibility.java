@@ -19,52 +19,40 @@ package bisq.api.offerbook;
 
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.util.StringUtils;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfileService;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 // Whether the API shows an offer, and with which seller reputation verdict. Valid offers are shown like in the desktop
 // offerbook. Own offers are shown also when they are invalid, so that the app can warn its user.
-@Slf4j
 public record OfferVisibility(boolean shown, boolean valid, boolean hasSellerSufficientReputation) {
     private static final OfferVisibility HIDDEN = new OfferVisibility(false, false, false);
     // isValid already checks the reputation of a sell offer
     private static final OfferVisibility VALID = new OfferVisibility(true, true, true);
 
-    // Empty when the visibility is unknown: while the maker profile is missing, or when the check fails. A failing
-    // check repeats on every pass, so only the debug log carries the stack trace.
+    // Empty when the visibility is unknown, while the maker profile is missing. A failing check propagates to the
+    // caller, which knows whether it retries and how often to warn.
     public static Optional<OfferVisibility> find(BisqEasyOfferbookMessageService messageService,
                                                  UserProfileService userProfileService,
                                                  UserIdentityService userIdentityService,
                                                  BisqEasyOfferbookMessage message) {
-        try {
-            if (userProfileService.findUserProfile(message.getAuthorUserProfileId()).isEmpty()) {
-                // The item shows the profile, so no item can be built without it. Checked without the profile, the
-                // reputation service would use a score of 0 and cache the offer as insufficient. The ban and ignore
-                // checks need no profile.
-                boolean isBannedOrIgnored = !messageService.isNotBanned(message) || !messageService.isNotIgnored(message);
-                return isBannedOrIgnored && !message.isMyMessage(userIdentityService)
-                        ? Optional.of(HIDDEN)
-                        : Optional.empty();
-            }
-            if (messageService.isValid(message)) {
-                return Optional.of(VALID);
-            }
-            if (!message.isMyMessage(userIdentityService)) {
-                return Optional.of(HIDDEN);
-            }
-            boolean verdict = messageService.hasSellerSufficientReputation(message);
-            return Optional.of(new OfferVisibility(true, false, verdict));
-        } catch (RuntimeException e) {
-            // The maker chooses the offer ID
-            String offerId = StringUtils.sanitizeForLog(message.getBisqEasyOffer().map(offer -> offer.getId()).orElse(""));
-            log.warn("Could not check the visibility of offer {}: {}: {}",
-                    offerId, e.getClass().getName(), StringUtils.sanitizeForLog(e.getMessage()));
-            log.debug("Could not check the visibility of offer {}", offerId, e);
-            return Optional.empty();
+        if (userProfileService.findUserProfile(message.getAuthorUserProfileId()).isEmpty()) {
+            // The item shows the profile, so no item can be built without it. Checked without the profile, the
+            // reputation service would use a score of 0 and cache the offer as insufficient. The ban and ignore
+            // checks need no profile.
+            boolean isBannedOrIgnored = !messageService.isNotBanned(message) || !messageService.isNotIgnored(message);
+            return isBannedOrIgnored && !message.isMyMessage(userIdentityService)
+                    ? Optional.of(HIDDEN)
+                    : Optional.empty();
         }
+        if (messageService.isValid(message)) {
+            return Optional.of(VALID);
+        }
+        if (!message.isMyMessage(userIdentityService)) {
+            return Optional.of(HIDDEN);
+        }
+        boolean verdict = messageService.hasSellerSufficientReputation(message);
+        return Optional.of(new OfferVisibility(true, false, verdict));
     }
 }

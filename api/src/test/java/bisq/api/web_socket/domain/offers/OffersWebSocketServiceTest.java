@@ -101,6 +101,7 @@ class OffersWebSocketServiceTest {
     private Runnable onFailingItem = () -> {
     };
     private String itemFailureMessage = "item failed";
+    private String verdictFailureMessage = "verdict failed";
     // The item carries it in formattedPrice, so the test can tell a fresh item from a recorded one
     private String itemPrice = "price-1";
     private int numVerdictChecks;
@@ -199,7 +200,7 @@ class OffersWebSocketServiceTest {
     private boolean checkVerdict(BisqEasyOffer offer) {
         numVerdictChecks++;
         if (offersWithFailingVerdict.contains(offer)) {
-            throw new IllegalStateException("verdict failed");
+            throw new IllegalStateException(verdictFailureMessage);
         }
         Boolean verdict = verdictByOffer.get(offer);
         onVerdictCheck.run();
@@ -818,6 +819,111 @@ class OffersWebSocketServiceTest {
 
         assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN)
                 .filteredOn(event -> event.getFormattedMessage().startsWith("Could not build the item"))
+                .hasSize(2);
+    }
+
+    // The pass retries a failing check until it passes, so only the first failure is a warning
+    @Test
+    void failingVisibilityCheckLogsOneWarning() {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        offersWithFailingVerdict.add(message.getBisqEasyOffer().orElseThrow());
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            service.initialize().join();
+            offerValidityRevision.set(1L);
+            runScheduledPass();
+            offerValidityRevision.set(2L);
+            runScheduledPass();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(sentEvents).isEmpty();
+        assertThat(appender.list).filteredOn(event -> event.getLevel().isGreaterOrEqual(Level.WARN))
+                .singleElement()
+                .satisfies(event -> {
+                    assertThat(event.getLevel()).isEqualTo(Level.WARN);
+                    assertThat(event.getThrowableProxy()).isNull();
+                    assertThat(event.getFormattedMessage()).contains("java.lang.IllegalStateException");
+                });
+    }
+
+    // The maker chooses the offer ID, and the exception message can carry text of the offer, so a line break in
+    // them could forge a log line
+    @Test
+    void logMessagesOfAFailingVisibilityCheckHaveNoLineBreak() {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a\nFORGED offer-a", true);
+        offersWithFailingVerdict.add(message.getBisqEasyOffer().orElseThrow());
+        verdictFailureMessage = "verdict\r\nFORGED failed";
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        Level level = logger.getLevel();
+        logger.setLevel(Level.DEBUG);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            service.initialize().join();
+        } finally {
+            logger.detachAppender(appender);
+            logger.setLevel(level);
+        }
+
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN).hasSize(1);
+        assertThat(appender.list).extracting(ILoggingEvent::getFormattedMessage)
+                .allSatisfy(logMessage -> assertThat(logMessage).doesNotContain("\n", "\r"));
+    }
+
+    // Removing the offer forgets its failure, so that the set does not grow with removed offers
+    @Test
+    void offerAddedAgainAfterItsRemovalWarnsAgainWhenItsVisibilityCheckFails() {
+        service.initialize().join();
+        BisqEasyOfferbookMessage message = sellOffer("message-a", "offer-a", true);
+        offersWithFailingVerdict.add(message.getBisqEasyOffer().orElseThrow());
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            assertThat(channel.addChatMessage(message)).isTrue();
+            channel.removeChatMessage(message);
+            assertThat(channel.addChatMessage(message)).isTrue();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN)
+                .filteredOn(event -> event.getFormattedMessage().startsWith("Could not check the visibility"))
+                .hasSize(2);
+    }
+
+    // A check which passed forgets the failure, so that a later failure warns again
+    @Test
+    void visibilityCheckWhichFailsAgainAfterItPassedWarnsAgain() {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        BisqEasyOffer offer = message.getBisqEasyOffer().orElseThrow();
+        offersWithFailingVerdict.add(offer);
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            service.initialize().join();
+            offersWithFailingVerdict.clear();
+            offerValidityRevision.set(1L);
+            runScheduledPass();
+            offersWithFailingVerdict.add(offer);
+            offerValidityRevision.set(2L);
+            runScheduledPass();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(sentEvents).hasSize(1);
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN)
+                .filteredOn(event -> event.getFormattedMessage().startsWith("Could not check the visibility"))
                 .hasSize(2);
     }
 

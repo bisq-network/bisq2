@@ -23,19 +23,14 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.user.identity.UserIdentityService;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.LoggerFactory;
 
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -120,56 +115,12 @@ class OfferVisibilityTest {
         verify(messageService, never()).isValid(any());
     }
 
-    // A failing check repeats on every request and revision, so its warning carries no stack trace
+    // The caller decides how to log and retry a failing check
     @Test
-    void failingCheckGivesNoVisibilityAndAShortWarning() {
-        when(offer.getId()).thenReturn("offer-id");
+    void failingCheckPropagatesToTheCaller() {
         when(messageService.isValid(message)).thenThrow(new IllegalStateException("check failed"));
-        Logger logger = (Logger) LoggerFactory.getLogger(OfferVisibility.class);
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
-        appender.start();
-        logger.addAppender(appender);
 
-        Optional<OfferVisibility> visibility;
-        try {
-            visibility = find();
-        } finally {
-            logger.detachAppender(appender);
-        }
-
-        assertThat(visibility).isEmpty();
-        List<ILoggingEvent> warnings = appender.list.stream()
-                .filter(event -> event.getLevel() == Level.WARN)
-                .toList();
-        assertThat(warnings).hasSize(1);
-        assertThat(warnings.get(0).getThrowableProxy()).isNull();
-        // The simple name of an anonymous class is empty
-        assertThat(warnings.get(0).getFormattedMessage()).contains("java.lang.IllegalStateException");
-    }
-
-    // The maker chooses the offer ID, so a line break in it could forge a log line. The layout prints a logged
-    // throwable as it is, like every other one.
-    @Test
-    void logMessagesOfAFailingCheckHaveNoLineBreak() {
-        when(offer.getId()).thenReturn("offer-id\nFORGED offer-id");
-        when(messageService.isValid(message)).thenThrow(new IllegalStateException("check\r\nFORGED failed"));
-        Logger logger = (Logger) LoggerFactory.getLogger(OfferVisibility.class);
-        Level level = logger.getLevel();
-        logger.setLevel(Level.DEBUG);
-        ListAppender<ILoggingEvent> appender = new ListAppender<>();
-        appender.start();
-        logger.addAppender(appender);
-
-        try {
-            find();
-        } finally {
-            logger.detachAppender(appender);
-            logger.setLevel(level);
-        }
-
-        assertThat(appender.list).extracting(ILoggingEvent::getLevel).containsExactly(Level.WARN, Level.DEBUG);
-        assertThat(appender.list).extracting(ILoggingEvent::getFormattedMessage)
-                .allSatisfy(logMessage -> assertThat(logMessage).doesNotContain("\n", "\r"));
+        assertThatThrownBy(this::find).isInstanceOf(IllegalStateException.class).hasMessage("check failed");
     }
 
     private Optional<OfferVisibility> find() {

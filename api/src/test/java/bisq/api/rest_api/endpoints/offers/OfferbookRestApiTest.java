@@ -23,7 +23,6 @@ import bisq.api.dto.offer.amount.spec.QuoteSideFixedAmountSpecDto;
 import bisq.api.dto.offer.price.spec.PriceSpecDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDto;
 import bisq.api.dto.presentation.offerbook.OfferItemPresentationDtoFactory;
-import bisq.api.offerbook.OfferVisibility;
 import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.offerbook.RecordedOfferItems.RecordedOffer;
 import bisq.bisq_easy.BisqEasyOfferbookMessageService;
@@ -122,16 +121,16 @@ class OfferbookRestApiTest {
         }
     }
 
-    // A failing check repeats on every request, so its warning carries no stack trace
+    // Without the WebSocket nothing retries, so each request warns, like for a failing item
     @Test
-    void offerWhoseVisibilityCheckFailsIsSkippedWithAShortWarning() {
+    void offerWhoseVisibilityCheckFailsIsSkippedWithAWarning() {
         BisqEasyOfferbookMessage validMessage = offerMessage();
         BisqEasyOfferbookMessage failingMessage = offerMessage();
         when(messageService.isValid(validMessage)).thenReturn(true);
         when(messageService.isValid(failingMessage)).thenThrow(new IllegalStateException("check failed"));
         OfferbookRestApi api = api();
 
-        Logger logger = (Logger) LoggerFactory.getLogger(OfferVisibility.class);
+        Logger logger = (Logger) LoggerFactory.getLogger(OfferbookRestApi.class);
         ListAppender<ILoggingEvent> appender = new ListAppender<>();
         appender.start();
         logger.addAppender(appender);
@@ -150,7 +149,6 @@ class OfferbookRestApiTest {
                 .filter(event -> event.getLevel() == Level.WARN)
                 .toList();
         assertThat(warnings).hasSize(1);
-        assertThat(warnings.get(0).getThrowableProxy()).isNull();
     }
 
     // Without the WebSocket, nothing records the offers, so the list applies the rule of the OFFERS topic itself

@@ -351,20 +351,18 @@ public class OfferbookRestApi extends RestApiBase {
     }
 
     private Optional<OfferItemPresentationDto> findVisibleItem(BisqEasyOfferbookMessage message) {
-        return OfferVisibility.find(bisqEasyOfferbookMessageService, userProfileService, userIdentityService, message)
-                .filter(OfferVisibility::shown)
-                .flatMap(visibility -> {
-                    try {
-                        return createOfferListItemDto(message, visibility.hasSellerSufficientReputation());
-                    } catch (RuntimeException e) {
-                        // A single offer whose amounts cannot be converted at its price (an overflowing
-                        // amount reaches longValueExact) must not abort the whole market listing with a
-                        // 500. The WebSocket path retries the item with the next pass. Without the
-                        // WebSocket nothing retries, so the offer is skipped.
-                        log.warn("Skipping an offer that could not be mapped to a presentation dto", e);
-                        return Optional.empty();
-                    }
-                });
+        try {
+            return OfferVisibility.find(bisqEasyOfferbookMessageService, userProfileService, userIdentityService, message)
+                    .filter(OfferVisibility::shown)
+                    .flatMap(visibility -> createOfferListItemDto(message, visibility.hasSellerSufficientReputation()));
+        } catch (RuntimeException e) {
+            // A single offer whose check or amounts fail (an overflowing amount reaches longValueExact) must not
+            // abort the whole market listing with a 500. The WebSocket path retries the offer with the pass after
+            // the next revision. Without the WebSocket nothing retries and nothing remembers the offer, so each
+            // request skips it with a warning.
+            log.warn("Skipping an offer whose visibility check or item failed", e);
+            return Optional.empty();
+        }
     }
 
     private Optional<OfferItemPresentationDto> createOfferListItemDto(BisqEasyOfferbookMessage message,
