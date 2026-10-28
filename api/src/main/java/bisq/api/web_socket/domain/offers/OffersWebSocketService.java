@@ -376,7 +376,9 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 try {
                     send(json.get(), subscriber, modificationType);
                 } catch (Exception e) {
-                    log.error("Failed to send offer update to subscriber={}, json={}", subscriber, json.get(), e);
+                    // The payload stays out of the log, like in the other topics; it is in the trace log of the send
+                    log.error("Failed to send offer update to subscriber={}, jsonLength={}",
+                            subscriber.getSubscriberId(), json.get().length(), e);
                 }
             }
         } catch (Exception e) {

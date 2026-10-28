@@ -927,6 +927,33 @@ class OffersWebSocketServiceTest {
                 .hasSize(2);
     }
 
+    // Logs get pasted into bug reports, so the error names the subscriber and the size of the payload, not the offer
+    @Test
+    void failedSendLogsTheSubscriberAndTheJsonLengthWithoutThePayload() {
+        onSend = () -> {
+            throw new IllegalStateException("send failed");
+        };
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            addSellOffer("message-a", "offer-a", true);
+            service.initialize().join();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(sentEvents).hasSize(1);
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.ERROR)
+                .singleElement()
+                .satisfies(event -> {
+                    assertThat(event.getFormattedMessage()).contains("subscriber-id");
+                    assertThat(event.getFormattedMessage()).containsPattern("jsonLength=[1-9][0-9]*");
+                    assertThat(event.getFormattedMessage()).doesNotContain("message-a", "formattedPrice");
+                });
+    }
+
     // The snapshot of the first subscriber carries the item which was recorded without subscribers
     @Test
     void offerRecordedWithoutSubscribersIsNotResentToALaterSubscriber() {
