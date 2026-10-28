@@ -331,7 +331,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
     }
 
     // Recorded before the subscriber lookup, so that a subscriber which registers meanwhile reads it in its snapshot.
-    // Without an item, clients keep what they hold and the next pass tries again.
+    // Without an item, clients keep what they hold. The pass after the next revision tries again; nothing retries
+    // without a revision.
     private void applyVisibility(String quoteCurrencyCode,
                                  BisqEasyOfferbookMessage message,
                                  OfferVisibility visibility) {

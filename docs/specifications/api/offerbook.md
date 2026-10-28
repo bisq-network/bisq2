@@ -45,11 +45,11 @@ a removal is the last item which the node sent for the offer. Released clients p
 every event of the topic as a list of items, so a removal cannot carry only the offer ID. An offer
 which was never sent produces no removal.
 
-Additions and removals of offerbook messages are published right away. A change of visibility caused
-by a market price, a reputation score, the ban list or the ignore list is applied by a periodic pass
-over all offers. The pass starts at most once every 30 seconds, because these changes come in bursts
-and each pass checks every offer. A visibility change which happens during a pass is applied by the
-next pass.
+Additions and removals of offerbook messages are published right away. A change of a market price, a
+reputation score, the ban list or the ignore list is a revision of the validity rule. Each revision
+schedules a pass over all offers, which applies the visibility changes. The pass starts at most once
+every 30 seconds, because revisions come in bursts and each pass checks every offer. A revision which
+happens during a pass schedules the next pass.
 
 ## Snapshot of the OFFERS topic
 
@@ -57,7 +57,8 @@ The snapshot which a subscriber receives contains the offers which the node has 
 sent, to the other subscribers: the recorded offers. Each item is built again with the current
 amounts and reputation and with the recorded verdict. When no item can be built, the snapshot carries
 the last item sent. An offer which is shown but not recorded yet, for example because its maker
-profile arrived after the offer, is left out of the snapshot and sent by the next pass.
+profile arrived after the offer, is left out of the snapshot and sent by the pass after the next
+revision.
 
 ## NUM_OFFERS topic
 
@@ -85,6 +86,10 @@ The order of a snapshot and the events sent during the subscription is not guara
 WebSocket subscription itself. A client can receive an event before the snapshot which already
 reflects it. Until the subscription mechanism orders them, a lost `ADDED` leaves a shown offer out of
 the client list, and a lost `REMOVED` leaves a hidden offer in it, until the client reloads the list.
+
+Only a pass retries an offer whose maker profile was missing or whose check or item failed, and only
+a revision schedules a pass. The arrival of a maker profile is not a revision. The periodic market
+price update is one, so a retry usually follows within minutes. Without a revision nothing retries.
 
 A shown offer whose maker profile became unknown stays as the clients hold it until the profile
 returns or the offer leaves the offerbook, unless the maker is banned or ignored. The ban and ignore
