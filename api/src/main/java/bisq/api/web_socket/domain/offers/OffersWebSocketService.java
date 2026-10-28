@@ -54,7 +54,6 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -86,8 +85,8 @@ public class OffersWebSocketService extends BaseWebSocketService {
     private final RecordedOfferItems recordedOffers;
     // Messages whose item failed to build. Accessed only under offerUpdateLock.
     private final Set<BisqEasyOfferbookMessage> messagesWithFailedItem = new HashSet<>();
-    // Messages whose visibility check failed. The pass checks outside the lock, so the set is concurrent.
-    private final Set<BisqEasyOfferbookMessage> messagesWithFailedVisibility = ConcurrentHashMap.newKeySet();
+    // Messages whose visibility check failed. Accessed only under offerUpdateLock.
+    private final Set<BisqEasyOfferbookMessage> messagesWithFailedVisibility = new HashSet<>();
     // Written before isResendScheduled is reset, so that the revision which schedules the next pass reads it
     private volatile long lastPassStartNanos;
 
@@ -284,17 +283,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                              String quoteCurrencyCode,
                              BisqEasyOfferbookMessage message) {
         try {
-            Optional<OfferVisibility> visibility = findVisibility(message);
-            if (visibility.isEmpty()) {
-                return;
-            }
-            synchronized (offerUpdateLock) {
-                // Removed during the check; resending would revive it in clients
-                if (!channel.getChatMessages().contains(message)) {
-                    return;
-                }
-                applyVisibility(quoteCurrencyCode, message, visibility.get());
-            }
+            checkAndApply(channel, quoteCurrencyCode, message);
         } catch (Exception e) {
             log.error("Failed to resend offer {}", offerIdForLog(message), e);
         }
@@ -316,8 +305,7 @@ public class OffersWebSocketService extends BaseWebSocketService {
                 if (!channel.getChatMessages().contains(message)) {
                     return;
                 }
-                findVisibility(message).ifPresent(visibility ->
-                        applyVisibility(quoteCurrencyCode, message, visibility));
+                checkAndApply(channel, quoteCurrencyCode, message);
             }
         } catch (Exception e) {
             log.error("Failed to update offer {}", offerIdForLog(message), e);
@@ -330,24 +318,47 @@ public class OffersWebSocketService extends BaseWebSocketService {
         }
     }
 
-    // The pass retries a failing check until it passes, so only the first failure is a warning
-    private Optional<OfferVisibility> findVisibility(BisqEasyOfferbookMessage message) {
+    // The check runs with the lock state of the caller. The record and the failure set change under the lock, after
+    // the message was seen in the channel: a removal during the check forgets the offer and its failure.
+    private void checkAndApply(BisqEasyOfferbookChannel channel,
+                               String quoteCurrencyCode,
+                               BisqEasyOfferbookMessage message) {
+        Optional<OfferVisibility> visibility;
         try {
-            Optional<OfferVisibility> visibility = OfferVisibility.find(bisqEasyOfferbookMessageService,
+            visibility = OfferVisibility.find(bisqEasyOfferbookMessageService,
                     userProfileService,
                     userIdentityService,
                     message);
-            messagesWithFailedVisibility.remove(message);
-            return visibility;
         } catch (RuntimeException e) {
-            String offerId = offerIdForLog(message);
-            if (messagesWithFailedVisibility.add(message)) {
-                log.warn("Could not check the visibility of offer {}: {}: {}",
-                        offerId, e.getClass().getName(), StringUtils.sanitizeForLog(e.getMessage()));
+            synchronized (offerUpdateLock) {
+                if (channel.getChatMessages().contains(message)) {
+                    warnOnceAboutFailedVisibility(message, e);
+                }
             }
-            log.debug("Could not check the visibility of offer {}", offerId, e);
-            return Optional.empty();
+            return;
         }
+        // Unknown while the maker profile is missing: the check did not pass, so a known failure stays known
+        if (visibility.isEmpty()) {
+            return;
+        }
+        synchronized (offerUpdateLock) {
+            // Removed during the check; resending would revive it in clients
+            if (!channel.getChatMessages().contains(message)) {
+                return;
+            }
+            messagesWithFailedVisibility.remove(message);
+            applyVisibility(quoteCurrencyCode, message, visibility.get());
+        }
+    }
+
+    // The pass retries a failing check until it passes, so only the first failure is a warning
+    private void warnOnceAboutFailedVisibility(BisqEasyOfferbookMessage message, RuntimeException e) {
+        String offerId = offerIdForLog(message);
+        if (messagesWithFailedVisibility.add(message)) {
+            log.warn("Could not check the visibility of offer {}: {}: {}",
+                    offerId, e.getClass().getName(), StringUtils.sanitizeForLog(e.getMessage()));
+        }
+        log.debug("Could not check the visibility of offer {}", offerId, e);
     }
 
     // Recorded before the subscriber lookup, so that a subscriber which registers meanwhile reads it in its snapshot.

@@ -100,6 +100,9 @@ class OffersWebSocketServiceTest {
     // Runs before the factory fails to build an item
     private Runnable onFailingItem = () -> {
     };
+    // Runs before the verdict check fails
+    private Runnable onFailingVerdict = () -> {
+    };
     private String itemFailureMessage = "item failed";
     private String verdictFailureMessage = "verdict failed";
     // The item carries it in formattedPrice, so the test can tell a fresh item from a recorded one
@@ -200,6 +203,7 @@ class OffersWebSocketServiceTest {
     private boolean checkVerdict(BisqEasyOffer offer) {
         numVerdictChecks++;
         if (offersWithFailingVerdict.contains(offer)) {
+            onFailingVerdict.run();
             throw new IllegalStateException(verdictFailureMessage);
         }
         Boolean verdict = verdictByOffer.get(offer);
@@ -927,6 +931,67 @@ class OffersWebSocketServiceTest {
                 .hasSize(2);
     }
 
+    // The pass checks outside the lock, so the offer can leave the channel during a check which fails. The failure of
+    // a removed offer is no warning, and it is forgotten, so that the offer warns again when it is added again.
+    @Test
+    void offerRemovedDuringItsFailingCheckIsNotWarnedAbout() throws Exception {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        service.initialize().join();
+        sentEvents.clear();
+        offersWithFailingVerdict.add(message.getBisqEasyOffer().orElseThrow());
+        onFailingVerdict = () -> {
+            onFailingVerdict = () -> {
+            };
+            channel.removeChatMessage(message);
+        };
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            offerValidityRevision.set(1L);
+            runScheduledPass();
+            assertThat(sentEvents).hasSize(1);
+            assertSentType(sentEvents.get(0), "REMOVED", "message-a");
+            assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN).isEmpty();
+
+            assertThat(channel.addChatMessage(message)).isTrue();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN)
+                .filteredOn(event -> event.getFormattedMessage().startsWith("Could not check the visibility"))
+                .hasSize(1);
+    }
+
+    // A check which is skipped while the maker profile is missing did not pass, so the failure stays known
+    @Test
+    void failingCheckWarnsOnceWhenTheProfileIsMissingInBetween() {
+        BisqEasyOfferbookMessage message = addSellOffer("message-a", "offer-a", true);
+        offersWithFailingVerdict.add(message.getBisqEasyOffer().orElseThrow());
+        Logger logger = (Logger) LoggerFactory.getLogger(OffersWebSocketService.class);
+        ListAppender<ILoggingEvent> appender = new ListAppender<>();
+        appender.start();
+        logger.addAppender(appender);
+        try {
+            service.initialize().join();
+            authorsWithoutProfile.add("maker-id");
+            offerValidityRevision.set(1L);
+            runScheduledPass();
+            authorsWithoutProfile.clear();
+            offerValidityRevision.set(2L);
+            runScheduledPass();
+        } finally {
+            logger.detachAppender(appender);
+        }
+
+        assertThat(sentEvents).isEmpty();
+        assertThat(appender.list).filteredOn(event -> event.getLevel() == Level.WARN)
+                .filteredOn(event -> event.getFormattedMessage().startsWith("Could not check the visibility"))
+                .hasSize(1);
+    }
+
     // Logs get pasted into bug reports, so the error names the subscriber and the size of the payload, not the offer
     @Test
     void failedSendLogsTheSubscriberAndTheJsonLengthWithoutThePayload() {
@@ -1135,6 +1200,7 @@ class OffersWebSocketServiceTest {
         assertThat(channel.addChatMessage(message)).isTrue();
         assertThat(sentEvents).isEmpty();
         assertThat(recordedOffers.size()).isZero();
+        assertThat(numVerdictChecks).isZero();
     }
 
     // Shutdown can stop the executor while the revision observer runs
