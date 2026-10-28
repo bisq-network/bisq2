@@ -10,9 +10,22 @@ the implementation.
 
 ### Tor of the node
 
-On macOS and Windows the node starts the Tor of the bundled Tor expert bundle. On Linux it starts the `tor` of the
-system, which the Linux packages depend on. The node installs the files of the bundle into its Tor directory
-(`<data dir>/tor`); on Linux these are only the programs of the pluggable transports.
+On every operating system the node starts the Tor of the Tor expert bundle which the build packages. It never starts a
+`tor` of the system or from `PATH`, and the programs of the pluggable transports also come only from the bundle. The
+node installs the files of the bundle into its Tor directory (`<data dir>/tor`): Tor, its libraries, its GeoIP files
+and the programs of the pluggable transports. At the first start after an update which brings another bundle, it
+installs them again.
+
+The bundle is the stable expert bundle of the pinned Tor Browser version (`tor.version` in `tor/gradle.properties`).
+The stable releases have no expert bundle for Linux ARM64, so a build on Linux ARM64 takes the expert bundle of the
+alpha release `tor.bundleVersion.linux_arm64`, whose tor has the same version. On Linux, Tor needs the glibc and the
+`libz.so.1` of the system; the bundle brings its other libraries. Every Debian and Ubuntu system has `libz.so.1` in the
+package `zlib1g`. The bundles of the pinned versions need glibc 2.17 on x86_64 and 2.27 on ARM64.
+
+The Linux packages do not depend on the `tor` package of the distribution. The packages of Bisq 2.1.3 to 2.1.14 did,
+because these versions ran the `tor` of the system on Linux. An update from one of them leaves the `tor` package
+installed, and on Debian and Ubuntu its service `tor@default` keeps running until the user removes the package. The
+node does not use it.
 
 ### External Tor
 
@@ -73,8 +86,19 @@ Users configure bridges or an external Tor with bridges to get around a block of
 they use Tor. Connecting without the bridges would fail in the first case and expose the user in the second. Failing
 the start leaves that decision to the user.
 
+The node runs the Tor of its bundle on Linux as well, so that every node gets the version of Tor which the build pins
+and checks, with its security fixes, also where the `tor` package of the distribution is older. On Linux ARM64 the
+alpha release is the only source of an expert bundle.
+
 ## Known gaps
 
 - Bisq 2 has no user interface for bridges. They are set in `bisq.conf` of the data directory, see `docs/dev/build.md`.
-- On Linux ARM64 the bundle has no programs for the pluggable transports, so the user has to install them.
+- On Linux ARM64 the bundle comes from an alpha release of Tor Browser until a stable release has an expert bundle for
+  Linux ARM64. The build checks that its tor has the version of the stable bundles. Its libraries and its programs of
+  the pluggable transports are those of the alpha release and can be newer than those of the stable bundles.
+- The bundled tor of Linux is built for the usual layout of the file system: it takes the loader, glibc and
+  `libz.so.1` from the system. It does not run on NixOS or Guix, whose libraries lie in their stores; there the node
+  needs an external Tor.
+- On Linux the bundled tor finds its libraries through `LD_LIBRARY_PATH`, which the loader splits at `:` and `;`. A
+  data directory whose path contains one of them fails the start of Tor with a message that says so.
 - The onion service of the API is not reachable on Whonix, because the API server listens on `127.0.0.1` only.

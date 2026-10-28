@@ -163,9 +163,9 @@ public class TorTransportService implements TransportService {
     }
 
     /**
-     * @return the version which the running Tor reports. On Linux it is the tor of the system, and with an external
-     * Tor the Tor of the user, so it can differ from the Tor of the bundle. Empty before the transport has
-     * initialized and when an external Tor does not tell its version.
+     * @return the version which the running Tor reports. With an external Tor it is the Tor of the user, so it can
+     * differ from the Tor of the bundle. Empty before the transport has initialized and when an external Tor does not
+     * tell its version.
      */
     public Optional<String> getTorVersion() {
         return torService.getTorVersion();
