@@ -20,6 +20,8 @@ package bisq.network.p2p.node.transport;
 import bisq.common.network.TorAddress;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +29,9 @@ import org.mockito.MockedConstruction;
 
 import java.lang.reflect.Field;
 import java.net.Socket;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -78,6 +82,24 @@ class TorTransportServiceTest {
 
             assertThat(transportService.getTorVersion()).contains("0.4.8.16");
         }
+    }
+
+    // The node and the application wrap the failure of the Tor start, so the refusal can lie anywhere in the chain
+    @Test
+    void findsTheTransportsOfAStartWhichTheSandboxRefusedForPluggableTransports() {
+        PluggableTransportsNotAllowedException refusal = new PluggableTransportsNotAllowedException("reason",
+                "hint", List.of("obfs4", "snowflake"));
+        Throwable startFailure = new CompletionException(new RuntimeException("node failed", refusal));
+
+        assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure))
+                .contains(List.of("obfs4", "snowflake"));
+    }
+
+    @Test
+    void findsNoTransportsForAnotherRefusalOfTheSandbox() {
+        Throwable startFailure = new CompletionException(new SandboxUnavailableException("reason", "hint"));
+
+        assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure)).isEmpty();
     }
 
     private static void setStaticTorService(TorService torService) throws Exception {
