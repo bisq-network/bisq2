@@ -11,6 +11,12 @@ The builds in `apps`, `apps/desktop`, and `network` have no metadata of their ow
 directories verifies no dependency. CI must therefore run their tasks from the repository root, for example
 `:apps:build`. The `tor` build has the metadata of the Tor library and verifies its dependencies on its own.
 
+Gradle must verify signatures only with the keys of the committed keyring. The metadata of this repository turns the
+key servers off, so that a build never waits for a key server and a key which the keyring lacks fails the verification
+instead of being downloaded. A run which downloads keys turns them on for that run only. The policy check fails when
+the committed metadata does not turn them off, because Gradle drops the setting when it writes the metadata with the
+key servers on.
+
 Plugin resolution must not search MavenLocal. Local build-logic plugins come from the included build; published
 dependencies come from the configured remote repositories. This prevents unsigned or incomplete local Maven entries
 from shadowing signed publications, including Kotlin dependencies requested during IDE import.

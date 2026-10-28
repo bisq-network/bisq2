@@ -61,6 +61,7 @@ data class VerificationMetadata(
     val componentsById: Map<String, VerifiedComponent>,
     val trustedKeys: List<TrustedKey>,
     val ignoredKeyIds: List<String>,
+    val keyServersDisabled: Boolean,
 )
 data class VerifiedArtifact(
     val name: String,
@@ -559,6 +560,10 @@ fun parseVerificationMetadata(metadataFile: File): VerificationMetadata {
         .flatMap { it.getElementsByTagName("ignored-key").elements() }
         .map { it.getAttribute("id") }
 
+    val keyServersDisabled = document.getElementsByTagName("configuration").elements()
+        .flatMap { it.getElementsByTagName("key-servers").elements() }
+        .any { it.getAttribute("enabled") == "false" }
+
     val componentsById = TreeMap<String, VerifiedComponent>()
     document.getElementsByTagName("component").elements().forEach { component ->
         val group = component.getAttribute("group")
@@ -596,7 +601,7 @@ fun parseVerificationMetadata(metadataFile: File): VerificationMetadata {
         .distinct()
         .sorted()
 
-    return VerificationMetadata(componentsById, trustedKeys, allIgnoredKeyIds)
+    return VerificationMetadata(componentsById, trustedKeys, allIgnoredKeyIds, keyServersDisabled)
 }
 
 // Gradle never verifies a signature made with an ignored key, also when the keyring contains the key. An ignored key
@@ -722,10 +727,20 @@ if (isBisqRepositoryRootBuild) {
 
         doLast {
             val previousModified = if (dependencyVerificationKeyring.exists()) dependencyVerificationKeyring.lastModified() else 0L
-            val result = execOperations.exec {
-                workingDir = bisqRepositoryRoot
-                commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
-                isIgnoreExitValue = true
+            // The committed metadata turns the key servers off, so that builds verify signatures only with the
+            // committed keyring. This run downloads keys, so its Gradle reads the metadata with the key servers on.
+            val metadataText = dependencyVerificationMetadata.readText()
+            dependencyVerificationMetadata.writeText(
+                metadataText.replace(Regex("""\r?\n[ \t]*<key-servers enabled="false"/>"""), "")
+            )
+            val result = try {
+                execOperations.exec {
+                    workingDir = bisqRepositoryRoot
+                    commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
+                    isIgnoreExitValue = true
+                }
+            } finally {
+                dependencyVerificationMetadata.writeText(metadataText)
             }
 
             if (!dependencyVerificationKeyring.exists()) {
@@ -758,7 +773,8 @@ if (isBisqRepositoryRootBuild) {
 
     tasks.register("verifyDependencySignaturePolicy") {
         group = "verification"
-        description = "Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed."
+        description = "Verifies all dependency artifacts and fails if checksum-only artifacts are not explicitly allowed " +
+                "or if the metadata does not turn the key servers off."
 
         dependsOn("resolveAndVerifyDependencies")
         inputs.files(dependencyVerificationInventoryFiles).withPropertyName("dependencyInventories")
@@ -776,7 +792,8 @@ if (isBisqRepositoryRootBuild) {
             }
             val allowlist = readChecksumFallbackAllowlist(dependencyChecksumFallbackAllowlist)
             val resolved = readResolvedDependencyInventory()
-            val (componentsById, _, ignoredKeyIds) = parseVerificationMetadata(dependencyVerificationMetadata)
+            val (componentsById, _, ignoredKeyIds, keyServersDisabled) =
+                parseVerificationMetadata(dependencyVerificationMetadata)
             val ignoredKeysPresentInKeyring = ignoredKeysInKeyring(ignoredKeyIds, dependencyVerificationKeyring)
             val executableMetadataViolations = executableArtifactMetadataViolations(resolved, componentsById)
             val checksumFallbackEntries = TreeSet<String>()
@@ -789,6 +806,7 @@ if (isBisqRepositoryRootBuild) {
             val unapprovedEntries = checksumFallbackEntries.filter { !allowlist.entries.contains(it) }
             val staleAllowlistEntries = allowlist.entries.filter { !checksumFallbackEntries.contains(it) }
             if (
+                !keyServersDisabled ||
                 unapprovedEntries.isNotEmpty() ||
                 staleAllowlistEntries.isNotEmpty() ||
                 ignoredKeysPresentInKeyring.isNotEmpty() ||
@@ -796,6 +814,14 @@ if (isBisqRepositoryRootBuild) {
                 executableMetadataViolations.staleArtifacts.isNotEmpty()
             ) {
                 val message = StringBuilder("Dependency signature policy failed.")
+                // Builds take every key from the committed keyring. Gradle removes the element when it writes the
+                // metadata with the key servers on, as a refresh of the keyring needs them.
+                if (!keyServersDisabled) {
+                    message.append("\n\n")
+                        .append(dependencyVerificationMetadata)
+                        .append(" does not turn the key servers off. Add <key-servers enabled=\"false\"/> after " +
+                                "<keyring-format>, as gradle/README.md describes.")
+                }
                 if (ignoredKeysPresentInKeyring.isNotEmpty()) {
                     message
                         .append("\n\nIgnored signing keys that are present in ")

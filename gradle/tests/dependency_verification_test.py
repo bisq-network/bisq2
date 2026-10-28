@@ -46,6 +46,7 @@ class DependencyVerificationTest(unittest.TestCase):
         configuration = ET.SubElement(metadata, "configuration")
         ET.SubElement(configuration, "verify-metadata").text = "true"
         ET.SubElement(configuration, "verify-signatures").text = "false"
+        ET.SubElement(configuration, "key-servers", enabled="false")
         components = ET.SubElement(metadata, "components")
 
         for build, children in BUILDS.items():
@@ -276,6 +277,22 @@ class DependencyVerificationTest(unittest.TestCase):
                 output = self.run_gradle("check", success=False)
                 self.assertIn("Ignored signing keys that are present in", output)
                 self.assertIn(f" - {ignored_key}", output)
+
+    def test_metadata_which_does_not_turn_the_key_servers_off_fails_policy(self):
+        # Builds take every key from the committed keyring. Gradle drops the element when it writes the metadata with
+        # the key servers on, so a refresh which does not put it back has to fail.
+        self.run_gradle("check")
+        for enabled in (None, "true"):
+            with self.subTest(enabled=enabled):
+                tree = ET.parse(self.metadata)
+                configuration = tree.getroot().find("configuration")
+                for key_servers in configuration.findall("key-servers"):
+                    configuration.remove(key_servers)
+                if enabled is not None:
+                    ET.SubElement(configuration, "key-servers", enabled=enabled)
+                tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
+                output = self.run_gradle("check", success=False)
+                self.assertIn("does not turn the key servers off", output)
 
     def test_allowlist_entry_for_signed_artifact_is_stale(self):
         self.add_metadata_artifact("signed", "signed-1.jar", pgp="0123456789ABCDEF0123456789ABCDEF01234567")

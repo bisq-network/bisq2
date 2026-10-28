@@ -4,6 +4,7 @@
       <verify-metadata>true</verify-metadata>
       <verify-signatures>true</verify-signatures>
       <keyring-format>armored</keyring-format>
+      <key-servers enabled="false"/>
       <ignored-keys>
          <ignored-key id="61651257058D3757" reason="Key couldn't be downloaded from any key server"/>
       </ignored-keys>
