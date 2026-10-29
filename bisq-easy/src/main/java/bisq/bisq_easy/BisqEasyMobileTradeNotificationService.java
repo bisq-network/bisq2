@@ -124,6 +124,12 @@ public class BisqEasyMobileTradeNotificationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        // The applications initialize this service before the trade service, so that it sees the state changes which
+        // the trade service applies at startup. BisqEasyService.initialize() calls it again for applications which do
+        // not. A second subscription would treat the current state of each trade as a new transition.
+        if (tradesPin != null) {
+            return CompletableFuture.completedFuture(true);
+        }
         log.info("initialize");
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<BisqEasyTrade>() {
             @Override

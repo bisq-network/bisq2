@@ -219,6 +219,9 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> offerService.initialize())
                 .thenCompose(result -> chatService.initialize())
                 .thenCompose(result -> supportService.initialize())
+                // Subscribes to the trade states before the trade service applies the queued events and the replayed
+                // messages, so that these state changes send mobile notifications.
+                .thenCompose(result -> bisqEasyService.getBisqEasyMobileTradeNotificationService().initialize())
                 .thenCompose(result -> tradeService.initialize())
                 .thenCompose(result -> bisqEasyService.initialize())
                 .thenCompose(result -> openTradeItemsService.initialize())

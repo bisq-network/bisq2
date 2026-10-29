@@ -128,6 +128,27 @@ class BisqEasyMobileTradeNotificationServiceTest {
         assertTrue(notifications.isEmpty());
     }
 
+    @Test
+    void secondInitializeDoesNotRepeatTheNotificationOfTheCurrentState() {
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA);
+        trades.add(trade);
+
+        service.initialize().join();
+
+        assertTrue(notifications.isEmpty());
+    }
+
+    @Test
+    void shutdownAfterSecondInitializeStopsNotifications() {
+        service.initialize().join();
+        service.shutdown().join();
+
+        trades.add(trade);
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA);
+
+        assertTrue(notifications.isEmpty());
+    }
+
     private long offerTakenNotifications() {
         String title = Res.get("bisqEasy.mobileNotifications.offerTaken.title", "trade123");
         return notifications.stream().filter(notification -> notification.getTitle().equals(title)).count();

@@ -10,6 +10,11 @@ address arrives before the take-offer request.
 Later payment-data transitions do not repeat the offer-taken notification. Loading an existing trade observes its
 current state without emitting a historical notification. Payment-information notifications remain separate events.
 
+The notification service observes the trade states before the trade service starts. The state which a trade has when
+the node loads it from its store is historical. The trade service then applies queued events and replayed messages,
+for example from the mailbox, and can create a maker trade from a replayed take-offer request. These state changes
+happen in the current run, so they send notifications like a live message.
+
 One state transition produces at most one notification. A buyer maker who receives the account data before the
 take-offer request enters a state which means both "offer taken" and "payment information received". In this case
 only the offer-taken notification is sent. Both notifications for a trade share one device notification, so a second
