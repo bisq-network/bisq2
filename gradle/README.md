@@ -39,7 +39,8 @@ The committed verification files are:
 - `gradle/dependency-checksum-fallback-allowlist.tsv`
 
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
-including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `tor` included builds.
+including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, `tor`, and `tor/build-logic`
+included builds.
 
 The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
 `.gradle/dependency-verification/inventory.tsv` relative to its build root. These inventories survive `clean` and
@@ -75,12 +76,13 @@ To generate their metadata for a specific dependency, run this command from the 
 ```
 
 The [init script](resolve-ide-artifacts.gradle) registers the task for this invocation. Replace the coordinate with
-`group:name:version` for another dependency. The helper requests both sources and Javadoc; both archives must be
-published. Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
+`group:name:version` for another dependency; a comma-separated list resolves several dependencies. The helper requests
+the classifiers in `-PverificationClassifiers`, by default `sources,javadoc`; each requested archive must be published.
+Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
 
 Review the generated diff and verify new signatures or checksums before committing. Metadata generation records
-downloaded artifacts; it does not independently establish their trustworthiness. This helper handles one dependency;
-`resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+downloaded artifacts; it does not independently establish their trustworthiness. The helper handles only the listed
+dependencies; `resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
 
 ### Verifying and refreshing build dependencies
 
@@ -125,13 +127,15 @@ Checksum fallback artifacts must be reviewed in `gradle/dependency-checksum-fall
 Keep the allowlist exact and sorted. `verifyDependencySignaturePolicy` fails when a fallback artifact is missing from
 the allowlist, when an allowlist entry is stale, or when an entry has no rationale.
 
-Gradle verifies an artifact by its checksum only if the artifact has no signature or if every key which signed it is
-ignored. The policy treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key
-couldn't be downloaded` or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry
-for the module names a key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`,
-`sha1`, `sha256` and `sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in `gradle/verification-metadata.xml`, not only
-the resolved dependency graph, because Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
-against it. Entries for versions no build uses therefore also need an allowlist entry until they are removed.
+Gradle checks every checksum which the metadata declares for an artifact, also for a signed artifact. A checksum is the
+only verification of an artifact if the artifact has no signature or if every key which signed it is ignored. The policy
+treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key couldn't be downloaded`
+or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry for the module names a
+key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`, `sha1`, `sha256` and
+`sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in
+`gradle/verification-metadata.xml`, not only the resolved dependency graph, because Gradle also verifies parent POMs,
+imported BOMs and artifacts of other platforms against it. Entries for versions no build uses therefore also need an
+allowlist entry until they are removed.
 
 Gradle writes a reason once and keeps it when it regenerates the metadata. After `refreshDependencyVerificationKeyring`
 adds a key, remove the key from `ignored-keys`, delete the component entries of the artifacts it signs and run
