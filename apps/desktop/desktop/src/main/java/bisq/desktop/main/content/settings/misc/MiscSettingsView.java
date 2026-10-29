@@ -24,7 +24,6 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -35,6 +34,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettingsController> {
@@ -43,6 +43,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
     private final Button resetDontShowAgain;
     private final Switch useAnimations, preventStandbyMode, addContactsAutomatically;
     private final MaterialTextField totalMaxBackupSizeInMB;
+    private Subscription totalMaxBackupSizeInMBPin;
 
     public MiscSettingsView(MiscSettingsModel model, MiscSettingsController controller) {
         super(new VBox(), model, controller);
@@ -94,8 +95,9 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         preventStandbyMode.selectedProperty().bindBidirectional(model.getPreventStandbyMode());
         resetDontShowAgain.setOnAction(e -> controller.onResetDontShowAgain());
 
-        Bindings.bindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB(),
-                model.getTotalMaxBackupSizeConverter());
+        totalMaxBackupSizeInMBPin = SettingsViewUtils.bindOnCommit(totalMaxBackupSizeInMB,
+                model.getTotalMaxBackupSizeInMB(), model.getTotalMaxBackupSizeConverter(),
+                controller::onCommitTotalMaxBackupSizeInMB);
         totalMaxBackupSizeInMB.validate();
 
         addContactsAutomatically.selectedProperty().bindBidirectional(model.getAddContactsAutomatically());
@@ -107,7 +109,7 @@ public class MiscSettingsView extends View<VBox, MiscSettingsModel, MiscSettings
         preventStandbyMode.selectedProperty().unbindBidirectional(model.getPreventStandbyMode());
         resetDontShowAgain.setOnAction(null);
 
-        Bindings.unbindBidirectional(totalMaxBackupSizeInMB.textProperty(), model.getTotalMaxBackupSizeInMB());
+        totalMaxBackupSizeInMBPin.unsubscribe();
         totalMaxBackupSizeInMB.resetValidation();
 
         addContactsAutomatically.selectedProperty().unbindBidirectional(model.getAddContactsAutomatically());

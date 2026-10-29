@@ -83,8 +83,8 @@ public class MiscSettingsController implements Controller {
                     }
                 });
 
-        totalMaxBackupSizeInMBPin = FxBindings.bindBiDir(model.getTotalMaxBackupSizeInMB())
-                .to(settingsService.getTotalMaxBackupSizeInMB(), settingsService::setTotalMaxBackupSizeInMB);
+        totalMaxBackupSizeInMBPin = FxBindings.bind(model.getTotalMaxBackupSizeInMB())
+                .to(settingsService.getTotalMaxBackupSizeInMB());
 
         addContactsAutomaticallyPin = FxBindings.bindBiDir(model.getAddContactsAutomatically())
                 .to(settingsService.getAutoAddToContactsList(), settingsService::setAutoAddToContactsList);
@@ -107,6 +107,10 @@ public class MiscSettingsController implements Controller {
         }
 
         addContactsAutomaticallyPin.unbind();
+    }
+
+    void onCommitTotalMaxBackupSizeInMB(Number value) {
+        settingsService.setTotalMaxBackupSizeInMB(value.doubleValue());
     }
 
     void onResetDontShowAgain() {

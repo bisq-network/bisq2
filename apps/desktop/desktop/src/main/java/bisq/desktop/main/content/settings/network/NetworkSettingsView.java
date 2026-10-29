@@ -26,7 +26,6 @@ import bisq.desktop.components.controls.Switch;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -51,7 +50,7 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
     private final Button resetToDefaultsButton, shutdownButton;
     private final Switch ignoreDiffAdjustFromSecManagerSwitch;
     private final MaterialTextField difficultyAdjustmentFactor;
-    private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
+    private Subscription ignoreDiffAdjustFromSecManagerSwitchPin, difficultyAdjustmentFactorPin;
 
     private Subscription selectedTransportOptionPin;
 
@@ -209,8 +208,9 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().bindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
 
-        Bindings.bindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor(),
-                model.getDifficultyAdjustmentFactorConverter());
+        difficultyAdjustmentFactorPin = SettingsViewUtils.bindOnCommit(difficultyAdjustmentFactor,
+                model.getDifficultyAdjustmentFactor(), model.getDifficultyAdjustmentFactorConverter(),
+                controller::onCommitDifficultyAdjustmentFactor);
         difficultyAdjustmentFactor.validate();
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().bind(model.getDifficultyAdjustmentFactorEditable());
         difficultyAdjustmentFactor.descriptionProperty().bind(model.getDifficultyAdjustmentFactorDescriptionText());
@@ -245,7 +245,7 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         ignoreDiffAdjustFromSecManagerSwitch.selectedProperty().unbindBidirectional(model.getIgnoreDiffAdjustmentFromSecManager());
 
-        Bindings.unbindBidirectional(difficultyAdjustmentFactor.textProperty(), model.getDifficultyAdjustmentFactor());
+        difficultyAdjustmentFactorPin.unsubscribe();
         difficultyAdjustmentFactor.resetValidation();
         difficultyAdjustmentFactor.getTextInputControl().editableProperty().unbind();
         difficultyAdjustmentFactor.descriptionProperty().unbind();
