@@ -22,12 +22,12 @@ import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.controls.Switch;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
-import javafx.beans.binding.Bindings;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import lombok.extern.slf4j.Slf4j;
+import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSettingsController> {
@@ -35,6 +35,7 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
 
     private final Switch closeMyOfferWhenTaken;
     private final MaterialTextField maxTradePriceDeviation, priceDeviationWarningThreshold, numDaysAfterRedactingTradeData;
+    private Subscription maxTradePriceDeviationPin, priceDeviationWarningThresholdPin, numDaysAfterRedactingTradeDataPin;
 
     public TradeSettingsView(TradeSettingsModel model, TradeSettingsController controller) {
         super(new VBox(), model, controller);
@@ -50,19 +51,16 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
                 null, Res.get("settings.trade.maxTradePriceDeviation.help"));
         maxTradePriceDeviation.setValidators(model.getMaxTradePriceDeviationValidator());
         maxTradePriceDeviation.setMaxWidth(TEXT_FIELD_WIDTH);
-        maxTradePriceDeviation.setStringConverter(model.getMaxTradePriceDeviationConverter());
 
         priceDeviationWarningThreshold = new MaterialTextField(Res.get("settings.trade.priceDeviationWarningThreshold"),
                 null, Res.get("settings.trade.priceDeviationWarningThreshold.help"));
         priceDeviationWarningThreshold.setValidators(model.getPriceDeviationWarningThresholdValidator());
         priceDeviationWarningThreshold.setMaxWidth(TEXT_FIELD_WIDTH);
-        priceDeviationWarningThreshold.setStringConverter(model.getPriceDeviationWarningThresholdConverter());
 
         numDaysAfterRedactingTradeData = new MaterialTextField(Res.get("settings.trade.numDaysAfterRedactingTradeData"),
                 null, Res.get("settings.trade.numDaysAfterRedactingTradeData.help"));
         numDaysAfterRedactingTradeData.setValidators(model.getNumDaysAfterRedactingTradeDataValidator());
         numDaysAfterRedactingTradeData.setMaxWidth(TEXT_FIELD_WIDTH);
-        numDaysAfterRedactingTradeData.setStringConverter(model.getNumDaysAfterRedactingTradeDataConverter());
 
         VBox.setMargin(maxTradePriceDeviation, new Insets(15, 0, 15, 0));
         VBox tradeVBox = new VBox(10, closeMyOfferWhenTaken, maxTradePriceDeviation, priceDeviationWarningThreshold, numDaysAfterRedactingTradeData);
@@ -79,15 +77,18 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     protected void onViewAttached() {
         closeMyOfferWhenTaken.selectedProperty().bindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.bindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation(),
-                model.getMaxTradePriceDeviationConverter());
+        maxTradePriceDeviationPin = SettingsViewUtils.bindOnCommit(maxTradePriceDeviation,
+                model.getMaxTradePriceDeviation(), model.getMaxTradePriceDeviationConverter(),
+                controller::onCommitMaxTradePriceDeviation);
         maxTradePriceDeviation.validate(); // Needed to show help field as its shown only if input is valid
-        Bindings.bindBidirectional(priceDeviationWarningThreshold.textProperty(), model.getPriceDeviationWarningThreshold(),
-                model.getPriceDeviationWarningThresholdConverter());
+        priceDeviationWarningThresholdPin = SettingsViewUtils.bindOnCommit(priceDeviationWarningThreshold,
+                model.getPriceDeviationWarningThreshold(), model.getPriceDeviationWarningThresholdConverter(),
+                controller::onCommitPriceDeviationWarningThreshold);
         priceDeviationWarningThreshold.validate();
 
-        Bindings.bindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData(),
-                model.getNumDaysAfterRedactingTradeDataConverter());
+        numDaysAfterRedactingTradeDataPin = SettingsViewUtils.bindOnCommit(numDaysAfterRedactingTradeData,
+                model.getNumDaysAfterRedactingTradeData(), model.getNumDaysAfterRedactingTradeDataConverter(),
+                controller::onCommitNumDaysAfterRedactingTradeData);
         numDaysAfterRedactingTradeData.validate(); // Needed to show help field as its shown only if input is valid
     }
 
@@ -95,12 +96,12 @@ public class TradeSettingsView extends View<VBox, TradeSettingsModel, TradeSetti
     protected void onViewDetached() {
         closeMyOfferWhenTaken.selectedProperty().unbindBidirectional(model.getCloseMyOfferWhenTaken());
 
-        Bindings.unbindBidirectional(maxTradePriceDeviation.textProperty(), model.getMaxTradePriceDeviation());
-        Bindings.unbindBidirectional(priceDeviationWarningThreshold.textProperty(), model.getPriceDeviationWarningThreshold());
+        maxTradePriceDeviationPin.unsubscribe();
+        priceDeviationWarningThresholdPin.unsubscribe();
         maxTradePriceDeviation.resetValidation();
         priceDeviationWarningThreshold.resetValidation();
 
-        Bindings.unbindBidirectional(numDaysAfterRedactingTradeData.textProperty(), model.getNumDaysAfterRedactingTradeData());
+        numDaysAfterRedactingTradeDataPin.unsubscribe();
         numDaysAfterRedactingTradeData.resetValidation();
     }
 }
