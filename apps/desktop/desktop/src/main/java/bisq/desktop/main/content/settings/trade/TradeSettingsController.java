@@ -44,12 +44,12 @@ public class TradeSettingsController implements Controller {
     public void onActivate() {
         closeMyOfferWhenTakenPin = FxBindings.bindBiDir(model.getCloseMyOfferWhenTaken())
                 .to(settingsService.getCloseMyOfferWhenTaken(), settingsService::setCloseMyOfferWhenTaken);
-        maxTradePriceDeviationPin = FxBindings.bindBiDir(model.getMaxTradePriceDeviation())
-                .to(settingsService.getMaxTradePriceDeviation(), settingsService::setMaxTradePriceDeviation);
-        priceDeviationWarningThresholdPin = FxBindings.bindBiDir(model.getPriceDeviationWarningThreshold())
-                .to(settingsService.getPriceDeviationWarningThreshold(), settingsService::setPriceDeviationWarningThreshold);
-        tradeAgeForRedactingDataPin = FxBindings.bindBiDir(model.getNumDaysAfterRedactingTradeData())
-                .to(settingsService.getNumDaysAfterRedactingTradeData(), settingsService::setNumDaysAfterRedactingTradeData);
+        maxTradePriceDeviationPin = FxBindings.bind(model.getMaxTradePriceDeviation())
+                .to(settingsService.getMaxTradePriceDeviation());
+        priceDeviationWarningThresholdPin = FxBindings.bind(model.getPriceDeviationWarningThreshold())
+                .to(settingsService.getPriceDeviationWarningThreshold());
+        tradeAgeForRedactingDataPin = FxBindings.bind(model.getNumDaysAfterRedactingTradeData())
+                .to(settingsService.getNumDaysAfterRedactingTradeData());
     }
 
     @Override
@@ -58,5 +58,17 @@ public class TradeSettingsController implements Controller {
         maxTradePriceDeviationPin.unbind();
         priceDeviationWarningThresholdPin.unbind();
         tradeAgeForRedactingDataPin.unbind();
+    }
+
+    void onCommitMaxTradePriceDeviation(Number value) {
+        settingsService.setMaxTradePriceDeviation(value.doubleValue());
+    }
+
+    void onCommitPriceDeviationWarningThreshold(Number value) {
+        settingsService.setPriceDeviationWarningThreshold(value.doubleValue());
+    }
+
+    void onCommitNumDaysAfterRedactingTradeData(Number value) {
+        settingsService.setNumDaysAfterRedactingTradeData(value.intValue());
     }
 }
