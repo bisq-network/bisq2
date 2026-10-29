@@ -37,6 +37,9 @@ public record OfferItemPresentationDto(BisqEasyOfferDto bisqEasyOffer,
                                        String formattedPriceSpec,
                                        List<String> quoteSidePaymentMethods,
                                        List<String> baseSidePaymentMethods,
-                                       ReputationScoreDto reputationScore // Can change by reputation changes
+                                       ReputationScoreDto reputationScore, // Can change by reputation changes
+                                       // Same check as desktop's offerbook; buys and a missing price give true.
+                                       // Advisory: the node checks again on take, so treat false as a warning.
+                                       boolean hasSellerSufficientReputation
 ) {
 }
