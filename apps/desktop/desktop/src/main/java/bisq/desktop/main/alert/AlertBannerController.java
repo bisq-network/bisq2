@@ -63,18 +63,18 @@ public class AlertBannerController implements Controller {
     }
 
     void onClose() {
-        UIThread.run(() -> {
-            alertNotificationsService.dismissAlert(model.getDisplayedAuthorizedAlertData());
-            model.reset();
-            showAlertBanner();
-        });
+        // Dismissing removes the alert from the unconsumed alerts, which calls showAlertBanner synchronously.
+        UIThread.run(() -> alertNotificationsService.dismissAlert(model.getDisplayedAuthorizedAlertData()));
     }
 
     private void showAlertBanner() {
         UIThread.run(() -> {
             Optional<AuthorizedAlertData> mostRelevantAlert = alertNotificationsService.getUnconsumedAlerts().stream()
                     .max(AuthorizedAlertDataUtils.RELEVANCE_COMPARATOR);
-            if (mostRelevantAlert.isPresent() && !mostRelevantAlert.get().equals(model.getDisplayedAuthorizedAlertData())) {
+            if (mostRelevantAlert.isEmpty()) {
+                // The last alert was dismissed or removed, e.g. the security manager lifted a trading halt.
+                model.reset();
+            } else if (!mostRelevantAlert.get().equals(model.getDisplayedAuthorizedAlertData())) {
                 model.reset();
                 add(mostRelevantAlert.get());
             }
