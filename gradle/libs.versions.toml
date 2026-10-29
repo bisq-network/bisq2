@@ -65,7 +65,6 @@ slf4j-lib = { strictly = '2.0.18' }
 swagger-lib = { strictly = '2.2.50' }
 testfx-junit5-lib = { strictly = '4.0.18' }
 testfx-monocle-lib = { strictly = '21.0.2' }
-tukaani-lib = { strictly = '1.12' }
 typesafe-config-lib = { strictly = '1.4.8' }
 
 zxing-lib = { strictly = '3.5.4' }
@@ -154,7 +153,6 @@ swagger-swagger-annotations = { module = 'io.swagger.core.v3:swagger-annotations
 
 testfx-junit5 = { module = 'org.testfx:testfx-junit5', version.ref = 'testfx-junit5-lib' }
 testfx-monocle = { module = 'org.testfx:openjfx-monocle', version.ref = 'testfx-monocle-lib' }
-tukaani = { module = 'org.tukaani:xz', version.ref = 'tukaani-lib' }
 typesafe-config = { module = 'com.typesafe:config', version.ref = 'typesafe-config-lib' }
 
 zxing = { module = 'com.google.zxing:javase', version.ref = 'zxing-lib' }

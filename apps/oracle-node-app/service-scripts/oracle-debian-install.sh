@@ -19,7 +19,7 @@ echo "[*] Creating Bisq2 user"
 sudo adduser --home "${BISQ_HOME}" --disabled-password --gecos "" "${BISQ_USER}" --quiet
 
 echo "[*] Cloning Bisq repo"
-sudo -H -i -u "${BISQ_USER}" git clone "${BISQ_REPO_URL}" "${BISQ_HOME}/${BISQ_REPO_NAME}"
+sudo -H -i -u "${BISQ_USER}" git clone --recurse-submodules "${BISQ_REPO_URL}" "${BISQ_HOME}/${BISQ_REPO_NAME}"
 
 update-set-branch "${BISQ_REPO_TAG_OR_BRANCH}"
 update-clean-install-oracle
