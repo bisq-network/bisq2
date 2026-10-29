@@ -57,6 +57,7 @@ public class OfferItemPresentationDtoFactory {
                                                             UserIdentityService userIdentityService,
                                                             ReputationService reputationService,
                                                             MarketPriceService marketPriceService,
+                                                            boolean hasSellerSufficientReputation,
                                                             BisqEasyOfferbookMessage bisqEasyOfferbookMessage) {
         BisqEasyOffer bisqEasyOffer = bisqEasyOfferbookMessage.getBisqEasyOffer().orElseThrow();
         String authorUserProfileId = bisqEasyOfferbookMessage.getAuthorUserProfileId();
@@ -122,6 +123,7 @@ public class OfferItemPresentationDtoFactory {
                 formattedPriceSpec,
                 quoteSidePaymentMethods,
                 baseSidePaymentMethods,
-                reputationScoreDto));
+                reputationScoreDto,
+                hasSellerSufficientReputation));
     }
 }
