@@ -57,6 +57,9 @@ public class PairingService {
      */
     public static final int MAX_CLIENT_NAME_LENGTH = 100;
 
+    private static final String PAIRING_QR_CODE_FILE_NAME = "pairing_qr_code.txt";
+    private static final String PAIRING_QR_CODE_TEMP_FILE_NAME = PAIRING_QR_CODE_FILE_NAME + ".tmp";
+
     private final ApiConfig apiConfig;
     private final Path appDataDirPath;
     private final ApiAccessStoreService apiAccessStoreService;
@@ -79,6 +82,28 @@ public class PairingService {
         this.permissionService = permissionService;
 
         pairingCodeTtlInSeconds = apiConfig.getPairingCodeTtlInSeconds();
+
+        // Pairing codes only live in memory, so a QR code file left by an earlier process is stale.
+        // We are created after the instance lock is acquired (unless checkInstanceLock=false), so no other running
+        // instance owns the file.
+        deletePairingQrCodeFile();
+    }
+
+    /**
+     * Deletes the pairing QR code file, so that a file on disk always belongs to the running process.
+     */
+    public void deletePairingQrCodeFile() {
+        for (String fileName : List.of(PAIRING_QR_CODE_FILE_NAME, PAIRING_QR_CODE_TEMP_FILE_NAME)) {
+            Path path = appDataDirPath.resolve(fileName);
+            try {
+                if (Files.deleteIfExists(path)) {
+                    log.info("Deleted pairing QR code file {}", path);
+                }
+            } catch (Exception e) {
+                // Not only IOException: a failure here must not break startup or shutdown.
+                log.error("Error at deleting pairing QR code file {}", path, e);
+            }
+        }
     }
 
     public PairingCode createPairingCode(Permission requiredPermissions) {
@@ -239,7 +264,7 @@ public class PairingService {
 
     // Package-private for testing
     void writePairingQrCodeToDataDir(String pairingQrCode) {
-        Path path = appDataDirPath.resolve("pairing_qr_code.txt");
+        Path path = appDataDirPath.resolve(PAIRING_QR_CODE_FILE_NAME);
         try {
             StringBuilder content = new StringBuilder(pairingQrCode);
             try {
@@ -249,7 +274,7 @@ public class PairingService {
             }
             // The file is rewritten on every code regeneration. Write to a temp file and move
             // atomically so a concurrent reader never observes a truncated payload.
-            Path tempPath = appDataDirPath.resolve("pairing_qr_code.txt.tmp");
+            Path tempPath = appDataDirPath.resolve(PAIRING_QR_CODE_TEMP_FILE_NAME);
             FileMutatorUtils.writeToPath(content.toString(), tempPath);
             try {
                 Files.move(tempPath, path, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);

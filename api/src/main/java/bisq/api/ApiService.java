@@ -125,6 +125,8 @@ public class ApiService implements Service {
     private final AlertNotificationsService alertNotificationsService;
     private final Observable<State> state = new Observable<>(State.NEW);
     private final Object pairingQrCodeLock = new Object();
+    // Guarded by pairingQrCodeLock
+    private boolean pairingQrCodeCreationStopped;
     @Nullable
     private Pin pairingCodePin;
     private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
@@ -357,6 +359,11 @@ public class ApiService implements Service {
             pairingCodePin.unbind();
             pairingCodePin = null;
         }
+        // Under the lock, so that a regeneration still in progress cannot write the file again after we deleted it.
+        synchronized (pairingQrCodeLock) {
+            pairingQrCodeCreationStopped = true;
+            pairingService.deletePairingQrCodeFile();
+        }
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
         futures.add(alertNotificationsService.shutdown());
         futures.add(apiAccessTransportService.shutdown());
@@ -370,6 +377,10 @@ public class ApiService implements Service {
 
     public void createPairingQrCode() {
         synchronized (pairingQrCodeLock) {
+            if (pairingQrCodeCreationStopped) {
+                log.info("Skipping pairing QR code creation as we are shutting down");
+                return;
+            }
             if (webSocketService.isEmpty()) {
                 log.warn("Cannot create pairing QR code: WebSocket service not initialized");
                 return;
