@@ -1,5 +1,14 @@
 # Gradle Notes
 
+## Build JDK
+
+CI requests Zulu `21.0.13+9`. `verifyBuildEnvironment` checks the Java update, runtime build, Zulu distribution build,
+and Gradle version pinned in `gradle.properties`. The Java update alone is insufficient: Zulu can publish different
+builds under the same update version. Update the CI workflows, pinned properties, and toolchain URLs together when
+changing the build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
+
+See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
+
 ## Gradle Wrapper Verification
 
 `verifyGradleWrapperSecurity` (part of the root `check`) and the CI workflow compare `gradlew`, `gradlew.bat`,
