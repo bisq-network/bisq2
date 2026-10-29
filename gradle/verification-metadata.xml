@@ -72,7 +72,6 @@
             <trusting group="org.codehaus.groovy" version="3.0.21"/>
          </trusted-key>
          <trusted-key id="3690C240CE51B4670D30AD1C38EE757D69184620">
-            <trusting group="org.tukaani" name="xz" version="1.12"/>
             <trusting group="org.tukaani" name="xz" version="1.9"/>
          </trusted-key>
          <trusted-key id="3AC8633E97ACA1E8F2A7ED239052174975143979" group="org.glassfish.grizzly"/>

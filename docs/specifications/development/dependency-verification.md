@@ -6,6 +6,15 @@ The root build's `check` must audit all resolvable project and buildscript confi
 composite builds, including build logic, applications, desktop, network, and Tor. Gradle must verify the resolved
 dependencies against the committed verification metadata and keyring.
 
+Gradle verifies dependencies only against the verification metadata of the build which is the root of the build tree.
+The builds in `apps`, `apps/desktop`, and `network` have no metadata of their own, so a build started in one of these
+directories verifies no dependency. CI must therefore run their tasks from the repository root, for example
+`:apps:build`. The `tor` build has the metadata of the Tor library and verifies its dependencies on its own.
+
+Plugin resolution must not search MavenLocal. Local build-logic plugins come from the included build; published
+dependencies come from the configured remote repositories. This prevents unsigned or incomplete local Maven entries
+from shadowing signed publications, including Kotlin dependencies requested during IDE import.
+
 Checksum fallbacks must have exact, reviewed allowlist entries with a rationale. Missing, duplicate, unsorted, or
 stale entries must fail the policy check. Resolved executable artifacts must have explicit verification metadata;
 metadata for older, unresolved versions of those tools must fail the policy check.

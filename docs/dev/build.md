@@ -74,6 +74,12 @@
    ./gradlew :apps:desktop:desktop-app-launcher:clean :apps:desktop:desktop-app-launcher:generateInstallers
    ```
 
+   The task runs jpackage once for each package format of the platform: deb and rpm on Linux, dmg on macOS, exe and
+   msi on Windows. It fails when jpackage fails, does not finish within 15 minutes, or does not create the package.
+   jpackage writes its output into `build/packaging/jpackage/jpackage_<format>.log` of the project, which the error
+   names. On Linux, jpackage needs `fakeroot` and `dpkg-deb` for the deb and `rpmbuild` for the rpm. On Debian and
+   Ubuntu, the package `rpm` contains `rpmbuild`.
+
 7. **Other useful dev gradle commands**
 
 For a quick full cleanup/rebuild you can use

@@ -1,17 +1,27 @@
 gradle.rootProject { root ->
+    // The root project declares no repositories; the subprojects get Maven Central from bisq.java-conventions.
+    root.repositories {
+        mavenCentral()
+    }
+
     root.tasks.register('resolveIdeArtifactsForVerification') {
         group = 'verification'
-        description = 'Resolves sources and Javadoc for the dependency specified by verificationDependency.'
+        description = 'Resolves the classifier artifacts (default: sources and Javadoc) of the dependencies ' +
+                'specified by verificationDependency.'
 
         doLast {
-            def coordinate = root.findProperty('verificationDependency')
-            if (!coordinate) {
-                throw new GradleException('Supply -PverificationDependency=group:name:version')
+            def splitList = { value -> value.split(',').collect { it.trim() }.findAll { it } }
+            def coordinates = splitList(root.findProperty('verificationDependency') ?: '')
+            if (coordinates.isEmpty()) {
+                throw new GradleException('Supply -PverificationDependency=group:name:version[,group:name:version...]')
             }
-            ['sources', 'javadoc'].each { classifier ->
-                def dependency = root.dependencies.create("${coordinate}:${classifier}@jar")
-                root.configurations.detachedConfiguration(dependency).resolve().each {
-                    println("Resolved IDE artifact: ${it.name}")
+            def classifiers = splitList(root.findProperty('verificationClassifiers') ?: 'sources,javadoc')
+            coordinates.each { coordinate ->
+                classifiers.each { classifier ->
+                    def dependency = root.dependencies.create("${coordinate}:${classifier}@jar")
+                    root.configurations.detachedConfiguration(dependency).resolve().each {
+                        println("Resolved artifact: ${it.name}")
+                    }
                 }
             }
         }
