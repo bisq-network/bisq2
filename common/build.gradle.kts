@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     java
     id("bisq.java-conventions")
@@ -5,15 +7,19 @@ plugins {
     id("bisq.protobuf")
 }
 
-
-val torVersion: String? = project.findProperty("tor.version") as String?
-if (torVersion == null) {
-    throw GradleException("Tor version is not defined in gradle.properties")
+// The Tor build in the Git submodule tor/ defines the Tor versions, so that they exist only once
+val torGradleProperties = Properties().apply {
+    rootProject.file("tor/gradle.properties").inputStream().use { load(it) }
 }
 
-val torBinaryVersion: String? = project.findProperty("tor.binaryVersion") as String?
+val torVersion: String? = torGradleProperties.getProperty("tor.version")
+if (torVersion == null) {
+    throw GradleException("Tor version is not defined in tor/gradle.properties")
+}
+
+val torBinaryVersion: String? = torGradleProperties.getProperty("tor.binaryVersion")
 if (torBinaryVersion == null) {
-    throw GradleException("Tor binary version is not defined in gradle.properties")
+    throw GradleException("Tor binary version is not defined in tor/gradle.properties")
 }
 
 /**

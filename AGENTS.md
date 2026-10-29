@@ -13,6 +13,8 @@ Bisq 2 is a decentralized trading platform.
 ## Repo Structure (high‑level)
 - `apps/` — composite build for desktop app, seed node app, installers
 - `network/` — composite build for networking components
+- `tor/`: Git submodule with the Tor build, a composite build of its own. Run `git submodule update --init` after a
+  clone or checkout without `--recurse-submodules`; the build stops when `tor/` is empty
 - `common/`, `platform/`, `presentation/`, `application/`, `trade/`, etc. — core modules
 - `docs/dev/` — dev guide, build instructions, code guidelines
 
