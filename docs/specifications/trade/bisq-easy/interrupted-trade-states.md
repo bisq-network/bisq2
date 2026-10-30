@@ -27,8 +27,9 @@ records the role of the trader which interrupted the trade, maker or taker.
 
 ## Compatibility
 
-- The rules change no message and no persisted data. The state is local to the node, so a peer with an earlier version
-  is not affected.
+- The rules change no message and no persisted field. The store keeps the name of the state, so a trade which a node
+  cancels under these rules stores `CANCELLED` where an earlier version stored `PEER_CANCELLED`, and the other way
+  round. The state is local to the node, so a peer with an earlier version is not affected.
 - A stored trade keeps its state. For a trade which an earlier version cancelled, the state can name the wrong trader.
   The recorded role names the right trader in all versions, so a reader which needs to know who cancelled the trade
   uses the role.
