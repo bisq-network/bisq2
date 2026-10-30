@@ -729,20 +729,11 @@ if (isBisqRepositoryRootBuild) {
 
         doLast {
             val previousModified = if (dependencyVerificationKeyring.exists()) dependencyVerificationKeyring.lastModified() else 0L
-            // The committed metadata turns the key servers off, so that builds verify signatures only with the
-            // committed keyring. This run downloads keys, so its Gradle reads the metadata with the key servers on.
-            val metadataText = dependencyVerificationMetadata.readText()
-            dependencyVerificationMetadata.writeText(
-                metadataText.replace(Regex("""\r?\n[ \t]*<key-servers enabled="false"/>"""), "")
-            )
-            val result = try {
-                execOperations.exec {
-                    workingDir = bisqRepositoryRoot
-                    commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
-                    isIgnoreExitValue = true
-                }
-            } finally {
-                dependencyVerificationMetadata.writeText(metadataText)
+            // --export-keys downloads keys also when the metadata turns the key servers off; only --offline stops it.
+            val result = execOperations.exec {
+                workingDir = bisqRepositoryRoot
+                commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
+                isIgnoreExitValue = true
             }
 
             if (!dependencyVerificationKeyring.exists()) {
@@ -816,8 +807,7 @@ if (isBisqRepositoryRootBuild) {
                 executableMetadataViolations.staleArtifacts.isNotEmpty()
             ) {
                 val message = StringBuilder("Dependency signature policy failed.")
-                // Builds take every key from the committed keyring. Gradle removes the element when it writes the
-                // metadata with the key servers on, as a refresh of the keyring needs them.
+                // Builds take every key from the committed keyring.
                 if (!keyServersDisabled) {
                     message.append("\n\n")
                         .append(dependencyVerificationMetadata)
