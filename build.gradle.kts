@@ -400,11 +400,13 @@ tasks.register<Delete>("cleanAll") {
     delete(allBuildDirectories())
 }
 
-// gradle/build-environment-verification.gradle.kts checks the Java update, the Java vendor and the Gradle version, as
-// in the included builds. The root build also pins the exact JDK build.
-tasks.named("verifyBuildEnvironment") {
+// verifyBuildEnvironment of gradle/build-environment-verification.gradle.kts accepts every build of the Java update, as
+// in the included builds. The installers bundle the JDK of the build as their runtime, so a release build also needs
+// the exact build.
+tasks.named("verifyReleaseEnvironment") {
     inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
     inputs.property("expectedReleaseJavaVendorVersion", expectedReleaseJavaVendorVersion.orElse(""))
+    outputs.upToDateWhen { false }
 
     doLast {
         val expectedJavaRuntimeVersion = requiredGradleProperty("releaseBuild.javaRuntimeVersion", expectedReleaseJavaRuntimeVersion)
@@ -422,10 +424,12 @@ tasks.named("verifyBuildEnvironment") {
 
         if (violations.isNotEmpty()) {
             throw GradleException(
-                "Build environment verification failed:\n" +
+                "Release build environment verification failed:\n" +
                         violations.joinToString("\n") { "  - $it" }
             )
         }
+
+        logger.lifecycle("Verified release build environment: Java $actualJavaRuntimeVersion ($actualJavaVendorVersion).")
     }
 }
 
