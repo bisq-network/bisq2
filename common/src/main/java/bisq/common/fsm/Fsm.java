@@ -36,9 +36,9 @@ import static com.google.common.base.Preconditions.checkNotNull;
  * Minimalistic finite state machine implementation inspired by <a href="https://github.com/j-easy/easy-states">easy-states</a>
  * <br/>
  * In case of out-of-order events we store the un-handled events in the event queue of the model and retry to apply
- * those pending events after the next state transition. The owner of a persisted model can persist the event queue
- * with the model (a trade persists its queued trade messages). The queue keeps at most one event of a type which has
- * only state-changing transitions (see addToEventQueue).
+ * those pending events after the next state transition. The owner of a persisted model can persist the event queue and
+ * the processed event types with the model (a trade persists its queued trade messages and its processed event types).
+ * The queue keeps at most one event of a type which has only state-changing transitions (see addToEventQueue).
  * The handling of out-of-order events only support unique event/state pairs. The out-of-order handling does not
  * support the use of the same event for multiple transitions. Though that is not a restriction of the transition config.
  * <br/>
@@ -106,10 +106,10 @@ public abstract class Fsm<M extends FsmModel> {
                         log.info("Transition completed to new state {}", newState);
                         model.setNewState(newState);
                         if (newState.isFinalState()) {
-                            model.processedEvents.clear();
+                            model.processedEventTypes.clear();
                             model.eventQueue.clear();
                         } else {
-                            model.processedEvents.add(eventClass);
+                            model.processedEventTypes.add(eventClass.getName());
                             // We do not queue an event of a processed type (addToEventQueue), so we remove a queued
                             // one as well. It remains when the type has an internal transition, as the queue keeps
                             // each event of such a type, or when a new event of the type was applied before the queued
@@ -175,7 +175,7 @@ public abstract class Fsm<M extends FsmModel> {
                                  State currentState,
                                  Set<Map.Entry<Pair<State, Class<? extends Event>>, Transition>> transitionMapEntriesForEvent) {
         Class<? extends Event> eventClass = event.getClass();
-        if (model.processedEvents.contains(eventClass)) {
+        if (model.processedEventTypes.contains(eventClass.getName())) {
             log.info("We did not find a transition with state {} and event {}. An event of that type was processed " +
                     "already, so we do not add it to the eventQueue.", currentState, eventClass.getSimpleName());
             return;

@@ -40,7 +40,9 @@ public class FsmModel {
     // trade changes its model. A concurrent set does not throw a ConcurrentModificationException in these cases.
     @ToString.Exclude
     final Set<Event> eventQueue = ConcurrentHashMap.newKeySet();
-    final Set<Class<? extends Event>> processedEvents = ConcurrentHashMap.newKeySet();
+    // The class names of the processed events. The owner of a persisted model can store the names with the model. A
+    // name of a class which no longer exists matches no event.
+    final Set<String> processedEventTypes = ConcurrentHashMap.newKeySet();
 
     public FsmModel(State initialState, Set<Event> eventQueue) {
         this(initialState, eventQueue, Set.of());
@@ -51,14 +53,13 @@ public class FsmModel {
         this(initialState, Set.of(), Set.of());
     }
 
-    @VisibleForTesting
-    FsmModel(State initialState, Set<Event> eventQueue, Set<Class<? extends Event>> processedEvents) {
+    public FsmModel(State initialState, Set<Event> eventQueue, Set<String> processedEventTypes) {
         if (initialState == null) {
             throw new FsmConfigException("initialState must not be null");
         }
         state.set(initialState);
         this.eventQueue.addAll(eventQueue);
-        this.processedEvents.addAll(processedEvents);
+        this.processedEventTypes.addAll(processedEventTypes);
     }
 
     public ReadOnlyObservable<State> stateObservable() {
@@ -78,7 +79,7 @@ public class FsmModel {
         return Collections.unmodifiableSet(eventQueue);
     }
 
-    public Set<Class<? extends Event>> getProcessedEvents() {
-        return Collections.unmodifiableSet(processedEvents);
+    public Set<String> getProcessedEventTypes() {
+        return Collections.unmodifiableSet(processedEventTypes);
     }
 }

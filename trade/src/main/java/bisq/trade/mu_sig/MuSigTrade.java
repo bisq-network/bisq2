@@ -88,8 +88,10 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                        MuSigTradeParty taker,
                        MuSigTradeParty maker,
                        TradeLifecycleState lifecycleState,
-                       Set<Event> queuedEvents) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, queuedEvents);
+                       Set<Event> queuedEvents,
+                       Set<String> processedEventTypes) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, queuedEvents,
+                processedEventTypes);
 
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
@@ -129,7 +131,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                     TradeParty.protoToMuSigTradeParty(proto.getTaker()),
                     TradeParty.protoToMuSigTradeParty(proto.getMaker()),
                     TradeLifecycleState.fromProto(proto.getLifecycleState()),
-                    queuedTradeMessagesFromProto(proto));
+                    queuedTradeMessagesFromProto(proto),
+                    processedEventTypesFromProto(proto));
             if (proto.hasErrorMessage()) {
                 trade.setErrorMessage(proto.getErrorMessage());
             }

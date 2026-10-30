@@ -26,23 +26,24 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Other threads read the sets of a model while its Fsm changes them: the persistence reads the event queue, and the
- * hash code of a model reads both sets, for example when a trade store copies its trades for a write. The test changes
- * a set while it iterates it, which is what such a read meets when the Fsm changes the set at the same time.
+ * Other threads read the sets of a model while its Fsm changes them: the persistence reads the event queue and the
+ * processed event types, and the hash code of a model reads both sets, for example when a trade store copies its trades
+ * for a write. The test changes a set while it iterates it, which is what such a read meets when the Fsm changes the
+ * set at the same time.
  */
 class FsmModelTest {
     @Test
-    void processedEventsCanChangeWhileTheyAreIterated() {
+    void processedEventTypesCanChangeWhileTheyAreIterated() {
         FsmModel model = new FsmModel(FsmTest.MockState.S1,
                 Set.of(),
-                Set.of(FsmTest.MockEvent1.class, FsmTest.MockEvent2.class));
-        Iterator<Class<? extends Event>> iterator = model.processedEvents.iterator();
+                Set.of(FsmTest.MockEvent1.class.getName(), FsmTest.MockEvent2.class.getName()));
+        Iterator<String> iterator = model.processedEventTypes.iterator();
         iterator.next();
 
-        model.processedEvents.add(FsmTest.MockEvent3.class);
+        model.processedEventTypes.add(FsmTest.MockEvent3.class.getName());
 
         assertDoesNotThrow(iterator::next);
-        assertTrue(model.getProcessedEvents().contains(FsmTest.MockEvent3.class));
+        assertTrue(model.getProcessedEventTypes().contains(FsmTest.MockEvent3.class.getName()));
     }
 
     @Test

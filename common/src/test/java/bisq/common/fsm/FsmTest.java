@@ -121,13 +121,13 @@ public class FsmTest {
         assertEquals(MockState.INIT, model.getState());
         assertEquals("test1", model.data);
         assertEquals(0, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
+        assertEquals(0, model.processedEventTypes.size());
 
         fsm.handle(new MockEvent1(model, "test2"));
         assertEquals(MockState.INIT, model.getState());
         assertEquals("test2", model.data);
         assertEquals(0, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
+        assertEquals(0, model.processedEventTypes.size());
     }
 
     @Test
@@ -154,7 +154,26 @@ public class FsmTest {
         assertEquals(MockState.S1, model.getState());
         assertEquals("internal", model.data);
         assertEquals(0, model.eventQueue.size());
-        assertEquals(1, model.processedEvents.size());
+        assertEquals(1, model.processedEventTypes.size());
+    }
+
+    // The owner of a persisted model restores it with its processed event types, for example a trade after a restart.
+    // An event of such a type which has no transition from the current state is not queued, as before the restart.
+    @Test
+    void eventOfARestoredProcessedTypeIsNotQueued() {
+        MockModel model = new MockModel(MockState.S1, Set.of(), Set.of(MockEvent1.class.getName()));
+        SimpleFsm<MockModel> fsm = new SimpleFsm<>(model);
+        fsm.addTransition()
+                .from(MockState.INIT)
+                .on(MockEvent1.class)
+                .run(MockEventHandler.class)
+                .to(MockState.S1);
+
+        fsm.handle(new MockEvent1(model, "copy"));
+
+        assertEquals(MockState.S1, model.getState());
+        assertNull(model.data);
+        assertEquals(0, model.eventQueue.size());
     }
 
     @Test
@@ -220,13 +239,13 @@ public class FsmTest {
         assertEquals(MockState.INIT, fsm.getModel().getState());
         assertNull((fsm.getModel()).data);
         assertEquals(1, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
+        assertEquals(0, model.processedEventTypes.size());
 
         fsm.handle(new MockEvent2(model, "test2"));
         assertEquals(MockState.INIT, fsm.getModel().getState());
         assertNull((fsm.getModel()).data);
         assertEquals(2, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
+        assertEquals(0, model.processedEventTypes.size());
 
         // Now we trigger transition from INIT state and process the queued events
         // to arrive at S3
@@ -234,14 +253,14 @@ public class FsmTest {
         assertEquals(MockState.S3, fsm.getModel().getState());
         assertEquals("test3", fsm.getModel().data);
         assertEquals(0, model.eventQueue.size());
-        assertEquals(3, model.processedEvents.size());
+        assertEquals(3, model.processedEventTypes.size());
 
-        // At a final state we clear the eventQueue and processedEvents
+        // At a final state we clear the eventQueue and processedEventTypes
         fsm.handle(new MockEvent4(model, "test_comp"));
         assertEquals(MockState.COMPLETED, fsm.getModel().getState());
         assertEquals("test_comp", fsm.getModel().data);
         assertEquals(0, model.eventQueue.size());
-        assertEquals(0, model.processedEvents.size());
+        assertEquals(0, model.processedEventTypes.size());
     }
 
     @Test
@@ -824,6 +843,10 @@ public class FsmTest {
 
         public MockModel(MockState state, Set<Event> eventQueue) {
             super(state, eventQueue);
+        }
+
+        public MockModel(MockState state, Set<Event> eventQueue, Set<String> processedEventTypes) {
+            super(state, eventQueue, processedEventTypes);
         }
 
         private String data = null;
