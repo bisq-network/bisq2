@@ -53,9 +53,11 @@ class DesktopApplicationServiceTest {
                 List.of("obfs4", "snowflake"), false);
 
         assertThat(message)
-                .contains("pluggable transports obfs4, snowflake")
+                .contains("pluggable transports: obfs4, snowflake")
                 .contains(ALLOW_PLUGGABLE_TRANSPORTS)
-                .contains("Remove the bridges")
+                .contains("Connect without bridges if Tor is not blocked where you are")
+                .contains("remove the bridges from bisq.conf")
+                .contains("replace them with bridges that do not use pluggable transports")
                 .contains(SANDBOX_OFF);
     }
 
@@ -94,9 +96,11 @@ class DesktopApplicationServiceTest {
         String message = DesktopApplicationService.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
 
         assertThat(message)
-                .contains("pluggable transports obfs4")
+                .contains("pluggable transports: obfs4")
                 .doesNotContain("allowPluggableTransports")
-                .contains("Remove the bridges")
+                .contains("Connect without bridges if Tor is not blocked where you are")
+                .contains("remove the bridges from bisq.conf")
+                .contains("replace them with bridges that do not use pluggable transports")
                 .contains(SANDBOX_OFF);
     }
 
