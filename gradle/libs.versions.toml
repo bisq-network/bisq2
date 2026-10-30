@@ -54,6 +54,7 @@ junit-jupiter-lib = { strictly = '6.0.3' }
 logback-lib = { strictly = '1.5.32' }
 lombok-lib = { strictly = '1.18.46' }
 mockito-lib = { strictly = '5.23.0' }
+javafx = { strictly = '21.0.13' }
 openjfx-plugin = { strictly = '0.1.0' }
 
 protobuf-java-lib = { strictly = '4.28.2' }
