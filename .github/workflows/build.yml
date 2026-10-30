@@ -85,4 +85,4 @@ jobs:
     with:
       os: ${{ matrix.os }}
       name: tor module
-      build-root-dir: network/tor
+      build-root-dir: tor

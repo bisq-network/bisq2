@@ -26,7 +26,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 1. **Clone Bisq 2:**
    ```bash
-   git clone https://github.com/bisq-network/bisq2.git
+   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
    ```
    ```bash
    cd bisq2
@@ -37,7 +37,7 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
 
 3. **Update to latest GitHub version:**
    ```bash
-   git pull
+   git pull --recurse-submodules
    ```
 
 4. **Build desktop client distribution:**
@@ -56,6 +56,68 @@ in [the Bisq wiki](https://bisq.wiki/Bisq_Easy).
    ```
 
 **For Windows environments**: replace `./gradlew` with `gradlew.bat`.
+
+### Tor Submodule
+
+The directory `tor/` is the Git submodule [tor](https://github.com/bisq-network/tor), the Tor build of Bisq. Bisq 2
+records one commit of it, and `tor/` must contain this commit.
+
+**Check out the recorded commit.** A clone without `--recurse-submodules`, a `git pull` without it, and a branch switch
+leave `tor/` empty or at another commit. Then run:
+```bash
+git submodule update --init
+```
+This command does not take new commits of the tor repository. It checks out the commit which Bisq 2 records, also when
+`tor/` has a newer commit checked out.
+
+If `tor/` still contains files of a checkout from before the submodule, for example `tor/build` of an earlier build, the
+command fails with `destination path 'tor' already exists and is not an empty directory`. Remove the directory first
+(`rm -rf tor`) and run the command again.
+
+To let `git pull` and `git switch` update `tor/` automatically, run once: `git config submodule.recurse true`.
+
+**Update Bisq 2 to a newer commit of the tor repository:**
+1. Fetch the new commits into `tor/` and check out the new commit there:
+   ```bash
+   git -C tor fetch origin
+   ```
+   ```bash
+   git -C tor checkout <commit>
+   ```
+To use the main branch:
+   ```bash
+   git -C tor checkout origin/main
+   ```
+   `git submodule update --remote tor` does both for the newest commit of the `main` branch.
+2. Review the changes which the update brings:
+   ```bash
+   git diff --submodule=log tor
+   ```
+3. Build and test, then commit the new commit of `tor/` in Bisq 2:
+   ```bash
+   git add tor
+   ```
+   ```bash
+   git commit
+   ```
+
+**Change the Tor code.** `tor/` is a repository of its own. Commit the change in `tor/` on a branch and push it to the
+tor repository. Then commit the new commit of `tor/` in Bisq 2 as in step 3. Push the tor commit first, otherwise other
+clones of Bisq 2 cannot check it out.
+
+**Local tor repository (temporary).** As long as the tor repository is not published, a checkout which uses a local
+repository `tor` next to the Bisq 2 checkout sets the URLs once by hand. Use relative paths, so that the URLs also work
+when another machine (for example a virtual machine) sees the directories under another absolute path:
+```bash
+git config submodule.tor.url ../tor
+```
+```bash
+git -C tor remote set-url origin ../../tor
+```
+Git resolves the first URL from the Bisq 2 checkout and the second from `tor/`. Git refuses local submodule URLs by
+default, so add `-c protocol.file.allow=always` to submodule commands which clone, for example
+`git -c protocol.file.allow=always submodule update --init`. Do not run `git submodule sync` in such a checkout: it
+writes the URL of `.gitmodules`, which does not exist yet, into both places.
 
 ## Community and Contributions
 

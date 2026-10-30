@@ -48,8 +48,9 @@ class TorTransportServiceTest {
 
     @Test
     void connectionOfANodeUsesTheNodeIdAsStreamId() throws Exception {
-        TorTransportConfig config = mock(TorTransportConfig.class);
+        TorTransportService.Config config = mock(TorTransportService.Config.class);
         when(config.getSocketTimeout()).thenReturn(120_000);
+        when(config.getTorTransportConfig()).thenReturn(mock(TorTransportConfig.class));
         try (MockedConstruction<TorService> torServices = mockConstruction(TorService.class,
                 (torService, context) -> when(torService.getSocket(anyString(), anyInt(), anyString(), anyInt()))
                         .thenReturn(mock(Socket.class)))) {

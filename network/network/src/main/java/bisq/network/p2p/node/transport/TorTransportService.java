@@ -10,24 +10,64 @@ import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.onionservice.OnionServiceKey;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
 
 @Slf4j
 public class TorTransportService implements TransportService {
+    @Getter
+    @ToString
+    @EqualsAndHashCode
+    public static final class Config implements TransportConfig {
+        public static Config from(Path dataDirPath, com.typesafe.config.Config config) {
+            return new Config(dataDirPath,
+                    config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
+                    (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
+                    config.getInt("sendMessageThrottleTime"),
+                    config.getInt("receiveMessageThrottleTime"),
+                    TorTransportConfig.from(dataDirPath, config));
+        }
+
+        private final Path dataDirPath;
+        private final int defaultNodePort;
+        private final int socketTimeout; // in ms
+        private final int sendMessageThrottleTime;
+        private final int receiveMessageThrottleTime;
+        private final TorTransportConfig torTransportConfig;
+
+        public Config(Path dataDirPath,
+                      int defaultNodePort,
+                      int socketTimeout,
+                      int sendMessageThrottleTime,
+                      int receiveMessageThrottleTime,
+                      TorTransportConfig torTransportConfig) {
+            this.dataDirPath = dataDirPath;
+            this.defaultNodePort = defaultNodePort;
+            this.socketTimeout = socketTimeout;
+            this.sendMessageThrottleTime = sendMessageThrottleTime;
+            this.receiveMessageThrottleTime = receiveMessageThrottleTime;
+            this.torTransportConfig = torTransportConfig;
+        }
+    }
+
     private static TorService torService;
 
     private final int socketTimeout;
@@ -44,7 +84,7 @@ public class TorTransportService implements TransportService {
         socketTimeout = config.getSocketTimeout();
         if (torService == null) {
             setTransportState(TransportState.NEW);
-            torService = new TorService((TorTransportConfig) config);
+            torService = new TorService(((Config) config).getTorTransportConfig(), new BisqTorPlatformServices());
         }
     }
 
@@ -77,7 +117,7 @@ public class TorTransportService implements TransportService {
             TorKeyPair torKeyPair = keyBundle.getTorKeyPair();
             String onionAddress = torKeyPair.getOnionAddress();
             TorAddress address = new TorAddress(onionAddress, port);
-            ServerSocket serverSocket = torService.publishOnionServiceAndCreateServerSocket(port, torKeyPair).get();
+            ServerSocket serverSocket = torService.publishOnionServiceAndCreateServerSocket(port, toOnionServiceKey(torKeyPair)).get();
             initializedServerSocketTimestampByNetworkId.put(networkId, System.currentTimeMillis());
             return new ServerSocketResult(serverSocket, address);
         } catch (InterruptedException e) {
@@ -117,11 +157,15 @@ public class TorTransportService implements TransportService {
         return Optional.of(torService.getSocks5Proxy());
     }
 
-    public Observable<Boolean> getUseExternalTor() {
-        return torService.getUseExternalTor();
+    public boolean isUseExternalTor() {
+        return torService.isUseExternalTor();
     }
 
     public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
-        return torService.publishOnionService(localPort, onionServicePort, torKeyPair);
+        return torService.publishOnionService(localPort, onionServicePort, toOnionServiceKey(torKeyPair));
+    }
+
+    private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {
+        return new OnionServiceKey(torKeyPair.getOnionAddress(), torKeyPair.getBase64SecretScalar());
     }
 }

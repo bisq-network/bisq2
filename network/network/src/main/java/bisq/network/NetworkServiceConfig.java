@@ -26,9 +26,9 @@ import bisq.network.p2p.node.Feature;
 import bisq.network.p2p.node.authorization.AuthorizationService;
 import bisq.network.p2p.node.transport.ClearNetTransportService;
 import bisq.network.p2p.node.transport.I2PTransportService;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
-import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import lombok.Getter;
 
@@ -131,7 +131,7 @@ public final class NetworkServiceConfig {
         return switch (transportType) {
             case TOR -> {
                 transportDirPath = appDataDirPath.resolve("tor");
-                yield TorTransportConfig.from(transportDirPath, transportConfig);
+                yield TorTransportService.Config.from(transportDirPath, transportConfig);
             }
             case I2P -> {
                 transportDirPath = appDataDirPath.resolve("i2p");
