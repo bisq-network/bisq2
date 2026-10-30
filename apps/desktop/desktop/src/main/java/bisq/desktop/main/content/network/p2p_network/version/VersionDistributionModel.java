@@ -19,6 +19,8 @@ package bisq.desktop.main.content.network.p2p_network.version;
 
 import bisq.common.data.Pair;
 import bisq.desktop.common.view.Model;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +34,7 @@ public class VersionDistributionModel implements Model {
     private final List<Pair<String, Double>> versionDistribution = new ArrayList<>();
     @Setter
     private String versionDistributionTooltip;
+    private final StringProperty localVersionDetails = new SimpleStringProperty();
 
     public VersionDistributionModel() {
     }

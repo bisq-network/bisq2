@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.support.resources;
 
-import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqHyperlink;
 import bisq.desktop.components.controls.BisqTooltip;
@@ -53,6 +52,7 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
             walletGuide, license, tac;
 
     private final TreeView<String> backupSnapshotTreeView;
+    private final Label localVersionDetails;
 
     public ResourcesView(ResourcesModel model, ResourcesController controller) {
         super(new VBox(), model, controller);
@@ -101,19 +101,9 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
 
         Label localVersionHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.localVersion.headline"));
 
-        String versionString = ApplicationVersion.getVersion() != null ?
-                ApplicationVersion.getVersion().getVersionAsString() : Res.get("data.na");
-        String commitHash = ApplicationVersion.getBuildCommitShortHash() != null ?
-                ApplicationVersion.getBuildCommitShortHash() : Res.get("data.na");
-        String torBinaryVersion = ApplicationVersion.getTorBinaryVersionString() != null ?
-                ApplicationVersion.getTorBinaryVersionString() : Res.get("data.na");
-        String torVersion = ApplicationVersion.getTorVersionString() != null ?
-                ApplicationVersion.getTorVersionString() : Res.get("data.na");
-
-        Label details = new Label(Res.get("support.resources.localVersion.details",
-                versionString, commitHash, torBinaryVersion, torVersion));
-        details.getStyleClass().add("user-content-note");
-        VBox localVersionBox = new VBox(5, details);
+        localVersionDetails = new Label();
+        localVersionDetails.getStyleClass().add("user-content-note");
+        VBox localVersionBox = new VBox(5, localVersionDetails);
 
         Label resourcesHeadline = SettingsViewUtils.getHeadline(Res.get("support.resources.resources.headline"));
         webpage = new BisqHyperlink(Res.get("support.resources.resources.webpage"), "https://bisq.network/");
@@ -164,6 +154,8 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         muSigTradeGuide.setVisible(model.isMusigEnabled());
         muSigTradeGuide.setManaged(model.isMusigEnabled());
 
+        localVersionDetails.textProperty().bind(model.getLocalVersionDetails());
+
         updateBackupSnapshotTreeView();
 
         openLogFileButton.setOnAction(e -> controller.onOpenLogFile());
@@ -199,6 +191,7 @@ public class ResourcesView extends View<VBox, ResourcesModel, ResourcesControlle
         setBackupLocationButton.defaultButtonProperty().unbind();
         backupButton.defaultButtonProperty().unbind();
         backupButton.disableProperty().unbind();
+        localVersionDetails.textProperty().unbind();
 
         backupSnapshotTreeView.getRoot().getChildren().clear();
 

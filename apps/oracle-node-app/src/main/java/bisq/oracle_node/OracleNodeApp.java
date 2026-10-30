@@ -39,6 +39,10 @@ public class OracleNodeApp extends Executable<OracleNodeApplicationService> {
 
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
+        if (hasStartFailed(result, throwable)) {
+            shutdownAfterFailedStart();
+            return;
+        }
         AddressByTransportTypeMap addressByTransportTypeMap =
                 applicationService.getIdentityService()
                         .getOrCreateDefaultIdentity()

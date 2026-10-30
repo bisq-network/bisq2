@@ -126,6 +126,23 @@ class ConnectionHandshakePeerChecksTest {
         verify(authorizationService, never()).isAuthorized(any(), any(), any(), any(), anyString());
     }
 
+    // The message of the type error contains the reply. A token of difficulty 0 made its string fail, so the initiator
+    // reported an unspecified error instead of the type error.
+    @Test
+    void theInitiatorRejectsAReplyWhichIsNotAResponseAlsoWithATokenOfDifficultyZero() throws IOException {
+        Capability peersCapability = capability(5678);
+        AuthorizationToken tokenOfDifficultyZero = new HashCashV2Token(
+                new ProofOfWork(new byte[20], 0, null, 0, new byte[72], 0), 0);
+        Socket socket = socketWhichReceives(tokenOfDifficultyZero, new Ping(1));
+        AuthorizationService authorizationService = authorizationServiceWhichCreatesTokens();
+        ConnectionHandshake handshake = handshake(socket, mock(BanList.class), authorizationService);
+
+        assertThatThrownBy(() -> handshake.start(new NetworkLoad(), peersCapability.getAddress()))
+                .isInstanceOf(ConnectionException.class)
+                .hasMessageContaining("not type of Response");
+        verify(socket).close();
+    }
+
     private static ConnectionHandshake handshake(Socket socket,
                                                  BanList banList,
                                                  AuthorizationService authorizationService) throws IOException {
@@ -148,8 +165,13 @@ class ConnectionHandshakePeerChecksTest {
 
     // A socket whose input holds one envelope with the given message and whose output discards everything
     private static Socket socketWhichReceives(EnvelopePayloadMessage payload) throws IOException {
+        return socketWhichReceives(TOKEN, payload);
+    }
+
+    private static Socket socketWhichReceives(AuthorizationToken token, EnvelopePayloadMessage payload)
+            throws IOException {
         ByteArrayOutputStream received = new ByteArrayOutputStream();
-        new NetworkEnvelope(TOKEN, payload).writeDelimitedTo(received);
+        new NetworkEnvelope(token, payload).writeDelimitedTo(received);
         Socket socket = mock(Socket.class);
         when(socket.getInputStream()).thenReturn(new ByteArrayInputStream(received.toByteArray()));
         when(socket.getOutputStream()).thenReturn(OutputStream.nullOutputStream());

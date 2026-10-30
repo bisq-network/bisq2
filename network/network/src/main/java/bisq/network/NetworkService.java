@@ -69,6 +69,7 @@ import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.TorKeyPair;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -216,6 +217,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         // We use anyOf to complete as soon as we got at least one transport node initialized
         return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
                 .thenApply(node -> {
+                    logFailedTransports(initializedDefaultNodeByTransport);
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
                         resendMessageService.ifPresent(ResendMessageService::initialize);
@@ -598,6 +600,21 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
+
+    /**
+     * The network is ready with its first initialized transport, so the failure of another one, for example a refused
+     * start of Tor next to I2P, fails no start and would otherwise reach no log.
+     */
+    @VisibleForTesting
+    static void logFailedTransports(Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport) {
+        initializedDefaultNodeByTransport.forEach((transportType, initializedDefaultNode) ->
+                initializedDefaultNode.whenComplete((node, throwable) -> {
+                    if (throwable != null) {
+                        log.error("The {} transport failed to initialize. The network runs without it.",
+                                transportType, throwable);
+                    }
+                }));
+    }
 
     private void requestReferenceTime() {
         transportStatePins.forEach(Pin::unbind);
