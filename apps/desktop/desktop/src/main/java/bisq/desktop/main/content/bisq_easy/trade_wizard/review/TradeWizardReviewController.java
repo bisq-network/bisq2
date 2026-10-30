@@ -761,7 +761,8 @@ public class TradeWizardReviewController implements Controller {
     // precision. The amount step converts between the Bitcoin and the fiat amount, which can lose such a fraction, for
     // example 99.9997 USD for 100 USD. The taker's node and the maker accept only an amount within the range of the
     // offer (BisqEasyOfferAmountValidator), so for such an amount we take the limit of the range. We take it in the
-    // unit of the range, as a limit in Bitcoin converted to fiat and back can end below the minimum.
+    // unit of the range, as a limit in Bitcoin converted to fiat and back can end below the minimum. For the same
+    // reason, an amount equal to the minimum in fiat takes the minimum as well.
     private AmountSpec getAmountSpecWithinOffersRange(BisqEasyOffer bisqEasyOffer, AmountSpec amountSpec) {
         if (!(amountSpec instanceof QuoteSideFixedAmountSpec quoteSideFixedAmountSpec)
                 || !(bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec rangeAmountSpec)) {
@@ -775,7 +776,7 @@ public class TradeWizardReviewController implements Controller {
         Monetary amount = Monetary.from(quoteSideFixedAmountSpec.getAmount(),
                 bisqEasyOffer.getMarket().getQuoteCurrencyCode());
         int lowPrecision = amount.getLowPrecision();
-        if (amount.isLessThan(minAmount.get()) && !amount.isLessThan(minAmount.get(), lowPrecision)) {
+        if (!amount.isGreaterThan(minAmount.get()) && !amount.isLessThan(minAmount.get(), lowPrecision)) {
             return toFixedAmountSpec(rangeAmountSpec, rangeAmountSpec.getMinAmount());
         }
         if (amount.isGreaterThan(maxAmount.get()) && !amount.isGreaterThan(maxAmount.get(), lowPrecision)) {

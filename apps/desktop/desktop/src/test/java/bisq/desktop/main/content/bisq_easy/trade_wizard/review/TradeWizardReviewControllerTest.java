@@ -159,6 +159,17 @@ class TradeWizardReviewControllerTest {
         assertThat(takenAmounts.baseSideAmount).isEqualTo(2_500_001);
     }
 
+    @Test
+    void anAmountEqualToTheBitcoinMinimumInFiatIsTakenAtTheMinimumAtALowPrice() {
+        useMarketPrice(PriceQuote.fromFiatPrice(4_000, "USD"));
+        BisqEasyOffer offer = rangeSellOffer(new BaseSideRangeAmountSpec(2_500_001, 12_500_001));
+
+        TakenAmounts takenAmounts = takeOffer(offer, 1_000_000);
+
+        assertDoesNotThrow(() -> validateOfferAmount(offer, takenAmounts.baseSideAmount, takenAmounts.quoteSideAmount));
+        assertThat(takenAmounts.baseSideAmount).isEqualTo(2_500_001);
+    }
+
     // At 4,000 USD, the maximum of 12,500,001 satoshi is 500.0000 USD, and 500 USD are 12,500,000 satoshi
     @Test
     void anAmountWhichMissesTheBitcoinMaximumOnlyBelowACentIsTakenAtTheMaximumAtALowPrice() {
