@@ -113,14 +113,15 @@ successful `resolveAndVerifyDependencies` shows that the keyring has every key w
 `verifyDependencySignaturePolicy` requires exactly one such element: Gradle applies each `<key-servers>` element in
 order, so a second element could turn the key servers on again.
 
-Runs which download keys need the key servers:
+Keep the line in the committed metadata, also when keys must be downloaded. The setting applies to builds which
+verify dependencies. When Gradle writes the metadata (`--write-verification-metadata`) or exports the keyring
+(`--export-keys`), it still downloads missing keys from the key servers, unless `--offline` is given. It then logs
+`Will use key servers to download missing keys`, and it keeps the line when it rewrites the metadata.
 
 - `refreshDependencyVerificationKeyring` runs Gradle with `--export-keys` and leaves the metadata unchanged.
-- For a new dependency whose signing key is not in the keyring, remove the line `<key-servers enabled="false"/>` for
-  the metadata generation and add `--export-keys`, so that Gradle writes the downloaded keys into the keyring. Put the
-  line back afterwards: Gradle keeps it when it rewrites the metadata with the key servers off, but omits it when they
-  are on. `verifyDependencySignaturePolicy` fails while the line is missing or turns the key servers on. Then run
-  `resolveAndVerifyDependencies` with the line, which fails if the keyring still lacks a key.
+- For a new dependency whose signing key is not in the keyring, add `--export-keys` to the metadata generation, so that
+  Gradle writes the downloaded keys into the keyring. Review the added keys before committing them. Then run
+  `resolveAndVerifyDependencies`, which fails if the keyring still lacks a key.
 
 ### Verifying and refreshing build dependencies
 
