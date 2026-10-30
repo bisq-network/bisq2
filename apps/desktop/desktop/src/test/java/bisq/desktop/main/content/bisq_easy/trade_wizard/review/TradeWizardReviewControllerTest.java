@@ -78,17 +78,18 @@ class TradeWizardReviewControllerTest {
     private static final FiatPaymentMethod ZELLE = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE);
 
     private ServiceProvider serviceProvider;
+    private MarketPrice marketPrice;
+    private MarketPriceService marketPriceService;
 
     @BeforeEach
     void setUp() {
-        MarketPrice marketPrice = mock(MarketPrice.class);
-        when(marketPrice.getPriceQuote()).thenReturn(PRICE_QUOTE);
+        marketPrice = mock(MarketPrice.class);
         ObservableHashMap<Market, MarketPrice> marketPriceByCurrencyMap = new ObservableHashMap<>();
         marketPriceByCurrencyMap.put(MARKET, marketPrice);
-        MarketPriceService marketPriceService = mock(MarketPriceService.class);
+        marketPriceService = mock(MarketPriceService.class);
         when(marketPriceService.getMarketPriceByCurrencyMap()).thenReturn(marketPriceByCurrencyMap);
         when(marketPriceService.findMarketPrice(MARKET)).thenReturn(Optional.of(marketPrice));
-        when(marketPriceService.findMarketPriceQuote(MARKET)).thenReturn(Optional.of(PRICE_QUOTE));
+        useMarketPrice(PRICE_QUOTE);
 
         BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
         when(bisqEasyTradeService.takerCreatesProtocol(any(), any(), any(), any(), any(), any(), any(), anyLong()))
@@ -146,6 +147,30 @@ class TradeWizardReviewControllerTest {
         assertThat(takenAmounts.baseSideAmount).isEqualTo(166_659);
     }
 
+    // At 4,000 USD, the minimum of 2,500,001 satoshi is 100.0000 USD, and 100 USD are 2,500,000 satoshi
+    @Test
+    void anAmountWhichMissesTheBitcoinMinimumOnlyBelowACentIsTakenAtTheMinimumAtALowPrice() {
+        useMarketPrice(PriceQuote.fromFiatPrice(4_000, "USD"));
+        BisqEasyOffer offer = rangeSellOffer(new BaseSideRangeAmountSpec(2_500_001, 12_500_001));
+
+        TakenAmounts takenAmounts = takeOffer(offer, 999_997);
+
+        assertDoesNotThrow(() -> validateOfferAmount(offer, takenAmounts.baseSideAmount, takenAmounts.quoteSideAmount));
+        assertThat(takenAmounts.baseSideAmount).isEqualTo(2_500_001);
+    }
+
+    // At 4,000 USD, the maximum of 12,500,001 satoshi is 500.0000 USD, and 500 USD are 12,500,000 satoshi
+    @Test
+    void anAmountWhichMissesTheBitcoinMaximumOnlyBelowACentIsTakenAtTheMaximumAtALowPrice() {
+        useMarketPrice(PriceQuote.fromFiatPrice(4_000, "USD"));
+        BisqEasyOffer offer = rangeSellOffer(new BaseSideRangeAmountSpec(2_500_001, 12_500_001));
+
+        TakenAmounts takenAmounts = takeOffer(offer, 5_000_004);
+
+        assertDoesNotThrow(() -> validateOfferAmount(offer, takenAmounts.baseSideAmount, takenAmounts.quoteSideAmount));
+        assertThat(takenAmounts.baseSideAmount).isEqualTo(12_500_001);
+    }
+
     // 99.9949 USD is 99.99 USD in cents, so the offer list does not show the offer
     @Test
     void anAmountWhichMissesTheMinimumByACentIsNotChanged() {
@@ -154,6 +179,11 @@ class TradeWizardReviewControllerTest {
         TakenAmounts takenAmounts = takeOffer(offer, 999_949);
 
         assertThat(takenAmounts.quoteSideAmount).isEqualTo(999_949);
+    }
+
+    private void useMarketPrice(PriceQuote priceQuote) {
+        when(marketPrice.getPriceQuote()).thenReturn(priceQuote);
+        when(marketPriceService.findMarketPriceQuote(MARKET)).thenReturn(Optional.of(priceQuote));
     }
 
     private TakenAmounts takeOffer(BisqEasyOffer offer, long quoteSideAmount) {
