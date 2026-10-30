@@ -81,7 +81,6 @@ class PoolingTorHttpClientConnectionManager
 
     private final HttpClientConnectionOperator connectionOperator;
     private final ManagedConnPool<HttpRoute, ManagedHttpClientConnection> pool;
-    private final HttpConnectionFactory<ManagedHttpClientConnection> connFactory;
     private final AtomicBoolean closed;
 
     private volatile Resolver<HttpRoute, SocketConfig> socketConfigResolver;
@@ -95,8 +94,7 @@ class PoolingTorHttpClientConnectionManager
                                 .build()),
                 PoolConcurrencyPolicy.STRICT,
                 PoolReusePolicy.LIFO,
-                TimeValue.NEG_ONE_MILLISECOND,
-                null);
+                TimeValue.NEG_ONE_MILLISECOND);
     }
 
     @Internal
@@ -104,8 +102,7 @@ class PoolingTorHttpClientConnectionManager
             final HttpClientConnectionOperator httpClientConnectionOperator,
             final PoolConcurrencyPolicy poolConcurrencyPolicy,
             final PoolReusePolicy poolReusePolicy,
-            final TimeValue timeToLive,
-            final HttpConnectionFactory<ManagedHttpClientConnection> connFactory) {
+            final TimeValue timeToLive) {
         super();
         this.connectionOperator = Args.notNull(httpClientConnectionOperator, "Connection operator");
         switch (poolConcurrencyPolicy != null ? poolConcurrencyPolicy : PoolConcurrencyPolicy.STRICT) {
@@ -141,7 +138,6 @@ class PoolingTorHttpClientConnectionManager
             default:
                 throw new IllegalArgumentException("Unexpected PoolConcurrencyPolicy value: " + poolConcurrencyPolicy);
         }
-        this.connFactory = connFactory != null ? connFactory : CONNECTION_FACTORY;
         this.closed = new AtomicBoolean(false);
     }
 
@@ -267,7 +263,7 @@ class PoolingTorHttpClientConnectionManager
                         if (conn != null) {
                             conn.activate();
                         } else {
-                            poolEntry.assignConnection(connFactory.createConnection(null));
+                            poolEntry.assignConnection(CONNECTION_FACTORY.createConnection(null));
                         }
                         this.endpoint = new InternalConnectionEndpoint(poolEntry);
                         if (LOG.isDebugEnabled()) {
@@ -360,7 +356,7 @@ class PoolingTorHttpClientConnectionManager
         }
         final PoolEntry<HttpRoute, ManagedHttpClientConnection> poolEntry = internalEndpoint.getPoolEntry();
         if (!poolEntry.hasConnection()) {
-            poolEntry.assignConnection(connFactory.createConnection(null));
+            poolEntry.assignConnection(CONNECTION_FACTORY.createConnection(null));
         }
         final HttpRoute route = poolEntry.getRoute();
         final HttpHost firstHop = route.getProxyHost() != null ? route.getProxyHost() : route.getTargetHost();
