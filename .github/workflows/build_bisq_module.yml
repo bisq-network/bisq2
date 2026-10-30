@@ -5,28 +5,15 @@ on:
         required: true
         type: string
 
-      name:
-        required: true
-        type: string
-
-      build-root-dir:
-        required: true
-        type: string
-
-      build-task:
-        required: false
-        type: string
-        default: build
-
 permissions:
   contents: read
 
 jobs:
   build:
-    name: Build ${{ inputs.name }} on ${{ inputs.os }}
+    name: Build Bisq 2
     runs-on: ${{ inputs.os }}
-    # The build runs the tests. A test which hangs would otherwise hold the runner for the default limit of 6 hours.
-    timeout-minutes: 60
+    # This job runs all module tests. Allow more time than the former 60-minute per-module jobs.
+    timeout-minutes: 90
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -56,6 +43,14 @@ jobs:
         with:
           cache-provider: basic
 
-      - name: Build with Gradle
+      # Apps, desktop, and network must run from the repository root to use its dependency verification metadata.
+      - name: Build Bisq, apps, desktop, and network
+        id: build_composite
         shell: bash
-        run: ./gradlew -p "${{ inputs.build-root-dir }}" "${{ inputs.build-task }}"
+        run: ./gradlew --continue :build-logic:build build :apps:build :apps:desktop:build :network:build
+
+      # Tor has its own dependency verification metadata. Run it even if another module fails.
+      - name: Build Tor
+        if: ${{ success() || steps.build_composite.outcome == 'failure' }}
+        shell: bash
+        run: ./gradlew -p tor --continue build
