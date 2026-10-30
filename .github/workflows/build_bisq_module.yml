@@ -13,6 +13,11 @@ on:
         required: true
         type: string
 
+      build-task:
+        required: false
+        type: string
+        default: build
+
 permissions:
   contents: read
 
@@ -53,4 +58,4 @@ jobs:
 
       - name: Build with Gradle
         shell: bash
-        run: ./gradlew -p "${{ inputs.build-root-dir }}" build
+        run: ./gradlew -p "${{ inputs.build-root-dir }}" "${{ inputs.build-task }}"

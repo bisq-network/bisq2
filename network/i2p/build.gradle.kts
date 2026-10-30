@@ -4,10 +4,24 @@ plugins {
     id("bisq.grpc")
 }
 
+// The programs of the source set demo try the I2P library by hand and need a running I2P router. They are not tests,
+// and Gradle fails a test task whose test source set contains no tests.
+val demo: SourceSet by sourceSets.creating
+
+configurations[demo.implementationConfigurationName].extendsFrom(configurations.implementation.get())
+
 dependencies {
     implementation("bisq:security")
     implementation(libs.bundles.i2p)
     implementation(libs.grpc.netty.shaded)
+
+    "demoCompileOnly"(libs.lombok)
+    "demoAnnotationProcessor"(libs.lombok)
+}
+
+// The build compiles the demo programs, so that it finds compile errors in them
+tasks.named("assemble") {
+    dependsOn(demo.classesTaskName)
 }
 
 val grpcPluginId = "grpc"

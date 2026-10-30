@@ -4,7 +4,7 @@ on:
   push:
   pull_request:
     types: [ opened, reopened, synchronize, closed ]
-    branches: [ main ]
+    branches: [ main, 'release-candidate-*' ]
 
 permissions:
   contents: read
@@ -25,6 +25,9 @@ jobs:
       name: Bisq
       build-root-dir: .
 
+  # The module jobs run the build of their module from the repository root. Gradle verifies dependencies only with the
+  # gradle/verification-metadata.xml of the build which it runs, and the builds in apps, apps/desktop and network have
+  # none, so a build with -p apps, -p apps/desktop or -p network verifies no dependency.
   build_apps_module:
     name: Build apps module on ${{ matrix.os }}
     strategy:
@@ -38,7 +41,8 @@ jobs:
     with:
       os: ${{ matrix.os }}
       name: apps module
-      build-root-dir: apps
+      build-root-dir: .
+      build-task: ':apps:build'
 
   # apps/desktop is a build of its own. The apps build includes it, but no project of the apps build depends on it, so
   # the apps job does not build it.
@@ -55,7 +59,8 @@ jobs:
     with:
       os: ${{ matrix.os }}
       name: desktop module
-      build-root-dir: apps/desktop
+      build-root-dir: .
+      build-task: ':apps:desktop:build'
 
   build_network_module:
     name: Build network module on ${{ matrix.os }}
@@ -70,8 +75,11 @@ jobs:
     with:
       os: ${{ matrix.os }}
       name: network module
-      build-root-dir: network
+      build-root-dir: .
+      build-task: ':network:build'
 
+  # The tor build verifies its dependencies with tor/gradle/verification-metadata.xml of the Tor library, as it does in
+  # the repository of the library.
   build_tor_module:
     name: Build tor module on ${{ matrix.os }}
     strategy:

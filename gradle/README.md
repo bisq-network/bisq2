@@ -39,7 +39,8 @@ The committed verification files are:
 - `gradle/dependency-checksum-fallback-allowlist.tsv`
 
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
-including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `tor` included builds.
+including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, `tor`, and `tor/build-logic`
+included builds.
 
 The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
 `.gradle/dependency-verification/inventory.tsv` relative to its build root. These inventories survive `clean` and
@@ -75,12 +76,29 @@ To generate their metadata for a specific dependency, run this command from the 
 ```
 
 The [init script](resolve-ide-artifacts.gradle) registers the task for this invocation. Replace the coordinate with
-`group:name:version` for another dependency. The helper requests both sources and Javadoc; both archives must be
-published. Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
+`group:name:version` for another dependency; a comma-separated list resolves several dependencies. The helper requests
+the classifiers in `-PverificationClassifiers`, by default `sources,javadoc`; each requested archive must be published.
+Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
 
 Review the generated diff and verify new signatures or checksums before committing. Metadata generation records
-downloaded artifacts; it does not independently establish their trustworthiness. This helper handles one dependency;
-`resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+downloaded artifacts; it does not independently establish their trustworthiness. The helper handles only the listed
+dependencies; `resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+
+### Key servers
+
+The metadata turns the key servers off (`<key-servers enabled="false"/>`). Gradle then verifies signatures only with
+the keys in `gradle/verification-keyring.keys` and never waits for a key server; a lookup at `pgp.mit.edu` once took
+more than 20 minutes. A key which the keyring lacks fails the verification instead of being downloaded, so a
+successful `resolveAndVerifyDependencies` shows that the keyring has every key which the builds need.
+
+Runs which download keys need the key servers:
+
+- `refreshDependencyVerificationKeyring` turns them on for its own Gradle run and restores the metadata afterwards.
+- For a new dependency whose signing key is not in the keyring, remove the line `<key-servers enabled="false"/>` for
+  the metadata generation and add `--export-keys`, so that Gradle writes the downloaded keys into the keyring. Put the
+  line back afterwards: Gradle keeps it when it rewrites the metadata with the key servers off, but omits it when they
+  are on. `verifyDependencySignaturePolicy` fails while the line is missing or turns the key servers on. Then run
+  `resolveAndVerifyDependencies` with the line, which fails if the keyring still lacks a key.
 
 ### Verifying and refreshing build dependencies
 
@@ -104,7 +122,7 @@ Refresh the keyring first so newly available signing keys are present before Gra
 `gradle/verification-metadata.xml`. This avoids adding checksum fallbacks for artifacts whose signatures can now be
 verified.
 
-`refreshDependencyVerificationKeyring` wraps:
+`refreshDependencyVerificationKeyring` wraps the following command, which it runs with the key servers on:
 
 ```bash
 ./gradlew help --refresh-keys --export-keys
@@ -125,13 +143,15 @@ Checksum fallback artifacts must be reviewed in `gradle/dependency-checksum-fall
 Keep the allowlist exact and sorted. `verifyDependencySignaturePolicy` fails when a fallback artifact is missing from
 the allowlist, when an allowlist entry is stale, or when an entry has no rationale.
 
-Gradle verifies an artifact by its checksum only if the artifact has no signature or if every key which signed it is
-ignored. The policy treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key
-couldn't be downloaded` or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry
-for the module names a key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`,
-`sha1`, `sha256` and `sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in `gradle/verification-metadata.xml`, not only
-the resolved dependency graph, because Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
-against it. Entries for versions no build uses therefore also need an allowlist entry until they are removed.
+Gradle checks every checksum which the metadata declares for an artifact, also for a signed artifact. A checksum is the
+only verification of an artifact if the artifact has no signature or if every key which signed it is ignored. The policy
+treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key couldn't be downloaded`
+or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry for the module names a
+key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`, `sha1`, `sha256` and
+`sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in
+`gradle/verification-metadata.xml`, not only the resolved dependency graph, because Gradle also verifies parent POMs,
+imported BOMs and artifacts of other platforms against it. Entries for versions no build uses therefore also need an
+allowlist entry until they are removed.
 
 Gradle writes a reason once and keeps it when it regenerates the metadata. After `refreshDependencyVerificationKeyring`
 adds a key, remove the key from `ignored-keys`, delete the component entries of the artifacts it signs and run
