@@ -23,6 +23,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.http.utils.HttpException;
 import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
+import bisq.network.http.utils.ResponseBodyTooLargeException;
 import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.Timeout;
 
 import java.io.IOException;
@@ -57,8 +59,12 @@ public class TorHttpClient extends BaseHttpClient {
     private volatile CloseableHttpClient closeableHttpClient;
     private volatile boolean shutdownStarted;
 
-    public TorHttpClient(String baseUrl, String logBaseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
-        super(baseUrl, logBaseUrl, userAgent);
+    public TorHttpClient(String baseUrl,
+                         String logBaseUrl,
+                         String userAgent,
+                         int maxResponseBodyBytes,
+                         Socks5ProxyProvider socks5ProxyProvider) {
+        super(baseUrl, logBaseUrl, userAgent, maxResponseBodyBytes);
         this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
@@ -229,7 +235,20 @@ public class TorHttpClient extends BaseHttpClient {
      */
     String readBody(ClassicHttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
-        return entity == null ? "" : inputStreamToString(entity.getContent());
+        if (entity == null) {
+            return "";
+        }
+        try {
+            return inputStreamToString(entity.getContent());
+        } catch (ResponseBodyTooLargeException e) {
+            // Apache closes the response after the handler and reads the rest of the body to reuse the connection,
+            // also an endless body. Closing the client first closes the connection.
+            CloseableHttpClient client = closeableHttpClient;
+            if (client != null) {
+                client.close(CloseMode.IMMEDIATE);
+            }
+            throw e;
+        }
     }
 
     /**

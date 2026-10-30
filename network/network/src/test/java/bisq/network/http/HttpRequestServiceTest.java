@@ -43,7 +43,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -52,6 +54,8 @@ import static org.mockito.Mockito.when;
 
 @Isolated("Replaces the process-wide JDK facade")
 class HttpRequestServiceTest {
+    private static final int MAX_RESPONSE_BODY_BYTES = 4096;
+
     private NetworkService networkService;
     private BaseHttpClient client;
     private HttpRequestService<String, String> service;
@@ -68,7 +72,7 @@ class HttpRequestServiceTest {
         networkService = mock(NetworkService.class);
         client = mock(BaseHttpClient.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.CLEAR));
-        when(networkService.getHttpClient(anyString(), anyString(), anyString(), any())).thenReturn(client);
+        when(networkService.getHttpClient(anyString(), anyString(), anyString(), any(), anyInt())).thenReturn(client);
         when(client.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
     }
 
@@ -121,6 +125,17 @@ class HttpRequestServiceTest {
         verify(client, times(2)).post(anyString(), any());
     }
 
+    // The provider controls the size of its responses, so each client reads at most the limit of the service
+    @Test
+    void clientReadsAtMostTheResponseBodyLimitOfTheService() throws IOException {
+        when(client.get(anyString(), any())).thenReturn("ok");
+        createService(HttpRequest.get("path"), false);
+
+        assertEquals("ok", service.request("request").join());
+
+        verify(networkService).getHttpClient(anyString(), anyString(), anyString(), any(), eq(MAX_RESPONSE_BODY_BYTES));
+    }
+
     @Test
     void getRetriesResponseReadFailure() throws IOException {
         when(client.get(anyString(), any())).thenThrow(new SocketTimeoutException("Response read timed out"))
@@ -140,7 +155,7 @@ class HttpRequestServiceTest {
 
         assertEquals("ok", service.request("request").join());
 
-        verify(networkService, times(2)).getHttpClient(anyString(), anyString(), anyString(), any());
+        verify(networkService, times(2)).getHttpClient(anyString(), anyString(), anyString(), any(), anyInt());
         verify(client, times(1)).post(anyString(), any());
     }
 
@@ -172,7 +187,7 @@ class HttpRequestServiceTest {
         BaseHttpClient fallbackClient = mock(BaseHttpClient.class);
         when(fallbackClient.shutdown()).thenReturn(CompletableFuture.completedFuture(true));
         when(fallbackClient.get(anyString(), any())).thenReturn("ok");
-        when(networkService.getHttpClient(startsWith("https://fallback.example"), anyString(), anyString(), any()))
+        when(networkService.getHttpClient(startsWith("https://fallback.example"), anyString(), anyString(), any(), anyInt()))
                 .thenReturn(fallbackClient);
         when(client.get(anyString(), any())).thenThrow(new IOException(new HttpException("Not found", 404)));
         createService(HttpRequest.get("path"), false,
@@ -228,7 +243,7 @@ class HttpRequestServiceTest {
                                Set<HttpRequestUrlProvider> fallbackProviders,
                                ExecutorService executor) {
         HttpRequestServiceConfig config = new HttpRequestServiceConfig(30, providers, fallbackProviders);
-        service = new HttpRequestService<>(config, networkService, executor) {
+        service = new HttpRequestService<>(config, networkService, executor, MAX_RESPONSE_BODY_BYTES) {
             @Override
             protected String parseResult(String json) {
                 if (failParsing) {

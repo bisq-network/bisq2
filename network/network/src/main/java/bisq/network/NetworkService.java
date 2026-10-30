@@ -476,12 +476,18 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
      *               and exception messages emitted by the returned client.
      *               Pass the same value as {@code url} when nothing in the
      *               URL is sensitive.
+     * @param maxResponseBodyBytes The largest response body which the client reads. A larger body fails the request.
      */
-    public BaseHttpClient getHttpClient(String url, String logUrl, String userAgent, TransportType transportType) {
+    public BaseHttpClient getHttpClient(String url,
+                                        String logUrl,
+                                        String userAgent,
+                                        TransportType transportType,
+                                        int maxResponseBodyBytes) {
         if (Objects.requireNonNull(transportType) == TransportType.TOR) {
-            return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
+            return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, maxResponseBodyBytes,
+                    serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
         }
-        return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType);
+        return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, maxResponseBodyBytes);
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
