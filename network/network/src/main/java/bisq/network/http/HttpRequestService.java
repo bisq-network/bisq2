@@ -112,6 +112,8 @@ public abstract class HttpRequestService<T, R> implements Service {
     protected final HttpRequestServiceConfig conf;
     protected final NetworkService networkService;
     protected final String userAgent;
+    // The largest response body of the endpoint of the service. A provider controls the size of its responses.
+    protected final int maxResponseBodyBytes;
 
     @Getter
     protected final Observable<HttpRequestUrlProvider> selectedProvider = new Observable<>();
@@ -127,12 +129,19 @@ public abstract class HttpRequestService<T, R> implements Service {
     protected volatile boolean shutdownStarted;
     private volatile long timeSinceLastResponse;
 
+    /**
+     * @param maxResponseBodyBytes the largest response body which the service reads, chosen above the largest
+     *                             legitimate response of its endpoint. A larger body fails the request like an I/O
+     *                             failure, without reading the rest.
+     */
     public HttpRequestService(HttpRequestServiceConfig conf,
                               NetworkService networkService,
-                              ExecutorService executorService) {
+                              ExecutorService executorService,
+                              int maxResponseBodyBytes) {
         this.conf = conf;
         this.networkService = networkService;
         this.executorService = executorService;
+        this.maxResponseBodyBytes = maxResponseBodyBytes;
 
         userAgent = "bisq-v2/" + ApplicationVersion.getVersion().toString();
 
@@ -242,7 +251,8 @@ public abstract class HttpRequestService<T, R> implements Service {
                                 clientBaseUrl,
                                 clientLogBaseUrl,
                                 userAgent,
-                                providerForThisRequest.getTransportType());
+                                providerForThisRequest.getTransportType(),
+                                maxResponseBodyBytes);
 
                         if (client.hasPendingRequest()) {
                             // Transport-level: request was never sent. Always safe to retry.

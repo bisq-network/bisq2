@@ -112,22 +112,25 @@ class ConnectionHandshakePeerChecksTest {
         verify(authorizationService, never()).isAuthorized(any(), any(), any(), any(), anyString());
     }
 
+    // The message names the type of the reply, as the responder does, and not its content, which the peer chooses
     @Test
     void theInitiatorRejectsAReplyWhichIsNotAResponse() throws IOException {
         Capability peersCapability = capability(5678);
-        Socket socket = socketWhichReceives(new Ping(1));
+        Socket socket = socketWhichReceives(new Ping(424242));
         AuthorizationService authorizationService = authorizationServiceWhichCreatesTokens();
         ConnectionHandshake handshake = handshake(socket, mock(BanList.class), authorizationService);
 
         assertThatThrownBy(() -> handshake.start(new NetworkLoad(), peersCapability.getAddress()))
                 .isInstanceOf(ConnectionException.class)
-                .hasMessageContaining("not type of Response");
+                .hasMessageContaining("not type of Response. Type=Ping")
+                .hasMessageNotContaining("424242")
+                .hasMessageNotContaining("authorizationToken");
         verify(socket).close();
         verify(authorizationService, never()).isAuthorized(any(), any(), any(), any(), anyString());
     }
 
-    // The message of the type error contains the reply. A token of difficulty 0 made its string fail, so the initiator
-    // reported an unspecified error instead of the type error.
+    // A token of difficulty 0 made the string of the reply fail when the message of the type error contained the reply,
+    // so the initiator reported an unspecified error instead of the type error.
     @Test
     void theInitiatorRejectsAReplyWhichIsNotAResponseAlsoWithATokenOfDifficultyZero() throws IOException {
         Capability peersCapability = capability(5678);
@@ -140,6 +143,41 @@ class ConnectionHandshakePeerChecksTest {
         assertThatThrownBy(() -> handshake.start(new NetworkLoad(), peersCapability.getAddress()))
                 .isInstanceOf(ConnectionException.class)
                 .hasMessageContaining("not type of Response");
+        verify(socket).close();
+    }
+
+    // The message names the type of the token of the peer, not its content, which the peer chooses. The message stays
+    // in the log of this node; the peer only sees the closed connection.
+    @Test
+    void theResponderNamesOnlyTheTypeOfTheTokenOfAnUnauthorizedRequest() throws IOException {
+        Socket socket = socketWhichReceives(request(capability(5678)));
+        AuthorizationService authorizationService = mock(AuthorizationService.class);
+        when(authorizationService.isAuthorized(any(), any(), any(), any(), anyString())).thenReturn(false);
+        ConnectionHandshake handshake = handshake(socket, mock(BanList.class), authorizationService);
+
+        assertThatThrownBy(() -> handshake.onSocket(new NetworkLoad()))
+                .isInstanceOf(ConnectionException.class)
+                .hasMessageEndingWith("Token type=HashCashV2Token")
+                .hasMessageNotContaining("proofOfWork")
+                .satisfies(e -> assertThat(((ConnectionException) e).getReason())
+                        .isEqualTo(ConnectionException.Reason.AUTHORIZATION_FAILED));
+        verify(socket).close();
+    }
+
+    @Test
+    void theInitiatorNamesOnlyTheTypeOfTheTokenOfAnUnauthorizedResponse() throws IOException {
+        Capability peersCapability = capability(5678);
+        Socket socket = socketWhichReceives(new ConnectionHandshake.Response(peersCapability, new NetworkLoad()));
+        AuthorizationService authorizationService = authorizationServiceWhichCreatesTokens();
+        when(authorizationService.isAuthorized(any(), any(), any(), any(), anyString())).thenReturn(false);
+        ConnectionHandshake handshake = handshake(socket, mock(BanList.class), authorizationService);
+
+        assertThatThrownBy(() -> handshake.start(new NetworkLoad(), peersCapability.getAddress()))
+                .isInstanceOf(ConnectionException.class)
+                .hasMessageEndingWith("Token type=HashCashV2Token")
+                .hasMessageNotContaining("proofOfWork")
+                .satisfies(e -> assertThat(((ConnectionException) e).getReason())
+                        .isEqualTo(ConnectionException.Reason.AUTHORIZATION_FAILED));
         verify(socket).close();
     }
 

@@ -38,6 +38,9 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class MobileNotificationRelayClient extends HttpRequestService<MobileNotificationRelayClient.RequestData, MobileNotificationRelayResult> {
+    // The relay answers with a JSON object of a few fields, or a proxy in front of it with a short error page
+    private static final int MAX_RESPONSE_BODY_BYTES = 64 * 1024;
+
 
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(MobileNotificationRelayClient.class.getSimpleName(),
@@ -49,7 +52,8 @@ public class MobileNotificationRelayClient extends HttpRequestService<MobileNoti
     public MobileNotificationRelayClient(HttpRequestServiceConfig conf, NetworkService networkService) {
         super(conf,
                 networkService,
-                getExecutorService());
+                getExecutorService(),
+                MAX_RESPONSE_BODY_BYTES);
     }
 
     @Override

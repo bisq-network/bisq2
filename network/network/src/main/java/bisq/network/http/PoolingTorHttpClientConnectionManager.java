@@ -33,6 +33,7 @@ import org.apache.hc.core5.annotation.Internal;
 import org.apache.hc.core5.annotation.ThreadingBehavior;
 import org.apache.hc.core5.function.Resolver;
 import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.config.Http1Config;
 import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.apache.hc.core5.http.io.HttpConnectionFactory;
@@ -65,6 +66,18 @@ class PoolingTorHttpClientConnectionManager
 
     public static final int DEFAULT_MAX_TOTAL_CONNECTIONS = 25;
     public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 5;
+
+    // The servers are not under Bisq's control. These limits bound the status line and the headers of a response, and
+    // are set here so that they do not depend on the defaults of the httpcore5 version: 5.4.2 had no limit for the
+    // number of headers and the line length.
+    static final HttpConnectionFactory<ManagedHttpClientConnection> CONNECTION_FACTORY =
+            ManagedHttpClientConnectionFactory.builder()
+                    .http1Config(Http1Config.custom()
+                            .setMaxHeaderCount(100)
+                            .setMaxLineLength(8192)
+                            .setMaxEmptyLineCount(10)
+                            .build())
+                    .build();
 
     private final HttpClientConnectionOperator connectionOperator;
     private final ManagedConnPool<HttpRoute, ManagedHttpClientConnection> pool;
@@ -128,7 +141,7 @@ class PoolingTorHttpClientConnectionManager
             default:
                 throw new IllegalArgumentException("Unexpected PoolConcurrencyPolicy value: " + poolConcurrencyPolicy);
         }
-        this.connFactory = connFactory != null ? connFactory : ManagedHttpClientConnectionFactory.INSTANCE;
+        this.connFactory = connFactory != null ? connFactory : CONNECTION_FACTORY;
         this.closed = new AtomicBoolean(false);
     }
 

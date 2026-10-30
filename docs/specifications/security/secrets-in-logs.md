@@ -50,15 +50,22 @@ payment account data. On a node without the API, the EC private keys were not in
      hidden.
    - `AUTHENTICATE`: the password or the auth cookie is hidden: `AUTHENTICATE [hidden]`.
    - `SETCONF`: the arguments are hidden, because the value of an option can be a password.
-   - `GETINFO`, `HSFETCH`, `RESETCONF`, `SETEVENTS`, `TAKEOWNERSHIP`: the arguments are info keys, onion service IDs,
-     option names and event names. They are public, so the log keeps them.
+   - `GETINFO`, `HSFETCH`, `SETEVENTS`, `TAKEOWNERSHIP`: the arguments are info keys, onion service IDs and event
+     names. They are public, so the log keeps them.
+   - `RESETCONF`: the log keeps the option names and hides a value, because `RESETCONF` also accepts `Key=Value`, for
+     example `RESETCONF Socks5ProxyPassword=[hidden]`.
 3. **Tor control replies.** The log form of a reply line keeps the status code and the status text, for example
    `250 OK` or an error message of Tor, and keeps asynchronous events, for example `650 HS_DESC ...`. Reply data of the
    form `Key=Value` keeps its value only if the key is known to have a public value (`ServiceID`,
    `net/listeners/socks`). Otherwise the value is hidden, for example `250-PrivateKey=[hidden]`. A line without a
    status code is a line of a multi-line data reply. It has no fixed form, so it is hidden.
 4. The exception of a failed Tor control command contains only the log forms of the command and of the reply. The
-   exception of a failed `SETCONF` names only the option.
+   exception of a failed `SETCONF` names only the option, and the exception of a failed `RESETCONF` the log form of its
+   argument.
+5. The node writes the log forms of the Tor control commands, replies and events at debug level only. They contain the
+   onion addresses of the identities of the node and of the peers which it looks up. In a shared log at info level,
+   they would show which user profiles belong to the same user, although each profile has its own onion service so
+   that its profiles cannot be linked.
 
 ## Reasons
 
