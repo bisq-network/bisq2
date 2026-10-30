@@ -103,6 +103,8 @@ public class MuSigService extends LifecycleService {
     private final AlertService alertService;
     private final MuSigOfferService muSigOfferService;
     private final BannedUserService bannedUserService;
+    @Getter
+    private final MusigNotificationService musigNotificationService;
 
     @Getter
     private final Observable<Boolean> muSigActivated = new Observable<>(false);
@@ -153,6 +155,12 @@ public class MuSigService extends LifecycleService {
         muSigTraderMediationService = muSigTradeService.getMuSigTraderMediationService();
         muSigTraderArbitrationService = muSigTradeService.getMuSigTraderArbitrationService();
         muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
+
+        musigNotificationService = new MusigNotificationService(
+                muSigOpenTradeChannelService,
+                chatService,
+                muSigTradeService,
+                supportService.getMuSigMediatorService());
     }
 
 
@@ -166,6 +174,7 @@ public class MuSigService extends LifecycleService {
             muSigActivated.set(DevMode.isDevMode() && activated);
             if (muSigActivated.get()) {
                 activate();
+                musigNotificationService.initialize();
             } else {
                 if (getState() == State.ACTIVATED || getState() == State.ACTIVATING_FAILED) {
                     deactivate();
@@ -182,6 +191,7 @@ public class MuSigService extends LifecycleService {
             if (getState() == State.ACTIVATED || getState() == State.ACTIVATING_FAILED) {
                 deactivate();
             }
+            musigNotificationService.shutdown();
             muSigActivatedPin.unbind();
             muSigActivatedPin = null;
         }

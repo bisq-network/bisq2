@@ -45,6 +45,7 @@ import bisq.network.NetworkServiceConfig;
 import bisq.notifications.NotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
+import bisq.offer.mu_sig.MuSigOfferbookService;
 import bisq.os_specific.notifications.linux.LinuxNotificationService;
 import bisq.os_specific.notifications.osx.OsxNotificationService;
 import bisq.os_specific.notifications.other.AwtNotificationService;
@@ -164,7 +165,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                notificationService);
+                notificationService,
+                offerService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService,

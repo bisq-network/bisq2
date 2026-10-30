@@ -33,6 +33,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.navigation.NavigationUtil;
 import bisq.evolution.updater.UpdaterService;
 import bisq.mu_sig.MuSigService;
+import bisq.mu_sig.MusigNotificationService;
 import bisq.settings.CookieKey;
 import bisq.settings.SettingsService;
 import bisq.user.identity.UserIdentity;
@@ -54,6 +55,7 @@ public class LeftNavController implements Controller {
     private final UserIdentityService userIdentityService;
     private final UpdaterService updaterService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private final MusigNotificationService musigNotificationService;
     private final SettingsService settingsService;
     private final MuSigService muSigService;
     private Pin bondedRolesPin, selectedUserIdentityPin, isNewReleaseAvailablePin, changedChatNotificationPin, isMuSigActivatedPin;
@@ -66,6 +68,7 @@ public class LeftNavController implements Controller {
         updaterService = serviceProvider.getUpdaterService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
         muSigService = serviceProvider.getMuSigService();
+        musigNotificationService = muSigService.getMusigNotificationService();
 
         NetworkInfo networkInfo = new NetworkInfo(serviceProvider, this::onNavigationTargetSelected);
         model = new LeftNavModel();
@@ -154,14 +157,23 @@ public class LeftNavController implements Controller {
                     // we handle in the mediation view.
                     numNotifications = Math.max(0, numNotifications - numMediatorsNotConsumedNotifications.get());
                 }
+                if (notification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OFFERBOOK ||
+                        notification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OPEN_TRADES) {
+                    numNotifications = musigNotificationService.getMusigNotConsumedNotifications().count();
+                }
 
                 leftNavButton.setNumNotifications(numNotifications);
-                leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
                 switch (notification.getChatChannelDomain()) {
                     case BISQ_EASY_OFFERBOOK:
                     case BISQ_EASY_OPEN_TRADES:
                     case BISQ_EASY_PRIVATE_CHAT:
                         if (bisqEasyNotificationsService.hasTradeIdsOfNotConsumedNotifications()) {
+                            leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
+                        }
+                        break;
+                    case MU_SIG_OFFERBOOK:
+                    case MU_SIG_OPEN_TRADES:
+                        if (musigNotificationService.hasMusigNotifications()) {
                             leftNavButton.getNumMessagesBadge().getStyleClass().add("open-trades-badge");
                         }
                         break;

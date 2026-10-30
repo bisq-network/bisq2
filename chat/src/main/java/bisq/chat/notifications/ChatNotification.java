@@ -25,6 +25,7 @@ import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.notifications.Notification;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,6 +41,10 @@ import java.util.Optional;
 public class ChatNotification implements Notification, PersistableProto {
     public static String createId(String channelId, String messageId) {
         return channelId + "." + messageId;
+    }
+
+    public static String createId(MuSigOffer offer) {
+        return "MU_SIG_OFFER." + offer.getId();
     }
 
     @Override
@@ -117,17 +122,17 @@ public class ChatNotification implements Notification, PersistableProto {
                 false);
     }
 
-    private ChatNotification(String id,
-                             String title,
-                             String message,
-                             long date,
-                             String chatChannelId,
-                             ChatChannelDomain chatChannelDomain,
-                             String chatMessageId,
-                             Optional<String> tradeId,
-                             Optional<UserProfile> senderUserProfile,
-                             Optional<UserProfile> mediator,
-                             boolean isConsumed
+    ChatNotification(String id,
+                     String title,
+                     String message,
+                     long date,
+                     String chatChannelId,
+                     ChatChannelDomain chatChannelDomain,
+                     String chatMessageId,
+                     Optional<String> tradeId,
+                     Optional<UserProfile> senderUserProfile,
+                     Optional<UserProfile> mediator,
+                     boolean isConsumed
     ) {
         this.id = id;
         this.title = title;
