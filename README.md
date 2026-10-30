@@ -105,8 +105,8 @@ To use the main branch:
 tor repository. Then commit the new commit of `tor/` in Bisq 2 as in step 3. Push the tor commit first, otherwise other
 clones of Bisq 2 cannot check it out.
 
-**Local tor repository (temporary).** As long as the tor repository is not published, a checkout which uses a local
-repository `tor` next to the Bisq 2 checkout sets the URLs once by hand. Use relative paths, so that the URLs also work
+**Use a local Tor repository.** For local development, a checkout which uses a local repository `tor` next to the
+Bisq 2 checkout can override the published URL in its local Git configuration. Use relative paths, so that the URLs work
 when another machine (for example a virtual machine) sees the directories under another absolute path:
 ```bash
 git config submodule.tor.url ../tor
@@ -117,7 +117,7 @@ git -C tor remote set-url origin ../../tor
 Git resolves the first URL from the Bisq 2 checkout and the second from `tor/`. Git refuses local submodule URLs by
 default, so add `-c protocol.file.allow=always` to submodule commands which clone, for example
 `git -c protocol.file.allow=always submodule update --init`. Do not run `git submodule sync` in such a checkout: it
-writes the URL of `.gitmodules`, which does not exist yet, into both places.
+restores the published URL from `.gitmodules` in both places, replacing the local overrides.
 
 ## Community and Contributions
 

@@ -22,8 +22,8 @@ modular desktop runtime and `jlink` image as a later phase that first requires d
 
 - Java 21 is already required and configured through Gradle toolchains.
 - No `module-info.java` files are currently checked in.
-- The root build includes 27 projects plus composite builds for `apps`, `apps/desktop`, `network`, `network/tor`, and
-  `build-logic`.
+- The root build includes 27 projects plus composite builds for `apps`, `apps/desktop`, `network`, `tor` (the Git
+  submodule of the Tor build, with its own `build-logic`), and `build-logic`.
 - The Gradle convention plugin `bisq.java-library` applies `java-library`, configures Lombok as a compile-only
   annotation processor, and adds shared dependencies such as Guava, SLF4J, Logback, JUnit, AssertJ, and Mockito.
 - `platform` is a Java platform/BOM project and does not produce a Java component.
@@ -97,7 +97,7 @@ modular desktop runtime and `jlink` image as a later phase that first requires d
 2. Automatic module names are unstable or unsuitable for Bisq jars.
 
    Hyphenated project names derive automatic names such as `bisq.easy`, `bonded.roles`, `mu.sig`, `os.specific`, and
-   `socks5.socket.channel`. Some are acceptable but not ideal; `java-se` is actively wrong because it collides with the
+   `desktop.automation.contract`. Some are acceptable but not ideal; `java-se` is actively wrong because it collides with the
    JDK naming space. Explicit descriptors are required for any serious migration.
 
 3. Third-party dependency cleanup is required before a fully modular application can launch on the module path.
