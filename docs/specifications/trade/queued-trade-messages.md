@@ -31,7 +31,9 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
 ## Rules
 
 1. The node persists the queued trade messages of a trade together with the trade. When the node loads the trade, the
-   event queue of the trade contains these messages again.
+   event queue of the trade contains these messages again. The node also persists the recorded types of the trade
+   (rule 6), so the protocol does not queue an event of a recorded type after a restart either. A write which stores a
+   recorded type also stores the state which the event of that type produced, or a later state.
 2. When the node loads a trade, it skips a queued trade message which it cannot parse. It keeps the trade and the
    other queued trade messages of the trade (rule 4 of [Validation at parsing](../network/validation-at-parsing.md)).
    When the node writes a trade, it skips a queued trade message which it cannot serialize. It logs the type of the
@@ -46,9 +48,10 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
    trade peer, as for a new message. When the queued events of one trade fail at startup in another way, the node logs
    the failure and continues with the next trade. The start of the trade service does not fail, as for the items of
    [Startup replay](../network/startup-replay.md).
-6. The event queue of a trade holds at most one event of each type for which the protocol has only state-changing
-   transitions. When the queue holds an event of such a type, the protocol drops a later event of the same type which
-   it cannot process yet. The first event stays in the queue.
+6. The protocol records the type of each event which changes the state of the trade. It drops a later event of a
+   recorded type which it cannot process yet. The event queue of a trade holds at most one event of each type for
+   which the protocol has only state-changing transitions. When the queue holds an event of such a type, the protocol
+   drops a later event of the same type which it cannot process yet. The first event stays in the queue.
 7. When an event changes the state of the trade, the protocol removes the other queued events of the same type.
 
 ## Reasons
@@ -60,6 +63,13 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   message again. Before rule 1, a restart of the node lost the queued trade messages, and the trade waited without end
   for a message which it had received. In the example above, the seller never learned that the buyer had sent the fiat
   payment.
+- Rule 1, recorded types: the network can deliver a copy of a processed message after a restart, for example the
+  second copy of a mailbox message. Before the node persisted the recorded types, a restart lost them. The protocol
+  then queued such a copy, and the node persisted it with the trade until the trade reached a final state. The
+  protocol sets the new state before it records the type, and a write reads the recorded types before the state. So a
+  stored type always comes with the state which its event produced, or a later state. In the other order, a write could
+  store a type without that state. After a restart, the protocol would then drop a copy of the message which it cannot
+  process yet, although the trade still needs the message.
 - Rule 2: a later version can add an integrity rule which a persisted message breaks (rule 3 of
   [Validation at parsing](../network/validation-at-parsing.md)). If such a message made the trade fail at parsing, the
   trade store would skip the whole trade, and the next write of the store would remove the trade from the disk. The
@@ -103,6 +113,12 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   as before.
 - An earlier version which loads a store of this version ignores the field. It loses the queued trade messages, as it
   did before.
+- The recorded types are a new field of the persisted trade: `processedEventTypes`, number 34 of the message `Trade`
+  in `trade.proto`. The field holds the class names of the events. A store of an earlier version has no recorded
+  types, so after the update the protocol can queue a copy of a message which it processed before, as before. An
+  earlier version which loads a store of this version ignores the field.
+- A stored name of a class which a later version renames or moves matches no event. For such a type, the protocol can
+  then queue a copy of a processed message, as before.
 - The rules change no network message.
 
 ## Known limitations
@@ -111,14 +127,6 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   - Why it remains: local events have no persisted form. The change is limited to the trade messages, because the node
     cannot receive them again.
   - What would remove it: a persisted form for the local events of the protocols.
-  - Who decides: the developers.
-- **Processed event types.** The protocol records the type of each event which changed the state of the trade, and it
-  does not queue an event of a recorded type. It keeps the recorded types only in memory. So after a restart, it
-  queues a copy of a message which it processed before the restart, for example the second copy of a mailbox message,
-  and the node persists the copy with the trade. The copy stays in the event queue until the trade reaches a final
-  state. Rule 6 still applies, so the queue holds at most one such copy of each type.
-  - Why it remains: the change persists only the queued trade messages, which the trade needs to continue.
-  - What would remove it: persisting the processed event types together with the trade.
   - Who decides: the developers.
 - **Types with an internal transition.** Rule 6 does not limit the events of a type for which the protocol has an
   internal transition, a transition which processes the event without a change of the state. Several events of such
