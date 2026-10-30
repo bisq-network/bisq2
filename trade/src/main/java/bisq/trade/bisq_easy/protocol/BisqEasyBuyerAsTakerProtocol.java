@@ -148,8 +148,8 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 BUYER_SENT_FIAT_SENT_CONFIRMATION,
                 BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
                 BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeMessage.class)
-                .run(BisqEasyCancelTradeMessageHandler.class)
+                .on(BisqEasyCancelTradeEvent.class)
+                .run(BisqEasyCancelTradeEventHandler.class)
                 .to(CANCELLED);
 
         // Peer cancelled trade
@@ -160,8 +160,8 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
                 BUYER_SENT_FIAT_SENT_CONFIRMATION,
                 BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION,
                 BUYER_RECEIVED_BTC_SENT_CONFIRMATION)
-                .on(BisqEasyCancelTradeEvent.class)
-                .run(BisqEasyCancelTradeEventHandler.class)
+                .on(BisqEasyCancelTradeMessage.class)
+                .run(BisqEasyCancelTradeMessageHandler.class)
                 .to(PEER_CANCELLED);
     }
 }
