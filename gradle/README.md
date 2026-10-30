@@ -2,10 +2,23 @@
 
 ## Build JDK
 
-CI requests Zulu `21.0.13+9`. `verifyBuildEnvironment` checks the Java update, runtime build, Zulu distribution build,
-and Gradle version pinned in `gradle.properties`. The Java update alone is insufficient: Zulu can publish different
-builds under the same update version. Update the CI workflows, pinned properties, and toolchain URLs together when
-changing the build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
+`gradle.properties` pins the Java update (`releaseBuild.javaVersion`) and the vendor (`releaseBuild.javaVendor`) of the
+JDK which runs Gradle, the same for every operating system. `verifyBuildEnvironment` (part of `check` of the root build
+and of the `apps`, `apps/desktop` and `network` builds) accepts every build of that update: the version numbers of the
+JDK must start with those of the pin, so `21.0.13.0.3+1` passes for `21.0.13`, and `21.0.13` fails for `21.0.1`. The
+pin holds version numbers only. The task logs the runtime version and the Zulu build of the JDK.
+
+Azul builds an update more than once, and an installer may offer only the latest build: Zulu `21.54.107`
+(`21.0.13+9`) and `21.54.109` (`21.0.13.0.3+1`) are both builds of 21.0.13, and the Homebrew cask `zulu@21` has only
+the latest. The two compile the same classes: their javac and the classes it compiles against differ only in version
+strings. They differ in their runtime (21.54.109 removes the emSign roots from `cacerts`), and the installers bundle the
+JDK of the build as their runtime. So a release build needs one exact build: `verifyReleaseEnvironment` also requires
+the runtime build (`releaseBuild.javaRuntimeVersion`) and the Zulu build (`releaseBuild.javaVendorVersion`).
+
+CI requests this exact build, Zulu `21.0.13+9`, on every runner. `verifyGithubActionsSecurity` requires every
+`java-version` of a workflow to be `releaseBuild.javaRuntimeVersion`, and that to be a build of
+`releaseBuild.javaVersion`. Update the CI workflows, pinned properties, and toolchain URLs together when changing the
+build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
 
 See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
 
@@ -110,15 +123,18 @@ The metadata turns the key servers off (`<key-servers enabled="false"/>`). Gradl
 the keys in `gradle/verification-keyring.keys` and never waits for a key server; a lookup at `pgp.mit.edu` once took
 more than 20 minutes. A key which the keyring lacks fails the verification instead of being downloaded, so a
 successful `resolveAndVerifyDependencies` shows that the keyring has every key which the builds need.
+`verifyDependencySignaturePolicy` requires exactly one such element: Gradle applies each `<key-servers>` element in
+order, so a second element could turn the key servers on again.
 
-Runs which download keys need the key servers:
+Keep the line in the committed metadata, also when keys must be downloaded. The setting applies to builds which
+verify dependencies. When Gradle writes the metadata (`--write-verification-metadata`) or exports the keyring
+(`--export-keys`), it still downloads missing keys from the key servers, unless `--offline` is given. It then logs
+`Will use key servers to download missing keys`, and it keeps the line when it rewrites the metadata.
 
-- `refreshDependencyVerificationKeyring` turns them on for its own Gradle run and restores the metadata afterwards.
-- For a new dependency whose signing key is not in the keyring, remove the line `<key-servers enabled="false"/>` for
-  the metadata generation and add `--export-keys`, so that Gradle writes the downloaded keys into the keyring. Put the
-  line back afterwards: Gradle keeps it when it rewrites the metadata with the key servers off, but omits it when they
-  are on. `verifyDependencySignaturePolicy` fails while the line is missing or turns the key servers on. Then run
-  `resolveAndVerifyDependencies` with the line, which fails if the keyring still lacks a key.
+- `refreshDependencyVerificationKeyring` runs Gradle with `--export-keys` and leaves the metadata unchanged.
+- For a new dependency whose signing key is not in the keyring, add `--export-keys` to the metadata generation, so that
+  Gradle writes the downloaded keys into the keyring. Review the added keys before committing them. Then run
+  `resolveAndVerifyDependencies`, which fails if the keyring still lacks a key.
 
 ### Verifying and refreshing build dependencies
 
@@ -142,7 +158,7 @@ Refresh the keyring first so newly available signing keys are present before Gra
 `gradle/verification-metadata.xml`. This avoids adding checksum fallbacks for artifacts whose signatures can now be
 verified.
 
-`refreshDependencyVerificationKeyring` wraps the following command, which it runs with the key servers on:
+`refreshDependencyVerificationKeyring` wraps the following command:
 
 ```bash
 ./gradlew help --refresh-keys --export-keys

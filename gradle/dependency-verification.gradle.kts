@@ -560,9 +560,11 @@ fun parseVerificationMetadata(metadataFile: File): VerificationMetadata {
         .flatMap { it.getElementsByTagName("ignored-key").elements() }
         .map { it.getAttribute("id") }
 
-    val keyServersDisabled = document.getElementsByTagName("configuration").elements()
+    // Gradle applies each <key-servers> element in order, so a later element can turn the key servers on again.
+    // Accept only the single element which Gradle writes.
+    val keyServersElements = document.getElementsByTagName("configuration").elements()
         .flatMap { it.getElementsByTagName("key-servers").elements() }
-        .any { it.getAttribute("enabled") == "false" }
+    val keyServersDisabled = keyServersElements.size == 1 && keyServersElements[0].getAttribute("enabled") == "false"
 
     val componentsById = TreeMap<String, VerifiedComponent>()
     document.getElementsByTagName("component").elements().forEach { component ->
@@ -727,20 +729,11 @@ if (isBisqRepositoryRootBuild) {
 
         doLast {
             val previousModified = if (dependencyVerificationKeyring.exists()) dependencyVerificationKeyring.lastModified() else 0L
-            // The committed metadata turns the key servers off, so that builds verify signatures only with the
-            // committed keyring. This run downloads keys, so its Gradle reads the metadata with the key servers on.
-            val metadataText = dependencyVerificationMetadata.readText()
-            dependencyVerificationMetadata.writeText(
-                metadataText.replace(Regex("""\r?\n[ \t]*<key-servers enabled="false"/>"""), "")
-            )
-            val result = try {
-                execOperations.exec {
-                    workingDir = bisqRepositoryRoot
-                    commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
-                    isIgnoreExitValue = true
-                }
-            } finally {
-                dependencyVerificationMetadata.writeText(metadataText)
+            // --export-keys downloads keys also when the metadata turns the key servers off; only --offline stops it.
+            val result = execOperations.exec {
+                workingDir = bisqRepositoryRoot
+                commandLine(gradleWrapperCommand, "--no-daemon", "help", "--refresh-keys", "--export-keys")
+                isIgnoreExitValue = true
             }
 
             if (!dependencyVerificationKeyring.exists()) {
@@ -814,13 +807,12 @@ if (isBisqRepositoryRootBuild) {
                 executableMetadataViolations.staleArtifacts.isNotEmpty()
             ) {
                 val message = StringBuilder("Dependency signature policy failed.")
-                // Builds take every key from the committed keyring. Gradle removes the element when it writes the
-                // metadata with the key servers on, as a refresh of the keyring needs them.
+                // Builds take every key from the committed keyring.
                 if (!keyServersDisabled) {
                     message.append("\n\n")
                         .append(dependencyVerificationMetadata)
-                        .append(" does not turn the key servers off. Add <key-servers enabled=\"false\"/> after " +
-                                "<keyring-format>, as gradle/README.md describes.")
+                        .append(" does not turn the key servers off. Keep exactly one <key-servers enabled=\"false\"/> " +
+                                "element, after <keyring-format>, as gradle/README.md describes.")
                 }
                 if (ignoredKeysPresentInKeyring.isNotEmpty()) {
                     message
