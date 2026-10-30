@@ -142,7 +142,8 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                notificationService);
+                notificationService,
+                offerService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService, networkService, chatService, userService, bondedRolesService);

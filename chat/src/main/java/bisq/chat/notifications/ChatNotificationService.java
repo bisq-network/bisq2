@@ -28,6 +28,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.application.Service;
@@ -42,6 +43,7 @@ import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
@@ -107,7 +109,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     final Set<String> notificationIdsPrunedBeforeInitialize = new HashSet<>();
     private boolean initializeCalled;
     @Nullable
-    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, ignoredUserProfileIdsPin;
+    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, musigOpenTradeChannelServicePin, musigOfferbookChannelPin, ignoredUserProfileIdsPin;
     private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
     private final Set<Pin> twoPartyPrivateChatChannelServicePins = new HashSet<>();
     private final Set<Pin> prunedAndExpiredDataRequestPins = new HashSet<>();
@@ -185,6 +187,32 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         bisqEasyOfferbookChannelServicePin = bisqEasyOfferbookChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
+        MuSigOpenTradeChannelService muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
+        musigOpenTradeChannelServicePin = muSigOpenTradeChannelService.getChannels().addObserver(() -> onChannelsChanged(muSigOpenTradeChannelService.getChannels()));
+
+        musigOfferbookChannelPin = chatService.getMuSigOfferbookService().getObservableOffers().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAdded(MuSigOffer offer) {
+                String offerId = ChatNotification.createId(offer);
+                if (persistableStore.findNotification(offerId).isEmpty()) {
+                    ChatNotification notification = createChatNotificationForMusigOffer(offer);
+                    addNotification(notification);
+                }
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                if (element instanceof MuSigOffer offer) {
+                    String id = ChatNotification.createId(offer);
+                    removeNotification(id);
+                }
+            }
+
+            @Override
+            public void onCleared() {
+            }
+        });
+
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(service -> {
                     Pin pin = service.getChannels().addObserver(() ->
@@ -213,6 +241,14 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (bisqEasyOfferbookChannelServicePin != null) {
             bisqEasyOfferbookChannelServicePin.unbind();
             bisqEasyOfferbookChannelServicePin = null;
+        }
+        if (musigOfferbookChannelPin != null) {
+            musigOfferbookChannelPin.unbind();
+            musigOfferbookChannelPin = null;
+        }
+        if (musigOpenTradeChannelServicePin != null) {
+            musigOpenTradeChannelServicePin.unbind();
+            musigOpenTradeChannelServicePin = null;
         }
         chatMessagesByChannelIdPins.values().forEach(Pin::unbind);
         chatMessagesByChannelIdPins.clear();
@@ -587,6 +623,24 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 senderUserProfile);
     }
 
+    // A musig offerbook message is not a real chat message so we add fields to make it
+    // a compatible notification for this store alongside related notifications
+    private ChatNotification createChatNotificationForMusigOffer(MuSigOffer offer) {
+        return new ChatNotification(
+                ChatNotification.createId(offer),
+                "MuSig Offer",
+                "",
+                offer.getDate(),
+                "",
+                ChatChannelDomain.MU_SIG_OFFERBOOK,
+                "",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                false
+        );
+    }
+
     private void maybeDispatchNotification(ChatNotification chatNotification, ChatMessage chatMessage) {
         boolean afterStartUp = isReceivedAfterStartUp(chatNotification);
         boolean domainMatches = testChatChannelDomainPredicate(chatNotification);
@@ -699,6 +753,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         return switch (domain) {
             case BISQ_EASY_OPEN_TRADES, MU_SIG_OPEN_TRADES -> true;
             case BISQ_EASY_OFFERBOOK,
+                 MU_SIG_OFFERBOOK,
                  DISCUSSION,
                  SUPPORT,
                  BISQ_EASY_PRIVATE_CHAT, // deprecated, falls back to DISCUSSION
