@@ -27,7 +27,9 @@ import org.mockito.MockedConstruction;
 
 import java.lang.reflect.Field;
 import java.net.Socket;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -62,6 +64,19 @@ class TorTransportServiceTest {
             TorService torService = torServices.constructed().get(0);
             verify(torService).getSocket(eq(ONION), eq(1000), eq("node1"), eq(120_000));
             verify(torService).getSocket(eq(ONION), eq(1000), eq("node2"), eq(120_000));
+        }
+    }
+
+    // On Linux the running Tor is the tor of the system, so the user interface shows its version, not the bundle's
+    @Test
+    void torVersionIsTheVersionWhichTheRunningTorReports() {
+        TorTransportService.Config config = mock(TorTransportService.Config.class);
+        when(config.getTorTransportConfig()).thenReturn(mock(TorTransportConfig.class));
+        try (MockedConstruction<TorService> torServices = mockConstruction(TorService.class,
+                (torService, context) -> when(torService.getTorVersion()).thenReturn(Optional.of("0.4.8.16")))) {
+            TorTransportService transportService = new TorTransportService(config);
+
+            assertThat(transportService.getTorVersion()).contains("0.4.8.16");
         }
     }
 

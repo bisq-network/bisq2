@@ -39,6 +39,7 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -105,8 +106,13 @@ public class NetworkInfo {
             networkService.getServiceNodesByTransport()
                     .findServiceNode(TransportType.TOR)
                     .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
-                    .map(TorTransportService::isUseExternalTor)
-                    .ifPresent(model.getUseExternalTor()::set);
+                    .ifPresent(torTransportService ->
+                            // Whether an external Tor is used is known once the transport has initialized. The
+                            // network service completes with its first initialized transport, so with several
+                            // transports this view can open before the Tor transport knows it.
+                            pins.add(torTransportService.getTransportState().addObserver(transportState ->
+                                    UIThread.run(() -> model.getUseExternalTor()
+                                            .set(torTransportService.isUseExternalTor())))));
 
             networkService.getSupportedTransportTypes().forEach(type ->
                     networkService.getServiceNodesByTransport().findServiceNode(type)
@@ -125,6 +131,11 @@ public class NetworkInfo {
         public void onDeactivate() {
             pins.forEach(Pin::unbind);
             pins.clear();
+        }
+
+        @VisibleForTesting
+        Model getModel() {
+            return model;
         }
 
         private void applyNumTargetConnections(TransportType type, PeerGroupManager peerGroupManager) {
@@ -186,8 +197,9 @@ public class NetworkInfo {
         }
     }
 
+    @VisibleForTesting
     @Getter
-    private static class Model implements bisq.desktop.common.view.Model {
+    static class Model implements bisq.desktop.common.view.Model {
         @Setter
         private boolean clearNetEnabled;
         @Setter

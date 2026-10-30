@@ -17,7 +17,6 @@
 
 package bisq.desktop.main.content.network.p2p_network.version;
 
-import bisq.common.application.ApplicationVersion;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
@@ -36,6 +35,7 @@ import lombok.extern.slf4j.Slf4j;
 public class VersionDistributionView extends View<VBox, VersionDistributionModel, VersionDistributionController> {
     private final HBox versionDistributionHBox;
     private final BisqTooltip tooltip;
+    private final Label localVersionDetails;
 
     public VersionDistributionView(VersionDistributionModel model, VersionDistributionController controller) {
         super(new VBox(20), model, controller);
@@ -48,11 +48,7 @@ public class VersionDistributionView extends View<VBox, VersionDistributionModel
         Label localVersionHeadline = new Label(Res.get("network.version.localVersion.headline"));
         localVersionHeadline.getStyleClass().add("rich-table-headline");
 
-        Label details = new Label(Res.get("network.version.localVersion.details",
-                ApplicationVersion.getVersion().getVersionAsString(),
-                ApplicationVersion.getBuildCommitShortHash(),
-                ApplicationVersion.getTorBinaryVersionString(),
-                ApplicationVersion.getTorVersionString()));
+        localVersionDetails = new Label();
 
         tooltip = new BisqTooltip();
         Tooltip.install(versionDistributionHBox, tooltip);
@@ -62,7 +58,7 @@ public class VersionDistributionView extends View<VBox, VersionDistributionModel
                 SettingsViewUtils.getLineAfterHeadline(root.getSpacing()),
                 versionDistributionHBox,
                 localVersionHeadline,
-                details);
+                localVersionDetails);
     }
 
 
@@ -71,10 +67,12 @@ public class VersionDistributionView extends View<VBox, VersionDistributionModel
         versionDistributionHBox.getChildren().clear();
         model.getVersionDistribution().forEach(pair -> versionDistributionHBox.getChildren().add(addVersion(pair.getFirst(), pair.getSecond())));
         tooltip.setText(model.getVersionDistributionTooltip());
+        localVersionDetails.textProperty().bind(model.getLocalVersionDetails());
     }
 
     @Override
     protected void onViewDetached() {
+        localVersionDetails.textProperty().unbind();
     }
 
     private static VBox addVersion(String version, double percentage) {
