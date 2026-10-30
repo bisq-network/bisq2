@@ -44,6 +44,8 @@ apply(from = "gradle/dependency-verification.gradle.kts")
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
 val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
 val expectedReleaseJavaVendor = providers.gradleProperty("releaseBuild.javaVendor")
+val expectedReleaseJavaRuntimeVersion = providers.gradleProperty("releaseBuild.javaRuntimeVersion")
+val expectedReleaseJavaVendorVersion = providers.gradleProperty("releaseBuild.javaVendorVersion")
 val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
 val releaseReadinessReportFile = layout.buildDirectory.file("reports/release/release-readiness.md")
 
@@ -404,15 +406,21 @@ tasks.register("verifyBuildEnvironment") {
 
     inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
     inputs.property("expectedReleaseJavaVendor", expectedReleaseJavaVendor.orElse(""))
+    inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
+    inputs.property("expectedReleaseJavaVendorVersion", expectedReleaseJavaVendorVersion.orElse(""))
     inputs.property("expectedReleaseGradleVersion", expectedReleaseGradleVersion.orElse(""))
     outputs.upToDateWhen { false }
 
     doLast {
         val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
         val expectedJavaVendor = requiredGradleProperty("releaseBuild.javaVendor", expectedReleaseJavaVendor)
+        val expectedJavaRuntimeVersion = requiredGradleProperty("releaseBuild.javaRuntimeVersion", expectedReleaseJavaRuntimeVersion)
+        val expectedJavaVendorVersion = requiredGradleProperty("releaseBuild.javaVendorVersion", expectedReleaseJavaVendorVersion)
         val expectedGradleVersion = requiredGradleProperty("releaseBuild.gradleVersion", expectedReleaseGradleVersion)
         val actualJavaVersion = System.getProperty("java.version")
         val actualJavaVendor = System.getProperty("java.vendor")
+        val actualJavaRuntimeVersion = System.getProperty("java.runtime.version")
+        val actualJavaVendorVersion = System.getProperty("java.vendor.version")
         val violations = mutableListOf<String>()
 
         if (actualJavaVersion != expectedJavaVersion) {
@@ -420,6 +428,12 @@ tasks.register("verifyBuildEnvironment") {
         }
         if (actualJavaVendor != expectedJavaVendor) {
             violations += "Java vendor expected $expectedJavaVendor but was $actualJavaVendor"
+        }
+        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
+            violations += "Java runtime version expected $expectedJavaRuntimeVersion but was $actualJavaRuntimeVersion"
+        }
+        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
+            violations += "Java vendor version expected $expectedJavaVendorVersion but was $actualJavaVendorVersion"
         }
         if (gradle.gradleVersion != expectedGradleVersion) {
             violations += "Gradle version expected $expectedGradleVersion but was ${gradle.gradleVersion}"
@@ -1481,10 +1495,13 @@ tasks.register("verifyGithubActionsSecurity") {
 
     inputs.files(workflowFiles)
     inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
+    inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
     outputs.upToDateWhen { false }
 
     doLast {
         val expectedJavaVersion = expectedReleaseJavaVersion.orNull?.trim()
+        val expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.orNull?.trim()
+        val expectedJavaBuildVersion = expectedJavaRuntimeVersion?.removeSuffix("-LTS")
         val violations = mutableListOf<String>()
         val usesRegex = Regex("""^\s*-?\s*uses:\s*([^#\s]+)(?:\s+#\s*(.+))?\s*$""")
         val floatingRunnerRegex = Regex("""\b(ubuntu|macos|windows)-latest\b""", RegexOption.IGNORE_CASE)
@@ -1494,7 +1511,7 @@ tasks.register("verifyGithubActionsSecurity") {
         val variableComparisonRegex = Regex("""\bvars\.[A-Za-z0-9_]+\s*==\s*'[^']*'""")
         val javaVersionRegex = Regex("""^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$""")
         val javaMatrixRegex = Regex("""^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$""")
-        val exactJavaVersionRegex = Regex("""\d+\.\d+\.\d+""")
+        val exactJavaVersionRegex = Regex("""\d+(?:\.\d+){2,}\+\d+""")
         val checkLatestTrueRegex = Regex("""^\s*check-latest:\s*['"]?true['"]?\s*$""", RegexOption.IGNORE_CASE)
         val checkLatestFalseRegex = Regex("""^\s*check-latest:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
@@ -1502,6 +1519,12 @@ tasks.register("verifyGithubActionsSecurity") {
 
         if (expectedJavaVersion.isNullOrEmpty()) {
             violations += "Missing releaseBuild.javaVersion in gradle.properties"
+        }
+        if (expectedJavaRuntimeVersion.isNullOrEmpty()) {
+            violations += "Missing releaseBuild.javaRuntimeVersion in gradle.properties"
+        } else if (expectedJavaVersion != null &&
+            !expectedJavaBuildVersion.orEmpty().startsWith("$expectedJavaVersion+")) {
+            violations += "releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion"
         }
 
         fun cleanYamlScalar(value: String): String {
@@ -1581,9 +1604,9 @@ tasks.register("verifyGithubActionsSecurity") {
                     if (!javaVersion.startsWith("\${{") && !exactJavaVersionRegex.matches(javaVersion)) {
                         violations += "$workflowPath:$lineNumber uses a floating Java version: ${line.trim()}"
                     } else if (!javaVersion.startsWith("\${{") &&
-                        !expectedJavaVersion.isNullOrEmpty() &&
-                        javaVersion != expectedJavaVersion) {
-                        violations += "$workflowPath:$lineNumber uses Java version $javaVersion but releaseBuild.javaVersion is $expectedJavaVersion"
+                        !expectedJavaBuildVersion.isNullOrEmpty() &&
+                        javaVersion != expectedJavaBuildVersion) {
+                        violations += "$workflowPath:$lineNumber uses Java version $javaVersion but releaseBuild.javaRuntimeVersion is $expectedJavaRuntimeVersion"
                     }
                 }
 
@@ -1596,8 +1619,8 @@ tasks.register("verifyGithubActionsSecurity") {
                         .forEach {
                             if (!exactJavaVersionRegex.matches(it)) {
                                 violations += "$workflowPath:$lineNumber uses a floating Java matrix version: $it"
-                            } else if (!expectedJavaVersion.isNullOrEmpty() && it != expectedJavaVersion) {
-                                violations += "$workflowPath:$lineNumber uses Java matrix version $it but releaseBuild.javaVersion is $expectedJavaVersion"
+                            } else if (!expectedJavaBuildVersion.isNullOrEmpty() && it != expectedJavaBuildVersion) {
+                                violations += "$workflowPath:$lineNumber uses Java matrix version $it but releaseBuild.javaRuntimeVersion is $expectedJavaRuntimeVersion"
                             }
                         }
                 }
@@ -1619,10 +1642,57 @@ tasks.register("verifyGithubActionsSecurity") {
     }
 }
 
+tasks.register("verifyDockerJavaVersion") {
+    group = "verification"
+    description = "Verifies Docker images use the Azul Zulu release of releaseBuild.javaVersion, pinned by digest."
+
+    val dockerFiles = fileTree("apps") {
+        include("**/Dockerfile")
+        exclude("**/build/**")
+    }
+
+    inputs.files(dockerFiles)
+    inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
+    outputs.upToDateWhen { false }
+
+    doLast {
+        val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
+        val violations = mutableListOf<String>()
+        // The digest pins the image. The tag only shows its version to reviewers and to this check, so both
+        // must change together when the JDK is updated.
+        val zuluImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*azul/zulu-openjdk(\S*)""", RegexOption.IGNORE_CASE)
+        val pinnedZuluImageRegex = Regex(""":(\d+\.\d+\.\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
+
+        dockerFiles.files.sortedBy { it.path }.forEach { dockerFile ->
+            val dockerPath = rootProject.relativePath(dockerFile)
+            dockerFile.readLines(StandardCharsets.UTF_8).forEachIndexed { index, line ->
+                val imageMatch = zuluImageRegex.find(line) ?: return@forEachIndexed
+                val pinnedMatch = pinnedZuluImageRegex.matchEntire(imageMatch.groupValues[1])
+                if (pinnedMatch == null) {
+                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<version>[-jre]@sha256:<digest>"
+                } else if (pinnedMatch.groupValues[1] != expectedJavaVersion) {
+                    violations += "$dockerPath:${index + 1} uses Java version ${pinnedMatch.groupValues[1]} " +
+                            "but releaseBuild.javaVersion is $expectedJavaVersion"
+                }
+            }
+        }
+
+        if (violations.isNotEmpty()) {
+            throw GradleException(
+                "Docker Java version verification failed:\n" +
+                    violations.joinToString(separator = "\n") { "  - $it" }
+            )
+        }
+
+        logger.lifecycle("Verified ${dockerFiles.files.size} Dockerfiles.")
+    }
+}
+
 tasks.named("check") {
     dependsOn("verifyBuildEnvironment")
     dependsOn("verifyGradleWrapperSecurity")
     dependsOn("verifyGithubActionsSecurity")
+    dependsOn("verifyDockerJavaVersion")
     dependsOn("verifyDependencySignaturePolicy")
 }
 
