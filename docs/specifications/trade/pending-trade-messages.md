@@ -46,8 +46,13 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 
 6. A received chat message creates a Bisq Easy trade channel only if it carries an offer and the node has a trade with
    its trade ID whose peer is the sender of the message and whose own user profile is the receiver of the message.
-   Otherwise the message is a pending chat message (rule 4). When the node creates a trade, or loads it at startup, it
-   processes the pending chat messages of that trade again.
+   Otherwise the message is a pending chat message (rule 4). When the node creates a trade or a trade channel, or loads
+   a trade at startup, it processes the pending chat messages of that trade again. A chat message whose trade or trade
+   channel the node creates while the message becomes pending still reaches the channel: the node looks for the
+   channel again after it kept the message as pending. If the channel which it finds then does not accept the message
+   (see [Private channel membership](../chat/private-channel-membership.md)), the node drops the message, and it is no
+   longer pending. A received chat message makes the node process other pending chat messages only when it creates
+   the trade channel, and then only those of its trade.
 
 ## Reasons
 
@@ -88,6 +93,14 @@ which the protocol of the trade cannot process yet is a queued trade message (se
   trade, and the trade service fails the trade with a report to the peer. The report would tell the peer that both
   profiles are hosted on one node (see rule 5 of [Sender of a trade message](trade-message-sender.md) for trade
   messages).
+- Rule 6, at the same time: the node receives a chat message in another thread than the one which creates the trade
+  or the channel. The creator processes the pending chat messages of the trade right after it added the trade or the
+  channel. A message which found neither, and which became pending after that, could stay pending for good. If it is
+  the taker's first chat message, the maker gets no trade channel. So the node looks for the channel and checks the
+  trade again after it kept the message as pending.
+- Rule 6, other pending chat messages: a pending chat message can reach a channel only when its trade or its channel
+  is created, and the node processes the pending chat messages of the trade at that step. Processing all pending chat
+  messages after each received chat message would repeat the work for up to 100 messages each time.
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
@@ -112,6 +125,9 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 - Rule 6: a flood of chat messages for made-up trade IDs can push the taker's first chat message out of the pending chat
   messages before the take offer request arrives. The maker then has no trade channel, and the trade fails at the
   next step of the maker (the trade requires its chat channel).
+- Rule 6: when the node processes the pending chat messages of a trade, a message which the channel of the trade does
+  not accept stays pending until the bound pushes it out or the node restarts. Only the second lookup of a received
+  message drops such a message. The MuSig chat drops it when it processes it.
 - Rule 6 relies on the trades of the node. The maker stores a trade only for a take offer request which it accepted (see
   [take offer request validation](take-offer-request-validation.md)). A trade which an earlier version stored for a
   rejected request still lets the taker of that request get a channel stored for that trade.
