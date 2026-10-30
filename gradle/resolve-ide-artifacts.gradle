@@ -1,7 +1,9 @@
 gradle.rootProject { root ->
     // The root project declares no repositories; the subprojects get Maven Central from bisq.java-conventions.
+    // Gradle plugins such as org.openjfx:javafx-plugin are published only on the Gradle Plugin Portal.
     root.repositories {
         mavenCentral()
+        gradlePluginPortal()
     }
 
     root.tasks.register('resolveIdeArtifactsForVerification') {
