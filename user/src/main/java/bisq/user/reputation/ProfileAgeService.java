@@ -50,7 +50,6 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
@@ -188,29 +187,23 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
 
         requestTimestampFuture = CompletableFuture.runAsync(() -> {
             try {
-                AtomicBoolean hasRequested = new AtomicBoolean();
                 for (int i = 0; i < candidates.size(); i++) {
                     long delay = i * (10_000 + new Random().nextLong(110_000));
                     UserIdentity userIdentity = candidates.get(i);
                     // The requestTimestamp() is using the NetworkService.NETWORK_IO_POOL at network call level.
                     // At first iteration the delay is 0, thus no delay is used.
                     Delay.run(() -> {
-                                        boolean requestSuccess = requestTimestamp(userIdentity);
-                                        if (!requestSuccess) {
+                                        if (requestTimestamp(userIdentity)) {
+                                            // Recorded here, as the tasks run after the loop which schedules them
+                                            persistableStore.setLastRequested(System.currentTimeMillis());
+                                            persist();
+                                        } else {
                                             log.warn("Requesting timestamp for {} failed", userIdentity.getUserProfile().getUserName());
                                         }
-                                        hasRequested.compareAndSet(false, requestSuccess);
                                     }
                             )
                             .withExecutor(commonForkJoinPool())
                             .after(delay, TimeUnit.MILLISECONDS);
-                }
-
-                if (hasRequested.get()) {
-                    // lastRequested is set only when we check for all user profiles. When we create a new user profile
-                    // we do not update it.
-                    persistableStore.setLastRequested(System.currentTimeMillis());
-                    persist();
                 }
             } finally {
                 requestTimestampFuture = null;
