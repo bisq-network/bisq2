@@ -104,7 +104,7 @@ val verificationChecksumKinds = listOf("md5", "sha1", "sha256", "sha512")
 val gradleWrapperCommand =
     if (System.getProperty("os.name").lowercase(Locale.ROOT).contains("windows")) "gradlew.bat" else "./gradlew"
 val dependencyVerificationBuildDirs = listOf(
-    "", "build-logic", "apps", "apps/desktop", "network", "network/tor",
+    "", "build-logic", "apps", "apps/desktop", "network", "tor", "tor/build-logic",
 )
 val dependencyVerificationInventoryFiles = dependencyVerificationBuildDirs
     .map { dependencyVerificationInventoryFile(File(bisqRepositoryRoot, it)) }

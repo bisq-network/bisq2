@@ -2,11 +2,14 @@
 
 1. **Clone Bisq 2**
    ```bash
-   git clone https://github.com/bisq-network/bisq2.git
+   git clone --recurse-submodules https://github.com/bisq-network/bisq2.git
    ```
    ```bash
    cd bisq2
    ```
+   The directory `tor/` is the Git submodule [tor](https://github.com/bisq-network/tor). In a clone without
+   `--recurse-submodules`, run `git submodule update --init`. Run `git pull --recurse-submodules` to update, so that
+   `tor/` follows the commit which Bisq 2 records. See [Tor Submodule](../../README.md#tor-submodule).
 
 2. **Install Dependencies:**
    Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
@@ -33,7 +36,7 @@
 
 3. **Update to latest GitHub version:**
    ```bash
-   git pull
+   git pull --recurse-submodules
    ```
 
 4. **Build Bisq**
@@ -101,6 +104,55 @@ For a quick full cleanup/rebuild you can use
 
    See `gradle/README.md` for the checksum fallback allowlist and report workflow.
 
+
+### Tor submodule
+
+**Use a local Tor repository.** To fetch committed changes from a local repository `tor` next to the Bisq 2 checkout,
+run the following commands from the Bisq 2 checkout's root directory. These overrides apply only to your local
+checkout; do not edit `.gitmodules` for machine-specific paths.
+
+Set the local repository path:
+
+```sh
+git config --local submodule.tor.url ../tor
+```
+
+If `tor/` is empty, initialize it from the local repository first:
+
+```sh
+git -c protocol.file.allow=always submodule update --init tor
+```
+
+Once initialization has succeeded, configure the submodule's remote and select the local repository's `main` branch:
+
+```sh
+git -C tor remote set-url origin ../../tor
+git config --local submodule.tor.branch main
+```
+
+Run `remote set-url` only after `tor/` is initialized: in an empty `tor/`, `git -C tor` changes the remote of the Bisq 2
+checkout. The two relative paths above resolve from the Bisq 2 checkout and its nested `tor/` checkout, respectively.
+Relative URLs in `.gitmodules` resolve against Bisq 2's default remote repository, so they do not refer to the adjacent
+local repository when Bisq 2's remote is on GitHub.
+
+Fetch and check out the latest committed changes from the local repository's `main` branch:
+
+```sh
+git -c protocol.file.allow=always submodule update --remote tor
+git diff --submodule=log tor
+```
+
+Git restricts local file transport for submodules by default; `-c protocol.file.allow=always` allows it for that
+command. Without `--remote`, `submodule update` checks out the commit recorded by Bisq 2. Uncommitted changes in the
+local repository are not included. Build and test, then record the new Tor commit in Bisq 2:
+
+```sh
+git add tor
+git commit
+```
+
+Other developers need access to that Tor commit before they can use the update. Do not run `git submodule sync` for
+Tor after configuring these overrides: it overwrites both local URLs with the URL from `.gitmodules`.
 
 ### Important notes
 

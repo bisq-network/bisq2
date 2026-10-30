@@ -105,9 +105,8 @@ public class NetworkInfo {
             networkService.getServiceNodesByTransport()
                     .findServiceNode(TransportType.TOR)
                     .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
-                    .map(TorTransportService::getUseExternalTor)
-                    .map(useExternalTor -> useExternalTor.addObserver(model.getUseExternalTor()::set))
-                    .ifPresent(pins::add);
+                    .map(TorTransportService::isUseExternalTor)
+                    .ifPresent(model.getUseExternalTor()::set);
 
             networkService.getSupportedTransportTypes().forEach(type ->
                     networkService.getServiceNodesByTransport().findServiceNode(type)

@@ -7,10 +7,8 @@ dependencyResolutionManagement {
 }
 
 include("commons")
-include("gradle-tasks")
 include("packaging")
 include("maven-publisher")
-include("tor-binary")
 include("toolchain-resolver")
 include("webcam-app")
 include("bi2p")

@@ -51,6 +51,24 @@ if [ ! -f "$marker" ] || [ "$(cat "$marker")" != "$commit" ]; then
     rm -rf "$baseline_dir"
     mkdir -p "$baseline_dir"
     git -C "$repo_root" archive --format=tar "$commit" | tar -x -C "$baseline_dir"
+    # `git archive` leaves the directory of a submodule (tor/ since it is the Git submodule tor) empty. The commit of
+    # each submodule must exist in its checkout.
+    git -C "$repo_root" ls-tree -r "$commit" |
+        while read -r _ object_type submodule_commit submodule_path; do
+            [ "$object_type" = commit ] || continue
+            # In an empty submodule directory, git would run in the superproject and report the wrong repository.
+            if [ ! -e "$repo_root/$submodule_path/.git" ]; then
+                echo "The submodule $submodule_path is not initialized. Run: git submodule update --init" >&2
+                exit 2
+            fi
+            if ! git -C "$repo_root/$submodule_path" cat-file -e "$submodule_commit^{commit}" 2> /dev/null; then
+                echo "The commit $submodule_commit of the submodule $submodule_path is missing. Fetch it with:" \
+                    "git -C $submodule_path fetch origin $submodule_commit" >&2
+                exit 2
+            fi
+            git -C "$repo_root/$submodule_path" archive --format=tar "$submodule_commit" |
+                tar -x -C "$baseline_dir/$submodule_path"
+        done
     echo "$commit" > "$marker"
 fi
 
