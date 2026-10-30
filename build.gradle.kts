@@ -2,6 +2,7 @@ import groovy.json.JsonSlurper
 import org.gradle.api.GradleException
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Delete
+import org.gradle.process.ExecOperations
 
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -16,6 +17,7 @@ import java.util.Locale
 import java.util.Properties
 import java.util.TreeMap
 import java.util.Locale.getDefault
+import javax.inject.Inject
 
 plugins {
     java
@@ -56,6 +58,12 @@ data class CommandResult(
             .joinToString("\n")
             .trim()
     }
+}
+
+// Gradle 9 removed Project.exec. A build script gets ExecOperations only through an object which Gradle creates.
+interface InjectedExecOperations {
+    @get:Inject
+    val execOperations: ExecOperations
 }
 
 data class HttpResponse(
@@ -366,6 +374,7 @@ tasks.register("buildAll") {
     group = "build"
     description = "Build the entire project leaving it ready to work with."
 
+    val execOperations = objects.newInstance<InjectedExecOperations>().execOperations
     // Builds all builds of the composite build in one Gradle run. A run configures the whole composite build, so a
     // run per build repeats this work, and one run can execute the tasks of different builds in parallel. The run is
     // a new process, so that after cleanAll it starts with a new configuration.
@@ -376,7 +385,7 @@ tasks.register("buildAll") {
         ) + compositeBuilds
             .filter { it.taskPath != ":build-logic" }
             .map { "${it.taskPath}:build" }
-        exec {
+        execOperations.exec {
             println("Executing Build: ${buildTasks.joinToString(" ")}")
             commandLine(listOf(getGradleCommand()) + buildTasks)
         }
@@ -446,6 +455,7 @@ tasks.register("signReleaseArtifacts") {
         .orElse(providers.environmentVariable("BISQ_GPG_USER"))
     val gpgExecutableProperty = providers.gradleProperty("gpgExecutable")
         .orElse(providers.environmentVariable("GPG_EXECUTABLE"))
+    val execOperations = objects.newInstance<InjectedExecOperations>().execOperations
 
     inputs.property("releaseDir", releaseDirProperty.orElse(""))
     inputs.property("gpgUser", gpgUserProperty.orElse(""))
@@ -456,7 +466,7 @@ tasks.register("signReleaseArtifacts") {
         fun execResult(commandLine: List<String>): CommandResult {
             val stdout = ByteArrayOutputStream()
             val stderr = ByteArrayOutputStream()
-            val result = exec {
+            val result = execOperations.exec {
                 commandLine(commandLine)
                 standardOutput = stdout
                 errorOutput = stderr
@@ -561,6 +571,7 @@ tasks.register("verifyReleaseReadiness") {
     val releaseVersionProperty = providers.gradleProperty("releaseVersion")
     val gpgExecutableProperty = providers.gradleProperty("gpgExecutable")
         .orElse(providers.environmentVariable("GPG_EXECUTABLE"))
+    val execOperations = objects.newInstance<InjectedExecOperations>().execOperations
 
     inputs.property("releaseVersion", releaseVersionProperty.orElse(""))
     inputs.property("gpgExecutable", gpgExecutableProperty.orElse(""))
@@ -742,7 +753,7 @@ tasks.register("verifyReleaseReadiness") {
             val stdout = ByteArrayOutputStream()
             val stderr = ByteArrayOutputStream()
             return try {
-                val processResult = exec {
+                val processResult = execOperations.exec {
                     commandLine(commandLine)
                     standardOutput = stdout
                     errorOutput = stderr
@@ -1619,6 +1630,7 @@ tasks.register("publishAll") {
     group = "publishing"
     description = "Publish all the jars in the following modules to local maven repository"
 
+    val execOperations = objects.newInstance<InjectedExecOperations>().execOperations
     doLast {
         listOf(
             ":account:publishToMavenLocal",
@@ -1646,7 +1658,7 @@ tasks.register("publishAll") {
             ":user:publishToMavenLocal",
             ":bisq-easy:publishToMavenLocal",
         ).forEach {
-            exec {
+            execOperations.exec {
                 println("Executing Publish To Maven Local: $it")
                 commandLine(getGradleCommand(), it)
             }
