@@ -149,6 +149,9 @@ public class HttpServerBootstrapService implements Service {
                             tlsContext = tlsContextService.getOrCreateTlsContext();
                         } catch (Exception e) {
                             log.error("Could not create TLS context", e);
+                            errorMessage.set("Could not create TLS context: " + e.getMessage());
+                            server.shutdownNow();
+                            httpServer = Optional.empty();
                             return false;
                         }
                         checkArgument(tlsContext.isPresent(), "If tlsRequired is true we expect that tlsContext is present");
