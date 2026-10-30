@@ -40,10 +40,10 @@ val compositeBuilds = listOf(
 
 apply(from = "gradle/dependency-security-overrides.gradle.kts")
 apply(from = "gradle/dependency-verification.gradle.kts")
+apply(from = "gradle/build-environment-verification.gradle.kts")
 
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
 val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
-val expectedReleaseJavaVendor = providers.gradleProperty("releaseBuild.javaVendor")
 val expectedReleaseJavaRuntimeVersion = providers.gradleProperty("releaseBuild.javaRuntimeVersion")
 val expectedReleaseJavaVendorVersion = providers.gradleProperty("releaseBuild.javaVendorVersion")
 val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
@@ -400,43 +400,24 @@ tasks.register<Delete>("cleanAll") {
     delete(allBuildDirectories())
 }
 
-tasks.register("verifyBuildEnvironment") {
-    group = "verification"
-    description = "Verifies the local Gradle and Java runtime match the pinned build environment."
-
-    inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
-    inputs.property("expectedReleaseJavaVendor", expectedReleaseJavaVendor.orElse(""))
+// gradle/build-environment-verification.gradle.kts checks the Java update, the Java vendor and the Gradle version, as
+// in the included builds. The root build also pins the exact JDK build.
+tasks.named("verifyBuildEnvironment") {
     inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
     inputs.property("expectedReleaseJavaVendorVersion", expectedReleaseJavaVendorVersion.orElse(""))
-    inputs.property("expectedReleaseGradleVersion", expectedReleaseGradleVersion.orElse(""))
-    outputs.upToDateWhen { false }
 
     doLast {
-        val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
-        val expectedJavaVendor = requiredGradleProperty("releaseBuild.javaVendor", expectedReleaseJavaVendor)
         val expectedJavaRuntimeVersion = requiredGradleProperty("releaseBuild.javaRuntimeVersion", expectedReleaseJavaRuntimeVersion)
         val expectedJavaVendorVersion = requiredGradleProperty("releaseBuild.javaVendorVersion", expectedReleaseJavaVendorVersion)
-        val expectedGradleVersion = requiredGradleProperty("releaseBuild.gradleVersion", expectedReleaseGradleVersion)
-        val actualJavaVersion = System.getProperty("java.version")
-        val actualJavaVendor = System.getProperty("java.vendor")
         val actualJavaRuntimeVersion = System.getProperty("java.runtime.version")
         val actualJavaVendorVersion = System.getProperty("java.vendor.version")
         val violations = mutableListOf<String>()
 
-        if (actualJavaVersion != expectedJavaVersion) {
-            violations += "Java version expected $expectedJavaVersion but was $actualJavaVersion"
-        }
-        if (actualJavaVendor != expectedJavaVendor) {
-            violations += "Java vendor expected $expectedJavaVendor but was $actualJavaVendor"
-        }
         if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
             violations += "Java runtime version expected $expectedJavaRuntimeVersion but was $actualJavaRuntimeVersion"
         }
         if (actualJavaVendorVersion != expectedJavaVendorVersion) {
             violations += "Java vendor version expected $expectedJavaVendorVersion but was $actualJavaVendorVersion"
-        }
-        if (gradle.gradleVersion != expectedGradleVersion) {
-            violations += "Gradle version expected $expectedGradleVersion but was ${gradle.gradleVersion}"
         }
 
         if (violations.isNotEmpty()) {
@@ -445,17 +426,7 @@ tasks.register("verifyBuildEnvironment") {
                         violations.joinToString("\n") { "  - $it" }
             )
         }
-
-        logger.lifecycle(
-            "Verified build environment: Gradle ${gradle.gradleVersion}, Java $actualJavaVersion ($actualJavaVendor)."
-        )
     }
-}
-
-tasks.register("verifyReleaseEnvironment") {
-    group = "verification"
-    description = "Verifies the local Gradle and Java runtime match the pinned release build environment."
-    dependsOn("verifyBuildEnvironment")
 }
 
 tasks.register("signReleaseArtifacts") {
