@@ -11,6 +11,8 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     protected final T applicationService;
     protected final List<Runnable> shutdownHandlers = new ArrayList<>();
     protected volatile boolean shutDownStarted;
+    // Set by the shutdown which starts first, so a later request does not change it.
+    private volatile int exitStatus = PlatformUtils.EXIT_SUCCESS;
 
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
@@ -72,11 +74,36 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     }
 
     public void shutdown(boolean callExit) {
+        shutdown(callExit, PlatformUtils.EXIT_SUCCESS);
+    }
+
+    /**
+     * Shuts the application down after its start failed and exits with {@link PlatformUtils#EXIT_FAILURE}, the status
+     * after which systemd (Restart=on-failure) starts a headless node again. A shutdown which runs already keeps its
+     * exit status.
+     */
+    protected void shutdownAfterFailedStart() {
+        if (!shutDownStarted) {
+            log.warn("The start failed. We shut down and exit with status {}", PlatformUtils.EXIT_FAILURE);
+        }
+        shutdown(true, PlatformUtils.EXIT_FAILURE);
+    }
+
+    /**
+     * @return whether the start failed: the initialization of the application service failed or completed without
+     * success. With several transports the network, and so the start, succeeds once one of them has initialized.
+     */
+    protected static boolean hasStartFailed(Boolean result, Throwable throwable) {
+        return throwable != null || !Boolean.TRUE.equals(result);
+    }
+
+    private void shutdown(boolean callExit, int exitStatus) {
         if (shutDownStarted) {
             log.info("shutDown has already started");
             return;
         }
         shutDownStarted = true;
+        this.exitStatus = exitStatus;
         try {
             notifyAboutShutdown();
             if (applicationService != null) {
@@ -118,7 +145,12 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
 
     protected void exitJvm() {
         log.info("Exiting JVM");
-        System.exit(PlatformUtils.EXIT_SUCCESS);
+        System.exit(exitStatus);
+    }
+
+    // The status with which exitJvm ends the process
+    int getExitStatus() {
+        return exitStatus;
     }
 
     @Override

@@ -44,7 +44,8 @@ class TorHttpClientTest {
     private static final String HOST = "abcdefghijklmnopqrstuvwxyz234567abcdefghijklmnopqrstuvwx.onion";
     private static final int TIMEOUT = 10_000;
 
-    private final ServerSocket serverSocket = new ServerSocket(0, 2, InetAddress.getLoopbackAddress());
+    // The client connects to 127.0.0.1. getLoopbackAddress() returns ::1 when the JVM prefers IPv6.
+    private final ServerSocket serverSocket = new ServerSocket(0, 2, InetAddress.getByName("127.0.0.1"));
 
     // What the fake proxy received on one connection
     private record Connection(String username, String password, String host, int port, String requestLine) {

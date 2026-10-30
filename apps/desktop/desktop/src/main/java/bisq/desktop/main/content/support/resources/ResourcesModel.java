@@ -37,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ResourcesModel implements Model {
     @Setter
     private boolean isMusigEnabled;
+    private final StringProperty localVersionDetails = new SimpleStringProperty();
     private final StringProperty backupLocation = new SimpleStringProperty();
     private final BooleanProperty backupButtonDefault = new SimpleBooleanProperty();
     private final BooleanProperty backupButtonDisabled = new SimpleBooleanProperty();
