@@ -115,7 +115,7 @@ order, so a second element could turn the key servers on again.
 
 Runs which download keys need the key servers:
 
-- `refreshDependencyVerificationKeyring` turns them on for its own Gradle run and restores the metadata afterwards.
+- `refreshDependencyVerificationKeyring` runs Gradle with `--export-keys` and leaves the metadata unchanged.
 - For a new dependency whose signing key is not in the keyring, remove the line `<key-servers enabled="false"/>` for
   the metadata generation and add `--export-keys`, so that Gradle writes the downloaded keys into the keyring. Put the
   line back afterwards: Gradle keeps it when it rewrites the metadata with the key servers off, but omits it when they
@@ -144,7 +144,7 @@ Refresh the keyring first so newly available signing keys are present before Gra
 `gradle/verification-metadata.xml`. This avoids adding checksum fallbacks for artifacts whose signatures can now be
 verified.
 
-`refreshDependencyVerificationKeyring` wraps the following command, which it runs with the key servers on:
+`refreshDependencyVerificationKeyring` wraps the following command:
 
 ```bash
 ./gradlew help --refresh-keys --export-keys
