@@ -73,6 +73,7 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -600,6 +601,17 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 .map(TorTransportService.class::cast)
                 .map(torTransportService -> torTransportService.publishOnionService(localPort, onionServicePort, torKeyPair))
                 .orElse(CompletableFuture.failedFuture(new UnsupportedOperationException("Calling publishOnionService requires to have a TorTransportService running.")));
+    }
+
+    /**
+     * @return the address on which a server which {@link #publishOnionService} publishes has to listen, or empty
+     * without the Tor transport. Known once the Tor transport has initialized.
+     */
+    public Optional<InetAddress> findOnionServiceBindAddress() {
+        return serviceNodesByTransport.findServiceNode(TOR)
+                .map(ServiceNode::getTransportService)
+                .map(TorTransportService.class::cast)
+                .map(TorTransportService::getOnionServiceBindAddress);
     }
 
 

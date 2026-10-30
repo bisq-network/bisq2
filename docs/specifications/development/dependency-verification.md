@@ -9,7 +9,8 @@ dependencies against the committed verification metadata and keyring.
 Gradle verifies dependencies only against the verification metadata of the build which is the root of the build tree.
 The builds in `apps`, `apps/desktop`, and `network` have no metadata of their own, so a build started in one of these
 directories verifies no dependency. CI must therefore run their tasks from the repository root, for example
-`:apps:build`. The `tor` build has the metadata of the Tor library and verifies its dependencies on its own.
+`:apps:build`. The `tor` build has the metadata of the Tor library, which turns the key servers off as well, and
+verifies its dependencies on its own.
 
 Gradle must verify signatures only with the keys of the committed keyring. The metadata of this repository turns the
 key servers off, so that a build never waits for a key server and a key which the keyring lacks fails the verification

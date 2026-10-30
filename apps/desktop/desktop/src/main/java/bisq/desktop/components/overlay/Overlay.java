@@ -40,6 +40,7 @@ import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.controls.BisqTooltip;
 import bisq.desktop.components.controls.BusyAnimation;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.settings.DontShowAgainKey;
 import bisq.settings.DontShowAgainService;
 import bisq.settings.SettingsService;
@@ -92,7 +93,6 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -1015,16 +1015,19 @@ public abstract class Overlay<T extends Overlay<T>> {
         Button zipLogButton = new Button(Res.get("popup.reportError.zipLogs"));
         zipLogButton.setOnAction(event -> FileChooserUtil.chooseDirectory(getRootContainer().getScene(), appDataDirPath, "")
                 .ifPresent(directory -> {
-                    // Copy debug log file and replace users home directory with "<HOME_DIR>" to avoid that
+                    // Copy the Tor log file and replace users home directory with "<HOME_DIR>" to avoid that
                     // private data gets leaked in case the user used their real name as their OS user.
-                    Path debugLogPath = Paths.get(appDataDirPath + "/tor/").resolve("debug.log");
-                    Path debugLogForZipFilePath = Paths.get(appDataDirPath + "/tor/").resolve("debug_for_zip.log");
+                    // Tor has no access to its log file, unlike to the files in the data directory of Tor.
+                    Path debugLogPath = TorTransportService.getTorLogPath(appDataDirPath);
+                    Path debugLogForZipFilePath = debugLogPath.resolveSibling("debug_for_zip.log");
                     try {
                         Files.deleteIfExists(debugLogForZipFilePath);
-                        FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
-                        String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
-                        logContent = LegacyLogSecrets.redact(StringUtils.maskHomeDirectory(logContent));
-                        FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
+                        if (Files.isRegularFile(debugLogPath)) {
+                            FileMutatorUtils.copyFile(debugLogPath, debugLogForZipFilePath);
+                            String logContent = FileReaderUtils.readUTF8String(debugLogForZipFilePath);
+                            logContent = LegacyLogSecrets.redact(StringUtils.maskHomeDirectory(logContent));
+                            FileMutatorUtils.writeToPath(logContent, debugLogForZipFilePath);
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

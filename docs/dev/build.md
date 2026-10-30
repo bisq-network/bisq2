@@ -12,27 +12,13 @@
    `tor/` follows the commit which Bisq 2 records. See [Tor Submodule](../../README.md#tor-submodule).
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21. On Linux, you will also need a working tor executable, which is distributed with the tor daemon and the tor browser packages.
+   Bisq requires JDK 21. You do not need to install Tor: on every operating system, also on Linux, Bisq runs the Tor
+   of the Tor expert bundle which the build packages (see `docs/specifications/network/tor-startup.md`). On Linux this
+   Tor needs `libz.so.1` of the system. Every Debian and Ubuntu system has it in the package `zlib1g`.
 
-   Please see the official [Tor installation instructions](https://support.torproject.org/little-t-tor/getting-started/installing/).
-   The TLDR for Debian-based distros:
-   ```bash
-    sudo apt update
-    sudo apt install apt-transport-https curl
-
-    # Add the Tor Project GPG key
-    curl https://deb.torproject.org/torproject.org/gpgkey | sudo gpg --dearmor -o /usr/share/keyrings/tor-archive-keyring.gpg
-
-    # Add Tor repository
-    echo "deb [signed-by=/usr/share/keyrings/tor-archive-keyring.gpg] \
-    https://deb.torproject.org/torproject.org $(lsb_release -cs) main" \
-    | sudo tee /etc/apt/sources.list.d/tor.list
-
-    # Install Tor
-    sudo apt update
-    sudo apt install tor
-
-   ```
+   Bisq 2.1.3 to 2.1.14 ran the `tor` of the system on Linux, and their packages depend on the `tor` package. An update
+   of Bisq leaves that package installed. On Debian and Ubuntu its service `tor@default` keeps running until you remove
+   the package, for example with `sudo apt remove tor` if no other program uses it.
 
 3. **Update to latest GitHub version:**
    ```bash
@@ -177,6 +163,17 @@ Tor after configuring these overrides: it overwrites both local URLs with the UR
    Bisq developers use by default the IntelliJ development IDE (Community edition is free to use).
    If running from the IDE one need to enable `annotation processing` (search for that in the settings).
    The `Protocol Buffers` plugin need to be installed as well.
+   When IntelliJ builds the project itself, it runs no Gradle task. Only Gradle creates the Tor bundle `tor.zip` and
+   the sandy binary, which the `tor` build packages as resources. Run these tasks once after a checkout, and again
+   after a change of the Tor version or of the sandy binary:
+
+   ```sh
+   ./gradlew :tor:tor:packageTorBinary :tor:tor:packageSandyBinary
+   ```
+
+   Alternatively, let IntelliJ delegate the build to Gradle (Settings > Build, Execution, Deployment > Build Tools >
+   Gradle: set "Build and run using" to "Gradle"). Without these resources, a start from the IDE fails with "Couldn't
+   open resource: tor.zip" or "This build of Bisq contains no sandy binary for the platform ...".
 
 ## Running Bisq
 
@@ -265,7 +262,44 @@ application {
 }
 ```
 
+Bridges for the Tor which Bisq starts (see `docs/specifications/network/tor-startup.md`) are set in the same way, with
+either the built-in bridges of one type of the bundled Tor or bridge lines, for example from
+https://bridges.torproject.org. The built-in bridges, and bridge lines which name a transport such as obfs4, need
+pluggable transports, which the Tor sandbox allows only with `allowPluggableTransports` (also a switch in the network
+settings of the desktop application). On Windows Tor cannot start them in its sandbox, so they need
+`sandbox.enabled = false` there instead:
+
+```
+application {
+    network {
+        configByTransportType {
+            tor {
+                # The built-in bridges of one type: "obfs4", "snowflake" or "meek"
+                builtInBridges = "obfs4"
+                # Or bridge lines. Set at most one of builtInBridges and bridges.
+                bridges = []
+                # Lets Tor start the pluggable transports of the bridges in its sandbox
+                sandbox {
+                    allowPluggableTransports = true
+                }
+            }
+        }
+    }
+}
+```
+
 Only change entries which are clear to you as inappropriate values could lead to issues.
+
+### Tor sandbox build
+
+The Tor which Bisq starts runs in the sandy sandbox (see `docs/specifications/network/tor-startup.md`). The included
+build `tor` packages the sandy binary of the platform of the build from `tor/tor/sandy/`, and fails if the binary does
+not have the SHA-256 hash which it pins. The Gradle property `sandy.package=false` builds without sandy; a sandboxed
+start of Tor then fails:
+
+```sh
+./gradlew :apps:desktop:desktop-app:installDist -Psandy.package=false
+```
 
 ## Run developer setup
 

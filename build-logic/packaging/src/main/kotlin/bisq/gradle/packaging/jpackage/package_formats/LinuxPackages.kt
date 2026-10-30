@@ -15,8 +15,6 @@ class LinuxPackages(private val resourcesPath: Path, private val appName: String
                 "--linux-package-name", appName.lowercase(Locale.ROOT).replace(" ", ""),
                 "--linux-app-release", "1",
 
-                "--linux-package-deps", "tor",
-
                 "--linux-menu-group", "Network",
                 "--linux-shortcut",
 
