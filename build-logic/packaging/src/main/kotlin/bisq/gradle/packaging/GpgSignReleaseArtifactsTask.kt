@@ -6,12 +6,17 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.TaskAction
+import org.gradle.process.ExecOperations
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.nio.charset.StandardCharsets
 import java.util.Locale
+import javax.inject.Inject
 
 abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
+
+    @get:Inject
+    abstract val execOperations: ExecOperations
 
     @get:Input
     abstract val releaseDirPath: Property<String>
@@ -264,7 +269,7 @@ abstract class GpgSignReleaseArtifactsTask : DefaultTask() {
     private fun execResult(commandLine: List<String>): ExecResult {
         val stdout = ByteArrayOutputStream()
         val stderr = ByteArrayOutputStream()
-        val result = project.exec {
+        val result = execOperations.exec {
             commandLine(commandLine)
             standardOutput = stdout
             errorOutput = stderr
