@@ -48,8 +48,10 @@ which the protocol of the trade cannot process yet is a queued trade message (se
    its trade ID whose peer is the sender of the message and whose own user profile is the receiver of the message.
    Otherwise the message is a pending chat message (rule 4). When the node creates a trade or a trade channel, or loads
    a trade at startup, it processes the pending chat messages of that trade again. A chat message whose trade or trade
-   channel the node creates while the message becomes pending still reaches the channel. A received chat message does
-   not make the node process other pending chat messages.
+   channel the node creates while the message becomes pending still reaches the channel. If that channel does not
+   accept the message (see [Private channel membership](../chat/private-channel-membership.md)), the node drops the
+   message, and it is no longer pending. A received chat message makes the node process other pending chat messages
+   only when it creates the trade channel, and then only those of its trade.
 
 ## Reasons
 
