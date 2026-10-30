@@ -32,7 +32,7 @@ import bisq.desktop.main.content.mu_sig.offer.listing.MuSigOfferbookController;
 import bisq.desktop.main.content.mu_sig.onboarding.MuSigDashboardController;
 import bisq.desktop.main.content.mu_sig.trade.pending.MuSigPendingTradesController;
 import bisq.desktop.navigation.NavigationTarget;
-import bisq.desktop.navigation.NavigationUtil;
+import bisq.mu_sig.MusigNotificationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,6 +43,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
     @Getter
     private final MuSigView view;
     private final ChatNotificationService chatNotificationService;
+    private final MusigNotificationService musigNotificationService;
     private Pin changedNotificationPin;
 
     public MuSigController(ServiceProvider serviceProvider) {
@@ -51,6 +52,7 @@ public class MuSigController extends ContentTabController<MuSigModel> {
         view = new MuSigView(model, this);
 
         chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
+        musigNotificationService = serviceProvider.getMuSigService().getMusigNotificationService();
     }
 
     @Override
@@ -79,12 +81,12 @@ public class MuSigController extends ContentTabController<MuSigModel> {
         UIThread.run(() -> {
             if (chatNotification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OFFERBOOK) {
                 findTabButton(NavigationTarget.MU_SIG_OFFERBOOK).ifPresent(button ->
-                        button.setNumNotifications(chatNotificationService.getNumNotifications(ChatChannelDomain.MU_SIG_OFFERBOOK)));
+                        button.setNumNotifications(getNumNotifications(ChatChannelDomain.MU_SIG_OFFERBOOK)));
             }
 
             if (chatNotification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OPEN_TRADES) {
                 findTabButton(NavigationTarget.MU_SIG_OPEN_TRADES).ifPresent(button ->
-                        button.setNumNotifications(chatNotificationService.getNumNotifications(ChatChannelDomain.MU_SIG_OPEN_TRADES)));
+                        button.setNumNotifications(getNumNotifications(ChatChannelDomain.MU_SIG_OPEN_TRADES)));
             }
         });
     }
@@ -94,6 +96,12 @@ public class MuSigController extends ContentTabController<MuSigModel> {
                 .filter(tabButton ->
                         navigationTarget == tabButton.getNavigationTarget()).findAny();
     }
+
+    private long getNumNotifications(ChatChannelDomain domain) {
+        return musigNotificationService.getMusigNotConsumedNotifications()
+                .filter(notification -> notification.getChatChannelDomain() == domain)
+                .count();
+        }
 
     @Override
     protected Optional<? extends Controller> createController(NavigationTarget navigationTarget) {
