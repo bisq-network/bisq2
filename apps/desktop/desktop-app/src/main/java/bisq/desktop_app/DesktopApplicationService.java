@@ -33,15 +33,18 @@ import bisq.chat.ChatService;
 import bisq.common.observable.Observable;
 import bisq.common.platform.OS;
 import bisq.common.util.ExceptionUtil;
+import bisq.common.util.StringUtils;
 import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
+import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.notifications.NotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
@@ -56,9 +59,11 @@ import bisq.trade.TradeService;
 import bisq.user.UserService;
 import bisq.wallet.MockWalletService;
 import bisq.wallet.WalletService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -321,7 +326,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         }
                     } else {
                         log.error("Initializing applicationService failed", throwable);
-                        startupErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
+                        startupErrorMessage.set(getStartupErrorMessage(throwable));
                     }
                     setState(State.FAILED);
                     return false;
@@ -374,7 +379,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         }
                     } else {
                         log.error("Shutdown applicationService failed", throwable);
-                        shutDownErrorMessage.set(ExceptionUtil.getRootCauseMessage(throwable));
+                        shutDownErrorMessage.set(toPopupMessage(ExceptionUtil.getRootCauseMessage(throwable)));
                     }
                     return false;
                 }), commonForkJoinPool())
@@ -403,5 +408,32 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private boolean logError(Throwable throwable) {
         log.error("Exception at shutdown", throwable);
         return false;
+    }
+
+    // The refusal of the Tor sandbox for the pluggable transports of the bridges names the configuration of the Tor
+    // library. The settings switch for the transports is out of reach after a failed start, so the message names the
+    // entries of bisq.conf.
+    @VisibleForTesting
+    static String getStartupErrorMessage(Throwable throwable) {
+        return toPopupMessage(TorTransportService.findPluggableTransportsNotAllowed(throwable)
+                .map(transportNames -> getPluggableTransportsNotAllowedMessage(transportNames, OS.isWindows()))
+                .orElseGet(() -> ExceptionUtil.getRootCauseMessage(throwable)));
+    }
+
+    // The popups of the startup and shutdown errors add a period after the message, in every language. Their report
+    // button copies the message into a bug report, so it names the home directory as the log zip does: masked.
+    private static String toPopupMessage(String message) {
+        String maskedMessage = StringUtils.maskHomeDirectory(message).strip();
+        return maskedMessage.endsWith(".") ?
+                maskedMessage.substring(0, maskedMessage.length() - 1) :
+                maskedMessage;
+    }
+
+    @VisibleForTesting
+    static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
+        String key = isWindows ?
+                "popup.startup.error.torPluggableTransportsNotAllowed.windows" :
+                "popup.startup.error.torPluggableTransportsNotAllowed";
+        return Res.get(key, String.join(", ", transportNames));
     }
 }

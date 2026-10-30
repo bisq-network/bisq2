@@ -28,6 +28,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
 import bisq.common.util.NetworkUtils;
 import bisq.network.NetworkService;
+import bisq.network.p2p.node.Node;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.KeyBundleService;
 import lombok.Getter;
@@ -35,9 +36,12 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+
+import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 
 @Slf4j
 
@@ -47,6 +51,7 @@ public class ApiAccessTransportService implements Service {
     private final Path appDataDirPath;
     private final NetworkService networkService;
     private final KeyBundleService keyBundleService;
+    private final String configuredBindHost;
     private final Observable<Integer> bindPort = new Observable<>(8090);
     @Getter
     private final int onionServicePort;
@@ -65,6 +70,7 @@ public class ApiAccessTransportService implements Service {
                                      int bindPort,
                                      int onionServicePort) {
         useTor = apiConfig.useTor();
+        configuredBindHost = apiConfig.getBindHost();
         this.appDataDirPath = appDataDirPath;
         this.networkService = networkService;
         this.keyBundleService = keyBundleService;
@@ -75,15 +81,54 @@ public class ApiAccessTransportService implements Service {
     @Override
     public CompletableFuture<Boolean> initialize() {
         if (useTor) {
-            return publishAndGetTorAddress().thenApply(address -> true);
+            return awaitTransport()
+                    .thenCompose(ready -> publishAndGetTorAddress())
+                    .thenApply(address -> true);
         } else {
             return CompletableFuture.completedFuture(true);
         }
     }
 
+    /**
+     * Completes when the transport through which clients reach the API can serve them. With the TOR transport that is
+     * once the Tor transport has initialized: the onion service needs a running Tor, and the server listens where that
+     * Tor connects ({@link #getServerBindHost()}). The network service completes with its first initialized transport,
+     * so with several transports Tor can come later. Fails when the Tor transport fails.
+     */
+    public CompletableFuture<Void> awaitTransport() {
+        if (!useTor) {
+            return CompletableFuture.completedFuture(null);
+        }
+        CompletableFuture<Node> initializedTorNode = networkService.getInitializedDefaultNodeByTransport()
+                .get(TransportType.TOR);
+        if (initializedTorNode == null) {
+            return CompletableFuture.failedFuture(new IllegalStateException(
+                    "The API uses the TOR transport, but the network has no Tor transport. Check that " +
+                            "network.supportedTransportTypes includes TOR in the config."));
+        }
+        // The Tor transport completes on a network thread; the API continues on the common pool.
+        return initializedTorNode.thenApplyAsync(node -> null, commonForkJoinPool());
+    }
+
     @Override
     public CompletableFuture<Boolean> shutdown() {
         return Service.super.shutdown();
+    }
+
+    /**
+     * @return the host on which the API server listens. With the TOR transport, Tor or the relay of the sandbox in
+     * front of Tor connects to the server of the onion service on the address which the Tor library names: the
+     * loopback address, or all addresses on Whonix, where the Tor of the Gateway connects to the Workstation. The
+     * configured bind host applies to the CLEAR transport. Like {@link #publishAndGetTorAddress}, it needs a running
+     * Tor transport.
+     */
+    public String getServerBindHost() {
+        if (!useTor) {
+            return configuredBindHost;
+        }
+        return networkService.findOnionServiceBindAddress()
+                .map(InetAddress::getHostAddress)
+                .orElse(configuredBindHost);
     }
 
     public Address findLanAddress() {

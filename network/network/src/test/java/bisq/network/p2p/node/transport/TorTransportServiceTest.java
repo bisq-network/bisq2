@@ -18,8 +18,11 @@
 package bisq.network.p2p.node.transport;
 
 import bisq.common.network.TorAddress;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +30,9 @@ import org.mockito.MockedConstruction;
 
 import java.lang.reflect.Field;
 import java.net.Socket;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -67,7 +72,7 @@ class TorTransportServiceTest {
         }
     }
 
-    // On Linux the running Tor is the tor of the system, so the user interface shows its version, not the bundle's
+    // An external Tor can be any Tor of the user, so the user interface shows the running version, not the bundle's
     @Test
     void torVersionIsTheVersionWhichTheRunningTorReports() {
         TorTransportService.Config config = mock(TorTransportService.Config.class);
@@ -77,6 +82,66 @@ class TorTransportServiceTest {
             TorTransportService transportService = new TorTransportService(config);
 
             assertThat(transportService.getTorVersion()).contains("0.4.8.16");
+        }
+    }
+
+    // The node and the application wrap the failure of the Tor start, so the refusal can lie anywhere in the chain
+    @Test
+    void findsTheTransportsOfAStartWhichTheSandboxRefusedForPluggableTransports() {
+        PluggableTransportsNotAllowedException refusal = new PluggableTransportsNotAllowedException("reason",
+                "hint", List.of("obfs4", "snowflake"));
+        Throwable startFailure = new CompletionException(new RuntimeException("node failed", refusal));
+
+        assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure))
+                .contains(List.of("obfs4", "snowflake"));
+    }
+
+    @Test
+    void findsNoTransportsForAnotherRefusalOfTheSandbox() {
+        Throwable startFailure = new CompletionException(new SandboxUnavailableException("reason", "hint"));
+
+        assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure)).isEmpty();
+    }
+
+    // A user who turned the sandbox off, or who uses an external Tor, gets no notice about weaknesses of the sandbox
+    @Test
+    void torWithoutTheSandboxHasNoSandboxWeaknesses() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.DISABLED)).isEmpty();
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.EXTERNAL_TOR)).isEmpty();
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.NOT_STARTED)).isEmpty();
+    }
+
+    @Test
+    void baseLevelWithANetworkOfItsOwnHasNoSandboxWeaknesses() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("base", true, true))).isEmpty();
+    }
+
+    // The base level has the network of the host only for pluggable transports which need it
+    @Test
+    void baseLevelWithTheNetworkOfTheHostUsesItForTheTransports() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("base", false, true)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_FOR_TRANSPORTS);
+    }
+
+    @Test
+    void weakerLevelsUseTheNetworkOfTheHostBecauseOfTheSystem() {
+        assertThat(TorTransportService.toSandboxWeaknesses(TorSandboxStatus.sandboxed("host-network", false, true)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
+        assertThat(TorTransportService.toSandboxWeaknesses(
+                TorSandboxStatus.sandboxed("host-network-signals", false, false)))
+                .containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM, TorSandboxWeakness.SIGNALS_NOT_ISOLATED);
+    }
+
+    @Test
+    void sandboxWeaknessesComeFromTheStatusOfTheRunningTor() {
+        TorTransportService.Config config = mock(TorTransportService.Config.class);
+        when(config.getTorTransportConfig()).thenReturn(mock(TorTransportConfig.class));
+        try (MockedConstruction<TorService> torServices = mockConstruction(TorService.class,
+                (torService, context) -> when(torService.getSandboxStatus())
+                        .thenReturn(TorSandboxStatus.sandboxed("host-network", false, true)))) {
+            TorTransportService transportService = new TorTransportService(config);
+
+            assertThat(transportService.getSandboxWeaknesses()).containsExactly(TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
         }
     }
 

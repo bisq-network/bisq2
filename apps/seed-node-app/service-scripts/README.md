@@ -80,6 +80,24 @@ Note that both configs explicitly indicate the other seed's addresses and by ext
 `seedAddressByTransportType` per transport type. This helps each seed avoid trying to connect to itself, as it would 
 normally do, because by default it would try to connect to all `seedAddressByTransportType`s listed in `Seed.conf`.
 
+### Tor sandbox
+
+The seed node starts its own Tor in the sandbox of sandy (`sandbox.enabled=true` in `seed_node.conf`). The
+sandbox keeps a compromised Tor away from the files and keys of the node. The rules are in
+`docs/specifications/network/tor-startup.md`, section "Sandbox".
+
+If the host cannot run Tor in the sandbox, the node does not start Tor and logs the reason. For example, sandy refuses
+to run as root or with capabilities, and Linux without Landlock cannot enforce the sandbox. The node never starts Tor
+without the sandbox by itself. To run Tor without the sandbox, add this line to `JAVA_OPTS` in
+`/etc/default/bisq2-seed.env` and restart the service:
+
+```
+-Dapplication.network.configByTransportType.tor.sandbox.enabled=false
+```
+
+At each start the node logs the level of the sandbox, with a warning for a weaker level. An external Tor
+(`useExternalTor`) runs without the sandbox of the node.
+
 ### Part 3: Finalize install
 
 After the contents of `/etc/default/bisq2-seed.env` have been set, we can start the service:

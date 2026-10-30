@@ -272,7 +272,8 @@ public class ApiService implements Service {
                 resourceConfig,
                 webSocketService,
                 sessionAuthenticationService,
-                tlsContextService);
+                tlsContextService,
+                apiAccessTransportService);
     }
 
     @Override
@@ -295,8 +296,10 @@ public class ApiService implements Service {
         setState(State.STARTING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
-        // REST API and Websocket are handled inside httpServerBootstrapService
-        futures.add(httpServerBootstrapService.initialize());
+        // REST API and Websocket are handled inside httpServerBootstrapService. With the TOR transport the server
+        // starts once the Tor transport has initialized, because it listens where that Tor connects.
+        futures.add(apiAccessTransportService.awaitTransport()
+                .thenCompose(ready -> httpServerBootstrapService.initialize()));
         futures.add(alertNotificationsService.initialize());
 
         futures.add(apiAccessTransportService.initialize());

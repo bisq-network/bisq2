@@ -1,3 +1,4 @@
+import bisq.gradle.common.getPlatform
 import java.util.Properties
 
 plugins {
@@ -12,7 +13,10 @@ val torGradleProperties = Properties().apply {
     rootProject.file("tor/gradle.properties").inputStream().use { load(it) }
 }
 
-val torVersion: String? = torGradleProperties.getProperty("tor.version")
+// The Tor Browser release whose expert bundle the Tor build packages for this platform: tor.version, unless the platform
+// takes the bundle of another release, as Linux ARM64 takes an alpha release
+val torVersion: String? = torGradleProperties.getProperty("tor.bundleVersion.${getPlatform().platformName}")
+    ?: torGradleProperties.getProperty("tor.version")
 if (torVersion == null) {
     throw GradleException("Tor version is not defined in tor/gradle.properties")
 }

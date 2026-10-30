@@ -20,6 +20,7 @@ package bisq.api;
 import bisq.api.access.filter.SingleHandshakeWebSocketFilter;
 import bisq.api.access.filter.WebSocketFilterAddOn;
 import bisq.api.access.filter.authn.SessionAuthenticationService;
+import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContext;
 import bisq.api.access.transport.TlsContextService;
 import bisq.api.rest_api.util.StaticFileHandler;
@@ -70,6 +71,7 @@ public class HttpServerBootstrapService implements Service {
     private final Optional<WebSocketService> webSocketService;
     private final SessionAuthenticationService sessionAuthenticationService;
     private final TlsContextService tlsContextService;
+    private final ApiAccessTransportService apiAccessTransportService;
 
     private Optional<HttpServer> httpServer = Optional.empty();
     private final Observable<String> errorMessage = new Observable<>();
@@ -79,13 +81,15 @@ public class HttpServerBootstrapService implements Service {
                                       ResourceConfig resourceConfig,
                                       Optional<WebSocketService> webSocketService,
                                       SessionAuthenticationService sessionAuthenticationService,
-                                      TlsContextService tlsContextService
+                                      TlsContextService tlsContextService,
+                                      ApiAccessTransportService apiAccessTransportService
     ) {
         this.apiConfig = apiConfig;
         this.resourceConfig = resourceConfig;
         this.webSocketService = webSocketService;
         this.sessionAuthenticationService = sessionAuthenticationService;
         this.tlsContextService = tlsContextService;
+        this.apiAccessTransportService = apiAccessTransportService;
     }
 
     @Override
@@ -97,9 +101,15 @@ public class HttpServerBootstrapService implements Service {
 
         setState(State.STARTING);
 
-        String bindHost = apiConfig.getBindHost();
+        String bindHost = apiAccessTransportService.getServerBindHost();
 
-        if (ApiConfig.isLoopbackHost(bindHost) && !apiConfig.useTor()) {
+        if (apiConfig.useTor()) {
+            if (!bindHost.equals(apiConfig.getBindHost())) {
+                log.info("The API is reached over its onion service, so the server listens on {}, where Tor " +
+                        "connects. The configured bind host {} applies only to the CLEAR transport.",
+                        bindHost, apiConfig.getBindHost());
+            }
+        } else if (ApiConfig.isLoopbackHost(bindHost)) {
             log.warn("NETWORK: Bind host is set to {} (loopback). " +
                     "In clearnet mode this will only be reachable from emulators on the same machine. " +
                     "To allow real devices on your LAN, set bind.host to your LAN IP " +

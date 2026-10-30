@@ -27,7 +27,8 @@ connections.
 
 Tor puts a new stream on an existing circuit only if its isolation rules allow it. The SOCKS port
 flag `IsolateSOCKSAuth` adds this rule: two streams with different SOCKS credentials never share a
-circuit. Tor turns this flag on by default, and Bisq does not change it.
+circuit. Tor turns this flag on by default. Bisq does not change it, and it refuses an external Tor
+which turns it off for the SOCKS port that Bisq uses (see "Rules for the SOCKS port").
 
 The flag only compares credentials. It does not create them. If two streams arrive with the same
 credentials, Tor may put them on the same circuit. To keep two connections on different circuits,
@@ -63,6 +64,21 @@ These rules apply to P2P connections and to HTTP connections.
 3. Bisq sends the target host as a domain name, and Tor resolves it. Bisq never resolves an onion
    address or the host of an HTTP request locally.
 4. Bisq rejects the connection if the proxy reports an error or sends an invalid reply.
+
+## Rules for the SOCKS port
+
+1. The Tor which the node starts has one SOCKS listener on `127.0.0.1` with the default flags,
+   which include `IsolateSOCKSAuth`. The node ignores `torrc` overrides of `SocksPort`, also in the
+   hidden form `__SocksPort`.
+2. With an external Tor, the node reads the `SocksPort` and `__SocksPort` entries of its
+   configuration once it knows the SOCKS port which it uses. The start fails if an entry which may
+   have opened that port turns the flag off with `NoIsolateSOCKSAuth`. An entry may have opened the
+   port if it names that port or `auto`, whose port Tor chooses. Of `IsolateSOCKSAuth` and
+   `NoIsolateSOCKSAuth`, the last one of the entry counts, in any letter case, as Tor reads them.
+   Without any entry, Tor opens its default SOCKS port, which isolates. The error names the entry
+   and asks the user to remove `NoIsolateSOCKSAuth`.
+3. If the control port of the external Tor does not report its configuration, as onion-grater on
+   Whonix does not, the node logs that it could not check the SOCKS port and starts.
 
 ## Why separate circuits are needed
 
@@ -125,9 +141,10 @@ Separate circuits prevent the attacks above. They do not remove every way to lin
 - **More circuits:** When several nodes of one user connect to the same peer, each node needs its
   own circuit to that peer. Users with several profiles therefore create more circuits. Each HTTP
   connection also needs its own circuit.
-- **Configuration:** The SOCKS port flag `NoIsolateSOCKSAuth` disables this protection. It can be
-  set in the configuration of an external Tor. The Tor library ignores a `torrc` override of
-  `SocksPort` for the embedded Tor, so the override cannot set it there.
+- **Configuration of an external Tor:** The check of the SOCKS port reads the configuration which
+  the external Tor reports. A Tor which reports a false configuration, or a filter in front of Tor
+  which does not report it, such as onion-grater on Whonix, is not checked (see "Rules for the
+  SOCKS port").
 
 ## Compatibility and connection failures
 
@@ -139,6 +156,9 @@ before.
 Tor accepts username and password authentication. Bisq offers only this method. A proxy in front of
 an external Tor that accepts only connections without authentication rejects Bisq's connections.
 In earlier versions, such a proxy worked.
+
+An external Tor whose SOCKS port turns `IsolateSOCKSAuth` off no longer starts. Earlier versions
+used it, and the connections of all nodes could share circuits.
 
 ### Timeouts
 

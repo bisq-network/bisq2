@@ -8,11 +8,16 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
+import bisq.network.tor.process.TorDirectories;
+import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
+import com.google.common.annotations.VisibleForTesting;
+import com.google.common.base.Throwables;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -20,10 +25,15 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -67,6 +77,12 @@ public class TorTransportService implements TransportService {
             this.torTransportConfig = torTransportConfig;
         }
     }
+
+    // The directory of the embedded Tor below the data directory of the application
+    public static final String TOR_DIR_NAME = "tor";
+    // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
+    // for (tor/README.md, the levels of the sandbox). Its weaker levels have other names.
+    private static final String BASE_SANDBOX_LEVEL = "base";
 
     private static TorService torService;
 
@@ -162,9 +178,9 @@ public class TorTransportService implements TransportService {
     }
 
     /**
-     * @return the version which the running Tor reports. On Linux it is the tor of the system, and with an external
-     * Tor the Tor of the user, so it can differ from the Tor of the bundle. Empty before the transport has
-     * initialized and when an external Tor does not tell its version.
+     * @return the version which the running Tor reports. With an external Tor it is the Tor of the user, so it can
+     * differ from the Tor of the bundle. Empty before the transport has initialized and when an external Tor does not
+     * tell its version.
      */
     public Optional<String> getTorVersion() {
         return torService.getTorVersion();
@@ -172,6 +188,72 @@ public class TorTransportService implements TransportService {
 
     public CompletableFuture<String> publishOnionService(int localPort, int onionServicePort, TorKeyPair torKeyPair) {
         return torService.publishOnionService(localPort, onionServicePort, toOnionServiceKey(torKeyPair));
+    }
+
+    /**
+     * @return the address on which a server which {@link #publishOnionService} publishes has to listen, because Tor,
+     * or the relay of the sandbox in front of Tor, connects there. It belongs to the running Tor, so it is known once
+     * the transport has initialized.
+     */
+    public InetAddress getOnionServiceBindAddress() {
+        return torService.getOnionServiceBindAddress();
+    }
+
+    /**
+     * @return the log of the embedded Tor of the application with this data directory: Tor logs to its standard
+     * output, which the Tor library writes to this file. The Tor library names it.
+     */
+    public static Path getTorLogPath(Path appDataDirPath) {
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getStdoutLogPath();
+    }
+
+    /**
+     * @return the earlier log of the embedded Tor of the application with this data directory, which the Tor library
+     * moves aside when the log exceeds its size limit. The Tor library names it.
+     */
+    public static Path getRotatedTorLogPath(Path appDataDirPath) {
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedStdoutLogPath();
+    }
+
+    /**
+     * @return what the sandbox of the running Tor cannot do on this system. Empty while Tor runs in the full sandbox,
+     * and without the sandbox: when the configuration turns it off, with an external Tor, and before the Tor of the
+     * start answers on its control port.
+     */
+    public Set<TorSandboxWeakness> getSandboxWeaknesses() {
+        return toSandboxWeaknesses(torService.getSandboxStatus());
+    }
+
+    @VisibleForTesting
+    static Set<TorSandboxWeakness> toSandboxWeaknesses(TorSandboxStatus sandboxStatus) {
+        if (!sandboxStatus.isSandboxed()) {
+            return Set.of();
+        }
+        Set<TorSandboxWeakness> weaknesses = EnumSet.noneOf(TorSandboxWeakness.class);
+        if (sandboxStatus.isHostNetwork()) {
+            // The base level gives Tor a network of its own, unless the pluggable transports of the bridges need the
+            // network of the host. A weaker level takes the network of the host where the system cannot give one.
+            weaknesses.add(BASE_SANDBOX_LEVEL.equals(sandboxStatus.getLevel()) ?
+                    TorSandboxWeakness.HOST_NETWORK_FOR_TRANSPORTS :
+                    TorSandboxWeakness.HOST_NETWORK_OF_SYSTEM);
+        }
+        if (sandboxStatus.isSignalsNotIsolated()) {
+            weaknesses.add(TorSandboxWeakness.SIGNALS_NOT_ISOLATED);
+        }
+        return Collections.unmodifiableSet(weaknesses);
+    }
+
+    /**
+     * @return the pluggable transports of the configured bridges, if Tor did not start because the configuration of
+     * its sandbox does not let Tor start them. The user can then allow them, remove the bridges or turn the sandbox
+     * off, which the generic message of the refusal does not say in the terms of Bisq 2.
+     */
+    public static Optional<List<String>> findPluggableTransportsNotAllowed(Throwable startFailure) {
+        return Throwables.getCausalChain(startFailure).stream()
+                .filter(PluggableTransportsNotAllowedException.class::isInstance)
+                .map(PluggableTransportsNotAllowedException.class::cast)
+                .map(PluggableTransportsNotAllowedException::getTransportNames)
+                .findFirst();
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {

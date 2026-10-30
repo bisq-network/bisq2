@@ -42,6 +42,7 @@ import bisq.persistence.PersistenceService;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -124,7 +125,7 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(appDataDirPath.resolve("tor").resolve("debug.log"));
+        PlatformUtils.open(TorTransportService.getTorLogPath(appDataDirPath));
     }
 
     void onOpenDataDir() {
@@ -160,14 +161,7 @@ public class ResourcesController implements Controller {
                             return;
                         }
                         try {
-                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
-                            // We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
-                            // the file descriptor, thus reading the file for the copy would release our own lock and disable the
-                            // single instance protection for the rest of the session.
-                            FileMutatorUtils.copyDirectory(appDataDirPath,
-                                    destinationPath,
-                                    Set.of("log"),
-                                    Set.of(InstanceLock.LOCK_FILE_NAME));
+                            copyDataDirectory(appDataDirPath, destinationPath);
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();
@@ -224,6 +218,32 @@ public class ResourcesController implements Controller {
 
     void onOpenCommunity() {
         Browser.open("https://matrix.to/#/%23bisq:bitcoin.kyoto");
+    }
+
+    /**
+     * Copies the data directory for a backup.
+     * <p>
+     * Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
+     * The rotated log of Tor (tor-stdout.log.1) has another extension, so it is excluded by the name which the Tor
+     * library gives it.
+     * We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
+     * the file descriptor, thus reading the file for the copy would release our own lock and disable the
+     * single instance protection for the rest of the session.
+     * The data directory of Tor holds only Tor's cache. Tor runs in a sandbox and can write there, so
+     * Bisq must not open its files (a link or a named pipe there could make the copy read other files
+     * or block).
+     * The node installs the Tor bundle (with its version file) and sandy again at its next start of Tor when they
+     * are missing, so the backup leaves them out. It keeps external_tor.config, which can hold the password of an
+     * external Tor (ControlPassword) in plain text.
+     */
+    @VisibleForTesting
+    static void copyDataDirectory(Path appDataDirPath, Path destinationPath) throws IOException {
+        FileMutatorUtils.copyDirectory(appDataDirPath,
+                destinationPath,
+                Set.of("log"),
+                Set.of(InstanceLock.LOCK_FILE_NAME,
+                        TorTransportService.getRotatedTorLogPath(appDataDirPath).getFileName().toString()),
+                Set.of(Paths.get("tor", "data"), Paths.get("tor", "bin"), Paths.get("tor", "sandy")));
     }
 
     private static String getLocalVersionDetails(Optional<String> runningTorVersion) {

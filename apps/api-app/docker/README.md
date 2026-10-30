@@ -46,14 +46,26 @@ docker exec <container> cat /data/pairing_qr_code.txt
 
 Do not paste the content of this file into bug reports.
 
-On Linux bisq2 runs the system `tor` binary, so the image installs it from the Tor
-Project's apt repository rather than Ubuntu's (which lags Tor security releases) and
-the build fails if the installed version is older than the `TOR_MIN_VERSION` build
-arg. Check what an image ships with:
+As on every system, the node runs the Tor of the Tor expert bundle which the build
+packages into the api-app distribution: on amd64 the stable bundle of `tor.version`, on
+arm64 the bundle of the alpha release `tor.bundleVersion.linux_arm64`, because no stable
+release has one for Linux ARM64 (both in `tor/gradle.properties`). The image installs no
+`tor` package. At its start the node installs the bundle into `/data/tor/bin` and runs
+Tor and sandy from `/data/tor`, so `/data` must not be mounted with `noexec`. The bundled
+tor needs the glibc and `libz.so.1` of the base image; the image build fails if the base
+image lacks `libz.so.1`. Each start logs the version of the running Tor:
 
 ```bash
-docker run --rm --entrypoint tor bisq2-api --version
+docker logs <container> 2>&1 | grep 'runs with the binary'
 ```
+
+The node starts this Tor in the sandbox of sandy (`sandbox.enabled=true` in `api_app.conf`; the rules are in
+`docs/specifications/network/tor-startup.md`, section "Sandbox"). sandy refuses to run as root or with capabilities,
+and Linux without Landlock cannot enforce the sandbox; in a container, its seccomp profile and capabilities decide
+too. If the sandbox cannot run, the node does not start Tor and logs the reason; it never starts Tor without the
+sandbox by itself. To run Tor without the sandbox, pass
+`-e JAVA_OPTS="-Dapplication.network.configByTransportType.tor.sandbox.enabled=false"`. An external Tor
+(`TOR_CONTROL_PORT`, below) runs without the sandbox of the node.
 
 > Always pass a named `-v <name>:/data` mount (as above). The image declares
 > `VOLUME /data`, so running without `-v` creates a fresh **anonymous** volume on
@@ -110,7 +122,7 @@ docker run -d --name bisq2-web --network container:bisq2-api -v bisq2-api-data:/
 | `JAVA_OPTS` | — | Extra `-Dapplication.*` overrides, appended. |
 | `TOR_CONTROL_PORT` | — | If set, use an external Tor instead of the bundled one (see below). |
 | `TOR_CONTROL_HOST` | `127.0.0.1` | External Tor control host. |
-| `TOR_SOCKS_PORT` / `TOR_SOCKS_HOST` | — / `127.0.0.1` | External Tor SOCKS endpoint. |
+| `TOR_SOCKS_PORT` / `TOR_SOCKS_HOST` | not set | Not used. Bisq uses the SOCKS port which the external Tor reports, on `TOR_CONTROL_HOST`. |
 | `TOR_COOKIE_AUTH_FILE` | — | Path to the external Tor control auth cookie. |
 
 > **Security:** `JAVA_OPTS` and the `TOR_*` variables are a host-operator trust boundary —
@@ -122,12 +134,15 @@ docker run -d --name bisq2-web --network container:bisq2-api -v bisq2-api-data:/
 Setting `TOR_CONTROL_PORT` makes the entrypoint write `${BISQ_DATA_DIR}/tor/external_tor.config`
 and enable external-Tor mode (`TOR_SKIP_LAUNCH=1`).
 
-> FIXME(external-tor): bisq2's external-Tor mode talks to Tor's **control port** (with
-> cookie auth) and discovers the SOCKS port from it — it does not just consume a SOCKS
-> port. `TorSocksProxyFactory` also hardcodes `127.0.0.1`, so the external Tor must be
-> reachable on the container's loopback. Reusing a host/shared Tor needs its control
-> port + auth cookie exposed on loopback inside the container; this is wired up when
-> integrating with the target self-hosting platform's bundled Tor.
+bisq2's external-Tor mode talks to Tor's **control port** on `TOR_CONTROL_HOST`. With
+`TOR_COOKIE_AUTH_FILE` it authenticates with SAFECOOKIE, in which Tor proves that it knows the
+cookie before Bisq sends anything. It uses the SOCKS port which that Tor reports, on
+`TOR_CONTROL_HOST` as well. If the external Tor cannot be used, the start fails; the bundled
+Tor is not started instead.
+
+> FIXME(external-tor): Tor publishes the onion services of Bisq with targets on `127.0.0.1` of
+> its own host, so a Tor in another container reaches them only in a shared network namespace.
+> This is wired up when integrating with the target self-hosting platform's bundled Tor.
 
 ## Publishing the images (interim — manual)
 

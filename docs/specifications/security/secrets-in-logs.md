@@ -66,6 +66,8 @@ payment account data. On a node without the API, the EC private keys were not in
    onion addresses of the identities of the node and of the peers which it looks up. In a shared log at info level,
    they would show which user profiles belong to the same user, although each profile has its own onion service so
    that its profiles cannot be linked.
+6. The node does not log bridge lines (see `docs/specifications/network/tor-startup.md`). The log which Tor writes
+   itself is outside these rules; that specification describes what it contains.
 
 ## Reasons
 
