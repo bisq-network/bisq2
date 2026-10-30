@@ -126,6 +126,9 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Written from the alert-set observer thread, read from trade calls on other threads
     private volatile boolean haltTrading;
     private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
+    // Two changes of the alerts can run at the same time. The lock lets each change compare the restrictions before and
+    // after its own update, so that no change misses the end of a restriction.
+    private final Object tradeRestrictionsLock = new Object();
     @Nullable
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
@@ -653,11 +656,31 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         });
     }
 
+    // When a restriction of trading ends, we apply the queued events of the stored trades, which we did not apply at
+    // startup during the restriction (rule 4 of docs/specifications/trade/queued-trade-messages.md)
     private void updateTradeRestrictions() {
-        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
-                alertService.getAuthorizedAlertDataSet().stream(), appType);
-        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
-                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        boolean hasRestrictionEnded;
+        synchronized (tradeRestrictionsLock) {
+            boolean wasTradingRestricted = isTradingRestricted();
+            haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                    alertService.getAuthorizedAlertDataSet().stream(), appType);
+            minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                    alertService.getAuthorizedAlertDataSet().stream(), appType);
+            hasRestrictionEnded = wasTradingRestricted && !isTradingRestricted();
+        }
+        if (hasRestrictionEnded) {
+            handleQueuedEventsOfStoredTrades();
+        }
+    }
+
+    private boolean isTradingRestricted() {
+        try {
+            verifyTradingNotOnHalt();
+            verifyMinVersionForTrading();
+            return false;
+        } catch (TradeRestrictedException e) {
+            return true;
+        }
     }
 
     private void verifyTradingNotOnHalt() {
