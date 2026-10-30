@@ -1488,14 +1488,20 @@ tasks.register("verifyGithubActionsSecurity") {
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val stepStartRegex = Regex("""^(\s*)-\s+[A-Za-z_][A-Za-z0-9_-]*\s*:.*$""")
 
+        // Compared by version numbers: 21.0.13+9-LTS and 21.0.13.0.3+1-LTS are both builds of the update 21.0.13
+        fun isBuildOf(runtimeVersion: String, javaVersion: String): Boolean = runCatching {
+            val updateNumbers = Runtime.Version.parse(javaVersion).version()
+            Runtime.Version.parse(runtimeVersion).version().take(updateNumbers.size) == updateNumbers
+        }.getOrDefault(false)
+
         if (expectedJavaVersion.isNullOrEmpty()) {
             violations += "Missing releaseBuild.javaVersion in gradle.properties"
         }
         if (expectedJavaRuntimeVersion.isNullOrEmpty()) {
             violations += "Missing releaseBuild.javaRuntimeVersion in gradle.properties"
-        } else if (expectedJavaVersion != null &&
-            !expectedJavaBuildVersion.orEmpty().startsWith("$expectedJavaVersion+")) {
-            violations += "releaseBuild.javaRuntimeVersion does not match releaseBuild.javaVersion"
+        } else if (!expectedJavaVersion.isNullOrEmpty() && !isBuildOf(expectedJavaRuntimeVersion, expectedJavaVersion)) {
+            violations += "releaseBuild.javaRuntimeVersion $expectedJavaRuntimeVersion is no build of " +
+                "releaseBuild.javaVersion $expectedJavaVersion"
         }
 
         fun cleanYamlScalar(value: String): String {
