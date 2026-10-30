@@ -11,6 +11,7 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     protected final T applicationService;
     protected final List<Runnable> shutdownHandlers = new ArrayList<>();
     protected volatile boolean shutDownStarted;
+    private volatile int exitCode = PlatformUtils.EXIT_SUCCESS;
 
     public Executable(String[] args) {
         setDefaultUncaughtExceptionHandler();
@@ -71,6 +72,14 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         shutdown(true);
     }
 
+    /**
+     * Shuts down and exits with {@link PlatformUtils#EXIT_FAILURE}, so that a process supervisor can restart us.
+     */
+    protected void shutdownWithFailure() {
+        exitCode = PlatformUtils.EXIT_FAILURE;
+        shutdown(true);
+    }
+
     public void shutdown(boolean callExit) {
         if (shutDownStarted) {
             log.info("shutDown has already started");
@@ -80,8 +89,12 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         try {
             notifyAboutShutdown();
             if (applicationService != null) {
+                // whenComplete instead of thenRun: if the shutdown fails, we must still exit and not hang.
                 applicationService.shutdown()
-                        .thenRun(() -> {
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                log.error("Error at applicationService shutdown", throwable);
+                            }
                             shutdownHandlers.forEach(shutdownHandler -> {
                                 try {
                                     shutdownHandler.run();
@@ -117,8 +130,8 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
     }
 
     protected void exitJvm() {
-        log.info("Exiting JVM");
-        System.exit(PlatformUtils.EXIT_SUCCESS);
+        log.info("Exiting JVM with exit code {}", exitCode);
+        System.exit(exitCode);
     }
 
     @Override
