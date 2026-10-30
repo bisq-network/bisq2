@@ -164,8 +164,14 @@ public abstract class HttpRequestService<T, R> implements Service {
 
         return httpClient.map(BaseHttpClient::shutdown)
                 .orElse(CompletableFuture.completedFuture(true))
-                .thenApply(result -> {
+                // The executor is shut down also when the client fails to shut down, for example when the shutdown
+                // of TorHttpClient times out.
+                .handle((result, throwable) -> {
                     ExecutorFactory.shutdownAndAwaitTermination(executorService, 100);
+                    if (throwable != null) {
+                        log.warn("Shutdown of the HTTP client failed", throwable);
+                        return false;
+                    }
                     return result;
                 });
     }

@@ -73,7 +73,8 @@ public enum OS {
     }
 
     public static boolean isWindows(String osName) {
-        return osName.contains("win");
+        // Not contains("win"): "darwin" contains it too
+        return osName.startsWith("windows");
     }
 
     public static boolean isAndroid(String osName) {

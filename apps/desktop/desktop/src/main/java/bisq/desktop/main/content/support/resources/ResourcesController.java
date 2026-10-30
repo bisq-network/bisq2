@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.support.resources;
 
 import bisq.application.InstanceLock;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.threading.ExecutorFactory;
@@ -34,6 +36,8 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
+import bisq.network.NetworkService;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.presentation.formatters.TimeFormatter;
@@ -49,6 +53,7 @@ import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
@@ -67,7 +72,9 @@ public class ResourcesController implements Controller {
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
     private final MuSigService muSigService;
+    private final NetworkService networkService;
     private Pin backupLocationPin;
+    private Optional<Pin> torTransportStatePin = Optional.empty();
 
     public ResourcesController(ServiceProvider serviceProvider) {
         appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
@@ -75,6 +82,7 @@ public class ResourcesController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
         muSigService = serviceProvider.getMuSigService();
+        networkService = serviceProvider.getNetworkService();
 
         model = new ResourcesModel();
         view = new ResourcesView(model, this);
@@ -89,6 +97,14 @@ public class ResourcesController implements Controller {
 
         model.setMusigEnabled(muSigService.isActivated());
 
+        model.getLocalVersionDetails().set(getLocalVersionDetails(Optional.empty()));
+        // The running Tor tells its version once the Tor transport has initialized, which can be after this view opens
+        torTransportStatePin = networkService.findServiceNode(TransportType.TOR)
+                .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
+                .map(torTransportService -> torTransportService.getTransportState().addObserver(transportState ->
+                        UIThread.run(() -> model.getLocalVersionDetails()
+                                .set(getLocalVersionDetails(torTransportService.getTorVersion())))));
+
         fillBackupSnapshots();
     }
 
@@ -97,6 +113,8 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDefault().unbind();
         model.getBackupButtonDisabled().unbind();
         backupLocationPin.unbind();
+        torTransportStatePin.ifPresent(Pin::unbind);
+        torTransportStatePin = Optional.empty();
 
         model.getBackupSnapshotStoreItems().clear();
     }
@@ -206,6 +224,25 @@ public class ResourcesController implements Controller {
 
     void onOpenCommunity() {
         Browser.open("https://matrix.to/#/%23bisq:bitcoin.kyoto");
+    }
+
+    private static String getLocalVersionDetails(Optional<String> runningTorVersion) {
+        String versionString = ApplicationVersion.getVersion() != null ?
+                ApplicationVersion.getVersion().getVersionAsString() : Res.get("data.na");
+        String commitHash = ApplicationVersion.getBuildCommitShortHash() != null ?
+                ApplicationVersion.getBuildCommitShortHash() : Res.get("data.na");
+        if (runningTorVersion.isPresent()) {
+            return Res.get("support.resources.localVersion.details.runningTor",
+                    versionString, commitHash, runningTorVersion.get());
+        }
+
+        // Without the version of the running Tor, the version of the Tor bundle of this build
+        String torBinaryVersion = ApplicationVersion.getTorBinaryVersionString() != null ?
+                ApplicationVersion.getTorBinaryVersionString() : Res.get("data.na");
+        String torVersion = ApplicationVersion.getTorVersionString() != null ?
+                ApplicationVersion.getTorVersionString() : Res.get("data.na");
+        return Res.get("support.resources.localVersion.details",
+                versionString, commitHash, torBinaryVersion, torVersion);
     }
 
     private void fillBackupSnapshots() {
