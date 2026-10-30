@@ -51,6 +51,28 @@ jobs:
 
       # Tor has its own dependency verification metadata. Run it even if another module fails.
       - name: Build Tor
+        id: build_tor
+        env:
+          # Inherited by the test JVM, so JUnit records threads before interrupting a timed-out test.
+          JAVA_TOOL_OPTIONS: -Djunit.jupiter.execution.timeout.threaddump.enabled=true
         if: ${{ success() || steps.build_composite.outcome == 'failure' }}
         shell: bash
         run: ./gradlew -p tor --continue build
+
+      - name: Print failed Tor test reports
+        if: ${{ always() && steps.build_tor.outcome == 'failure' }}
+        shell: bash
+        run: |
+          python - <<'PYTHON'
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
+
+          for path in sorted(Path("tor").glob("*/build/test-results/*/TEST-*.xml")):
+              root = ET.parse(path).getroot()
+              if root.find(".//failure") is None and root.find(".//error") is None:
+                  continue
+              print(f"Failed test report: {path}", flush=True)
+              for element in root.iter():
+                  if element.tag in {"failure", "error", "system-out", "system-err"}:
+                      print(element.text or "", flush=True)
+          PYTHON
