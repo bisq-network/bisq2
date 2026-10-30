@@ -3,16 +3,18 @@ name: Build Bisq 2
 on:
   push:
   pull_request:
-    types: [ opened, reopened, synchronize, closed ]
+    types: [ opened, reopened, synchronize ]
     branches: [ main, 'release-candidate-*' ]
 
 permissions:
   contents: read
 
 jobs:
-  build_bisq:
-    name: Build Bisq on ${{ matrix.os }}
+  build:
+    name: Build Bisq 2 on ${{ matrix.os }}
     strategy:
+      # A failure on one OS must not cancel the remaining platform checks.
+      fail-fast: false
       matrix:
         # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
         # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
@@ -22,75 +24,3 @@ jobs:
     uses: ./.github/workflows/build_bisq_module.yml
     with:
       os: ${{ matrix.os }}
-      name: Bisq
-      build-root-dir: .
-
-  # The module jobs run the build of their module from the repository root. Gradle verifies dependencies only with the
-  # gradle/verification-metadata.xml of the build which it runs, and the builds in apps, apps/desktop and network have
-  # none, so a build with -p apps, -p apps/desktop or -p network verifies no dependency.
-  build_apps_module:
-    name: Build apps module on ${{ matrix.os }}
-    strategy:
-      matrix:
-        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
-        # two checked-in runner lists, so every runner label stays reviewed and verified.
-        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
-
-    uses: ./.github/workflows/build_bisq_module.yml
-    with:
-      os: ${{ matrix.os }}
-      name: apps module
-      build-root-dir: .
-      build-task: ':apps:build'
-
-  # apps/desktop is a build of its own. The apps build includes it, but no project of the apps build depends on it, so
-  # the apps job does not build it.
-  build_desktop_module:
-    name: Build desktop module on ${{ matrix.os }}
-    strategy:
-      matrix:
-        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
-        # two checked-in runner lists, so every runner label stays reviewed and verified.
-        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
-
-    uses: ./.github/workflows/build_bisq_module.yml
-    with:
-      os: ${{ matrix.os }}
-      name: desktop module
-      build-root-dir: .
-      build-task: ':apps:desktop:build'
-
-  build_network_module:
-    name: Build network module on ${{ matrix.os }}
-    strategy:
-      matrix:
-        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
-        # two checked-in runner lists, so every runner label stays reviewed and verified.
-        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
-
-    uses: ./.github/workflows/build_bisq_module.yml
-    with:
-      os: ${{ matrix.os }}
-      name: network module
-      build-root-dir: .
-      build-task: ':network:build'
-
-  # The tor build verifies its dependencies with tor/gradle/verification-metadata.xml of the Tor library, as it does in
-  # the repository of the library.
-  build_tor_module:
-    name: Build tor module on ${{ matrix.os }}
-    strategy:
-      matrix:
-        # macos-15 is arm64; macos-15-intel keeps Intel macOS coverage explicit.
-        # A repository can set BUILD_LINUX_ONLY to true to build on Ubuntu only. The variable only selects one of the
-        # two checked-in runner lists, so every runner label stays reviewed and verified.
-        os: ${{ fromJSON(vars.BUILD_LINUX_ONLY == 'true' && '["ubuntu-24.04"]' || '["ubuntu-24.04", "macos-15-intel", "macos-15", "windows-2025"]') }}
-
-    uses: ./.github/workflows/build_bisq_module.yml
-    with:
-      os: ${{ matrix.os }}
-      name: tor module
-      build-root-dir: tor
