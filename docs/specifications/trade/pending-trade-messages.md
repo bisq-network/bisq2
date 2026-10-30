@@ -46,8 +46,10 @@ which the protocol of the trade cannot process yet is a queued trade message (se
 
 6. A received chat message creates a Bisq Easy trade channel only if it carries an offer and the node has a trade with
    its trade ID whose peer is the sender of the message and whose own user profile is the receiver of the message.
-   Otherwise the message is a pending chat message (rule 4). When the node creates a trade, or loads it at startup, it
-   processes the pending chat messages of that trade again.
+   Otherwise the message is a pending chat message (rule 4). When the node creates a trade or a trade channel, or loads
+   a trade at startup, it processes the pending chat messages of that trade again. A chat message whose trade or trade
+   channel the node creates while the message becomes pending still reaches the channel. A received chat message does
+   not make the node process other pending chat messages.
 
 ## Reasons
 
@@ -88,6 +90,14 @@ which the protocol of the trade cannot process yet is a queued trade message (se
   trade, and the trade service fails the trade with a report to the peer. The report would tell the peer that both
   profiles are hosted on one node (see rule 5 of [Sender of a trade message](trade-message-sender.md) for trade
   messages).
+- Rule 6, at the same time: the node receives a chat message in another thread than the one which creates the trade
+  or the channel. The creator processes the pending chat messages of the trade right after it added the trade or the
+  channel. A message which found neither, and which became pending after that, could stay pending for good. If it is
+  the taker's first chat message, the maker gets no trade channel. So the node looks for the channel and checks the
+  trade again after it kept the message as pending.
+- Rule 6, other pending chat messages: a pending chat message can reach a channel only when its trade or its channel
+  is created, and the node processes the pending chat messages of the trade at that step. Processing all pending chat
+  messages after each received chat message would repeat the work for up to 100 messages each time.
 - Rule 3: trade messages carry private data of the traders: the payment account data of the seller, the Bitcoin
   address of the buyer, a transaction ID, or a payment proof. Users share their log files with support. A log file
   must not reveal the trade data of a trade peer.
