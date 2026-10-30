@@ -127,9 +127,15 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyRejectTradeEventHandler.class)
                 .to(REJECTED);
 
-        // Peer rejected trade
+        // Peer rejected trade. The seller can send its account data before it receives the take offer response and
+        // reject after that, so its reject can arrive in every state before we confirm the fiat payment. After that the
+        // reject stays queued, so we can still request mediation (docs/specifications/trade/bisq-easy/peer-reject.md).
         fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
-                MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
+                MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA_,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyRejectTradeMessage.class)
                 .run(BisqEasyRejectTradeMessageHandler.class)
                 .to(PEER_REJECTED);
