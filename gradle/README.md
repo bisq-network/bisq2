@@ -110,6 +110,8 @@ The metadata turns the key servers off (`<key-servers enabled="false"/>`). Gradl
 the keys in `gradle/verification-keyring.keys` and never waits for a key server; a lookup at `pgp.mit.edu` once took
 more than 20 minutes. A key which the keyring lacks fails the verification instead of being downloaded, so a
 successful `resolveAndVerifyDependencies` shows that the keyring has every key which the builds need.
+`verifyDependencySignaturePolicy` requires exactly one such element: Gradle applies each `<key-servers>` element in
+order, so a second element could turn the key servers on again.
 
 Runs which download keys need the key servers:
 

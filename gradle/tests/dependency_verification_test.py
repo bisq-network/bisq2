@@ -281,14 +281,15 @@ class DependencyVerificationTest(unittest.TestCase):
     def test_metadata_which_does_not_turn_the_key_servers_off_fails_policy(self):
         # Builds take every key from the committed keyring. Gradle drops the element when it writes the metadata with
         # the key servers on, so a refresh which does not put it back has to fail.
+        # Gradle applies each element in order, so a later element can turn the key servers on again.
         self.run_gradle("check")
-        for enabled in (None, "true"):
-            with self.subTest(enabled=enabled):
+        for enabled_values in ((), ("true",), ("false", "true")):
+            with self.subTest(enabled=enabled_values):
                 tree = ET.parse(self.metadata)
                 configuration = tree.getroot().find("configuration")
                 for key_servers in configuration.findall("key-servers"):
                     configuration.remove(key_servers)
-                if enabled is not None:
+                for enabled in enabled_values:
                     ET.SubElement(configuration, "key-servers", enabled=enabled)
                 tree.write(self.metadata, encoding="utf-8", xml_declaration=True)
                 output = self.run_gradle("check", success=False)
