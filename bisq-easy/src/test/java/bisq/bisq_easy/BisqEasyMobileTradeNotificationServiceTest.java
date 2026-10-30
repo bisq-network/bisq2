@@ -128,6 +128,19 @@ class BisqEasyMobileTradeNotificationServiceTest {
         assertTrue(notifications.isEmpty());
     }
 
+    // A seller maker sent the account data before a restart. The Bitcoin address of the buyer arrives at startup and
+    // moves the trade to another state of the payment-information exchange, which must not notify a second time.
+    @Test
+    void loadedTradeInAPaymentInformationStateDoesNotRepeatThePaymentInformationNotification() {
+        when(trade.isSeller()).thenReturn(true);
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS);
+        trades.add(trade);
+
+        state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS);
+
+        assertTrue(notifications.isEmpty());
+    }
+
     @Test
     void secondInitializeDoesNotRepeatTheNotificationOfTheCurrentState() {
         state.set(BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA);

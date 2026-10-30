@@ -201,6 +201,12 @@ public class BisqEasyMobileTradeNotificationService implements Service {
         String tradeId = trade.getId();
         boolean isFirstEmission = tradesWithInitializedState.add(tradeId);
         if (isFirstEmission) {
+            // A trade which is loaded in a state of the payment-info exchange counts as notified for it, as after a
+            // live transition to that state. So a later transition to another such state, for example by a message
+            // which the trade service applies at startup, does not push again.
+            if (isPaymentInfoExchangedState(state)) {
+                notifiedPaymentInfo.add(tradeId);
+            }
             log.debug("Skipping initial state observation for trade {} (state={})", tradeId, state);
             return;
         }
