@@ -20,6 +20,7 @@ package bisq.bonded_roles.bonded_role;
 import bisq.bonded_roles.AuthorizedPubKeys;
 import bisq.bonded_roles.BondedRoleType;
 import bisq.bonded_roles.oracle.AuthorizedOracleNode;
+import bisq.bonded_roles.oracle.OnlyStaticOracleNodes;
 import bisq.common.encoding.Hex;
 import bisq.common.network.AddressByTransportTypeMap;
 import bisq.common.network.TransportType;
@@ -70,9 +71,12 @@ class AuthorizedOracleNodeAuthorizationTest {
     private KeyPair oracleKeyPair;
     private KeyPair identityKeyPair;
     private AuthorizedOracleNode oracleNode;
+    private boolean previousOnlyStaticOracleNodes;
 
     @BeforeEach
     void setUp() {
+        previousOnlyStaticOracleNodes = OnlyStaticOracleNodes.isEnabled();
+        OnlyStaticOracleNodes.setEnabled(false);
         StorableTypesRegistry.register(AuthorizedOracleNode.class, AuthorizedOracleNode.META_DATA);
         dataService = new DataService(new PersistenceService(tempDir));
         store = dataService.getStorageService()
@@ -111,8 +115,12 @@ class AuthorizedOracleNodeAuthorizationTest {
 
     @AfterEach
     void tearDown() {
-        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
-        dataService.shutdown();
+        try {
+            store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
+            dataService.shutdown();
+        } finally {
+            OnlyStaticOracleNodes.setEnabled(previousOnlyStaticOracleNodes);
+        }
     }
 
     @Test
@@ -162,7 +170,7 @@ class AuthorizedOracleNodeAuthorizationTest {
     void oracleNodeStaysWhileAnAuthorizedPublicationIsStored() throws GeneralSecurityException {
         AuthorizedData publication = authorize(oracleNode, oracleKeyPair);
         AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, publication, identityKeyPair);
-        store.getPersistableStore().getMap().put(request.getStorageKey(), request);
+        assertThat(store.add(request).isSuccess()).isTrue();
         authorizedBondedRolesService.onAuthorizedDataAdded(publication);
 
         authorizedBondedRolesService.onAuthorizedDataRemoved(authorize(oracleNode, KeyGeneration.generateDefaultEcKeyPair()));
