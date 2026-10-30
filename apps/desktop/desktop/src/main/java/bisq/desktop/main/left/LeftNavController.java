@@ -163,6 +163,7 @@ public class LeftNavController implements Controller {
                 }
 
                 leftNavButton.setNumNotifications(numNotifications);
+                leftNavButton.getNumMessagesBadge().getStyleClass().remove("open-trades-badge");
                 switch (notification.getChatChannelDomain()) {
                     case BISQ_EASY_OFFERBOOK:
                     case BISQ_EASY_OPEN_TRADES:
