@@ -18,8 +18,13 @@
 package bisq.persistence;
 
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.fsm.FsmModel;
+import bisq.common.fsm.SnapshotLockTimeoutException;
+import bisq.common.fsm.State;
+import bisq.common.proto.ProtoResolver;
 import bisq.persistence.backup.MaxBackupSize;
 import bisq.persistence.backup.RestoreService;
+import com.google.protobuf.Message;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -33,6 +38,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -178,5 +184,43 @@ public class PersistableStoreReaderWriterTests {
 
         // Triggers rename
         persistableStoreReaderWriter.write(timestampStore);
+    }
+
+    @Test
+    void writePropagatesSnapshotLockTimeout(@TempDir Path tempDirPath) {
+        Path storageFilePath = tempDirPath.resolve("protoFile");
+        var storeFileManager = new PersistableStoreFileManager(storageFilePath);
+        var persistableStoreReaderWriter = new PersistableStoreReaderWriter<SnapshotLockTimeoutStore>(storeFileManager, new RestoreService());
+
+        // A SnapshotLockTimeoutException must escape, like every write failure, so that the caller does not treat
+        // the skipped write cycle as a success (see RateLimitedPersistenceClient#persist).
+        assertThatThrownBy(() -> persistableStoreReaderWriter.write(new SnapshotLockTimeoutStore()))
+                .hasRootCauseInstanceOf(SnapshotLockTimeoutException.class);
+
+        // The failed cycle must not have produced a (necessarily incomplete) store file.
+        assertThat(Files.notExists(storageFilePath)).isTrue();
+    }
+
+    // Minimal store whose serialization fails like a trade store does when a live FSM transition holds the
+    // FsmModel lock past the bounded snapshot wait (see BisqEasyTradeStore#getBuilder).
+    private static final class SnapshotLockTimeoutStore implements PersistableStore<SnapshotLockTimeoutStore> {
+        @Override
+        public Message.Builder getBuilder(boolean serializeForHash) {
+            throw new SnapshotLockTimeoutException(new FsmModel(State.FsmState.ERROR), 500);
+        }
+
+        @Override
+        public SnapshotLockTimeoutStore getClone() {
+            return this;
+        }
+
+        @Override
+        public void applyPersisted(SnapshotLockTimeoutStore persisted) {
+        }
+
+        @Override
+        public ProtoResolver<PersistableStore<?>> getResolver() {
+            throw new UnsupportedOperationException("Not used in this test");
+        }
     }
 }

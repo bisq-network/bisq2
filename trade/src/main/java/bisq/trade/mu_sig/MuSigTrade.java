@@ -17,6 +17,7 @@
 
 package bisq.trade.mu_sig;
 
+import bisq.common.fsm.Event;
 import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
@@ -39,6 +40,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.Set;
 
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.DEPOSIT_TX_CONFIRMED;
 import static bisq.trade.mu_sig.protocol.MuSigTradeState.INIT;
@@ -84,8 +86,9 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                        Identity myIdentity,
                        MuSigTradeParty taker,
                        MuSigTradeParty maker,
-                       TradeLifecycleState lifecycleState) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState);
+                       TradeLifecycleState lifecycleState,
+                       Set<Event> pendingEvents) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, pendingEvents);
 
         stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
     }
@@ -124,7 +127,8 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                     Identity.fromProto(proto.getMyIdentity()),
                     TradeParty.protoToMuSigTradeParty(proto.getTaker()),
                     TradeParty.protoToMuSigTradeParty(proto.getMaker()),
-                    TradeLifecycleState.fromProto(proto.getLifecycleState()));
+                    TradeLifecycleState.fromProto(proto.getLifecycleState()),
+                    pendingEventsFromProto(proto));
             if (proto.hasErrorMessage()) {
                 trade.setErrorMessage(proto.getErrorMessage());
             }

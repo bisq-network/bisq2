@@ -74,6 +74,28 @@ public abstract class RateLimitedPersistenceClient<T extends PersistableStore<T>
         }
     }
 
+    /**
+     * Unthrottled write path: bypasses the max-write-rate gate and any in-progress write, for the rare writes
+     * that must not be silently dropped - e.g. a trade protocol reaching a final state, whose in-memory wipe of
+     * sensitive queued messages has to reach disk promptly (see {@code bisq.common.fsm.Fsm#persistOnFinalState}).
+     * Safe to submit while a throttled write is in flight: the single Persistence executor thread serializes
+     * writes, and this call clones the store at submission time, so it captures state at least as new as any
+     * write already queued ahead of it.
+     */
+    public CompletableFuture<Boolean> persistNow() {
+        lastWrite = System.currentTimeMillis();
+        dropped = false;
+        return getPersistence()
+                .persistAsync(getPersistableStore().getClone())
+                .handle((nil, throwable) -> {
+                    if (throwable != null) {
+                        // Same contract as the throttled path above: a failed write must leave a retry pending.
+                        dropped = true;
+                    }
+                    return throwable == null;
+                });
+    }
+
     protected long getMaxWriteRateInMs() {
         return 1000;
     }

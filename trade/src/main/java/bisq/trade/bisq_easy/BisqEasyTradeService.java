@@ -84,6 +84,7 @@ import bisq.user.contact_list.ContactListService;
 import bisq.user.contact_list.ContactReason;
 import bisq.user.profile.UserProfile;
 import bisq.user.profile.UserProfileService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -165,7 +166,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                                 trade.getMyself().getNetworkId().getId().equals(receiverUserProfileId))
                         .isPresent());
 
-        persistableStore.getTrades().forEach(this::createAndAddTradeProtocol);
+        // Register the alert observer before restoring trades and before subscribing: addObserver() synchronously
+        // replays the persisted authorized alert data, so haltTrading / minRequiredVersionForTrading are known both
+        // to the restore drain below, which re-applies queued events, and to the subscription, which replays the
+        // processed messages of earlier sessions (see docs/specifications/network/startup-replay.md).
+        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
+
+        persistableStore.getTrades().forEach(trade -> createAndAddTradeProtocol(trade, true));
 
         // Checks all existing channels against their trades, and later a channel which appears for an existing
         // trade. A trade which appears for an existing channel is checked when its protocol gets created.
@@ -183,10 +190,6 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
             public void onCleared() {
             }
         });
-
-        // The subscription replays the processed messages of earlier sessions, so the trade restrictions of the stored
-        // alerts must be known before it (see docs/specifications/network/startup-replay.md).
-        authorizedAlertDataSetPin = alertService.getAuthorizedAlertDataSet().addObserver(this::updateTradeRestrictions);
 
         networkService.subscribeToConfidentialMessages(this);
 
@@ -474,6 +477,10 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
 
         tradeProtocolById.remove(trade.getId());
+        // A trade closed before reaching a final state can still hold queued peer messages, which are never applied
+        // after closing but would be kept with the closed trade. Cleared after removing the protocol, so that no
+        // message handled meanwhile can queue an event again.
+        trade.clearEventQueue();
         persist();
     }
 
@@ -576,6 +583,17 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     }
 
     private BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade) {
+        return createAndAddTradeProtocol(trade, false);
+    }
+
+    // isRestoredTrade is true when the trade was just loaded from persisted data (app startup), as opposed to a
+    // trade which was just created for a brand-new offer/take-offer flow (whose event queue is always empty).
+    // For restored trades we drain the event queue once: the queue itself survives a restart (persisted on
+    // Trade), but nothing would otherwise re-attempt those pending events until some further, unrelated live
+    // transition happens to occur for that same trade - which may never happen. See bisq.common.fsm.Fsm#drainEventQueue.
+    // Package-private (rather than private) so tests can register a hand-placed trade's protocol exactly the way
+    // production code does, without duplicating this wiring.
+    BisqEasyProtocol createAndAddTradeProtocol(BisqEasyTrade trade, boolean isRestoredTrade) {
         String id = trade.getId();
         BisqEasyProtocol tradeProtocol;
         boolean isBuyer = trade.isBuyer();
@@ -599,6 +617,46 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 .ifPresent(channel -> failTradeOnChatChannelMismatch(trade, channel));
         // The taker's first chat message, which creates our trade chat channel, can be pending if it arrived first
         bisqEasyOpenTradeChannelService.processPendingMessages(id);
+        if (isRestoredTrade) {
+            // The queued events passed onMessage()'s guards when they were originally received, but those
+            // conditions may have changed before the restart. Draining applies them directly through the FSM,
+            // so re-check here what onMessage() would check for a live message:
+            //  - Trading halt / min-version (global, temporary): defer the drain entirely and KEEP the events
+            //    queued - they persist and drain on a later restart once the emergency alert is lifted.
+            //    Deliberately no throw: the catch below would mislabel it "stuck until investigated".
+            //  - Banned sender (per event): DROP the event, mirroring onMessage() ignoring a banned sender's
+            //    live message. Kept queued it would get applied after a ban-lift restart - something
+            //    onMessage() would never have allowed.
+            if (haltTrading || isMinVersionForTradingViolated()) {
+                log.warn("Deferring the queued-event drain for restored trade {}: an emergency alert halts " +
+                        "trading or requires a min version. The events stay queued and drain on a later " +
+                        "restart once the alert is lifted.", id);
+            } else {
+                boolean removedBannedSenderEvents = trade.removeQueuedEventsIf(event ->
+                        event instanceof BisqEasyTradeMessage message &&
+                                bannedUserService.isUserProfileBanned(message.getSender()));
+                if (removedBannedSenderEvents) {
+                    log.warn("Removed queued event(s) from a banned sender for restored trade {} before " +
+                            "draining, mirroring the onMessage() banned-sender check.", id);
+                    // Unthrottled: the throttled persist() may silently drop the write during the restore loop,
+                    // and a dropped removal would resurface the banned event on a ban-lift restart.
+                    persistNow();
+                }
+                // Isolate per trade: drainEventQueue() re-applies queued events and can raise an FsmException. The
+                // trade is already created and registered above, so we keep it regardless. Without this guard a
+                // single failing trade would escape the persistableStore.getTrades().forEach(...) loop in
+                // initialize() and block restoring every subsequent trade. A failed drain here means the trade
+                // stays stuck until it is manually looked at - there is no periodic or reconnect-triggered safety
+                // net to retry it.
+                try {
+                    tradeProtocol.drainEventQueue();
+                } catch (Exception e) {
+                    log.warn("Failed to drain the event queue for restored trade {} on load. The trade is still " +
+                                    "loaded but remains stuck until manually investigated. Cause: {}", id,
+                            ExceptionUtil.getSafeStackTraceAsString(e));
+                }
+            }
+        }
         return tradeProtocol;
     }
 
@@ -666,12 +724,21 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         }
     }
 
+    // Same condition as verifyMinVersionForTrading, as a boolean for the restore-drain guard in
+    // createAndAddTradeProtocol(), which must defer rather than throw.
+    private boolean isMinVersionForTradingViolated() {
+        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        return minRequiredVersion.isPresent()
+                && !ApplicationVersion.getVersion().aboveOrEqual(new Version(minRequiredVersion.get()));
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Redact sensible data
     /* --------------------------------------------------------------------- */
 
-    private void maybeRedactDataOfCompletedTrades() {
+    @VisibleForTesting
+    void maybeRedactDataOfCompletedTrades() {
         int numDays = settingsService.getNumDaysAfterRedactingTradeData().get();
         long redactDate = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(numDays);
         // Trades which ended up with a failure or got stuck will never get the completed date set.
@@ -681,20 +748,32 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         String redactedMarker = Res.get("data.redacted");
         long numChanges = getAllTrades().stream()
                 .filter(trade -> {
-                    if (trade.getPaymentAccountData().map(data -> StringUtils.isEmpty(data) || data.equals(redactedMarker)).orElse(true)) {
-                        return false;
-                    }
                     boolean doRedaction = trade.getTradeCompletedDate().map(date -> date < redactDate)
                             .orElseGet(() -> trade.getContract().getTakeOfferDate() < redactDateForNotCompletedTrades);
-                    if (doRedaction) {
-
+                    if (!doRedaction) {
+                        return false;
+                    }
+                    // The persisted pending-event queue can hold account-data messages
+                    // (e.g. BisqEasyAccountDataMessage) on a trade that never reached a final state, so it must
+                    // be scrubbed past the threshold even when the payment-account field below is already
+                    // redacted or was never set (see FsmModel#clearEventQueue).
+                    boolean queueCleared = !trade.getEventQueue().isEmpty();
+                    if (queueCleared) {
+                        trade.clearEventQueue();
+                    }
+                    boolean fieldRedacted = trade.getPaymentAccountData()
+                            .map(data -> StringUtils.isNotEmpty(data) && !data.equals(redactedMarker))
+                            .orElse(false);
+                    if (fieldRedacted) {
                         trade.setPaymentAccountData(Optional.of(redactedMarker));
                     }
-                    return doRedaction;
+                    return fieldRedacted || queueCleared;
                 })
                 .count();
         if (numChanges > 0) {
-            persist();
+            // Unthrottled: a dropped write would leave the redacted data on disk, and the next pass finds nothing
+            // left to change in memory, so it would not write again.
+            persistNow();
         }
     }
 
