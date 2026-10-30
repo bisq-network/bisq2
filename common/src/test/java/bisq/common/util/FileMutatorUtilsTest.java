@@ -2,6 +2,7 @@ package bisq.common.util;
 
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
+import bisq.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -14,6 +15,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,6 +101,45 @@ public class FileMutatorUtilsTest {
         assertThat(dirPath).doesNotExist();
         assertThat(rootLinkPath).doesNotExist();
         assertThat(outsideFilePath).exists();
+    }
+
+    // Files.walkFileTree reports a junction as a directory and would enter it; symbolic links do not cover this.
+    @Test
+    void testDeleteFileOrDirectoryDeletesJunctionsButNotTheirTargets(@TempDir Path tempDirPath) throws Exception {
+        assumeTrue(OS.isWindows(), "Junctions exist only on Windows");
+        Path outsideDirPath = tempDirPath.resolve("outside");
+        Path outsideFilePath = outsideDirPath.resolve("keep.txt");
+        FileMutatorUtils.createDirectories(outsideDirPath);
+        FileMutatorUtils.writeToPath("keep", outsideFilePath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath.resolve("sub"));
+        Path rootJunctionPath = tempDirPath.resolve("rootJunction");
+        createJunction(dirPath.resolve("sub").resolve("junctionToOutside"), outsideDirPath);
+        createJunction(rootJunctionPath, outsideDirPath);
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+        FileMutatorUtils.deleteFileOrDirectory(rootJunctionPath);
+
+        assertThat(dirPath).doesNotExist();
+        assertThat(rootJunctionPath).doesNotExist();
+        assertThat(outsideFilePath).exists();
+    }
+
+    // Files.walkFileTree lists a junction before preVisitDirectory, so a dangling junction fails the listing.
+    @Test
+    void testDeleteFileOrDirectoryDeletesADanglingJunction(@TempDir Path tempDirPath) throws Exception {
+        assumeTrue(OS.isWindows(), "Junctions exist only on Windows");
+        Path targetPath = tempDirPath.resolve("target");
+        FileMutatorUtils.createDirectories(targetPath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath);
+        FileMutatorUtils.writeToPath("file", dirPath.resolve("file.txt"));
+        createJunction(dirPath.resolve("danglingJunction"), targetPath);
+        Files.delete(targetPath);
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+
+        assertThat(dirPath).doesNotExist();
     }
 
     @Test
@@ -264,5 +305,16 @@ public class FileMutatorUtilsTest {
         Path targetDirPath = tempDirPath.resolve("resourceCopy");
         FileMutatorUtils.copyResourceDirectory("bisq/common/util/", targetDirPath);
         assertTrue(Files.exists(targetDirPath.resolve("FileMutatorUtilsTest.class")));
+    }
+
+    private static void createJunction(Path junctionPath, Path targetPath) throws IOException, InterruptedException {
+        // mklink /J needs no administrator rights, unlike a symbolic link on Windows.
+        Process process = new ProcessBuilder("cmd", "/c", "mklink", "/J",
+                junctionPath.toString(), targetPath.toString())
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes());
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS), "mklink did not finish");
+        assertEquals(0, process.exitValue(), output);
     }
 }
