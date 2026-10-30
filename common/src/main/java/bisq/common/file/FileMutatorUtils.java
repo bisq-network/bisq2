@@ -149,6 +149,17 @@ public class FileMutatorUtils {
             }
 
             @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exception) throws IOException {
+                // Files.walkFileTree lists a junction before preVisitDirectory, so a junction whose target is
+                // missing or cannot be listed ends here.
+                if (isLinkOrJunction(file)) {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+                throw exception;
+            }
+
+            @Override
             public FileVisitResult postVisitDirectory(Path dir, IOException exception) throws IOException {
                 if (exception != null) {
                     throw exception;
