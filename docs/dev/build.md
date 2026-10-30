@@ -94,7 +94,7 @@ For a quick full cleanup/rebuild you can use
    ./gradlew dependencySignatureReport
    ```
 
-   The metadata turns the key servers off. See `gradle/README.md` for the runs which need them, and for the checksum
+   The metadata turns the key servers off. See `gradle/README.md` for the runs which download keys, and for the checksum
    fallback allowlist and report workflow.
 
 
