@@ -21,6 +21,7 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufException;
@@ -191,15 +192,23 @@ public class ChatNotification implements Notification, PersistableProto {
     }
 
     private static Optional<String> findTradeId(ChatChannel<? extends ChatMessage> chatChannel) {
-        return chatChannel instanceof BisqEasyOpenTradeChannel ?
-                Optional.of(((BisqEasyOpenTradeChannel) chatChannel).getTradeId()) :
-                Optional.empty();
+        if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            return Optional.of(bisqEasyOpenTradeChannel.getTradeId());
+        }
+        if (chatChannel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            return Optional.of(muSigOpenTradeChannel.getTradeId());
+        }
+        return Optional.empty();
     }
 
     private static Optional<UserProfile> findMediator(ChatChannel<? extends ChatMessage> chatChannel) {
-        return chatChannel instanceof BisqEasyOpenTradeChannel ?
-                ((BisqEasyOpenTradeChannel) chatChannel).getMediator() :
-                Optional.empty();
+        if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            return bisqEasyOpenTradeChannel.getMediator();
+        }
+        if (chatChannel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            return muSigOpenTradeChannel.getMediator();
+        }
+        return Optional.empty();
     }
 
     public void setConsumed(boolean consumed) {
