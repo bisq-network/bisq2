@@ -82,7 +82,7 @@ class NetworkSettingsControllerTest {
     void switchShowsTheConfiguredValueAndOffersToApplyOnlyAChange() {
         NetworkSettingsController controller = createController(true, false);
         NetworkSettingsModel model = controller.getModel();
-        JavaFxToolkitExtension.runOnFxThread(controller::onActivate);
+        activateController(controller, false);
 
         assertThat(model.getAllowPluggableTransports().get()).isFalse();
         assertThat(model.getAllowPluggableTransportsUnavailableText().get()).isEmpty();
@@ -104,7 +104,7 @@ class NetworkSettingsControllerTest {
                 ALLOW_PLUGGABLE_TRANSPORTS + "=true\n");
         NetworkSettingsController controller = createController(true, false);
 
-        JavaFxToolkitExtension.runOnFxThread(controller::onActivate);
+        activateController(controller, false);
 
         assertThat(controller.getModel().getAllowPluggableTransports().get()).isTrue();
     }
@@ -116,7 +116,7 @@ class NetworkSettingsControllerTest {
         Path bisqConfPath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         Files.writeString(bisqConfPath, "application.network.configByTransportType.tor.builtInBridges=\"obfs4\"\n");
         NetworkSettingsController controller = createController(true, false);
-        JavaFxToolkitExtension.runOnFxThread(controller::onActivate);
+        activateController(controller, false);
 
         JavaFxToolkitExtension.runOnFxThread(() -> {
             controller.onToggleAllowPluggableTransports(true);
@@ -135,25 +135,31 @@ class NetworkSettingsControllerTest {
     void switchIsUnavailableWhileTheSandboxIsOff() {
         NetworkSettingsController controller = createController(false, false);
 
-        JavaFxToolkitExtension.runOnFxThread(controller::onActivate);
+        activateController(controller, false);
 
         assertThat(controller.getModel().getAllowPluggableTransportsUnavailableText().get())
                 .isEqualTo(Res.get("settings.network.tor.allowPluggableTransports.sandboxDisabled"));
     }
 
-    // The Tor library refuses pluggable transports in the sandbox on Windows. A static mock applies only to the thread
-    // which created it, so the controller activates on the thread of the test.
+    // The Tor library refuses pluggable transports in the sandbox on Windows.
     @Test
     void switchIsUnavailableOnWindows() {
         NetworkSettingsController controller = createController(true, false);
 
-        try (MockedStatic<OS> os = mockStatic(OS.class, CALLS_REAL_METHODS)) {
-            os.when(OS::isWindows).thenReturn(true);
-            controller.onActivate();
-        }
+        activateController(controller, true);
 
         assertThat(controller.getModel().getAllowPluggableTransportsUnavailableText().get())
                 .isEqualTo(Res.get("settings.network.tor.allowPluggableTransports.windows"));
+    }
+
+    private void activateController(NetworkSettingsController controller, boolean windows) {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
+            // Static mocks are thread-local, so install the platform input where activation runs.
+            try (MockedStatic<OS> os = mockStatic(OS.class, CALLS_REAL_METHODS)) {
+                os.when(OS::isWindows).thenReturn(windows);
+                controller.onActivate();
+            }
+        });
     }
 
     private NetworkSettingsController createController(boolean sandboxEnabled, boolean allowPluggableTransports) {
