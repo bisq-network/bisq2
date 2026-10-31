@@ -168,7 +168,8 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
         return send(userIdentity, new AuthorizeTimestampRequest(userIdentity.getId(), System.currentTimeMillis()));
     }
 
-    private void maybeRequestTimestampForAllUserProfiles() {
+    @VisibleForTesting
+    void maybeRequestTimestampForAllUserProfiles() {
         if (requestTimestampFuture != null) {
             log.warn("requestTimestampFuture is still not completed");
             return;
@@ -194,7 +195,7 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
                     // At first iteration the delay is 0, thus no delay is used.
                     Delay.run(() -> {
                                         if (requestTimestamp(userIdentity)) {
-                                            // Recorded here, as the tasks run after the loop which schedules them
+                                            // The tasks run after the scheduling loop, so the request is recorded here
                                             persistableStore.setLastRequested(System.currentTimeMillis());
                                             persist();
                                         } else {
@@ -220,7 +221,8 @@ public class ProfileAgeService extends SourceReputationService<AuthorizedTimesta
     private boolean isExpiringSoon() {
         long lastRequested = persistableStore.getLastRequested();
         if (lastRequested == 0) {
-            return false;
+            // Nothing recorded yet (stores written before the request was recorded): request once to start the cycle
+            return true;
         }
         return System.currentTimeMillis() - lastRequested > AuthorizedTimestampData.TTL / 2;
     }
