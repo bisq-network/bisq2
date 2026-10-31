@@ -38,7 +38,7 @@ class WalletServiceTest {
 
     @BeforeEach
     void setUp() {
-        WalletService.Config config = new WalletService.Config(true, "localhost", 50051);
+        WalletService.Config config = new WalletService.Config(true, "localhost", 50051, true);
         PersistenceService persistenceService = new PersistenceService(tempDirPath);
         walletService = new MockWalletService(config, persistenceService);
     }
