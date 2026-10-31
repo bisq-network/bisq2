@@ -36,8 +36,9 @@ layout before into `data/`, deletes only the files of the old layout which it kn
 or a link at the path `data`, or at the path `data.migration` of the temporary directory of the move, belongs to no
 layout, so the node deletes it before the move; it deletes a link itself, never its target. The
 backup of the data directory skips `tor/data`, and `tor/bin` and `tor/sandy`, which the node installs again at its
-next start of Tor. The backup contains `external_tor.config`, also when it holds the password of an external Tor
-(`ControlPassword`) in plain text.
+next start of Tor. It also skips `tor/data-mode`, the record whether a sandboxed Tor wrote `tor/data`: copied back
+next to another data directory, it would describe that one. The backup contains `external_tor.config`, also when it
+holds the password of an external Tor (`ControlPassword`) in plain text.
 
 The node never deletes the `lock` file which Tor keeps in `data/`. Tor locks the file while it runs, so a file which an
 ended Tor left blocks no start, and a Tor which still runs on the data directory makes the next Tor exit instead of

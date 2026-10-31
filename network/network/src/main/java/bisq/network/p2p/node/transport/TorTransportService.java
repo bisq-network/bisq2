@@ -216,6 +216,14 @@ public class TorTransportService implements TransportService {
     }
 
     /**
+     * @return the record of the Tor library whether a sandboxed Tor wrote the data directory of the embedded Tor of the
+     * application with this data directory. The Tor library names it.
+     */
+    public static Path getTorDataModePath(Path appDataDirPath) {
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getDataModePath();
+    }
+
+    /**
      * @return what the sandbox of the running Tor cannot do on this system. Empty while Tor runs in the full sandbox,
      * and without the sandbox: when the configuration turns it off, with an external Tor, and before the Tor of the
      * start answers on its control port.

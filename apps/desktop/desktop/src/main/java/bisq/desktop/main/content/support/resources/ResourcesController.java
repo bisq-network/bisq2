@@ -231,7 +231,9 @@ public class ResourcesController implements Controller {
      * single instance protection for the rest of the session.
      * The data directory of Tor holds only Tor's cache. Tor runs in a sandbox and can write there, so
      * Bisq must not open its files (a link or a named pipe there could make the copy read other files
-     * or block).
+     * or block). The record of the Tor library whether a sandboxed Tor wrote that directory is left out with it:
+     * copied back next to another data directory of Tor, it would describe that one, and a Tor without the sandbox
+     * could then read what a sandboxed Tor wrote there instead of starting on a cleared data directory.
      * The node installs the Tor bundle (with its version file) and sandy again at its next start of Tor when they
      * are missing, so the backup leaves them out. It keeps external_tor.config, which can hold the password of an
      * external Tor (ControlPassword) in plain text.
@@ -242,7 +244,8 @@ public class ResourcesController implements Controller {
                 destinationPath,
                 Set.of("log"),
                 Set.of(InstanceLock.LOCK_FILE_NAME,
-                        TorTransportService.getRotatedTorLogPath(appDataDirPath).getFileName().toString()),
+                        TorTransportService.getRotatedTorLogPath(appDataDirPath).getFileName().toString(),
+                        TorTransportService.getTorDataModePath(appDataDirPath).getFileName().toString()),
                 Set.of(Paths.get("tor", "data"), Paths.get("tor", "bin"), Paths.get("tor", "sandy")));
     }
 
