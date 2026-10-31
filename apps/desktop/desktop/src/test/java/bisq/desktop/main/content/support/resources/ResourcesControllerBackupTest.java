@@ -63,6 +63,20 @@ class ResourcesControllerBackupTest {
         assertThat(backupDirPath.resolve("tor/data")).doesNotExist();
     }
 
+    // Copied back next to another data directory of Tor, the record would let a Tor without the sandbox start on what a
+    // sandboxed Tor wrote there instead of on a cleared data directory
+    @Test
+    void backupLeavesOutTheRecordOfTheDataDirectoryOfTor() throws IOException {
+        Path dataModePath = TorTransportService.getTorDataModePath(appDataDirPath);
+        writeFile(dataModePath);
+
+        ResourcesController.copyDataDirectory(appDataDirPath, backupDirPath);
+
+        assertThat(dataModePath.getParent()).isEqualTo(appDataDirPath.resolve("tor"));
+        assertThat(backupDirPath.resolve(appDataDirPath.relativize(dataModePath))).doesNotExist();
+        assertThat(backupDirPath.resolve("tor/torrc")).exists();
+    }
+
     @Test
     void backupKeepsTheDataOfTheUserAndTheExternalTorConfig() throws IOException {
         ResourcesController.copyDataDirectory(appDataDirPath, backupDirPath);
