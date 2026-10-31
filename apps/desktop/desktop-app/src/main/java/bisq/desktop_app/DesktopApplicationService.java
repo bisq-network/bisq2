@@ -116,12 +116,13 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         var walletCfg = WalletService.Config.from(getConfig("wallet"));
-      /*  walletService = walletCfg.isEnabled()
-                ? Optional.of(new WalletService(walletCfg))
-                : Optional.empty();*/
-        walletService = walletCfg.isEnabled()
-                ? Optional.of(new MockWalletService(walletCfg, persistenceService))
-                : Optional.empty();
+        if (!walletCfg.isEnabled()) {
+            walletService = Optional.empty();
+        } else if (walletCfg.isMock()) {
+            walletService = Optional.of(new MockWalletService(walletCfg, persistenceService));
+        } else {
+            walletService = Optional.of(new WalletService(walletCfg, persistenceService));
+        }
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
                 getConfig("network")),

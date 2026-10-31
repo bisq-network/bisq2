@@ -88,7 +88,7 @@ class WalletServiceGrpcTest {
         WalletGrpcClient client = new WalletGrpcClient(channel);
         client.initialize();
         persistenceService = new PersistenceService(tempDirPath);
-        walletService = new WalletService(new WalletService.Config(true, "localhost", 0), persistenceService, client);
+        walletService = new WalletService(new WalletService.Config(true, "localhost", 0, false), persistenceService, client);
     }
 
     // The store writes asynchronously and JUnit fails when a write still creates files in the temp dir after the test.

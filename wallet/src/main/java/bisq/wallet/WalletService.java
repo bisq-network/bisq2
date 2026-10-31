@@ -64,18 +64,21 @@ public class WalletService implements Service {
         private final boolean enabled;
         private final String host;
         private final int port;
+        private final boolean mock;
 
-        public Config(boolean enabled, String host, int port) {
+        public Config(boolean enabled, String host, int port, boolean mock) {
             this.enabled = enabled;
             this.host = host;
             this.port = port;
+            this.mock = mock;
         }
 
         public static Config from(com.typesafe.config.Config config) {
             return new Config(
                     config.getBoolean("enabled"),
                     config.getString("host"),
-                    config.getInt("port")
+                    config.getInt("port"),
+                    config.hasPath("mock") && config.getBoolean("mock")
             );
         }
     }
