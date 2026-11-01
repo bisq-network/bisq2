@@ -108,6 +108,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
         assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
         assertThat(ApiFeature.CLIENT_MANAGEMENT.getKey()).isEqualTo("client-management");
+        assertThat(ApiFeature.TRADE_STATUS.getKey()).isEqualTo("trade-status");
     }
 
     /**
@@ -124,6 +125,12 @@ class ConfigRestApiTest {
     void everyDeclaredFeatureIsBackedByARealImplementation() {
         for (ApiFeature feature : ApiFeature.values()) {
             boolean checked = switch (feature) {
+                case TRADE_STATUS -> {
+                    assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/status"))
+                            .as("trade-status must expose GET /trades/status")
+                            .isTrue();
+                    yield true;
+                }
                 case CLOSED_TRADES -> {
                     assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/closed"))
                             .as("closed-trades must expose GET /trades/closed")

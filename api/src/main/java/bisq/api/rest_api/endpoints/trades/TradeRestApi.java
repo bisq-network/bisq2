@@ -126,6 +126,35 @@ public class TradeRestApi extends RestApiBase {
         this.closedTradeItemsService = closedTradeItemsService;
     }
 
+    /**
+     * Minimal authenticated observation for a client recovering an ambiguous
+     * trade request. This is NOT a transaction receipt: an empty response
+     * must never be interpreted as permission to submit the trade again.
+     */
+    @GET
+    @Path("/status")
+    @Operation(
+            summary = "Observe local trade states for a specific offer",
+            description = "Returns minimal states from this node's open and closed trade stores. " +
+                    "The observation is non-atomic and cannot prove a prior trade request failed.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Matching local trade states"),
+                    @ApiResponse(responseCode = "400", description = "Missing or invalid offerId"),
+                    @ApiResponse(responseCode = "500", description = "Internal server error")
+            }
+    )
+    public Response getTradeStatuses(@QueryParam("offerId") String offerId) {
+        try {
+            return buildOkResponse(TradeStatusQuery.byOffer(
+                    bisqEasyTradeService.getTrades().stream(),
+                    bisqEasyTradeService.getClosedTrades().stream(), offerId));
+        } catch (IllegalArgumentException e) {
+            return buildErrorResponse(Response.Status.BAD_REQUEST, e.getMessage());
+        } catch (Exception e) {
+            log.error("Unable to read local trade status", e);
+            return buildErrorResponse("An unexpected error occurred");
+        }
+    }
     @GET
     @Path("/closed")
     @Operation(
