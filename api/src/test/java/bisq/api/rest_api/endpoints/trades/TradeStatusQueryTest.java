@@ -3,9 +3,18 @@
  *
  * Bisq is free software: you can redistribute it and/or modify it
  * under the terms of the GNU Affero General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * the Free Software Foundation, either version 3 of the License, or (at
+ * your option) any later version.
+ *
+ * Bisq is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+ * License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
+
 package bisq.api.rest_api.endpoints.trades;
 
 import bisq.offer.bisq_easy.BisqEasyOffer;
@@ -44,7 +53,7 @@ class TradeStatusQueryTest {
         assertThat(matches).hasSize(1);
         assertThat(matches.getFirst().tradeId()).isEqualTo("trade-a");
         assertThat(matches.getFirst().offerId()).isEqualTo("offer-1");
-        assertThat(matches.getFirst().lifecycle()).isEqualTo("OPEN");
+        assertThat(matches.getFirst().store()).isEqualTo(TradeStore.OPEN);
         assertThat(matches.getFirst().tradeState().name()).isEqualTo("INIT");
     }
 
@@ -55,7 +64,7 @@ class TradeStatusQueryTest {
         List<TradeStatusDto> matches = TradeStatusQuery.byOffer(
                 Stream.of(trade), Stream.of(closed), "offer-1");
         assertThat(matches).hasSize(1);
-        assertThat(matches.getFirst().lifecycle()).isEqualTo("CLOSED");
+        assertThat(matches.getFirst().store()).isEqualTo(TradeStore.CLOSED);
     }
 
     @Test
