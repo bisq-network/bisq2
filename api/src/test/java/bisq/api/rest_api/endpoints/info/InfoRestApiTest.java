@@ -21,6 +21,8 @@ import bisq.api.access.AllowUnauthenticated;
 import bisq.api.dto.info.ApiInfoDto;
 import bisq.api.rest_api.endpoints.config.ApiFeature;
 import bisq.common.application.ApplicationVersion;
+import bisq.common.json.JsonMapperProvider;
+import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
@@ -40,13 +42,20 @@ class InfoRestApiTest {
 
     @Test
     void imageVersionIsAbsentWhenEnvIsMissingOrBlank() {
-        assertThat(getInfo(Map.of()).imageVersion()).isNull();
-        assertThat(getInfo(Map.of("BISQ_IMAGE_VERSION", "   ")).imageVersion()).isNull();
+        assertThat(getInfo(Map.of()).imageVersion()).isEmpty();
+        assertThat(getInfo(Map.of("BISQ_IMAGE_VERSION", "   ")).imageVersion()).isEmpty();
     }
 
     @Test
     void imageVersionIsTrimmedWhenSet() {
-        assertThat(getInfo(Map.of("BISQ_IMAGE_VERSION", " 2.1.13.1 ")).imageVersion()).isEqualTo("2.1.13.1");
+        assertThat(getInfo(Map.of("BISQ_IMAGE_VERSION", " 2.1.13.1 ")).imageVersion()).hasValue("2.1.13.1");
+    }
+
+    @Test
+    void imageVersionKeyIsOmittedFromJsonWhenAbsent() {
+        assertThat(toJson(getInfo(Map.of())).has("imageVersion")).isFalse();
+        assertThat(toJson(getInfo(Map.of("BISQ_IMAGE_VERSION", "2.1.13.1"))).get("imageVersion").asText())
+                .isEqualTo("2.1.13.1");
     }
 
     /**
@@ -64,5 +73,9 @@ class InfoRestApiTest {
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         return (ApiInfoDto) response.getEntity();
+    }
+
+    private static JsonNode toJson(ApiInfoDto dto) {
+        return JsonMapperProvider.get().valueToTree(dto);
     }
 }

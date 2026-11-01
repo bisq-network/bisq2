@@ -32,6 +32,7 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 /**
@@ -66,7 +67,7 @@ public class InfoRestApi extends RestApiBase {
     )
     public Response getInfo() {
         String version = ApplicationVersion.getVersion().toString();
-        String imageVersion = ImageVersion.resolve(env).orElse(null);
+        Optional<String> imageVersion = ImageVersion.resolve(env);
         return buildOkResponse(new ApiInfoDto(version, imageVersion, ApiFeature.allKeys()));
     }
 }
