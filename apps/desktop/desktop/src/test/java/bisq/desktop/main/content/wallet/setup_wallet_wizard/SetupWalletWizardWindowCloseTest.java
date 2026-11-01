@@ -50,7 +50,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // The system close of the overlay window must close the wizard like its close button, and the first dismissal must
@@ -60,7 +59,6 @@ import static org.mockito.Mockito.when;
 class SetupWalletWizardWindowCloseTest {
     private final AtomicInteger overlayCloseHandlerCalls = new AtomicInteger();
     private MockedStatic<OverlayController> overlayController;
-    private WalletService walletService;
     private SetupWalletWizardController controller;
     private Stage stage;
     private StackPane container;
@@ -71,8 +69,7 @@ class SetupWalletWizardWindowCloseTest {
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
         Transitions.setSettingsService(settingsService);
         ServiceProvider serviceProvider = mock(ServiceProvider.class);
-        walletService = mock(WalletService.class);
-        when(serviceProvider.getWalletService()).thenReturn(Optional.of(walletService));
+        when(serviceProvider.getWalletService()).thenReturn(Optional.of(mock(WalletService.class)));
         JavaFxToolkitExtension.runOnFxThread(() -> {
             // Static mocks are bound to the thread which creates them, so this one lives on the JavaFX thread
             overlayController = mockStatic(OverlayController.class);
@@ -135,12 +132,10 @@ class SetupWalletWizardWindowCloseTest {
             overlayController.verify(OverlayController::hide, never());
         });
 
-        verify(walletService).setWalletInitialized();
-
         assertThat(overlayCloseHandlerCalls).hasValue(0);
     }
 
-    // A finish which arrives after a close must neither replace the Main target nor mark the wallet as set up.
+    // A finish which arrives after a close must not replace the Main target.
     @Test
     void finishAfterACloseChangesNothing() {
         JavaFxToolkitExtension.runOnFxThread(() -> {
@@ -150,8 +145,6 @@ class SetupWalletWizardWindowCloseTest {
             overlayController.verify(OverlayController::hide, times(1));
             overlayController.verify(() -> OverlayController.hide(any(Runnable.class)), never());
         });
-
-        verify(walletService, never()).setWalletInitialized();
     }
 
     @Test

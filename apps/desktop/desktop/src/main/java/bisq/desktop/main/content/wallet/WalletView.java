@@ -21,6 +21,7 @@ import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.main.content.ContentTabView;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardView;
 import bisq.desktop.main.content.wallet.txs.WalletTxsView;
@@ -28,6 +29,7 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
@@ -40,9 +42,10 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletView extends ContentTabView<WalletModel, WalletController> {
-    private Button setupWalletButton;
+    private Button setupWalletButton, unlockButton, retryButton;
     private Hyperlink restoreWalletLink;
-    private Subscription isWalletInitializedPin;
+    private MaterialPasswordField unlockPasswordField;
+    private Subscription walletStatePin;
 
     public WalletView(WalletModel model, WalletController controller) {
         super(model, controller);
@@ -57,13 +60,16 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     protected void onViewAttached() {
         super.onViewAttached();
 
-        isWalletInitializedPin = EasyBind.subscribe(model.getIsWalletInitialized(), isInitialized -> {
-            log.info("Wallet initialization status changed: {}", isInitialized);
-            if (isInitialized) {
-                setContentToTabs();
-            } else {
-                setContentToNotInitialized();
-                Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
+        walletStatePin = EasyBind.subscribe(model.getWalletState(), state -> {
+            log.info("Wallet state changed: {}", state);
+            switch (state) {
+                case NOT_SET_UP -> {
+                    setContentToNotInitialized();
+                    Navigation.navigateTo(NavigationTarget.SETUP_WALLET);
+                }
+                case LOCKED -> setContentToLocked();
+                case UNAVAILABLE -> setContentToUnavailable();
+                case OPEN -> setContentToTabs();
             }
         });
     }
@@ -72,13 +78,19 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
     protected void onViewDetached() {
         super.onViewDetached();
 
-        isWalletInitializedPin.unsubscribe();
+        walletStatePin.unsubscribe();
 
         if (setupWalletButton != null) {
             setupWalletButton.setOnAction(null);
         }
         if (restoreWalletLink != null) {
             restoreWalletLink.setOnAction(null);
+        }
+        if (unlockButton != null) {
+            unlockButton.setOnAction(null);
+        }
+        if (retryButton != null) {
+            retryButton.setOnAction(null);
         }
     }
 
@@ -109,6 +121,45 @@ public class WalletView extends ContentTabView<WalletModel, WalletController> {
 
         VBox contentBox = new VBox(20);
         contentBox.getChildren().addAll(label, setupWalletButton, restoreWalletLink);
+        contentBox.getStyleClass().add("bisq-common-bg");
+        contentBox.setAlignment(Pos.CENTER);
+
+        VBox.setVgrow(contentBox, Priority.ALWAYS);
+        VBox.setMargin(label, new Insets(0, 0, 20, 0));
+        root.setPadding(new Insets(40, 40, 20, 40));
+        root.getChildren().setAll(contentBox);
+    }
+
+    // Placeholders until the wallet UI gets its own unlock and connection screens.
+    private void setContentToLocked() {
+        unlockPasswordField = new MaterialPasswordField(Res.get("wallet.locked.password"));
+        unlockPasswordField.setMaxWidth(400);
+
+        unlockButton = new Button(Res.get("wallet.locked.button.unlock"));
+        unlockButton.setDefaultButton(true);
+        unlockButton.setOnAction(e -> {
+            controller.onUnlockWallet(unlockPasswordField.getText());
+            unlockPasswordField.setText("");
+        });
+
+        setContentToMessage(Res.get("wallet.locked.headline"), unlockPasswordField, unlockButton);
+    }
+
+    private void setContentToUnavailable() {
+        retryButton = new Button(Res.get("wallet.unavailable.button.retry"));
+        retryButton.setDefaultButton(true);
+        retryButton.setOnAction(e -> controller.onRetryWalletConnection());
+
+        setContentToMessage(Res.get("wallet.unavailable.headline"), retryButton);
+    }
+
+    private void setContentToMessage(String headline, Node... controls) {
+        Label label = new Label(headline);
+        label.getStyleClass().addAll("thin-text", "very-large-text");
+
+        VBox contentBox = new VBox(20);
+        contentBox.getChildren().add(label);
+        contentBox.getChildren().addAll(controls);
         contentBox.getStyleClass().add("bisq-common-bg");
         contentBox.setAlignment(Pos.CENTER);
 
