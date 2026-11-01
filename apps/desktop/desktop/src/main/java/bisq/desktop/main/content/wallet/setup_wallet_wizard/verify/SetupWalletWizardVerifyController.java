@@ -112,7 +112,6 @@ public class SetupWalletWizardVerifyController implements Controller {
     }
 
     void onCreateWallet() {
-        walletService.setWalletInitialized();
         closeAndNavigateToHandler.accept(NavigationTarget.WALLET);
     }
 

@@ -27,7 +27,6 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
-import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.PubAddressInfo;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
@@ -56,8 +55,17 @@ public class WalletService implements Service {
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
     protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
-    protected final Observable<Boolean> walletInitialized = new Observable<>(false);
     protected final Config config;
+    private final WalletStoreService walletStoreService;
+    private final Observable<State> state = new Observable<>(State.NOT_SET_UP);
+    private int stateGeneration;
+
+    public enum State {
+        NOT_SET_UP,
+        LOCKED,
+        OPEN,
+        UNAVAILABLE
+    }
 
     @Getter
     public static class Config {
@@ -94,6 +102,7 @@ public class WalletService implements Service {
         this.config = config;
         this.client = client;
         this.receiveAddressService = new ReceiveAddressService(persistenceService);
+        this.walletStoreService = new WalletStoreService(persistenceService);
     }
 
     @Override
@@ -102,7 +111,10 @@ public class WalletService implements Service {
             log.info("WalletService was disabled");
             return CompletableFuture.completedFuture(false);
         }
-        return client.initialize();
+        return client.initialize().thenApply(result -> {
+            refreshState();
+            return result;
+        });
     }
 
     @Override
@@ -110,46 +122,73 @@ public class WalletService implements Service {
         return client.shutdown();
     }
 
-    public ReadOnlyObservable<Boolean> getWalletInitialized() {
-        return walletInitialized;
+    public ReadOnlyObservable<State> getState() {
+        return state;
     }
 
-    /** Marks the wallet as initialized (i.e., setup wizard completed). */
-    public void setWalletInitialized() {
-        walletInitialized.set(true);
+    // The daemon cannot say whether a wallet exists, so the persisted flag decides between NOT_SET_UP and the daemon
+    // states. GetBalance needs an open wallet and has no side effect, which makes it the probe; IsWalletReady is also
+    // false while an open wallet syncs, so it cannot tell LOCKED from OPEN.
+    public CompletableFuture<Void> refreshState() {
+        if (!walletStoreService.isWalletExists()) {
+            applyState(State.NOT_SET_UP);
+            return CompletableFuture.completedFuture(null);
+        }
+        int generation = nextProbeGeneration();
+        return fetchBalance().handle((balance, throwable) -> {
+            if (throwable == null) {
+                applyProbeResult(generation, State.OPEN);
+            } else {
+                // An error the probe cannot classify keeps the state, except that an install with a wallet must not
+                // be shown the setup page
+                findState(throwable)
+                        .or(() -> state.get() == State.NOT_SET_UP ? Optional.of(State.UNAVAILABLE) : Optional.empty())
+                        .ifPresent(probed -> applyProbeResult(generation, probed));
+            }
+            return null;
+        });
     }
 
+    // Creates the wallet at the first call and opens it afterwards. Success is the only place the flag is set,
+    // so an install never asks the daemon to open a wallet it did not create.
     public CompletableFuture<Void> openOrCreateWallet(String password) {
-        return client.openOrCreateWallet(password).thenApply(response -> null);
+        return client.openOrCreateWallet(password)
+                .whenComplete((response, throwable) -> {
+                    if (throwable == null) {
+                        walletStoreService.setWalletExists();
+                        applyState(State.OPEN);
+                        // The screens bound to the balance may already be attached, so give them a value right away
+                        fetchBalance();
+                    } else if (findState(throwable).isPresent()) {
+                        refreshState();
+                    }
+                })
+                .thenApply(response -> null);
     }
 
     public CompletableFuture<List<String>> getSeedWords(String password) {
-        return client.getSeedWords(password)
-                .thenApply(GetSeedWordsResponse::getSeedWordsList);
-    }
-
-    public CompletableFuture<Boolean> isWalletReady() {
-        return client.isWalletReady().thenApply(IsWalletReadyResponse::getReady);
+        return tracked(client.getSeedWords(password)
+                .thenApply(GetSeedWordsResponse::getSeedWordsList));
     }
 
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
-        return client.getUnusedAddress()
+        return tracked(client.getUnusedAddress()
                 .thenApply(response -> response.getAddress().getAddress())
-                .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
+                .thenApply(receiveAddressService::findOrAddReceiveAddressEntry));
     }
 
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
-        return client.requestWalletAddresses()
+        return tracked(client.requestWalletAddresses()
                 .thenApply(response -> {
                     walletAddresses.setAll(response.getAddressesList().stream()
                             .map(PubAddressInfo::getAddress)
                             .toList());
                     return walletAddresses;
-                });
+                }));
     }
 
     public CompletableFuture<List<Transaction>> listTransactions() {
-        return client.listTransactions()
+        return tracked(client.listTransactions()
                 .thenApply(response -> {
                     try {
                         return ProtobufUtils.fromProtoStream(response.getTransactionsList(), Transaction::fromProto)
@@ -157,18 +196,18 @@ public class WalletService implements Service {
                     } catch (UnresolvableProtobufException e) {
                         throw new CompletionException(e);
                     }
-                });
+                }));
     }
 
     public CompletableFuture<List<Utxo>> listUtxos() {
-        return client.listUtxos()
+        return tracked(client.listUtxos()
                 .thenApply(response -> {
                     try {
                         return ProtobufUtils.fromProtoStream(response.getUtxosList(), Utxo::fromProto).toList();
                     } catch (UnresolvableProtobufException e) {
                         throw new CompletionException(e);
                     }
-                });
+                }));
     }
 
     public CompletableFuture<ReadOnlyObservableSet<AddressBalance>> requestAddressBalances() {
@@ -217,8 +256,8 @@ public class WalletService implements Service {
                 .setAmount(amount);
         feeRatePerKwu.ifPresent(request::setFeeRatePerKwu);
 
-        return client.sendToAddress(request.build())
-                .thenApply(SendToAddressResponse::getTxId);
+        return tracked(client.sendToAddress(request.build())
+                .thenApply(SendToAddressResponse::getTxId));
     }
 
     // The daemon's wallet always has a password.
@@ -227,6 +266,10 @@ public class WalletService implements Service {
     }
 
     public CompletableFuture<Coin> requestBalance() {
+        return tracked(fetchBalance());
+    }
+
+    private CompletableFuture<Coin> fetchBalance() {
         return client.requestBalance()
                 .thenApply(response -> {
                     var newBalance = Coin.asBtcFromValue(response.getBalance());
@@ -241,7 +284,7 @@ public class WalletService implements Service {
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
-        return client.listTransactions()
+        return tracked(client.listTransactions()
                 .thenApply(response -> {
                     try {
                         transactions.setAll(ProtobufUtils.fromProtoStream(response.getTransactionsList(),
@@ -251,9 +294,8 @@ public class WalletService implements Service {
                         throw new CompletionException(e);
                     }
                     return transactions;
-                });
+                }));
     }
-
 
     public ReadOnlyObservableSet<String> getWalletAddresses() {
         return walletAddresses;
@@ -279,5 +321,45 @@ public class WalletService implements Service {
         return receiveAddressService.getReceiveAddressEntries().stream()
                 .filter(entry -> entry.getAddress().equals(receiveAddress))
                 .findFirst();
+    }
+
+    // A failure that means the daemon state changed (musigd restarted or went away) is answered with a new probe,
+    // not with a direct state write, so a stale result of a call issued earlier cannot undo a later open.
+    private <T> CompletableFuture<T> tracked(CompletableFuture<T> future) {
+        return future.whenComplete((result, throwable) -> {
+            if (throwable != null && findState(throwable).isPresent()) {
+                refreshState();
+            }
+        });
+    }
+
+    private static Optional<State> findState(Throwable throwable) {
+        Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
+                ? throwable.getCause()
+                : throwable;
+        if (cause instanceof WalletException walletException) {
+            return switch (walletException.getReason()) {
+                case WALLET_NOT_OPEN -> Optional.of(State.LOCKED);
+                case DAEMON_UNAVAILABLE, UNSUPPORTED_CALL, CLIENT_NOT_READY -> Optional.of(State.UNAVAILABLE);
+                default -> Optional.empty();
+            };
+        }
+        return Optional.empty();
+    }
+
+    // A direct write and every new probe invalidate the probes still in flight, so only the newest answer counts.
+    protected synchronized void applyState(State newState) {
+        stateGeneration++;
+        state.set(newState);
+    }
+
+    private synchronized int nextProbeGeneration() {
+        return ++stateGeneration;
+    }
+
+    private synchronized void applyProbeResult(int generation, State newState) {
+        if (generation == stateGeneration) {
+            state.set(newState);
+        }
     }
 }

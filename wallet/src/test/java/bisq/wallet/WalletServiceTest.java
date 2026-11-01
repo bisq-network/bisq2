@@ -17,11 +17,13 @@
 
 package bisq.wallet;
 
+import bisq.common.application.DevMode;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.Utxo;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
@@ -35,12 +37,43 @@ class WalletServiceTest {
     @TempDir
     private Path tempDirPath;
     private MockWalletService walletService;
+    private PersistenceService persistenceService;
 
     @BeforeEach
     void setUp() {
         WalletService.Config config = new WalletService.Config(true, "localhost", 50051, true);
-        PersistenceService persistenceService = new PersistenceService(tempDirPath);
+        persistenceService = new PersistenceService(tempDirPath);
         walletService = new MockWalletService(config, persistenceService);
+    }
+
+    @AfterEach
+    void tearDown() {
+        DevMode.setDevMode(false);
+        DevMode.setDevModeWalletSetup(false);
+        persistenceService.persistAllClients().join();
+    }
+
+    @Test
+    void theMockIsNotSetUpUnlessDevModeWalletSetupIsOn() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        assertEquals(WalletService.State.NOT_SET_UP, walletService.getState().get());
+
+        DevMode.setDevMode(true);
+        DevMode.setDevModeWalletSetup(true);
+        walletService.initialize().get();
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+    }
+
+    @Test
+    void theMockOpensWithoutADaemonAndNeverPersistsTheWalletRecord() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+
+        walletService.openOrCreateWallet("anything").get();
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+
+        persistenceService.persistAllClients().join();
+        WalletStoreService stored = new WalletStoreService(new PersistenceService(tempDirPath));
+        assertFalse(stored.readPersisted().map(WalletStore::isWalletExists).orElse(false));
     }
 
     /**

@@ -26,6 +26,7 @@ import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.View;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.wallet.WalletOpenErrors;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.backup.SetupWalletWizardBackupController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.protect.SetupWalletWizardProtectController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.setup_or_restore.SetupWalletWizardSetupOrRestoreController;
@@ -33,7 +34,6 @@ import bisq.desktop.main.content.wallet.setup_wallet_wizard.verify.SetupWalletWi
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
-import bisq.wallet.WalletException;
 import bisq.wallet.WalletService;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -42,7 +42,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-import java.util.concurrent.CompletionException;
 
 @Slf4j
 public class SetupWalletWizardController extends NavigationController {
@@ -192,27 +191,11 @@ public class SetupWalletWizardController extends NavigationController {
             if (throwable == null) {
                 navigateTo(nextIndex);
             } else {
-                Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
-                        ? throwable.getCause()
-                        : throwable;
-                new Popup().warning(toOpenFailedMessage(cause))
+                new Popup().warning(WalletOpenErrors.toMessage(throwable))
                         .owner(view.getRoot())
                         .show();
             }
         }));
-    }
-
-    private static String toOpenFailedMessage(Throwable cause) {
-        if (cause instanceof WalletException walletException) {
-            return switch (walletException.getReason()) {
-                case WRONG_PASSWORD -> Res.get("wallet.protectWallet.error.wrongPassword");
-                case DAEMON_UNAVAILABLE, CLIENT_NOT_READY -> Res.get("wallet.protectWallet.error.daemonUnavailable");
-                case INVALID_REQUEST -> Res.get("wallet.protectWallet.error.openRefused",
-                        walletException.getDetail().orElse(walletException.getMessage()));
-                default -> Res.get("wallet.protectWallet.error.daemonError");
-            };
-        }
-        return Res.get("wallet.protectWallet.error.daemonError");
     }
 
     private void navigateTo(int nextIndex) {
@@ -256,8 +239,6 @@ public class SetupWalletWizardController extends NavigationController {
 
     private void closeAndNavigateTo(NavigationTarget navigationTarget) {
         reset();
-        // walletService.purgeSeedWords();
-        walletService.initialize();
         OverlayController.hide(() -> Navigation.navigateTo(navigationTarget));
     }
 

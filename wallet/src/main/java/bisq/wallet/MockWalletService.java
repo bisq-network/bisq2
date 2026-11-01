@@ -27,7 +27,6 @@ import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.TransactionInput;
 import bisq.wallet.vo.TransactionOutput;
 import bisq.wallet.vo.Utxo;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,19 +34,18 @@ import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
 public class MockWalletService extends WalletService {
+    // The mock keeps its wallet in memory and never touches the persisted flag of the real service.
+    private boolean walletExists;
+
     public MockWalletService(Config config, PersistenceService persistenceService) {
         super(config, persistenceService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (DevMode.isDevMode() && DevMode.isDevModeWalletSetup()) {
-            setWalletInitialized();
-            log.info("Wallet initialized");
-        }
-        return CompletableFuture.completedFuture(true);
+        walletExists = DevMode.isDevMode() && DevMode.isDevModeWalletSetup();
+        return refreshState().thenApply(nothing -> true);
     }
 
     @Override
@@ -56,8 +54,15 @@ public class MockWalletService extends WalletService {
     }
 
     @Override
+    public CompletableFuture<Void> refreshState() {
+        applyState(walletExists ? State.OPEN : State.NOT_SET_UP);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
     public CompletableFuture<Void> openOrCreateWallet(String password) {
-        log.info("openOrCreateWallet");
+        walletExists = true;
+        applyState(State.OPEN);
         return CompletableFuture.completedFuture(null);
     }
 
@@ -67,10 +72,6 @@ public class MockWalletService extends WalletService {
                 "water", "bero", "cycle",
                 "love", "key", "system",
                 "wife", "husband", "trade"));
-    }
-
-    public CompletableFuture<Boolean> isWalletReady() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {

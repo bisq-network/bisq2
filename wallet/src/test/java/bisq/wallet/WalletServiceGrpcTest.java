@@ -25,6 +25,8 @@ import bisq.wallet.protobuf.GetSeedWordsRequest;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.GetUnusedAddressRequest;
 import bisq.wallet.protobuf.GetUnusedAddressResponse;
+import bisq.wallet.protobuf.IsWalletReadyRequest;
+import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.GetWalletAddressesRequest;
 import bisq.wallet.protobuf.GetWalletAddressesResponse;
 import bisq.wallet.protobuf.ListTransactionsRequest;
@@ -43,6 +45,7 @@ import bisq.wallet.receive_address.ReceiveAddressEntry;
 import bisq.wallet.vo.BalanceBreakdown;
 import io.grpc.ManagedChannel;
 import io.grpc.Server;
+import io.grpc.Status;
 import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
@@ -56,9 +59,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -71,8 +76,10 @@ class WalletServiceGrpcTest {
 
     private final List<Object> requests = new ArrayList<>();
     private final List<String> unusedAddresses = new ArrayList<>();
+    private final RecordingWallet daemon = new RecordingWallet();
     private Server server;
     private ManagedChannel channel;
+    private WalletGrpcClient client;
     private PersistenceService persistenceService;
     private WalletService walletService;
 
@@ -81,11 +88,11 @@ class WalletServiceGrpcTest {
         String serverName = InProcessServerBuilder.generateName();
         server = InProcessServerBuilder.forName(serverName)
                 .directExecutor()
-                .addService(new RecordingWallet())
+                .addService(daemon)
                 .build()
                 .start();
         channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
-        WalletGrpcClient client = new WalletGrpcClient(channel);
+        client = new WalletGrpcClient(channel);
         client.initialize();
         persistenceService = new PersistenceService(tempDirPath);
         walletService = new WalletService(new WalletService.Config(true, "localhost", 0, false), persistenceService, client);
@@ -200,22 +207,268 @@ class WalletServiceGrpcTest {
         assertEquals("", utxos.get(1).getAddress());
     }
 
+    @Test
+    void aNewInstallIsNotSetUpWithoutAskingTheDaemon() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.NOT_SET_UP, walletService.getState().get());
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void openingTheWalletRecordsItAndTheRecordSurvivesARestart() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        walletService.openOrCreateWallet("Wallet-Pa55!").get();
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+
+        awaitStoredWalletRecord();
+        PersistenceService restartedPersistenceService = new PersistenceService(tempDirPath);
+        WalletService restarted = new WalletService(new WalletService.Config(true, "localhost", 0, false),
+                restartedPersistenceService, client);
+        restartedPersistenceService.readAllPersisted().join();
+        requests.clear();
+
+        restarted.initialize().get();
+        restarted.refreshState().get();
+
+        assertEquals(WalletService.State.OPEN, restarted.getState().get());
+        assertTrue(requests.stream().anyMatch(GetBalanceRequest.class::isInstance));
+    }
+
+    @Test
+    void openingTheWalletFetchesTheBalance() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+
+        walletService.openOrCreateWallet("Wallet-Pa55!").get();
+
+        awaitBalance();
+        assertEquals(Coin.asBtcFromValue(2000), walletService.getBalance().get());
+    }
+
+    @Test
+    void aClosedWalletOnTheDaemonIsLocked() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.walletOpen = false;
+
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.LOCKED, walletService.getState().get());
+    }
+
+    @Test
+    void anOpenWalletThatIsStillSyncingIsOpenAndNeedsNoPassword() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.ready = false;
+        requests.clear();
+
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+        assertFalse(requests.stream().anyMatch(IsWalletReadyRequest.class::isInstance));
+    }
+
+    @Test
+    void anUnreachableDaemonIsUnavailable() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.failure = Status.UNAVAILABLE;
+
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.UNAVAILABLE, walletService.getState().get());
+    }
+
+    @Test
+    void aDaemonWithoutTheWalletServiceIsUnavailable() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.failure = Status.UNIMPLEMENTED;
+
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.UNAVAILABLE, walletService.getState().get());
+    }
+
+    @Test
+    void anUnclassifiedProbeErrorOnAnInstallWithAWalletIsUnavailableNotSetup() throws ExecutionException, InterruptedException {
+        openWallet();
+        awaitStoredWalletRecord();
+        PersistenceService restartedPersistenceService = new PersistenceService(tempDirPath);
+        WalletService restarted = new WalletService(new WalletService.Config(true, "localhost", 0, false),
+                restartedPersistenceService, client);
+        restartedPersistenceService.readAllPersisted().join();
+        daemon.failure = Status.INTERNAL;
+
+        restarted.initialize().get();
+        restarted.refreshState().get();
+
+        assertEquals(WalletService.State.UNAVAILABLE, restarted.getState().get());
+    }
+
+    @Test
+    void aWrongPasswordOnALockedWalletKeepsItLocked() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.walletOpen = false;
+        walletService.refreshState().get();
+        assertEquals(WalletService.State.LOCKED, walletService.getState().get());
+
+        assertThrows(ExecutionException.class, () -> walletService.openOrCreateWallet("wrong").get());
+
+        assertEquals(WalletService.State.LOCKED, walletService.getState().get());
+    }
+
+    @Test
+    void anOpenAttemptAgainstAnUnreachableDaemonBeforeSetupStaysNotSetUp() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        daemon.failure = Status.UNAVAILABLE;
+
+        assertThrows(ExecutionException.class, () -> walletService.openOrCreateWallet("Wallet-Pa55!").get());
+
+        awaitState(WalletService.State.NOT_SET_UP);
+    }
+
+    @Test
+    void anOpenAttemptAgainstAnUnreachableDaemonOnALockedWalletIsUnavailable() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.walletOpen = false;
+        walletService.refreshState().get();
+        assertEquals(WalletService.State.LOCKED, walletService.getState().get());
+        daemon.failure = Status.UNAVAILABLE;
+
+        assertThrows(ExecutionException.class, () -> walletService.openOrCreateWallet("Wallet-Pa55!").get());
+
+        awaitState(WalletService.State.UNAVAILABLE);
+    }
+
+    @Test
+    void aRefusedPasswordLeavesTheStateAndTheRecordUntouched() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        daemon.walletOpen = false;
+
+        assertThrows(ExecutionException.class, () -> walletService.openOrCreateWallet("wrong").get());
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.NOT_SET_UP, walletService.getState().get());
+        assertFalse(requests.stream().anyMatch(GetBalanceRequest.class::isInstance));
+    }
+
+    @Test
+    void aNotOpenFailureOfAnOrdinaryCallIsAnsweredWithAProbe() throws Exception {
+        openWallet();
+        daemon.walletOpen = false;
+
+        assertThrows(ExecutionException.class, () -> walletService.requestTransactions().get());
+
+        awaitState(WalletService.State.LOCKED);
+    }
+
+    @Test
+    void aProbeStartedBeforeTheUnlockCannotLockTheWalletAgain() throws ExecutionException, InterruptedException {
+        openWallet();
+        daemon.walletOpen = false;
+        daemon.holdBalanceReply = true;
+        CompletableFuture<Void> probe = walletService.refreshState();
+        daemon.holdBalanceReply = false;
+
+        walletService.openOrCreateWallet("Wallet-Pa55!").get();
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+        daemon.heldBalanceReply.onError(Status.FAILED_PRECONDITION.asRuntimeException());
+        probe.get();
+
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+    }
+
+    @Test
+    void initializingTwiceKeepsTheWalletOpen() throws ExecutionException, InterruptedException {
+        openWallet();
+
+        walletService.initialize().get();
+        walletService.initialize().get();
+        walletService.refreshState().get();
+
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+    }
+
+    private void openWallet() throws ExecutionException, InterruptedException {
+        walletService.initialize().get();
+        walletService.openOrCreateWallet("Wallet-Pa55!").get();
+    }
+
+    // The record is written asynchronously by the persistence service; a restart reads it from disk.
+    private void awaitStoredWalletRecord() throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (!new WalletStoreService(new PersistenceService(tempDirPath)).readPersisted()
+                .map(WalletStore::isWalletExists).orElse(false)
+                && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+    }
+
+    private void awaitBalance() throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (walletService.getBalance().get() == null && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+    }
+
+    private void awaitState(WalletService.State expected) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (walletService.getState().get() != expected && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertEquals(expected, walletService.getState().get());
+    }
+
+    // The daemon's rules in miniature: a closed wallet refuses everything but open and ready, open needs the password,
+    // a configured failure fails every call.
     private class RecordingWallet extends WalletGrpc.WalletImplBase {
+        private boolean walletOpen = true;
+        private boolean ready = true;
+        private Status failure;
+        private boolean holdBalanceReply;
+        private StreamObserver<GetBalanceResponse> heldBalanceReply;
+
         @Override
         public void openOrCreateWallet(OpenOrCreateWalletRequest request, StreamObserver<OpenOrCreateWalletResponse> responseObserver) {
             requests.add(request);
+            if (failure != null) {
+                responseObserver.onError(failure.asRuntimeException());
+                return;
+            }
+            if (!walletOpen) {
+                if (!request.getPassword().equals("Wallet-Pa55!")) {
+                    responseObserver.onError(Status.PERMISSION_DENIED.asRuntimeException());
+                    return;
+                }
+                walletOpen = true;
+            }
             reply(responseObserver, OpenOrCreateWalletResponse.newBuilder().setSuccess(true).build());
+        }
+
+        @Override
+        public void isWalletReady(IsWalletReadyRequest request, StreamObserver<IsWalletReadyResponse> responseObserver) {
+            requests.add(request);
+            reply(responseObserver, IsWalletReadyResponse.newBuilder().setReady(walletOpen && ready).build());
         }
 
         @Override
         public void getSeedWords(GetSeedWordsRequest request, StreamObserver<GetSeedWordsResponse> responseObserver) {
             requests.add(request);
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, GetSeedWordsResponse.newBuilder().addSeedWords("word1").addSeedWords("word2").build());
         }
 
         @Override
         public void getBalance(GetBalanceRequest request, StreamObserver<GetBalanceResponse> responseObserver) {
             requests.add(request);
+            if (holdBalanceReply) {
+                heldBalanceReply = responseObserver;
+                return;
+            }
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, GetBalanceResponse.newBuilder()
                     .setBalance(2000)
                     .setConfirmed(1500)
@@ -228,12 +481,18 @@ class WalletServiceGrpcTest {
         @Override
         public void sendToAddress(SendToAddressRequest request, StreamObserver<SendToAddressResponse> responseObserver) {
             requests.add(request);
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, SendToAddressResponse.newBuilder().setTxId("sent_tx_id").build());
         }
 
         @Override
         public void getUnusedAddress(GetUnusedAddressRequest request, StreamObserver<GetUnusedAddressResponse> responseObserver) {
             requests.add(request);
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, GetUnusedAddressResponse.newBuilder()
                     .setAddress(PubAddressInfo.newBuilder().setAddress(unusedAddresses.remove(0)))
                     .build());
@@ -241,6 +500,9 @@ class WalletServiceGrpcTest {
 
         @Override
         public void getWalletAddresses(GetWalletAddressesRequest request, StreamObserver<GetWalletAddressesResponse> responseObserver) {
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, GetWalletAddressesResponse.newBuilder()
                     .addAddresses(PubAddressInfo.newBuilder().setAddress("bcrt1qone"))
                     .addAddresses(PubAddressInfo.newBuilder().setAddress("bcrt1qtwo"))
@@ -249,6 +511,9 @@ class WalletServiceGrpcTest {
 
         @Override
         public void listTransactions(ListTransactionsRequest request, StreamObserver<ListTransactionsResponse> responseObserver) {
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, ListTransactionsResponse.newBuilder()
                     .addTransactions(bisq.wallet.protobuf.Transaction.newBuilder()
                             .setTxId("tx1")
@@ -260,11 +525,26 @@ class WalletServiceGrpcTest {
 
         @Override
         public void listUtxos(ListUtxosRequest request, StreamObserver<ListUtxosResponse> responseObserver) {
+            if (!canServe(responseObserver)) {
+                return;
+            }
             reply(responseObserver, ListUtxosResponse.newBuilder()
                     .addUtxos(Utxo.newBuilder().setTxId("tx1").setAmount(1L)
                             .setAddress(PubAddressInfo.newBuilder().setAddress("bcrt1qowned")))
                     .addUtxos(Utxo.newBuilder().setTxId("tx2").setAmount(2L))
                     .build());
+        }
+
+        private boolean canServe(StreamObserver<?> responseObserver) {
+            if (failure != null) {
+                responseObserver.onError(failure.asRuntimeException());
+                return false;
+            }
+            if (!walletOpen) {
+                responseObserver.onError(Status.FAILED_PRECONDITION.withDescription("wallet not open").asRuntimeException());
+                return false;
+            }
+            return true;
         }
 
         private <T> void reply(StreamObserver<T> responseObserver, T response) {
