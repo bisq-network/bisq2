@@ -47,8 +47,9 @@ public class CatHashImageUtil {
     private static final String BASE_PATH = "images/cathash/";
 
     // A cache file in the compressed format starts with this marker, followed by the deflate compressed output of
-    // imageToByteArray. A file in the older uncompressed format starts with the image width, which is never 0. So the
-    // first byte tells the two formats apart.
+    // imageToByteArray. A file in the older uncompressed format starts with the low byte of the image width.
+    // CatHashService caches only icons up to SIZE_OF_CACHED_ICONS (120 px), so that byte is between 1 and 120 and
+    // never 0. So the first byte tells the two formats apart.
     private static final byte[] COMPRESSED_FORMAT_MARKER = new byte[]{0, 1};
 
     public static Image composeImage(String[] paths, double size) {
