@@ -21,9 +21,13 @@ A missing or malformed `offerId` returns 400.
 
 ## Access
 
-The endpoint requires an authenticated API session with the TRADES permission. That permission
-also authorizes the state-changing trade routes; this endpoint does not add a narrower read-only
-grant.
+The endpoint uses the same access control as the other REST routes. With the security setting
+`supportSessionHandling` enabled it requires an authenticated API session, and with
+`authorizationRequired` enabled it requires the TRADES permission. Both are enabled in the API app
+and desktop configurations. A node with both disabled serves the endpoint without either check.
+
+The TRADES permission also authorizes the state-changing trade routes; this endpoint does not add a
+narrower read-only grant.
 
 Nodes that support the endpoint list the `trade-status` key in their API capabilities, so a client
 can detect support without probing for a 404.
