@@ -22,7 +22,7 @@ import bisq.desktop.common.view.View;
 import bisq.desktop.components.containers.Spacer;
 import bisq.desktop.components.containers.WizardOverlay;
 import bisq.desktop.components.controls.BisqMenuItem;
-import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
+import bisq.desktop.main.content.wallet.receive.WalletInputBox;
 import bisq.i18n.Res;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -40,7 +40,7 @@ import org.fxmisc.easybind.Subscription;
 
 @Slf4j
 public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddressModel, WalletReceiveAddressController> {
-    private final AddressNoteInputBox addressNoteInputBox;
+    private final WalletInputBox addressNoteInputBox;
     private final Label addressDescriptionLabel, addressLabel;
     private final BisqMenuItem createAddressButton, saveNoteButton, clearNoteButton, generateQrCodeButton,
             copyAddressButton, addAddressNoteButton;
@@ -71,12 +71,15 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
 
         createAddressButton = new BisqMenuItem("new-address-green", "new-address-white");
         createAddressButton.setTooltip(Res.get("wallet.receive.createNew"));
+        double addressBarMargin = 30; // for the create address button
+        HBox.setMargin(addressBarHBox, new Insets(0, 0, 0, addressBarMargin));
         HBox addressBarAndCreateButtonHBox = new HBox(20, addressBarHBox, createAddressButton);
         addressBarAndCreateButtonHBox.setAlignment(Pos.CENTER_LEFT);
 
         addressDescriptionLabel = new Label();
         addressDescriptionLabel.getStyleClass().add("address-description");
-        VBox.setMargin(addressDescriptionLabel, new Insets(0, 0, 0, 15));
+        double descriptionMargin = 15;
+        VBox.setMargin(addressDescriptionLabel, new Insets(0, 0, 0, addressBarMargin + descriptionMargin));
         VBox addressVBox = new VBox(2, addressDescriptionLabel, addressBarAndCreateButtonHBox);
 
         // More options
@@ -88,7 +91,7 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
         addAddressNoteButton.setContentDisplay(ContentDisplay.RIGHT);
 
         // Address note
-        addressNoteInputBox = new AddressNoteInputBox();
+        addressNoteInputBox = new WalletInputBox();
         addressNoteInputBox.setEditable(true);
         addressNoteInputBox.setMinWidth(230);
         addressNoteInputBox.setValidators(model.getAddressNoteMaxLengthValidator());
