@@ -25,7 +25,9 @@ import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
+import bisq.common.timer.Scheduler;
 import bisq.persistence.PersistenceService;
+import bisq.wallet.protobuf.GetBalanceResponse;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.PubAddressInfo;
 import bisq.wallet.protobuf.SendToAddressRequest;
@@ -39,15 +41,21 @@ import bisq.wallet.receive_address.ReceiveAddressEntry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+import java.time.Duration;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class WalletService implements Service {
+    private static final Duration DEFAULT_REFRESH_INTERVAL = Duration.ofSeconds(30);
+
     private final WalletGrpcClient client;
     protected final ReceiveAddressService receiveAddressService;
     protected final Observable<Coin> balance = new Observable<>();
@@ -58,7 +66,16 @@ public class WalletService implements Service {
     protected final Config config;
     private final WalletStoreService walletStoreService;
     private final Observable<State> state = new Observable<>(State.NOT_SET_UP);
+    private final Duration refreshInterval;
+    private final AtomicInteger balanceSequence = new AtomicInteger();
+    private final AtomicInteger transactionsSequence = new AtomicInteger();
     private int stateGeneration;
+    private int appliedBalanceSequence;
+    private int appliedTransactionsSequence;
+    @Nullable
+    private volatile Scheduler refreshScheduler;
+    @Nullable
+    private volatile CompletableFuture<?> pollInFlight;
 
     public enum State {
         NOT_SET_UP,
@@ -99,8 +116,16 @@ public class WalletService implements Service {
     WalletService(Config config,
                   PersistenceService persistenceService,
                   WalletGrpcClient client) {
+        this(config, persistenceService, client, DEFAULT_REFRESH_INTERVAL);
+    }
+
+    WalletService(Config config,
+                  PersistenceService persistenceService,
+                  WalletGrpcClient client,
+                  Duration refreshInterval) {
         this.config = config;
         this.client = client;
+        this.refreshInterval = refreshInterval;
         this.receiveAddressService = new ReceiveAddressService(persistenceService);
         this.walletStoreService = new WalletStoreService(persistenceService);
     }
@@ -113,17 +138,52 @@ public class WalletService implements Service {
         }
         return client.initialize().thenApply(result -> {
             refreshState();
+            if (refreshScheduler == null) {
+                refreshScheduler = Scheduler.run(this::refreshWhileOpen)
+                        .host(this)
+                        .runnableName("refreshWallet")
+                        .periodically(refreshInterval.toMillis());
+            }
             return result;
         });
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        if (refreshScheduler != null) {
+            refreshScheduler.stop();
+            refreshScheduler = null;
+        }
         return client.shutdown();
     }
 
     public ReadOnlyObservable<State> getState() {
         return state;
+    }
+
+    // The daemon sees new blocks on its own poll, so the balance is polled here, and the transactions follow a
+    // changed breakdown (an incoming payment is untrusted pending first, which leaves the spendable balance alone).
+    // A failing call re-probes the state, which is how a restarted daemon shows up as LOCKED; while the daemon is
+    // unreachable the tick probes, so it comes back without a user action. One poll in flight at a time.
+    private void refreshWhileOpen() {
+        CompletableFuture<?> previous = pollInFlight;
+        if (previous != null && !previous.isDone()) {
+            return;
+        }
+        State current = state.get();
+        if (current == State.UNAVAILABLE) {
+            pollInFlight = refreshState();
+            return;
+        }
+        if (current != State.OPEN) {
+            return;
+        }
+        BalanceBreakdown previousBreakdown = balanceBreakdown.get();
+        pollInFlight = requestBalance().thenAccept(newBalance -> {
+            if (!Objects.equals(balanceBreakdown.get(), previousBreakdown)) {
+                requestTransactions();
+            }
+        });
     }
 
     // The daemon cannot say whether a wallet exists, so the persisted flag decides between NOT_SET_UP and the daemon
@@ -257,7 +317,13 @@ public class WalletService implements Service {
         feeRatePerKwu.ifPresent(request::setFeeRatePerKwu);
 
         return tracked(client.sendToAddress(request.build())
-                .thenApply(SendToAddressResponse::getTxId));
+                .thenApply(SendToAddressResponse::getTxId)
+                .whenComplete((txId, throwable) -> {
+                    if (throwable == null) {
+                        requestBalance();
+                        requestTransactions();
+                    }
+                }));
     }
 
     // The daemon's wallet always has a password.
@@ -269,25 +335,35 @@ public class WalletService implements Service {
         return tracked(fetchBalance());
     }
 
+    // An answer older than the last applied one is dropped: with the poll and the dashboard both asking, a slow
+    // answer can arrive after a newer one. The caller gets the balance the service holds afterwards.
     private CompletableFuture<Coin> fetchBalance() {
+        int sequence = balanceSequence.incrementAndGet();
         return client.requestBalance()
-                .thenApply(response -> {
-                    var newBalance = Coin.asBtcFromValue(response.getBalance());
-                    balance.set(newBalance);
-                    balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
-                            response.getConfirmed(),
-                            response.getTrustedPending(),
-                            response.getUntrustedPending(),
-                            response.getImmature()));
-                    return newBalance;
-                });
+                .thenApply(response -> applyBalance(sequence, response));
+    }
+
+    private synchronized Coin applyBalance(int sequence, GetBalanceResponse response) {
+        Coin newBalance = Coin.asBtcFromValue(response.getBalance());
+        if (sequence > appliedBalanceSequence) {
+            appliedBalanceSequence = sequence;
+            balance.set(newBalance);
+            balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
+                    response.getConfirmed(),
+                    response.getTrustedPending(),
+                    response.getUntrustedPending(),
+                    response.getImmature()));
+            return newBalance;
+        }
+        return Optional.ofNullable(balance.get()).orElse(newBalance);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
+        int sequence = transactionsSequence.incrementAndGet();
         return tracked(client.listTransactions()
                 .thenApply(response -> {
                     try {
-                        transactions.setAll(ProtobufUtils.fromProtoStream(response.getTransactionsList(),
+                        applyTransactions(sequence, ProtobufUtils.fromProtoStream(response.getTransactionsList(),
                                         Transaction::fromProto)
                                 .toList());
                     } catch (UnresolvableProtobufException e) {
@@ -295,6 +371,13 @@ public class WalletService implements Service {
                     }
                     return transactions;
                 }));
+    }
+
+    private synchronized void applyTransactions(int sequence, List<Transaction> latest) {
+        if (sequence > appliedTransactionsSequence) {
+            appliedTransactionsSequence = sequence;
+            transactions.setAll(latest);
+        }
     }
 
     public ReadOnlyObservableSet<String> getWalletAddresses() {

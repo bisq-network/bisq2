@@ -57,6 +57,7 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
@@ -76,7 +77,7 @@ class WalletServiceGrpcTest {
     @TempDir
     private Path tempDirPath;
 
-    private final List<Object> requests = new ArrayList<>();
+    private final List<Object> requests = Collections.synchronizedList(new ArrayList<>());
     private final List<String> unusedAddresses = new ArrayList<>();
     private final RecordingWallet daemon = new RecordingWallet();
     private Server server;
@@ -84,6 +85,7 @@ class WalletServiceGrpcTest {
     private WalletGrpcClient client;
     private PersistenceService persistenceService;
     private WalletService walletService;
+    private WalletService pollingService;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -104,6 +106,9 @@ class WalletServiceGrpcTest {
     // A write queued now completes after all earlier ones.
     @AfterEach
     void tearDown() {
+        if (pollingService != null) {
+            pollingService.shutdown().join();
+        }
         persistenceService.persistAllClients().join();
         channel.shutdownNow();
         server.shutdownNow();
@@ -140,8 +145,12 @@ class WalletServiceGrpcTest {
         walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(750L)).get();
         walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
 
-        SendToAddressRequest withFeeRate = (SendToAddressRequest) requests.get(0);
-        SendToAddressRequest withoutFeeRate = (SendToAddressRequest) requests.get(1);
+        List<SendToAddressRequest> sends = requests.stream()
+                .filter(SendToAddressRequest.class::isInstance)
+                .map(SendToAddressRequest.class::cast)
+                .toList();
+        SendToAddressRequest withFeeRate = sends.get(0);
+        SendToAddressRequest withoutFeeRate = sends.get(1);
         assertTrue(withFeeRate.hasFeeRatePerKwu());
         assertEquals(750L, withFeeRate.getFeeRatePerKwu());
         assertFalse(withoutFeeRate.hasFeeRatePerKwu());
@@ -416,6 +425,119 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void theBalanceIsPolledWhileTheWalletIsOpenAndTransactionsFollowAChange() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        requests.clear();
+        daemon.balance = 3000;
+
+        awaitBalance(polling, 3000);
+        awaitRequest(ListTransactionsRequest.class);
+    }
+
+    @Test
+    void anIncomingPaymentThatIsStillPendingRefreshesTheTransactions() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        Thread.sleep(150);
+        requests.clear();
+        daemon.untrustedPending = 500;
+
+        awaitRequest(ListTransactionsRequest.class);
+    }
+
+    @Test
+    void anUnreachableDaemonIsProbedByThePollUntilItIsBack() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.failure = Status.UNAVAILABLE;
+        awaitState(polling, WalletService.State.UNAVAILABLE);
+
+        daemon.failure = null;
+        daemon.walletOpen = false;
+
+        awaitState(polling, WalletService.State.LOCKED);
+    }
+
+    @Test
+    void aSlowDaemonStillUpdatesTheBalance() throws Exception {
+        openWallet();
+        daemon.holdBalanceReply = true;
+        CompletableFuture<Coin> first = walletService.requestBalance();
+        StreamObserver<GetBalanceResponse> firstReply = daemon.heldBalanceReply;
+        CompletableFuture<Coin> second = walletService.requestBalance();
+        StreamObserver<GetBalanceResponse> secondReply = daemon.heldBalanceReply;
+        daemon.holdBalanceReply = false;
+
+        firstReply.onNext(GetBalanceResponse.newBuilder().setBalance(3000).build());
+        firstReply.onCompleted();
+        first.get();
+        assertEquals(Coin.asBtcFromValue(3000), walletService.getBalance().get());
+
+        secondReply.onNext(GetBalanceResponse.newBuilder().setBalance(4000).build());
+        secondReply.onCompleted();
+        second.get();
+        assertEquals(Coin.asBtcFromValue(4000), walletService.getBalance().get());
+    }
+
+    @Test
+    void nothingIsPolledWhileTheWalletIsNotSetUp() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+
+        Thread.sleep(300);
+
+        assertFalse(requests.stream().anyMatch(GetBalanceRequest.class::isInstance));
+    }
+
+    @Test
+    void aRestartedDaemonIsNoticedByThePollWithoutAUserAction() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+
+        daemon.walletOpen = false;
+
+        awaitState(polling, WalletService.State.LOCKED);
+    }
+
+    @Test
+    void aSendRefreshesTheBalanceAndTheTransactions() throws Exception {
+        openWallet();
+        awaitBalance();
+        requests.clear();
+
+        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qsomeone", 1000).get();
+
+        awaitRequest(GetBalanceRequest.class);
+        awaitRequest(ListTransactionsRequest.class);
+    }
+
+    @Test
+    void aLateBalanceAnswerDoesNotOverwriteANewerOne() throws Exception {
+        openWallet();
+        daemon.holdBalanceReply = true;
+        CompletableFuture<Coin> slow = walletService.requestBalance();
+        daemon.holdBalanceReply = false;
+        daemon.balance = 5000;
+        walletService.requestBalance().get();
+        assertEquals(Coin.asBtcFromValue(5000), walletService.getBalance().get());
+
+        daemon.heldBalanceReply.onNext(GetBalanceResponse.newBuilder().setBalance(2000).build());
+        daemon.heldBalanceReply.onCompleted();
+        slow.get();
+
+        assertEquals(Coin.asBtcFromValue(5000), walletService.getBalance().get());
+    }
+
+    @Test
     void initializingTwiceKeepsTheWalletOpen() throws ExecutionException, InterruptedException {
         openWallet();
 
@@ -441,6 +563,11 @@ class WalletServiceGrpcTest {
         }
     }
 
+    private WalletService pollingService(Duration interval) {
+        pollingService = new WalletService(new WalletService.Config(true, "localhost", 0, false), persistenceService, client, interval);
+        return pollingService;
+    }
+
     private void awaitBalance() throws InterruptedException {
         long deadline = System.currentTimeMillis() + 5_000;
         while (walletService.getBalance().get() == null && System.currentTimeMillis() < deadline) {
@@ -448,21 +575,43 @@ class WalletServiceGrpcTest {
         }
     }
 
-    private void awaitState(WalletService.State expected) throws InterruptedException {
+    private void awaitBalance(WalletService service, long expected) throws InterruptedException {
         long deadline = System.currentTimeMillis() + 5_000;
-        while (walletService.getState().get() != expected && System.currentTimeMillis() < deadline) {
+        while (!Coin.asBtcFromValue(expected).equals(service.getBalance().get()) && System.currentTimeMillis() < deadline) {
             Thread.sleep(20);
         }
-        assertEquals(expected, walletService.getState().get());
+        assertEquals(Coin.asBtcFromValue(expected), service.getBalance().get());
+    }
+
+    private void awaitRequest(Class<?> requestType) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (requests.stream().noneMatch(requestType::isInstance) && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertTrue(requests.stream().anyMatch(requestType::isInstance), requestType.getSimpleName() + " was not requested");
+    }
+
+    private void awaitState(WalletService.State expected) throws InterruptedException {
+        awaitState(walletService, expected);
+    }
+
+    private void awaitState(WalletService service, WalletService.State expected) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (service.getState().get() != expected && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertEquals(expected, service.getState().get());
     }
 
     // The daemon's rules in miniature: a closed wallet refuses everything but open and ready, open needs the password,
     // a configured failure fails every call.
     private class RecordingWallet extends WalletGrpc.WalletImplBase {
-        private boolean walletOpen = true;
-        private boolean ready = true;
-        private Status failure;
-        private boolean holdBalanceReply;
+        private volatile boolean walletOpen = true;
+        private volatile boolean ready = true;
+        private volatile long balance = 2000;
+        private volatile long untrustedPending = 7;
+        private volatile Status failure;
+        private volatile boolean holdBalanceReply;
         private StreamObserver<GetBalanceResponse> heldBalanceReply;
 
         @Override
@@ -508,10 +657,10 @@ class WalletServiceGrpcTest {
                 return;
             }
             reply(responseObserver, GetBalanceResponse.newBuilder()
-                    .setBalance(2000)
+                    .setBalance(balance)
                     .setConfirmed(1500)
                     .setTrustedPending(500)
-                    .setUntrustedPending(7)
+                    .setUntrustedPending(untrustedPending)
                     .setImmature(3)
                     .build());
         }
@@ -549,6 +698,7 @@ class WalletServiceGrpcTest {
 
         @Override
         public void listTransactions(ListTransactionsRequest request, StreamObserver<ListTransactionsResponse> responseObserver) {
+            requests.add(request);
             if (!canServe(responseObserver)) {
                 return;
             }
