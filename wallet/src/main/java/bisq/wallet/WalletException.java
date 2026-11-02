@@ -30,6 +30,7 @@ public class WalletException extends RuntimeException {
         DAEMON_UNAVAILABLE,
         UNSUPPORTED_CALL,
         CLIENT_NOT_READY,
+        CALL_TIMED_OUT,
         DAEMON_ERROR
     }
 

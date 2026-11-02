@@ -55,12 +55,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -375,6 +377,42 @@ class WalletServiceGrpcTest {
         probe.get();
 
         assertEquals(WalletService.State.OPEN, walletService.getState().get());
+    }
+
+    @Test
+    void aTimedOutProbeKeepsTheState() throws Exception {
+        openWallet();
+        awaitStoredWalletRecord();
+        WalletGrpcClient shortDeadlineClient = new WalletGrpcClient(channel, Duration.ofMillis(200));
+        shortDeadlineClient.initialize();
+        PersistenceService restartedPersistenceService = new PersistenceService(tempDirPath);
+        WalletService slowDaemonService = new WalletService(new WalletService.Config(true, "localhost", 0, false),
+                restartedPersistenceService, shortDeadlineClient);
+        restartedPersistenceService.readAllPersisted().join();
+        slowDaemonService.refreshState().get();
+        assertEquals(WalletService.State.OPEN, slowDaemonService.getState().get());
+        daemon.holdBalanceReply = true;
+
+        slowDaemonService.refreshState().get(5, TimeUnit.SECONDS);
+
+        assertEquals(WalletService.State.OPEN, slowDaemonService.getState().get());
+    }
+
+    @Test
+    void aFirstProbeWhichTimesOutOnAnInstallWithAWalletIsUnavailable() throws Exception {
+        openWallet();
+        awaitStoredWalletRecord();
+        WalletGrpcClient shortDeadlineClient = new WalletGrpcClient(channel, Duration.ofMillis(200));
+        shortDeadlineClient.initialize();
+        PersistenceService restartedPersistenceService = new PersistenceService(tempDirPath);
+        WalletService restarted = new WalletService(new WalletService.Config(true, "localhost", 0, false),
+                restartedPersistenceService, shortDeadlineClient);
+        restartedPersistenceService.readAllPersisted().join();
+        daemon.holdBalanceReply = true;
+
+        restarted.refreshState().get(5, TimeUnit.SECONDS);
+
+        assertEquals(WalletService.State.UNAVAILABLE, restarted.getState().get());
     }
 
     @Test

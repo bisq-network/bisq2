@@ -341,6 +341,7 @@ public class WalletService implements Service {
             return switch (walletException.getReason()) {
                 case WALLET_NOT_OPEN -> Optional.of(State.LOCKED);
                 case DAEMON_UNAVAILABLE, UNSUPPORTED_CALL, CLIENT_NOT_READY -> Optional.of(State.UNAVAILABLE);
+                // A timeout says nothing about the wallet, the daemon may hold its lock for a sync
                 default -> Optional.empty();
             };
         }

@@ -34,6 +34,7 @@ public class WalletOpenErrors {
             return switch (walletException.getReason()) {
                 case WRONG_PASSWORD -> Res.get("wallet.protectWallet.error.wrongPassword");
                 case DAEMON_UNAVAILABLE, CLIENT_NOT_READY -> Res.get("wallet.protectWallet.error.daemonUnavailable");
+                case CALL_TIMED_OUT -> Res.get("wallet.protectWallet.error.timedOut");
                 case INVALID_REQUEST -> Res.get("wallet.protectWallet.error.openRefused",
                         walletException.getDetail().orElse(walletException.getMessage()));
                 default -> Res.get("wallet.protectWallet.error.daemonError");

@@ -63,6 +63,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -110,6 +111,32 @@ class WalletGrpcClientTest {
     void tearDown() {
         channels.forEach(ManagedChannel::shutdownNow);
         server.shutdownNow();
+    }
+
+    @Test
+    void aCallWhichOutlastsTheDeadlineFailsAsTimedOut() {
+        doAnswer(invocation -> null).when(serviceImpl).getBalance(any(), any());
+        WalletGrpcClient shortDeadlineClient = new WalletGrpcClient(createChannel(serverName), Duration.ofMillis(200));
+        shortDeadlineClient.initialize();
+
+        CompletableFuture<GetBalanceResponse> future = shortDeadlineClient.requestBalance();
+        ExecutionException exception = assertThrows(ExecutionException.class, () -> future.get(5, TimeUnit.SECONDS));
+
+        WalletException walletException = assertInstanceOf(WalletException.class, exception.getCause());
+        assertEquals(WalletException.Reason.CALL_TIMED_OUT, walletException.getReason());
+    }
+
+    @Test
+    void aSendHasNoDeadline() throws InterruptedException {
+        doAnswer(invocation -> null).when(serviceImpl).sendToAddress(any(), any());
+        WalletGrpcClient shortDeadlineClient = new WalletGrpcClient(createChannel(serverName), Duration.ofMillis(200));
+        shortDeadlineClient.initialize();
+
+        CompletableFuture<SendToAddressResponse> future = shortDeadlineClient.sendToAddress(SendToAddressRequest.newBuilder().build());
+        Thread.sleep(1_000);
+
+        assertFalse(future.isDone());
+        future.cancel(true);
     }
 
     @Test
