@@ -46,6 +46,7 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
 
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -55,21 +56,33 @@ import static bisq.common.util.CompletableFutureUtils.toCompletableFuture;
 
 @Slf4j
 public class WalletGrpcClient implements Service {
+    // The daemon holds its wallet lock while it syncs (bisq-network/bisq-musig#185), so a call may wait for a whole sync
+    // tick. A call which outlasts the deadline fails with CALL_TIMED_OUT instead of hanging the caller.
+    private static final Duration DEFAULT_CALL_DEADLINE = Duration.ofSeconds(60);
+
     private ManagedChannel managedChannel;
     private WalletGrpc.WalletFutureStub futureStub;
     private final String host;
     private final int port;
+    private final Duration callDeadline;
 
     public WalletGrpcClient(String host, int port) {
         this.host = host;
         this.port = port;
+        this.callDeadline = DEFAULT_CALL_DEADLINE;
     }
 
     @VisibleForTesting
     WalletGrpcClient(ManagedChannel managedChannel) {
+        this(managedChannel, DEFAULT_CALL_DEADLINE);
+    }
+
+    @VisibleForTesting
+    WalletGrpcClient(ManagedChannel managedChannel, Duration callDeadline) {
         this.managedChannel = managedChannel;
         this.host = null;
         this.port = 0;
+        this.callDeadline = callDeadline;
     }
 
 
@@ -149,8 +162,10 @@ public class WalletGrpcClient implements Service {
         return call("ListUtxos", stub -> stub.listUtxos(request));
     }
 
+    // No deadline: once the daemon holds the lock it builds and broadcasts the transaction without a cancellation point,
+    // so a send which timed out on the client may still have paid, and a retry would pay twice.
     public CompletableFuture<SendToAddressResponse> sendToAddress(SendToAddressRequest request) {
-        return call("SendToAddress", stub -> stub.sendToAddress(request));
+        return call("SendToAddress", stub -> stub.sendToAddress(request), false);
     }
 
     public CompletableFuture<GetBalanceResponse> requestBalance() {
@@ -160,9 +175,18 @@ public class WalletGrpcClient implements Service {
 
     private <T> CompletableFuture<T> call(String rpcName,
                                           Function<WalletGrpc.WalletFutureStub, ListenableFuture<T>> invocation) {
+        return call(rpcName, invocation, true);
+    }
+
+    private <T> CompletableFuture<T> call(String rpcName,
+                                          Function<WalletGrpc.WalletFutureStub, ListenableFuture<T>> invocation,
+                                          boolean withDeadline) {
         WalletGrpc.WalletFutureStub stub = futureStub;
         if (stub == null) {
             return CompletableFuture.failedFuture(clientNotReady(rpcName));
+        }
+        if (withDeadline) {
+            stub = stub.withDeadlineAfter(callDeadline.toMillis(), TimeUnit.MILLISECONDS);
         }
         CompletableFuture<T> source;
         try {
@@ -202,6 +226,7 @@ public class WalletGrpcClient implements Service {
             case INVALID_ARGUMENT -> WalletException.Reason.INVALID_REQUEST;
             case UNAVAILABLE -> WalletException.Reason.DAEMON_UNAVAILABLE;
             case UNIMPLEMENTED -> WalletException.Reason.UNSUPPORTED_CALL;
+            case DEADLINE_EXCEEDED -> WalletException.Reason.CALL_TIMED_OUT;
             default -> WalletException.Reason.DAEMON_ERROR;
         };
         Optional<String> detail = Optional.ofNullable(status.getDescription());
