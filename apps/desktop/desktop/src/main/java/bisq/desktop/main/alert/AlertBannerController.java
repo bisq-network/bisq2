@@ -63,8 +63,10 @@ public class AlertBannerController implements Controller {
     }
 
     void onClose() {
+        // After a reset, the close button stays visible while the banner slides out, but no alert is displayed.
         // Dismissing removes the alert from the unconsumed alerts, which calls showAlertBanner synchronously.
-        UIThread.run(() -> alertNotificationsService.dismissAlert(model.getDisplayedAuthorizedAlertData()));
+        UIThread.run(() -> Optional.ofNullable(model.getDisplayedAuthorizedAlertData())
+                .ifPresent(alertNotificationsService::dismissAlert));
     }
 
     private void showAlertBanner() {

@@ -17,7 +17,9 @@
 
 package bisq.desktop.main.alert;
 
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
+import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AlertType;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertData;
 import bisq.common.observable.Observable;
@@ -34,37 +36,46 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.testfx.api.FxToolkit;
+import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.desktop.testutil.JavaFxToolkitExtension.runOnFxThread;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testfx.util.WaitForAsyncUtils.waitForFxEvents;
 
+/**
+ * Uses the real AlertNotificationsService, so an alert reaches the banner on the same path as in the app: the alerts
+ * of the security manager in AlertService, then the unconsumed alerts of AlertNotificationsService, then the banner.
+ * The alerts of the security manager change on a network thread, so the tests change them off the FX thread.
+ */
 @ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
 class AlertBannerControllerTest {
-    private final ObservableSet<AuthorizedAlertData> unconsumedAlerts = new ObservableSet<>();
-    private final AuthorizedAlertData emergencyAlert = alert(AlertType.EMERGENCY, "Trading is halted");
-    private final AuthorizedAlertData infoAlert = alert(AlertType.INFO, "Info");
+    private final ObservableSet<AuthorizedAlertData> authorizedAlerts = new ObservableSet<>();
+    private final Observable<Boolean> useAnimations = new Observable<>(false);
+    private final AuthorizedAlertData haltAlert = alert("halt", AlertType.EMERGENCY, "Trading is halted", true);
+    private final AuthorizedAlertData infoAlert = alert("info", AlertType.INFO, "Info", false);
+    private AlertNotificationsService alertNotificationsService;
     private AlertBannerController controller;
 
     @BeforeEach
     void setUp() throws TimeoutException {
         SettingsService settingsService = mock(SettingsService.class);
-        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
+        when(settingsService.getUseAnimations()).thenReturn(useAnimations);
+        when(settingsService.getConsumedAlertIds()).thenReturn(new ObservableSet<>());
         Transitions.setSettingsService(settingsService);
 
-        AlertNotificationsService alertNotificationsService = mock(AlertNotificationsService.class);
-        when(alertNotificationsService.getUnconsumedAlerts()).thenReturn(unconsumedAlerts);
-        doAnswer(invocation -> unconsumedAlerts.remove(invocation.<AuthorizedAlertData>getArgument(0)))
-                .when(alertNotificationsService).dismissAlert(any());
+        AlertService alertService = mock(AlertService.class);
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(authorizedAlerts);
+        alertNotificationsService = new AlertNotificationsService(settingsService, alertService, AppType.DESKTOP);
+        alertNotificationsService.initialize().join();
 
         ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         when(serviceProvider.getAlertNotificationsService()).thenReturn(alertNotificationsService);
@@ -79,45 +90,86 @@ class AlertBannerControllerTest {
     @AfterEach
     void tearDown() throws TimeoutException {
         FxToolkit.setupSceneRoot(Pane::new);
+        alertNotificationsService.shutdown().join();
         Transitions.setSettingsService(null);
     }
 
     @Test
-    void bannerIsResetWhenTheLastAlertIsRemoved() {
-        unconsumedAlerts.add(emergencyAlert);
+    void bannerIsResetWhenTheSecurityManagerRemovesTheLastAlert() {
+        authorizedAlerts.add(haltAlert);
         waitForFxEvents();
-        assertThat(controller.getView().headline.getText()).isEqualTo("Trading is halted");
-        assertThat(controller.getView().getRoot().isVisible()).isTrue();
+        assertThat(headline()).isEqualTo("Trading is halted");
+        assertThat(isBannerVisible()).isTrue();
 
-        unconsumedAlerts.remove(emergencyAlert);
+        authorizedAlerts.remove(haltAlert);
         waitForFxEvents();
 
-        assertThat(controller.getView().headline.getText()).isNullOrEmpty();
-        assertThat(controller.getView().getRoot().isVisible()).isFalse();
+        assertThat(headline()).isNullOrEmpty();
+        assertThat(isBannerVisible()).isFalse();
     }
 
     @Test
     void closingTheBannerShowsTheNextAlertAndThenResetsIt() {
-        unconsumedAlerts.add(infoAlert);
-        unconsumedAlerts.add(emergencyAlert);
+        authorizedAlerts.add(infoAlert);
+        authorizedAlerts.add(haltAlert);
         waitForFxEvents();
-        assertThat(controller.getView().headline.getText()).isEqualTo("Trading is halted");
+        assertThat(headline()).isEqualTo("Trading is halted");
 
         runOnFxThread(controller::onClose);
-        assertThat(controller.getView().headline.getText()).isEqualTo("Info");
-        assertThat(controller.getView().getRoot().isVisible()).isTrue();
+        assertThat(headline()).isEqualTo("Info");
+        assertThat(isBannerVisible()).isTrue();
 
         runOnFxThread(controller::onClose);
-        assertThat(controller.getView().headline.getText()).isNullOrEmpty();
-        assertThat(controller.getView().getRoot().isVisible()).isFalse();
+        assertThat(headline()).isNullOrEmpty();
+        assertThat(isBannerVisible()).isFalse();
     }
 
-    private static AuthorizedAlertData alert(AlertType alertType, String headline) {
-        AuthorizedAlertData alert = mock(AuthorizedAlertData.class);
-        when(alert.getAlertType()).thenReturn(alertType);
-        when(alert.getDate()).thenReturn(1_700_000_000_000L);
-        when(alert.getHeadline()).thenReturn(Optional.of(headline));
-        when(alert.getMessage()).thenReturn(Optional.of("Message"));
-        return alert;
+    // With animations, the banner and its close button stay on screen while the banner slides out after a reset.
+    @Test
+    void closeClickedWhileTheBannerSlidesOutDoesNotThrow() {
+        useAnimations.set(true);
+        authorizedAlerts.add(haltAlert);
+        waitForFxEvents();
+        WaitForAsyncUtils.sleep(500, TimeUnit.MILLISECONDS); // Let the slide-in finish
+        assertThat(isBannerVisible()).isTrue();
+
+        authorizedAlerts.remove(haltAlert);
+        waitForFxEvents();
+        assertThat(isBannerVisible()).isTrue(); // Still sliding out
+
+        AtomicReference<Throwable> thrown = new AtomicReference<>();
+        runOnFxThread(() -> {
+            try {
+                controller.onClose();
+            } catch (Throwable t) {
+                thrown.set(t);
+            }
+        });
+
+        assertThat(thrown.get()).isNull();
+    }
+
+    private String headline() {
+        return controller.getView().headline.getText();
+    }
+
+    private boolean isBannerVisible() {
+        return controller.getView().getRoot().isVisible();
+    }
+
+    private static AuthorizedAlertData alert(String id, AlertType alertType, String headline, boolean haltTrading) {
+        return new AuthorizedAlertData(id,
+                System.currentTimeMillis(),
+                alertType,
+                Optional.of(headline),
+                Optional.of("Message"),
+                haltTrading,
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                "0123456789abcdef0123456789abcdef01234567",
+                false,
+                Optional.empty(),
+                AppType.DESKTOP);
     }
 }
