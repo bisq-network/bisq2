@@ -47,13 +47,20 @@ public class TorTransportService implements TransportService {
     @ToString
     @EqualsAndHashCode
     public static final class Config implements TransportConfig {
-        public static Config from(Path dataDirPath, com.typesafe.config.Config config) {
+        /**
+         * @param configFile  bisq.conf as ApplicationService parsed it, before resolution
+         * @param commandLine the program arguments and JVM options, which win over bisq.conf
+         */
+        public static Config from(Path dataDirPath,
+                                  com.typesafe.config.Config config,
+                                  com.typesafe.config.Config configFile,
+                                  com.typesafe.config.Config commandLine) {
             return new Config(dataDirPath,
                     config.hasPath("defaultNodePort") ? config.getInt("defaultNodePort") : -1,
                     (int) TimeUnit.SECONDS.toMillis(config.getInt("socketTimeout")),
                     config.getInt("sendMessageThrottleTime"),
                     config.getInt("receiveMessageThrottleTime"),
-                    TorTransportConfig.from(dataDirPath, config));
+                    TorTransportConfig.from(dataDirPath, config, configFile, commandLine));
         }
 
         private final Path dataDirPath;

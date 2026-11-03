@@ -47,6 +47,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 
 import static com.google.common.base.Preconditions.checkArgument;
 
@@ -242,8 +244,52 @@ public abstract class ApplicationService implements Service {
     @Override
     public abstract CompletableFuture<Boolean> shutdown();
 
+    /**
+     * Shuts the services down one after the other, in the order of {@code steps}. A step which fails is logged, and the
+     * later steps still run, so that their services release their resources, for example after Tor processes survived
+     * the shutdown of the network.
+     *
+     * @return false if a step failed, otherwise the result of the last step
+     */
+    protected static CompletableFuture<Boolean> shutdownInOrder(List<Supplier<CompletableFuture<Boolean>>> steps) {
+        AtomicBoolean hasFailed = new AtomicBoolean();
+        CompletableFuture<Boolean> result = CompletableFuture.completedFuture(true);
+        for (Supplier<CompletableFuture<Boolean>> step : steps) {
+            result = result.thenCompose(previousResult -> runShutdownStep(step, hasFailed));
+        }
+        return result.thenApply(lastResult -> !hasFailed.get() && Boolean.TRUE.equals(lastResult));
+    }
+
+    private static CompletableFuture<Boolean> runShutdownStep(Supplier<CompletableFuture<Boolean>> step,
+                                                              AtomicBoolean hasFailed) {
+        CompletableFuture<Boolean> shutdown;
+        try {
+            shutdown = step.get();
+        } catch (RuntimeException e) {
+            shutdown = CompletableFuture.failedFuture(e);
+        }
+        return shutdown.exceptionally(throwable -> {
+            log.error("A service failed to shut down. The shutdown continues with the next service.", throwable);
+            hasFailed.set(true);
+            return false;
+        });
+    }
+
     protected com.typesafe.config.Config getConfig(String path) {
         return applicationConfig.getConfig(path);
+    }
+
+    /**
+     * bisq.conf as parsed, before resolution. A resolved value keeps no trace of a substitution of bisq.conf, so the
+     * Tor library needs the file itself to find the torrc overrides which bisq.conf assigns.
+     */
+    protected com.typesafe.config.Config getConfigFile() {
+        return customConfig;
+    }
+
+    // Program arguments win over JVM options, and both win over bisq.conf.
+    protected com.typesafe.config.Config getCommandLineConfig() {
+        return programArgConfig.withFallback(jvmConfig);
     }
 
     protected boolean hasConfig(String path) {

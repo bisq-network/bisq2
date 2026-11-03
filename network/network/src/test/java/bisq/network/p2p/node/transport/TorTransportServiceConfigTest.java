@@ -22,18 +22,24 @@ import bisq.network.tor.TorTransportConfig;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The block of the Tor transport in the configuration of an application (for example desktop.conf) carries the
- * sandbox and the bridges to the Tor library.
+ * sandbox, the bridges and the torrc overrides to the Tor library.
  */
 class TorTransportServiceConfigTest {
+    private static final String TOR_CONFIG_PATH = "application.network.configByTransportType.tor";
+    private static final String OVERRIDES = TorTransportConfig.BISQ2_TORRC_OVERRIDES_PATH;
     private static final String TOR_CONFIG = """
             socketTimeout=120
             sendMessageThrottleTime=200
@@ -92,6 +98,77 @@ class TorTransportServiceConfigTest {
         assertThat(torConfig.getSandboxConfig().isAllowPluggableTransports()).isFalse();
     }
 
+    // ApplicationService reads program arguments and JVM options with ConfigFactory.parseMap and bisq.conf with
+    // ConfigFactory.parseFile, and the program arguments win. The Tor library refuses the overrides of bisq.conf, which
+    // Bisq 2 also writes itself, if they make Tor start a program or load a library.
+    @Test
+    void theTorrcOverridesOfBisqConfAreTheOverridesOfAConfigurationFile(@TempDir Path dataDir) throws IOException {
+        Path bisqConf = Files.writeString(dataDir.resolve("bisq.conf"),
+                "torrcOverrides { AccelName = \"engine\", ClientTransportPlugin = \"obfs4 exec /tmp/program\" }");
+        Config programArguments = ConfigFactory.parseMap(Map.of("torrcOverrides.ClientTransportPlugin",
+                "obfs4 exec /usr/bin/lyrebird"));
+        Config config = programArguments
+                .withFallback(ConfigFactory.parseFile(bisqConf.toFile()))
+                .withFallback(ConfigFactory.parseString(TOR_CONFIG))
+                .resolve();
+
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(),
+                ConfigFactory.empty()).getTorTransportConfig();
+
+        assertThat(torConfig.getTorrcOverrides())
+                .containsEntry("AccelName", "engine")
+                .containsEntry("ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird");
+        assertThat(torConfig.getConfigFileTorrcOverrides().getKeys()).containsExactly("AccelName");
+        assertThat(torConfig.getConfigFileTorrcOverrides().getHint()).contains("bisq.conf");
+    }
+
+    // ApplicationService passes bisq.conf before resolution and the command line, because a resolved substitution of
+    // bisq.conf has the origin of the value which it names, here a JVM option.
+    @Test
+    void anOverrideWhichBisqConfTakesFromTheCommandLineIsAnOverrideOfAConfigurationFile(@TempDir Path dataDir)
+            throws IOException {
+        Path bisqConf = Files.writeString(dataDir.resolve("bisq.conf"),
+                OVERRIDES + " { AccelName = ${application.enginePath} }");
+        Config configFile = ConfigFactory.parseFile(bisqConf.toFile());
+        Config commandLine = ConfigFactory.parseMap(Map.of("application.enginePath", "/trusted/engine",
+                OVERRIDES + ".ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird"));
+        Config rootConfig = commandLine
+                .withFallback(configFile)
+                .withFallback(ConfigFactory.parseString(TOR_CONFIG).atPath(TOR_CONFIG_PATH))
+                .resolve();
+
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"),
+                rootConfig.getConfig(TOR_CONFIG_PATH), configFile, commandLine).getTorTransportConfig();
+
+        assertThat(torConfig.getTorrcOverrides())
+                .containsEntry("AccelName", "/trusted/engine")
+                .containsEntry("ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird");
+        assertThat(torConfig.getConfigFileTorrcOverrides().getKeys()).containsExactly("AccelName");
+    }
+
+    // A value of bisq.conf without quotes is a number or a boolean, and TypesafeConfigUtils.coerce turns program
+    // arguments and JVM options into numbers and booleans where it can. Tor reads every value as text.
+    @Test
+    void numbersAndBooleansOfTheTorrcOverridesReachTorAsText(@TempDir Path dataDir) throws IOException {
+        Path bisqConf = Files.writeString(dataDir.resolve("bisq.conf"),
+                "torrcOverrides { AvoidDiskWrites = 1, NumEntryGuards = 3 }");
+        Config jvmOptions = ConfigFactory.parseMap(Map.of("torrcOverrides.ClientOnly", 1,
+                "torrcOverrides.SafeLogging", true));
+        Config config = jvmOptions
+                .withFallback(ConfigFactory.parseFile(bisqConf.toFile()))
+                .withFallback(ConfigFactory.parseString(TOR_CONFIG))
+                .resolve();
+
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(),
+                ConfigFactory.empty()).getTorTransportConfig();
+
+        assertThat(torConfig.getTorrcOverrides())
+                .containsEntry("AvoidDiskWrites", "1")
+                .containsEntry("NumEntryGuards", "3")
+                .containsEntry("ClientOnly", "1")
+                .containsEntry("SafeLogging", "true");
+    }
+
     @Test
     void builtInAndCustomBridgesTogetherAreRefused() {
         assertThatThrownBy(() -> torTransportConfig("""
@@ -103,6 +180,7 @@ class TorTransportServiceConfigTest {
 
     private static TorTransportConfig torTransportConfig(String bridgesAndSandbox) {
         Config config = ConfigFactory.parseString(TOR_CONFIG + bridgesAndSandbox);
-        return TorTransportService.Config.from(Path.of("tor"), config).getTorTransportConfig();
+        return TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(), ConfigFactory.empty())
+                .getTorTransportConfig();
     }
 }
