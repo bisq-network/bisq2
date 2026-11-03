@@ -246,6 +246,19 @@ public abstract class ApplicationService implements Service {
         return applicationConfig.getConfig(path);
     }
 
+    /**
+     * bisq.conf as parsed, before resolution. A resolved value keeps no trace of a substitution of bisq.conf, so the
+     * Tor library needs the file itself to find the torrc overrides which bisq.conf assigns.
+     */
+    protected com.typesafe.config.Config getConfigFile() {
+        return customConfig;
+    }
+
+    // Program arguments win over JVM options, and both win over bisq.conf.
+    protected com.typesafe.config.Config getCommandLineConfig() {
+        return programArgConfig.withFallback(jvmConfig);
+    }
+
     protected boolean hasConfig(String path) {
         return applicationConfig.hasPath(path);
     }

@@ -30,6 +30,7 @@ import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.network.p2p.services.data.inventory.InventoryService;
 import bisq.network.p2p.services.peer_group.PeerGroupManager;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import lombok.Getter;
 
 import java.nio.file.Path;
@@ -45,7 +46,24 @@ import static java.util.stream.Collectors.toMap;
 
 @Getter
 public final class NetworkServiceConfig {
+    /**
+     * Without bisq.conf and the command line, the Tor library finds the torrc overrides of bisq.conf only by the origin
+     * of their values, which misses substitutions. Kept for applications outside this repository; it is enough for one
+     * which runs only an external Tor, which gets no torrc overrides.
+     */
     public static NetworkServiceConfig from(Path appDataDirPath, Config networkConfig) {
+        return from(appDataDirPath, networkConfig, ConfigFactory.empty(), ConfigFactory.empty());
+    }
+
+    /**
+     * @param configFile  bisq.conf as ApplicationService parsed it, before resolution. The Tor library refuses the
+     *                    torrc overrides which it assigns if they make Tor run code.
+     * @param commandLine the program arguments and JVM options, which win over bisq.conf
+     */
+    public static NetworkServiceConfig from(Path appDataDirPath,
+                                            Config networkConfig,
+                                            Config configFile,
+                                            Config commandLine) {
         ServiceNode.Config serviceNodeConfig = ServiceNode.Config.from(networkConfig.getConfig("serviceNode"));
         InventoryService.Config inventoryServiceConfig = InventoryService.Config.from(networkConfig.getConfig("inventory"));
         AuthorizationService.Config authorizationServiceConfig = AuthorizationService.Config.from(networkConfig.getConfig("authorization"));
@@ -66,7 +84,8 @@ public final class NetworkServiceConfig {
                 ));
 
         Map<TransportType, Integer> defaultPortByTransportType = createDefaultPortByTransportType(networkConfig);
-        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(networkConfig, appDataDirPath);
+        Map<TransportType, TransportConfig> configByTransportType = createConfigByTransportType(networkConfig,
+                appDataDirPath, configFile, commandLine);
 
         return new NetworkServiceConfig(appDataDirPath,
                 networkConfig.getInt("version"),
@@ -117,21 +136,28 @@ public final class NetworkServiceConfig {
         return map;
     }
 
-    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config, Path appDataDirPath) {
+    private static Map<TransportType, TransportConfig> createConfigByTransportType(Config config,
+                                                                                   Path appDataDirPath,
+                                                                                   Config configFile,
+                                                                                   Config commandLine) {
         Map<TransportType, TransportConfig> map = new HashMap<>();
-        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, appDataDirPath));
-        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, appDataDirPath));
-        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, appDataDirPath));
+        map.put(TransportType.CLEAR, createTransportConfig(TransportType.CLEAR, config, appDataDirPath, configFile, commandLine));
+        map.put(TransportType.TOR, createTransportConfig(TransportType.TOR, config, appDataDirPath, configFile, commandLine));
+        map.put(TransportType.I2P, createTransportConfig(TransportType.I2P, config, appDataDirPath, configFile, commandLine));
         return map;
     }
 
-    private static TransportConfig createTransportConfig(TransportType transportType, Config config, Path appDataDirPath) {
+    private static TransportConfig createTransportConfig(TransportType transportType,
+                                                         Config config,
+                                                         Path appDataDirPath,
+                                                         Config configFile,
+                                                         Config commandLine) {
         Config transportConfig = config.getConfig("configByTransportType." + transportType.name().toLowerCase(Locale.ROOT));
         Path transportDirPath;
         return switch (transportType) {
             case TOR -> {
                 transportDirPath = appDataDirPath.resolve(TorTransportService.TOR_DIR_NAME);
-                yield TorTransportService.Config.from(transportDirPath, transportConfig);
+                yield TorTransportService.Config.from(transportDirPath, transportConfig, configFile, commandLine);
             }
             case I2P -> {
                 transportDirPath = appDataDirPath.resolve("i2p");

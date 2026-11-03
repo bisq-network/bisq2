@@ -60,7 +60,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getAppDataDirPath(),
-                getConfig("network"));
+                getConfig("network"), getConfigFile(), getCommandLineConfig());
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
                 securityService.getKeyBundleService(),
