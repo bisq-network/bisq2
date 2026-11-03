@@ -17,85 +17,106 @@
 
 package bisq.api.web_socket.domain.offers;
 
+import bisq.api.dto.presentation.offerbook.OfferItemPresentationDto;
+import bisq.api.offerbook.RecordedOfferItems;
+import bisq.api.offerbook.RecordedOfferItems.RecordedOffer;
+import bisq.api.web_socket.subscription.Subscriber;
 import bisq.api.web_socket.subscription.SubscriberRepository;
-import bisq.bisq_easy.BisqEasyOfferbookMessageService;
-import bisq.bisq_easy.BisqEasyService;
-import bisq.chat.ChatService;
-import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookChannel;
+import bisq.api.web_socket.subscription.SubscriptionSpecifier;
+import bisq.api.web_socket.subscription.Topic;
+import bisq.bonded_roles.BondedRolesService;
 import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
-import bisq.common.market.Market;
-import bisq.common.market.MarketRepository;
-import bisq.common.observable.Observable;
-import bisq.common.observable.collection.ObservableSet;
-import bisq.offer.bisq_easy.BisqEasyOffer;
+import bisq.common.json.JsonMapperProvider;
 import bisq.user.UserService;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class NumOffersWebSocketServiceTest {
-    private static final Market MARKET = MarketRepository.getUSDBitcoinMarket();
+    private final RecordedOfferItems recordedOffers = new RecordedOfferItems(
+            mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS));
+    private final List<String> sentEvents = new ArrayList<>();
+    private final NumOffersWebSocketService service;
+
+    NumOffersWebSocketServiceTest() {
+        Subscriber subscriber = mock(Subscriber.class);
+        when(subscriber.getTopic()).thenReturn(Topic.NUM_OFFERS);
+        when(subscriber.getSubscriberId()).thenReturn("subscriber-id");
+        when(subscriber.send(anyString())).thenAnswer(invocation -> {
+            sentEvents.add(invocation.getArgument(0));
+            return CompletableFuture.completedFuture(true);
+        });
+        SubscriberRepository subscriberRepository = mock(SubscriberRepository.class);
+        when(subscriberRepository.findSubscribers(Topic.NUM_OFFERS))
+                .thenReturn(Map.of(new SubscriptionSpecifier(Topic.NUM_OFFERS, Optional.empty()), Set.of(subscriber)));
+        service = new NumOffersWebSocketService(subscriberRepository, recordedOffers);
+    }
+
+    // The OFFERS service records the offers and publishes their count per market
+    @Test
+    void countFollowsTheRecordedOffers() throws Exception {
+        service.initialize().join();
+        sentEvents.clear();
+
+        recordedOffers.publishCount("USD");
+        assertThat(sentEvents).hasSize(1);
+        assertThat(sentCounts(sentEvents.get(0))).isEqualTo(Map.of("USD", 0));
+
+        recordedOffers.put(offerMessage(), new RecordedOffer("USD", true, item()));
+        recordedOffers.put(offerMessage(), new RecordedOffer("EUR", true, item()));
+        recordedOffers.publishCount("USD");
+        assertThat(sentEvents).hasSize(2);
+        assertThat(sentCounts(sentEvents.get(1))).isEqualTo(Map.of("USD", 1));
+
+        // Unchanged counts are not sent
+        recordedOffers.publishCount("USD");
+        assertThat(sentEvents).hasSize(2);
+
+        recordedOffers.publishCount("EUR");
+        assertThat(sentEvents).hasSize(3);
+        assertThat(sentCounts(sentEvents.get(2))).isEqualTo(Map.of("USD", 1, "EUR", 1));
+        assertThat(parseCounts(service.getJsonPayload().orElseThrow())).isEqualTo(Map.of("USD", 1, "EUR", 1));
+    }
 
     @Test
-    void numOffersFollowsOfferValidityChangesWithoutChatMessageEvents() {
-        BisqEasyOfferbookChannel channel = new BisqEasyOfferbookChannel(MARKET);
-        BisqEasyOfferbookMessage message = mock(BisqEasyOfferbookMessage.class);
-        when(message.getId()).thenReturn("offer-message-id");
-        when(message.getAuthorUserProfileId()).thenReturn("author-id");
-        when(message.hasBisqEasyOffer()).thenReturn(true);
-        // A channel holds only messages of supported types
-        when(message.hasSupportedChatMessageType()).thenReturn(true);
-        assertTrue(channel.addChatMessage(message));
-        ObservableSet<BisqEasyOfferbookChannel> channels = new ObservableSet<>();
-        channels.add(channel);
-        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
-        when(chatService.getBisqEasyOfferbookChannelService().getChannels()).thenReturn(channels);
-
-        Observable<Long> offerValidityRevision = new Observable<>(0L);
-        boolean[] offerIsValid = {false};
-        BisqEasyOffer offer = mock(BisqEasyOffer.class);
-        BisqEasyOfferbookMessageService messageService = mock(BisqEasyOfferbookMessageService.class);
-        when(messageService.getOfferValidityRevision()).thenReturn(offerValidityRevision);
-        when(messageService.getOffers(any(BisqEasyOfferbookChannel.class)))
-                .thenAnswer(invocation -> offerIsValid[0] ? Stream.of(offer) : Stream.empty());
-        BisqEasyService bisqEasyService = mock(BisqEasyService.class);
-        when(bisqEasyService.getBisqEasyOfferbookMessageService()).thenReturn(messageService);
-
-        NumOffersWebSocketService service = new NumOffersWebSocketService(mock(SubscriberRepository.class),
-                chatService,
-                mock(UserService.class),
-                bisqEasyService);
+    void nothingIsSentAfterShutdown() {
         service.initialize().join();
-        assertEquals(Map.of("USD", 0), service.getObservable());
-        int[] numNotifications = {0};
-        service.getObservable().addObserver(() -> numNotifications[0]++);
-        int notificationsAtRegistration = numNotifications[0];
-
-        offerIsValid[0] = true;
-        offerValidityRevision.set(1L);
-        assertEquals(Map.of("USD", 1), service.getObservable());
-        assertEquals(notificationsAtRegistration + 1, numNotifications[0]);
-
-        offerValidityRevision.set(2L);
-        assertEquals(Map.of("USD", 1), service.getObservable());
-        assertEquals(notificationsAtRegistration + 1, numNotifications[0]);
-
-        offerIsValid[0] = false;
-        offerValidityRevision.set(3L);
-        assertEquals(Map.of("USD", 0), service.getObservable());
-        assertEquals(notificationsAtRegistration + 2, numNotifications[0]);
-
         service.shutdown().join();
-        offerIsValid[0] = true;
-        offerValidityRevision.set(4L);
-        assertEquals(Map.of("USD", 0), service.getObservable());
+        sentEvents.clear();
+
+        recordedOffers.publishCount("USD");
+        assertThat(sentEvents).isEmpty();
+    }
+
+    private static BisqEasyOfferbookMessage offerMessage() {
+        return mock(BisqEasyOfferbookMessage.class);
+    }
+
+    private static OfferItemPresentationDto item() {
+        return new OfferItemPresentationDto(null, false, null, null, null, null, null, null, null, null, null, true);
+    }
+
+    private static Map<String, Integer> sentCounts(String event) throws Exception {
+        JsonNode envelope = JsonMapperProvider.get().readTree(event);
+        assertThat(envelope.get("modificationType").asText()).isEqualTo("REPLACE");
+        return parseCounts(envelope.get("payload").asText());
+    }
+
+    private static Map<String, Integer> parseCounts(String json) throws Exception {
+        return JsonMapperProvider.get().readValue(json, new TypeReference<>() {
+        });
     }
 }
