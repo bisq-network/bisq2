@@ -91,6 +91,10 @@ the next character, or it contains no `#`, which would start a comment, and does
 join the next line to the value. The rule applies to the overrides, to the entries of the node and to the bridge lines.
 The start fails for an entry which breaks it. This includes a path which the node writes into the torrc, all of them
 below the data directory of the application, when the path contains a `#`: the node writes its paths without quotes.
+An override value without quotes in `bisq.conf`, such as `AvoidDiskWrites = 1`, is a number or a boolean, and the node
+turns program arguments and JVM options into numbers and booleans where it can. Such a value reaches Tor as its text.
+Tor takes only `0` and `1` for its boolean options, so `true` stops the start of Tor with the error of Tor. A list is no
+override value: reading the configuration fails with an error which names the path.
 
 An override which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
 `AccelName` or `AccelDir` in any letter case and also as an abbreviation which Tor accepts, is accepted from the program

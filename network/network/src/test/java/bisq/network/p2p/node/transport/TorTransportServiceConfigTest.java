@@ -119,6 +119,28 @@ class TorTransportServiceConfigTest {
         assertThat(torConfig.getConfigFileTorrcOverrides().getHint()).contains("bisq.conf");
     }
 
+    // A value of bisq.conf without quotes is a number or a boolean, and TypesafeConfigUtils.coerce turns program
+    // arguments and JVM options into numbers and booleans where it can. Tor reads every value as text.
+    @Test
+    void numbersAndBooleansOfTheTorrcOverridesReachTorAsText(@TempDir Path dataDir) throws IOException {
+        Path bisqConf = Files.writeString(dataDir.resolve("bisq.conf"),
+                "torrcOverrides { AvoidDiskWrites = 1, NumEntryGuards = 3 }");
+        Config jvmOptions = ConfigFactory.parseMap(Map.of("torrcOverrides.ClientOnly", 1,
+                "torrcOverrides.SafeLogging", true));
+        Config config = jvmOptions
+                .withFallback(ConfigFactory.parseFile(bisqConf.toFile()))
+                .withFallback(ConfigFactory.parseString(TOR_CONFIG))
+                .resolve();
+
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config).getTorTransportConfig();
+
+        assertThat(torConfig.getTorrcOverrides())
+                .containsEntry("AvoidDiskWrites", "1")
+                .containsEntry("NumEntryGuards", "3")
+                .containsEntry("ClientOnly", "1")
+                .containsEntry("SafeLogging", "true");
+    }
+
     @Test
     void builtInAndCustomBridgesTogetherAreRefused() {
         assertThatThrownBy(() -> torTransportConfig("""
