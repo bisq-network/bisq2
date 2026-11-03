@@ -99,8 +99,6 @@ public class StorageService {
         this.persistenceService = persistenceService;
         this.clock = clock;
 
-        pruneExpiredEntriesService.initialize();
-
         // We create all stores for those files we have already persisted.
         // Persisted data is read at the very early stages of the application start.
         Path subPath = persistenceService.getAppDataDirPath().resolve(DbSubDirectory.NETWORK_DB.getDbPath());
@@ -175,7 +173,15 @@ public class StorageService {
         }
     }
 
+    // Pruning starts at initialization rather than at construction, so that its first run sees the loaded stores and
+    // nothing prunes in the background of a service which was only constructed
+    public void initialize() {
+        pruneExpiredEntriesService.initialize();
+    }
+
     public void shutdown() {
+        pruneExpiredEntriesService.shutdown();
+
         authenticatedDataStores.forEach((key, store) -> {
             AuthenticatedDataStorageService.Listener listener = authenticatedDataStoresListeners.get(key);
             store.removeListener(listener);
