@@ -19,6 +19,7 @@ package bisq.api.web_socket;
 
 import bisq.api.access.filter.Attributes;
 import bisq.api.access.permissions.PermissionService;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.util.LogCapture;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
@@ -155,6 +156,7 @@ class WebSocketConnectionHandlerLoggingTest {
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS),
                 mock(PermissionService.class),
-                false);
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS)));
     }
 }

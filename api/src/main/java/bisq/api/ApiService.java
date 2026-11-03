@@ -29,6 +29,7 @@ import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.endpoints.access.AccessApi;
@@ -175,6 +176,7 @@ public class ApiService implements Service {
                         ? pairingService::hasPermissions
                         : clientId -> true;
 
+        RecordedOfferItems recordedOfferItems = new RecordedOfferItems(userService, bondedRolesService);
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
                     tlsContextService,
@@ -191,7 +193,8 @@ public class ApiService implements Service {
                     // connection behind, so registration revalidates against the store. The grant
                     // is what answers that: a revocation withdraws it first and keeps the profile
                     // until its cleanup succeeds.
-                    clientAuthorizedCheck));
+                    clientAuthorizedCheck,
+                    recordedOfferItems));
         } else {
             webSocketService = Optional.empty();
         }
@@ -211,7 +214,9 @@ public class ApiService implements Service {
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
-                userService);
+                userService,
+                bisqEasyService,
+                recordedOfferItems);
         TradeRestApi tradeRestApi = new TradeRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
                 userService,

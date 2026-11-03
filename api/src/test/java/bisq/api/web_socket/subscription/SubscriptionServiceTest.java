@@ -22,6 +22,7 @@ import bisq.api.access.permissions.Permission;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.access.permissions.PermissionSet;
 import bisq.api.access.persistence.ApiAccessStoreService;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.web_socket.domain.BaseWebSocketService;
 import bisq.api.web_socket.domain.OpenTradeItemsService;
 import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
@@ -90,7 +91,8 @@ class SubscriptionServiceTest {
                 mock(PermissionService.class),
                 // Authorization off: these cover routing and subscriber bookkeeping, and the
                 // permission path has its own test.
-                false
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS))
         );
 
         WebSocket webSocket = mock(WebSocket.class);
@@ -120,7 +122,8 @@ class SubscriptionServiceTest {
                 mock(PermissionService.class),
                 // Authorization off: these cover routing and subscriber bookkeeping, and the
                 // permission path has its own test.
-                false
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS))
         );
         SubscriberRepository subscriberRepository = getSubscriberRepository(service);
         replaceWebSocketService(service, "marketPriceWebSocketService", new TestMarketPriceWebSocketService(subscriberRepository));
@@ -166,7 +169,8 @@ class SubscriptionServiceTest {
                 mock(PermissionService.class),
                 // Authorization off: these cover routing and subscriber bookkeeping, and the
                 // permission path has its own test.
-                false
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS))
         );
 
         service.onMessage(subscriptionJson("r1", "OFFERS", "eur"), mock(WebSocket.class, RETURNS_DEEP_STUBS));
@@ -197,7 +201,8 @@ class SubscriptionServiceTest {
                 mock(PermissionService.class),
                 // Authorization off: these cover routing and subscriber bookkeeping, and the
                 // permission path has its own test.
-                false
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS))
         );
 
         List<String> sentMessages = Collections.synchronizedList(new ArrayList<>());
@@ -474,7 +479,8 @@ class SubscriptionServiceTest {
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS),
                 permissionService,
-                authorizationRequired);
+                authorizationRequired,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS)));
     }
 
     /** The identity lives on the upgrade request, which only a DefaultWebSocket exposes. */
