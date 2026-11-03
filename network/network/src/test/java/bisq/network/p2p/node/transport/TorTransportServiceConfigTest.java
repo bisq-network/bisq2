@@ -38,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * sandbox, the bridges and the torrc overrides to the Tor library.
  */
 class TorTransportServiceConfigTest {
+    private static final String TOR_CONFIG_PATH = "application.network.configByTransportType.tor";
+    private static final String OVERRIDES = TorTransportConfig.BISQ2_TORRC_OVERRIDES_PATH;
     private static final String TOR_CONFIG = """
             socketTimeout=120
             sendMessageThrottleTime=200
@@ -110,13 +112,38 @@ class TorTransportServiceConfigTest {
                 .withFallback(ConfigFactory.parseString(TOR_CONFIG))
                 .resolve();
 
-        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config).getTorTransportConfig();
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(),
+                ConfigFactory.empty()).getTorTransportConfig();
 
         assertThat(torConfig.getTorrcOverrides())
                 .containsEntry("AccelName", "engine")
                 .containsEntry("ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird");
         assertThat(torConfig.getConfigFileTorrcOverrides().getKeys()).containsExactly("AccelName");
         assertThat(torConfig.getConfigFileTorrcOverrides().getHint()).contains("bisq.conf");
+    }
+
+    // ApplicationService passes bisq.conf before resolution and the command line, because a resolved substitution of
+    // bisq.conf has the origin of the value which it names, here a JVM option.
+    @Test
+    void anOverrideWhichBisqConfTakesFromTheCommandLineIsAnOverrideOfAConfigurationFile(@TempDir Path dataDir)
+            throws IOException {
+        Path bisqConf = Files.writeString(dataDir.resolve("bisq.conf"),
+                OVERRIDES + " { AccelName = ${application.enginePath} }");
+        Config configFile = ConfigFactory.parseFile(bisqConf.toFile());
+        Config commandLine = ConfigFactory.parseMap(Map.of("application.enginePath", "/trusted/engine",
+                OVERRIDES + ".ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird"));
+        Config rootConfig = commandLine
+                .withFallback(configFile)
+                .withFallback(ConfigFactory.parseString(TOR_CONFIG).atPath(TOR_CONFIG_PATH))
+                .resolve();
+
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"),
+                rootConfig.getConfig(TOR_CONFIG_PATH), configFile, commandLine).getTorTransportConfig();
+
+        assertThat(torConfig.getTorrcOverrides())
+                .containsEntry("AccelName", "/trusted/engine")
+                .containsEntry("ClientTransportPlugin", "obfs4 exec /usr/bin/lyrebird");
+        assertThat(torConfig.getConfigFileTorrcOverrides().getKeys()).containsExactly("AccelName");
     }
 
     // A value of bisq.conf without quotes is a number or a boolean, and TypesafeConfigUtils.coerce turns program
@@ -132,7 +159,8 @@ class TorTransportServiceConfigTest {
                 .withFallback(ConfigFactory.parseString(TOR_CONFIG))
                 .resolve();
 
-        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config).getTorTransportConfig();
+        TorTransportConfig torConfig = TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(),
+                ConfigFactory.empty()).getTorTransportConfig();
 
         assertThat(torConfig.getTorrcOverrides())
                 .containsEntry("AvoidDiskWrites", "1")
@@ -152,6 +180,7 @@ class TorTransportServiceConfigTest {
 
     private static TorTransportConfig torTransportConfig(String bridgesAndSandbox) {
         Config config = ConfigFactory.parseString(TOR_CONFIG + bridgesAndSandbox);
-        return TorTransportService.Config.from(Path.of("tor"), config).getTorTransportConfig();
+        return TorTransportService.Config.from(Path.of("tor"), config, ConfigFactory.empty(), ConfigFactory.empty())
+                .getTorTransportConfig();
     }
 }

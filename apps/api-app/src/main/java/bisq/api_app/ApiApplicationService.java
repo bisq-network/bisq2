@@ -102,7 +102,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
         walletService = Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
-                getConfig("network")),
+                getConfig("network"), getConfigFile(), getCommandLineConfig()),
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
