@@ -58,12 +58,16 @@ again. A shutdown during the start makes that start fail with an error which say
 during its start, also when every step of the start succeeded, and the shutdown completes only once no Tor of the
 service runs. A call of the start during a shutdown waits for the end of the shutdown and then starts again.
 
-When the start of the node fails, for example because the Tor library refused to start Tor, the seed node and the
-oracle node shut down and exit with the failure status 1, so that systemd, whose units of these nodes have
-`Restart=on-failure`, starts them again instead of leaving them running without a network. A start fails when the
-initialization of the application fails or completes without success. With several transports the network, and so the
-start, succeeds once one of them has initialized. A shutdown which runs already keeps its exit status. The API
-application and the node monitor log the failure and keep running (see "Known gaps").
+When the start of the node fails, for example because the Tor library refused to start Tor, the seed node, the oracle
+node and the API application shut down and exit with the failure status 1. Their supervisor then starts them again
+instead of leaving them running without a network: systemd for the seed node and the oracle node, whose units have
+`Restart=on-failure`, and for the API application a container runtime with a restart policy, for example
+`restart: on-failure`. A start fails when the initialization of the application fails or completes without success.
+With several transports the network, and so the start, succeeds once one of them has initialized. The start of the
+API application also fails when its API is enabled but its HTTP server does not run, for example because another
+process uses the port or the TLS context cannot be created. Without the server nobody can use the node, although its
+process runs. A shutdown which runs already keeps its exit status. The node monitor logs the failure and keeps running
+(see "Known gaps").
 
 ### Torrc overrides and files of the Tor of the node
 
@@ -328,8 +332,13 @@ credentials would let the connections of different user profiles share circuits,
 - With Tor and I2P, which the network settings of the desktop application offer, the network of the node is ready with
   its first initialized transport. A failed start of Tor then fails no start: the node runs without Tor, logs the
   failure with its reason at error level, and shows the user no notice.
-- The API application and the node monitor keep running without a network after a failed start and only log the
-  failure. Whether they should exit with the failure status, as the seed node and the oracle node do, is an open
-  decision, which the daemon of Bisq 1 shares.
+- The node monitor keeps running without a network after a failed start and only logs the failure. Whether it should
+  exit with the failure status, as the seed node, the oracle node and the API application do, is an open decision,
+  which the daemon of Bisq 1 shares.
+- The API application exits after a failed start also when the cause stays, for example when another process uses the
+  port of its API. Under a supervisor which restarts it, every start then starts Tor and connects to the seed nodes
+  again. A check that the port is free before the start of the network would end such a start at once; the API
+  application does not check it yet. Its initialization fails when it does not complete within 5 minutes, so a start
+  of Tor which takes longer, for example with bridges, also ends in an exit and a new start.
 - The Tor log in the log zip names the bridges which Tor used. A user with private bridges has to remove these lines
   before sharing the zip; whether the node should remove them is an open decision.
