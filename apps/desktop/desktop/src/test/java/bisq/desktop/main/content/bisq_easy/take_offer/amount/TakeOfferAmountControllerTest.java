@@ -70,6 +70,8 @@ class TakeOfferAmountControllerTest {
     private static final String SELLERS_PROFILE_ID = "sellers-profile-id";
     // The seller's maximum for this score is 399 USD
     private static final long SELLERS_SCORE = 79_902;
+    // Only guards against a hang. Building the first scene in a cold JVM can take over 10 s on a busy CI runner.
+    private static final long FX_TIMEOUT_SECONDS = 60;
 
     private ServiceProvider serviceProvider;
     private TakeOfferAmountController controller;
@@ -132,7 +134,7 @@ class TakeOfferAmountControllerTest {
         showAmountStep(rangeSellOffer(500_000, 4_000_000));
 
         // The buyer selects the amount which the seller's reputation covers
-        WaitForAsyncUtils.asyncFx(() -> controller.onSetReputationBasedAmount()).get(10, TimeUnit.SECONDS);
+        WaitForAsyncUtils.asyncFx(() -> controller.onSetReputationBasedAmount()).get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(controller.getTakersQuoteSideAmount().get()).isEqualTo(Fiat.fromFaceValue(399, "USD"));
@@ -146,7 +148,7 @@ class TakeOfferAmountControllerTest {
             stage = new Stage();
             stage.setScene(new Scene(controller.getView().getRoot()));
             stage.show();
-        }).get(10, TimeUnit.SECONDS);
+        }).get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
         // The amount selection applies its values on the next render frames
         WaitForAsyncUtils.waitForFxEvents();
         assertThat(controller.getTakersQuoteSideAmount().get()).isNotNull();
