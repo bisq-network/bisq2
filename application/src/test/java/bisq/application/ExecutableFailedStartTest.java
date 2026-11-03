@@ -73,6 +73,17 @@ class ExecutableFailedStartTest {
     }
 
     @Test
+    void aFailedShutdownStillExitsWithItsExitStatus() {
+        TestExecutable executable = new TestExecutable();
+        when(executable.applicationService.shutdown())
+                .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("Shutdown failed")));
+
+        executable.shutdownAfterFailedStart();
+
+        assertEquals(List.of(PlatformUtils.EXIT_FAILURE), executable.exitStatuses);
+    }
+
+    @Test
     void aStartFailsWithAnExceptionOrWithoutSuccess() {
         assertFalse(Executable.hasStartFailed(true, null));
         assertTrue(Executable.hasStartFailed(false, null));

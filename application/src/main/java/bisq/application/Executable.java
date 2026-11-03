@@ -107,8 +107,12 @@ public abstract class Executable<T extends ApplicationService> implements ShutDo
         try {
             notifyAboutShutdown();
             if (applicationService != null) {
+                // whenComplete instead of thenRun: if the shutdown fails, we must still exit and not hang.
                 applicationService.shutdown()
-                        .thenRun(() -> {
+                        .whenComplete((result, throwable) -> {
+                            if (throwable != null) {
+                                log.error("Error at applicationService shutdown", throwable);
+                            }
                             shutdownHandlers.forEach(shutdownHandler -> {
                                 try {
                                     shutdownHandler.run();
