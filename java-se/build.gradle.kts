@@ -3,11 +3,11 @@ plugins {
 }
 
 dependencies {
-    implementation("bisq:common")
-    implementation("bisq:security")
-    implementation("bisq:application")
-    implementation("bisq:evolution")
-    implementation("network:network")
+    implementation("bisq:common:$version")
+    implementation("bisq:security:$version")
+    implementation("bisq:application:$version")
+    implementation("bisq:evolution:$version")
+    implementation("network:network:$version")
 
     implementation(libs.typesafe.config)
 }

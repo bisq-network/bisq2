@@ -30,8 +30,9 @@ the project instructions on backward compatibility).
 `$BISQ_BASELINE_ROOT/<tag>`. The default is `~/.cache/bisq2/baselines`. It exports a tag only once and keeps the
 build outputs for later runs. It creates no git worktree.
 
-The directory must be outside of the repository: the build of the baseline reads its commit hash with
-`git rev-parse` and would otherwise get the commit of the checkout.
+The export has no `.git`, so the script passes the commit of the tag to the build as `-PbuildCommit`. Builds of older
+tags do not know this property and read their commit hash with `git rev-parse`. So the directory must be outside of
+the repository, or these builds would get the commit of the checkout.
 
 If `baselines/<tag>/init.gradle` exists, Gradle runs with this init script. It adds the test sources of
 `baselines/<tag>/<project>/src/test/java` to the project of the same name in the baseline build. The exported tree
