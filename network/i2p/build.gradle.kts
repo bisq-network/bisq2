@@ -4,6 +4,8 @@ plugins {
     id("bisq.grpc")
 }
 
+version = rootProject.version
+
 // The programs of the source set demo try the I2P library by hand and need a running I2P router. They are not tests,
 // and Gradle fails a test task whose test source set contains no tests.
 val demo: SourceSet by sourceSets.creating
@@ -11,7 +13,7 @@ val demo: SourceSet by sourceSets.creating
 configurations[demo.implementationConfigurationName].extendsFrom(configurations.implementation.get())
 
 dependencies {
-    implementation("bisq:security")
+    implementation("bisq:security:$version")
     implementation(libs.bundles.i2p)
     implementation(libs.grpc.netty.shaded)
 
