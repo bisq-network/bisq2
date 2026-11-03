@@ -10,7 +10,7 @@ dependencies {
     implementation(project(":bonded-roles"))
     implementation(project(":application"))
 
-    implementation("network:network")
+    implementation("network:network:$version")
 
     implementation(libs.typesafe.config)
     implementation(libs.bouncycastle.pg)

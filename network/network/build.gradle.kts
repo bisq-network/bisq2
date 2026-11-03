@@ -15,10 +15,10 @@ val torBuildVersion: String = Properties().apply {
 }.getProperty("version") ?: throw GradleException("Tor build version is not defined in tor/gradle.properties")
 
 dependencies {
-    implementation("bisq:common")
-    implementation("bisq:security")
-    implementation("bisq:persistence")
-    implementation("bisq:i18n")
+    implementation("bisq:common:$version")
+    implementation("bisq:security:$version")
+    implementation("bisq:persistence:$version")
+    implementation("bisq:i18n:$version")
 
     implementation(project(":network-identity"))
     implementation(project(":i2p"))
