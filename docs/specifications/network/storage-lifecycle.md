@@ -10,3 +10,10 @@ and listener registration must complete as one operation before another caller o
 
 Stores found during application construction are loaded by the initial persistence read before
 network services start handling messages.
+
+A store removes the entries which it no longer keeps, for example expired entries, when it loads
+them and then periodically while the node runs. The periodic removal starts when the network
+services start, after the initial persistence read, and it stops when they shut down. Creating the
+storage does not start it. Before the initial read the stores hold no entries, so an earlier run
+would remove nothing, and it could overlap the read which replaces the entries of a store. A storage
+which was only created, for example in a test, must not change its entries in the background.
