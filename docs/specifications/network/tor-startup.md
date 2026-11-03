@@ -56,7 +56,10 @@ The callers of the start of the Tor service share one start. A call while the st
 failure, and a call after a successful start gets the success at once. After a failed start, the next call starts
 again. A shutdown during the start makes that start fail with an error which says that the Tor service was shut down
 during its start, also when every step of the start succeeded, and the shutdown completes only once no Tor of the
-service runs. A call of the start during a shutdown waits for the end of the shutdown and then starts again.
+service runs. A call of the start during a shutdown waits for the end of the shutdown and then starts again. If
+processes of Tor still run after the Tor library stopped them forcibly, the shutdown of the Tor service fails and names
+them. The applications log that failure and still shut down the services which follow the network, so that those
+release their resources as well.
 
 When the start of the node fails, for example because the Tor library refused to start Tor, the seed node, the oracle
 node and the API application shut down and exit with the failure status 1. Their supervisor then starts them again
@@ -91,6 +94,27 @@ the next character, or it contains no `#`, which would start a comment, and does
 join the next line to the value. The rule applies to the overrides, to the entries of the node and to the bridge lines.
 The start fails for an entry which breaks it. This includes a path which the node writes into the torrc, all of them
 below the data directory of the application, when the path contains a `#`: the node writes its paths without quotes.
+An override value without quotes in `bisq.conf`, such as `AvoidDiskWrites = 1`, is a number or a boolean, and the node
+turns program arguments and JVM options into numbers and booleans where it can. Such a value reaches Tor as its text.
+Tor takes only `0` and `1` for its boolean options, so `true` stops the start of Tor with the error of Tor. A list is no
+override value: reading the configuration fails with an error which names the path.
+
+An override which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
+`AccelName` or `AccelDir` in any letter case and also as an abbreviation which Tor accepts, is accepted from the program
+arguments, the JVM options and the resources of the application, but not if `bisq.conf` in the data directory assigns
+it. `bisq.conf` assigns an override with a value of its own, with a substitution such as `${x}` which takes the value
+from another source, and with an include of a file, a URL or a resource. If it assigns the overrides or an object above
+them as a whole, it assigns all of them. Tor starts the program of a transport plugin entry, and it loads the library
+which `AccelName` and `AccelDir` name as its OpenSSL engine; `AccelName` alone is enough. If `bisq.conf` assigns such
+an override, the start of the Tor which the node starts fails with an error which names the override and the JVM option
+which gives it instead. A program argument or a JVM option which sets the same key replaces the value of `bisq.conf`,
+and the override then comes from the command line. With bridges in the configuration, the node ignores overrides of
+`ClientTransportPlugin`, so they do not stop the start either. The node writes `bisq.conf` itself, for example from the
+network settings, and whoever can change it could otherwise make the next start of Tor run code with the rights of the
+user, also with the sandbox off, which `bisq.conf` can turn off as well. The Tor library applies this rule; the node
+passes it `bisq.conf` as parsed, before its substitutions are resolved, and the command line, because a resolved value
+has the origin of the value which a substitution names. An external Tor gets no torrc overrides, so such an override
+does not stop its use.
 
 The node sets `AvoidDiskWrites 1`; an override can change it. Tor reads its GeoIP files from the bundle and gets an
 empty OpenSSL configuration file, so that it reads no file below `/var/tmp/dist`, the build path of the bundle, where

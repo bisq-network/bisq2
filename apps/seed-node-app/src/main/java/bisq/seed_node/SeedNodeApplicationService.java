@@ -28,6 +28,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -60,7 +61,7 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
         securityService = new SecurityService(persistenceService, SecurityService.Config.from(getConfig("security")));
 
         NetworkServiceConfig networkServiceConfig = NetworkServiceConfig.from(config.getAppDataDirPath(),
-                getConfig("network"));
+                getConfig("network"), getConfigFile(), getCommandLineConfig());
         networkService = new NetworkService(networkServiceConfig,
                 persistenceService,
                 securityService.getKeyBundleService(),
@@ -115,13 +116,15 @@ public class SeedNodeApplicationService extends JavaSeApplicationService {
             difficultyAdjustmentServicePin = null;
         }
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
-        // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> seedNodeService.shutdown()
-                .thenCompose(result -> bondedRolesService.shutdown())
-                .thenCompose(result -> identityService.shutdown())
-                .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> securityService.shutdown())
-                .thenCompose(result -> memoryReportService.shutdown())
+        // We shut down services in opposite order as they are initialized. A service which fails does not stop the
+        // shutdown of the later services.
+        return supplyAsync(() -> shutdownInOrder(List.of(
+                        () -> seedNodeService.shutdown(),
+                        () -> bondedRolesService.shutdown(),
+                        () -> identityService.shutdown(),
+                        () -> networkService.shutdown(),
+                        () -> securityService.shutdown(),
+                        () -> memoryReportService.shutdown()))
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {

@@ -129,7 +129,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 : Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
-                getConfig("network")),
+                getConfig("network"), getConfigFile(), getCommandLineConfig()),
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
