@@ -92,6 +92,18 @@ join the next line to the value. The rule applies to the overrides, to the entri
 The start fails for an entry which breaks it. This includes a path which the node writes into the torrc, all of them
 below the data directory of the application, when the path contains a `#`: the node writes its paths without quotes.
 
+An override which makes Tor start a program or load a library, `ClientTransportPlugin`, `ServerTransportPlugin`,
+`AccelName` or `AccelDir` in any letter case and also as an abbreviation which Tor accepts, is accepted from the program
+arguments, the JVM options and the resources of the application, but not from `bisq.conf` in the data directory or a
+file which `bisq.conf` includes. Tor starts the program of a transport plugin entry, and it loads the library which
+`AccelName` and `AccelDir` name as its OpenSSL engine; `AccelName` alone is enough. If `bisq.conf` brings such an
+override, the start of the Tor which the node starts fails with an error which names the override and the JVM option
+which gives it instead. A program argument or a JVM option which sets the same key replaces the value of `bisq.conf`,
+and the override then comes from the command line. The node writes `bisq.conf` itself, for example from the network
+settings, and whoever can change it could otherwise make the next start of Tor run code with the rights of the user,
+also with the sandbox off, which `bisq.conf` can turn off as well. The Tor library applies this rule. An external Tor
+gets no torrc overrides, so such an override does not stop its use.
+
 The node sets `AvoidDiskWrites 1`; an override can change it. Tor reads its GeoIP files from the bundle and gets an
 empty OpenSSL configuration file, so that it reads no file below `/var/tmp/dist`, the build path of the bundle, where
 another user of the system could place files.
