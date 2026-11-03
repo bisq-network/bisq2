@@ -164,7 +164,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 networkService,
                 userService,
                 settingsService,
-                notificationService);
+                notificationService,
+                offerService);
 
         supportService = new SupportService(SupportService.Config.from(getConfig("support")),
                 persistenceService,
