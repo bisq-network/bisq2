@@ -42,7 +42,8 @@ public enum ApiFeature {
     PRIVATE_CHAT("private-chat"),
     CONTACTS("contacts"),
     PUBLIC_CHAT("public-chat"),
-    CLIENT_MANAGEMENT("client-management");
+    CLIENT_MANAGEMENT("client-management"),
+    BANNED_ACCOUNT_DATA("banned-account-data");
 
     private final String key;
 

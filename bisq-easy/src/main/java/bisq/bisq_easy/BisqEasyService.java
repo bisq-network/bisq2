@@ -50,10 +50,10 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
@@ -79,7 +79,8 @@ public class BisqEasyService implements Service {
     private final MarketPriceService marketPriceService;
     private final AlertService alertService;
 
-    private final Set<String> bannedAccountDataSet = new HashSet<>();
+    // Written by the AlertService observer from several threads and read by UI and API threads
+    private final Set<String> bannedAccountDataSet = ConcurrentHashMap.newKeySet();
     private final BisqEasySellersReputationBasedTradeAmountService bisqEasySellersReputationBasedTradeAmountService;
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final BisqEasyMobileTradeNotificationService bisqEasyMobileTradeNotificationService;
