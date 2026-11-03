@@ -56,7 +56,10 @@ The callers of the start of the Tor service share one start. A call while the st
 failure, and a call after a successful start gets the success at once. After a failed start, the next call starts
 again. A shutdown during the start makes that start fail with an error which says that the Tor service was shut down
 during its start, also when every step of the start succeeded, and the shutdown completes only once no Tor of the
-service runs. A call of the start during a shutdown waits for the end of the shutdown and then starts again.
+service runs. A call of the start during a shutdown waits for the end of the shutdown and then starts again. If
+processes of Tor still run after the Tor library stopped them forcibly, the shutdown of the Tor service fails and names
+them. The applications log that failure and still shut down the services which follow the network, so that those
+release their resources as well.
 
 When the start of the node fails, for example because the Tor library refused to start Tor, the seed node, the oracle
 node and the API application shut down and exit with the failure status 1. Their supervisor then starts them again
