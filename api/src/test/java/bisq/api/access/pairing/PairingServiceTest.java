@@ -70,6 +70,29 @@ class PairingServiceTest {
     }
 
     @Test
+    void creationDeletesPairingQrCodeFileOfPreviousRun(@TempDir Path tempDir) throws IOException {
+        // Pairing codes only live in memory, so a QR code left by an earlier process is unknown to this one.
+        Files.writeString(tempDir.resolve("pairing_qr_code.txt"), "previous-run-payload");
+        Files.writeString(tempDir.resolve("pairing_qr_code.txt.tmp"), "previous-run-payload");
+
+        pairingService(tempDir);
+
+        assertFalse(Files.exists(tempDir.resolve("pairing_qr_code.txt")));
+        assertFalse(Files.exists(tempDir.resolve("pairing_qr_code.txt.tmp")));
+    }
+
+    @Test
+    void deletePairingQrCodeFileRemovesWrittenFile(@TempDir Path tempDir) {
+        PairingService service = pairingService(tempDir);
+        service.writePairingQrCodeToDataDir("payload");
+
+        service.deletePairingQrCodeFile();
+
+        assertFalse(Files.exists(tempDir.resolve("pairing_qr_code.txt")));
+        assertDoesNotThrow(service::deletePairingQrCodeFile);
+    }
+
+    @Test
     void writeCreatesPairingQrCodeFile(@TempDir Path tempDir) throws IOException {
         pairingService(tempDir).writePairingQrCodeToDataDir("first-payload");
 
