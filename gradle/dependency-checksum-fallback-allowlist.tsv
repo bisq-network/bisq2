@@ -2,6 +2,11 @@
 # Format: <group:name:version>	<artifact-file-name>	<review-rationale>
 # Keep entries sorted by module and artifact. Remove stale entries when signatures become verifiable.
 
+bisq-network:sandy:1.0.0	sandy-1.0.0-aarch64-apple-darwin.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-aarch64-unknown-linux-musl.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-apple-darwin.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-pc-windows-msvc.zip	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
+bisq-network:sandy:1.0.0	sandy-1.0.0-x86_64-unknown-linux-musl.tar.gz	sandy release archive has no detached signature; pinned by SHA-256, and verifySandyArchive checks it against the release SHA256SUMS signed by the pinned key.
 com.gradleup.shadow:com.gradleup.shadow.gradle.plugin:9.4.1	com.gradleup.shadow.gradle.plugin-9.4.1.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.gradle.kotlin.kotlin-dsl:org.gradle.kotlin.kotlin-dsl.gradle.plugin:6.2.0	org.gradle.kotlin.kotlin-dsl.gradle.plugin-6.2.0.pom	Gradle plugin marker POM has no detached signature; marker is pinned by SHA-256.
 org.openjfx:javafx-plugin:0.1.0	javafx-plugin-0.1.0-sources.jar	Publisher does not provide a detached PGP signature for this Gradle plugin source artifact; source artifact is pinned by SHA-256.
