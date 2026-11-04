@@ -8,12 +8,16 @@ Bisq now runs its bundled Tor on Linux as well as macOS and Windows. Its own Tor
 
 Built-in or custom bridges can be configured in `bisq.conf`, with bundled pluggable transport programs. The desktop adds a switch to permit those programs inside the sandbox. Bisq also supports external Tor, including Whonix, with stronger control-port authentication and a SOCKS isolation check.
 
+## API for Mobile Clients
+
+The API gets a node info endpoint and a check for banned seller account data. Its offerbook shows the same offers as the desktop offerbook, with a seller reputation verdict on each offer.
+
 ## More Predictable Failures
 
-A bridge that cannot run stops Tor startup instead of connecting directly. Seed and oracle nodes exit with a failure status when startup fails. HTTP clients reject oversized responses, and Bisq avoids deleting files through links or Windows junctions.
+A bridge that cannot run stops Tor startup instead of connecting directly. Seed nodes, oracle nodes and the API application exit with a failure status when startup fails. HTTP clients reject oversized responses, and Bisq avoids deleting files through links or Windows junctions.
 
 ## Before Updating
 
-Linux no longer needs the distribution's Tor package for Bisq. Pluggable transports in the sandbox need explicit permission; Windows requires the sandbox off to use them. Backups can include external Tor credentials, so review them before sharing.
+Linux no longer needs the distribution's Tor package for Bisq. Pluggable transports in the sandbox need explicit permission; Windows requires the sandbox off to use them. Torrc overrides in `bisq.conf` that make Tor run code stop the Tor start; set them as JVM options instead. Backups can include external Tor credentials, so review them before sharing.
 
 See [notable changes](notable-changes.md) and [full release notes](full-release-notes.md) for details.
