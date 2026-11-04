@@ -6,6 +6,8 @@
 
 # Bisq 2: The Decentralized Trading Platform
 
+[![Reproducible JitPack jars](https://github.com/bisq-network/bisq2/actions/workflows/jitpack_reproducibility.yml/badge.svg)](https://jitpack.io/#bisq-network/bisq2)
+
 Bisq 2 will be the successor to [Bisq v1](https://github.com/bisq-network/bisq) and will support multiple trade
 protocols, multiple privacy networks and multiple identities. Read more about Bisq 2 in
 the [Bisq wiki](https://bisq.wiki/Bisq_2)
