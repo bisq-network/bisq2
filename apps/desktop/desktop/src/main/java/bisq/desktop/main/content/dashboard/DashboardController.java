@@ -158,8 +158,9 @@ public class DashboardController implements Controller {
     }
 
     private void handleBannerVisibility() {
-        model.getIsBannerVisible().set(bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
-                musigNotificationService.getIsNotificationPanelVisible().get() ||
-                !alertNotificationsService.getUnconsumedAlerts().isEmpty());
+        UIThread.run(() -> model.getIsBannerVisible().set(
+                bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
+                        musigNotificationService.getIsNotificationPanelVisible().get() ||
+                        !alertNotificationsService.getUnconsumedAlerts().isEmpty()));
     }
 }

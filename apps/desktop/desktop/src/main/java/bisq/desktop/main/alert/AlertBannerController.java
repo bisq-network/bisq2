@@ -99,8 +99,8 @@ public class AlertBannerController implements Controller {
     }
 
     private void updateIsNotificationPanelVisible() {
-        model.getIsNotificationPanelVisible().set(
+        UIThread.run(() -> model.getIsNotificationPanelVisible().set(
                 bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
-                        musigNotificationService.getIsNotificationPanelVisible().get());
+                        musigNotificationService.getIsNotificationPanelVisible().get()));
     }
 }

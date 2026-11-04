@@ -34,7 +34,6 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -149,7 +148,9 @@ public class MusigNotificationService implements Service {
 
     // in case a trade or trade channel is added, it could be the destination for the unconsumed notification
     private void handleTradesOrTradeChannelsChange() {
-        Set<ChatNotification> allNotifications = new HashSet<>(orphanedNotifications);
+        Set<ChatNotification> allNotifications = orphanedNotifications.stream()
+                .filter(ChatNotification::isNotConsumed)
+                .collect(Collectors.toSet());
         Set<ChatNotification> unconsumedNotifications = chatNotificationService
                 .getNotConsumedNotifications(ChatChannelDomain.MU_SIG_OPEN_TRADES)
                 .collect(Collectors.toSet());
