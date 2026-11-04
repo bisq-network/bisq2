@@ -33,7 +33,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>
  * Every expectation below is the permission that already guards the same data over REST, so a
  * client cannot reach through a subscription what a request would refuse it. {@code NETWORK_INFO}
- * is the one row with no REST route to mirror.
+ * and {@code RELEASE_NOTIFICATIONS} have no REST route to mirror; see
+ * {@link SubscriptionPermissionMapping} for why each asks for what it does.
  */
 class SubscriptionPermissionMappingTest {
     private static final Map<Topic, Permission> EXPECTED = new EnumMap<>(Map.ofEntries(
@@ -55,7 +56,8 @@ class SubscriptionPermissionMappingTest {
             Map.entry(Topic.PRIVATE_CHAT_REACTIONS, Permission.PRIVATE_CHAT_CHANNELS),
             Map.entry(Topic.PUBLIC_CHAT_CHANNELS, Permission.PUBLIC_CHAT_CHANNELS),
             Map.entry(Topic.PUBLIC_CHAT_MESSAGES, Permission.PUBLIC_CHAT_CHANNELS),
-            Map.entry(Topic.PUBLIC_CHAT_REACTIONS, Permission.PUBLIC_CHAT_CHANNELS)));
+            Map.entry(Topic.PUBLIC_CHAT_REACTIONS, Permission.PUBLIC_CHAT_CHANNELS),
+            Map.entry(Topic.RELEASE_NOTIFICATIONS, Permission.SETTINGS)));
 
     private final SubscriptionPermissionMapping mapping = new SubscriptionPermissionMapping();
 

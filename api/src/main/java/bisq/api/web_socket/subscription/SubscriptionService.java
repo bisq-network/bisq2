@@ -39,6 +39,7 @@ import bisq.api.web_socket.domain.market_price.MarketPriceWebSocketService;
 import bisq.api.web_socket.domain.network.NetworkInfoWebSocketService;
 import bisq.api.web_socket.domain.offers.NumOffersWebSocketService;
 import bisq.api.web_socket.domain.offers.OffersWebSocketService;
+import bisq.api.web_socket.domain.release_notifications.ReleaseNotificationsWebSocketService;
 import bisq.api.web_socket.domain.reputation.ReputationWebSocketService;
 import bisq.api.web_socket.domain.trade_restricting_alert.TradeRestrictingAlertWebSocketService;
 import bisq.api.web_socket.domain.trades.TradePropertiesWebSocketService;
@@ -84,6 +85,7 @@ public class SubscriptionService implements Service {
     private final PublicChatChannelsWebSocketService publicChatChannelsWebSocketService;
     private final PublicChatMessagesWebSocketService publicChatMessagesWebSocketService;
     private final PublicChatReactionsWebSocketService publicChatReactionsWebSocketService;
+    private final ReleaseNotificationsWebSocketService releaseNotificationsWebSocketService;
     private final PermissionService permissionService;
     // Built here rather than injected, like RestApiAuthorizationFilter builds its own: which
     // permission a topic requires is this service's question and nobody else's.
@@ -149,6 +151,8 @@ public class SubscriptionService implements Service {
                 publicChatChannels,
                 userService.getUserProfileService(),
                 userService.getBannedUserService());
+        releaseNotificationsWebSocketService = new ReleaseNotificationsWebSocketService(subscriberRepository,
+                bondedRolesService.getReleaseNotificationsService());
     }
 
     @Override
@@ -171,7 +175,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> contactsWebSocketService.initialize())
                 .thenCompose(e -> publicChatChannelsWebSocketService.initialize())
                 .thenCompose(e -> publicChatMessagesWebSocketService.initialize())
-                .thenCompose(e -> publicChatReactionsWebSocketService.initialize());
+                .thenCompose(e -> publicChatReactionsWebSocketService.initialize())
+                .thenCompose(e -> releaseNotificationsWebSocketService.initialize());
     }
 
     @Override
@@ -194,7 +199,8 @@ public class SubscriptionService implements Service {
                 .thenCompose(e -> contactsWebSocketService.shutdown())
                 .thenCompose(e -> publicChatChannelsWebSocketService.shutdown())
                 .thenCompose(e -> publicChatMessagesWebSocketService.shutdown())
-                .thenCompose(e -> publicChatReactionsWebSocketService.shutdown());
+                .thenCompose(e -> publicChatReactionsWebSocketService.shutdown())
+                .thenCompose(e -> releaseNotificationsWebSocketService.shutdown());
     }
 
     public void onConnectionClosed(WebSocket webSocket) {
@@ -414,6 +420,9 @@ public class SubscriptionService implements Service {
             }
             case PUBLIC_CHAT_REACTIONS -> {
                 return Optional.of(publicChatReactionsWebSocketService);
+            }
+            case RELEASE_NOTIFICATIONS -> {
+                return Optional.of(releaseNotificationsWebSocketService);
             }
         }
         log.warn("No WebSocketService for topic {} found", topic);
