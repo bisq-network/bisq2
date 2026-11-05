@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedWords;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
@@ -30,7 +31,6 @@ import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -122,9 +122,10 @@ public class SetupWalletWizardVerifyController implements Controller {
     }
 
     private void loadSeedWordsAsync(WalletService walletService) {
-        walletService.getSeedWords(walletPassword.get()).thenAccept(seedWords -> UIThread.run(() -> {
-            setSeedWords(seedWords);
-        })).exceptionally(ex -> {
+        walletService.getSeedWords(walletPassword.get()).thenAccept(seedWords -> {
+            SeedWords.requireValidCount(seedWords);
+            UIThread.run(() -> model.setupQuestions(seedWords));
+        }).exceptionally(ex -> {
             Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
             log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
@@ -135,16 +136,6 @@ public class SetupWalletWizardVerifyController implements Controller {
 
             return null;
         });
-    }
-
-    private void setSeedWords(List<String> seedWords) {
-        if (seedWords.size() != 12) {
-            throw new IllegalArgumentException("Expected 12 seed words, got " + seedWords.size());
-        }
-        for (int i = 0; i < 12; i++) {
-            model.getSeedWords()[i].set(seedWords.get(i));
-        }
-        model.setupQuestions(seedWords);
     }
 
     private Region getPopupOwner() {
