@@ -32,6 +32,9 @@ import java.util.concurrent.ExecutorService;
 
 @Slf4j
 public class ReferenceTimeService extends HttpRequestService<Void, Long> {
+    // The price node answers getAllMarketPrices with about 12 KB for 77 markets
+    private static final int MAX_RESPONSE_BODY_BYTES = 1024 * 1024;
+
     // coinmarketcapTs and btcAverageTs are excluded as we use longer request time intervals for those.
     // coinbaseproTs has a timestamp of 0. independentreserveTs has a ts with 1 hour in future
     private static final List<String> TIMESTAMP_KEYS = List.of(
@@ -61,7 +64,8 @@ public class ReferenceTimeService extends HttpRequestService<Void, Long> {
     public ReferenceTimeService(HttpRequestServiceConfig conf, NetworkService networkService) {
         super(conf,
                 networkService,
-                getExecutorService());
+                getExecutorService(),
+                MAX_RESPONSE_BODY_BYTES);
     }
 
     @Override

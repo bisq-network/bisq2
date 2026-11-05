@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -361,7 +362,7 @@ class MobileNotificationRelayClientTest {
     private TestableRelayClient newFailoverClient(AtomicInteger attempts, StubResponse stubResponse) {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getSupportedTransportTypes()).thenReturn(Set.of(TransportType.CLEAR));
-        when(networkService.getHttpClient(any(), any(), any(), any()))
+        when(networkService.getHttpClient(any(), any(), any(), any(), anyInt()))
                 .thenAnswer(invocation -> new StubHttpClient(attempts, stubResponse));
         HttpRequestServiceConfig conf = new HttpRequestServiceConfig(60L,
                 Set.of(new HttpRequestUrlProvider("https://relay-1.example/", "op1", "/legacy", TransportType.CLEAR),
@@ -382,7 +383,7 @@ class MobileNotificationRelayClientTest {
         private final StubResponse stubResponse;
 
         StubHttpClient(AtomicInteger attempts, StubResponse stubResponse) {
-            super("https://stub.example", "https://stub.example", "test-agent");
+            super("https://stub.example", "https://stub.example", "test-agent", 1024);
             this.attempts = attempts;
             this.stubResponse = stubResponse;
         }

@@ -21,7 +21,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 
 import javax.annotation.Nullable;
 
-// imageVersion is only present on containerised distributions (see SettingsRestApi.resolveImageVersion)
+// imageVersion is only present on containerised distributions (see ImageVersion)
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record SettingsApiVersionDto(String version, @Nullable String imageVersion) {
 }

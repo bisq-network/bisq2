@@ -111,7 +111,10 @@ public final class ProofOfWork implements NetworkProto {
     }
 
     public double getLog2Difficulty() {
-        return MathUtils.roundDouble(Math.log(difficulty) / MathUtils.LOG2, 2);
+        double log2Difficulty = Math.log(difficulty) / MathUtils.LOG2;
+        // The token of a peer can carry any difficulty. For 0, a negative difficulty or NaN the logarithm is not
+        // finite, and roundDouble throws for it, which would break toString and every message which contains it.
+        return Double.isFinite(log2Difficulty) ? MathUtils.roundDouble(log2Difficulty, 2) : log2Difficulty;
     }
 
     @Override

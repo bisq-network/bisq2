@@ -1,5 +1,7 @@
+import bisq.gradle.common.getPlatform
 import org.gradle.process.ExecOperations
 import java.io.ByteArrayOutputStream
+import java.util.Properties
 import javax.inject.Inject
 
 plugins {
@@ -9,15 +11,22 @@ plugins {
     id("bisq.protobuf")
 }
 
-
-val torVersion: String? = project.findProperty("tor.version") as String?
-if (torVersion == null) {
-    throw GradleException("Tor version is not defined in gradle.properties")
+// The Tor build in the Git submodule tor/ defines the Tor versions, so that they exist only once
+val torGradleProperties = Properties().apply {
+    rootProject.file("tor/gradle.properties").inputStream().use { load(it) }
 }
 
-val torBinaryVersion: String? = project.findProperty("tor.binaryVersion") as String?
+// The Tor Browser release whose expert bundle the Tor build packages for this platform: tor.version, unless the platform
+// takes the bundle of another release, as Linux ARM64 takes an alpha release
+val torVersion: String? = torGradleProperties.getProperty("tor.bundleVersion.${getPlatform().platformName}")
+    ?: torGradleProperties.getProperty("tor.version")
+if (torVersion == null) {
+    throw GradleException("Tor version is not defined in tor/gradle.properties")
+}
+
+val torBinaryVersion: String? = torGradleProperties.getProperty("tor.binaryVersion")
 if (torBinaryVersion == null) {
-    throw GradleException("Tor binary version is not defined in gradle.properties")
+    throw GradleException("Tor binary version is not defined in tor/gradle.properties")
 }
 
 /**
