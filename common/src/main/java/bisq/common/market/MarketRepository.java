@@ -118,10 +118,7 @@ public class MarketRepository {
 
 
     public static List<Market> getMajorCryptoAssetMarkets() {
-        return CryptoAssetRepository.getCryptoAssets().stream()
-                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
-                .distinct()
-                .collect(Collectors.toList());
+        return toBtcMarkets(getCryptoAssetsWithoutBitcoin());
     }
 
     public static List<Market> getAllXmrMarkets() {
@@ -134,21 +131,12 @@ public class MarketRepository {
     }
 
     public static List<Market> getAllCryptoAssetMarkets() {
-        return CryptoAssetRepository.getCryptoAssets().stream()
-                .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
-                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
-                .distinct()
-                .collect(Collectors.toList());
+        return toBtcMarkets(getCryptoAssetsWithoutBitcoin());
     }
 
     public static List<Market> getAllNonXMRCryptoCurrencyMarkets() {
-        List<CryptoAsset> allCurrencies = CryptoAssetRepository.getCryptoAssets();
-        return allCurrencies.stream()
-                .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN))
-                .filter(currency -> !currency.equals(CryptoAssetRepository.XMR))
-                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
-                .distinct()
-                .collect(Collectors.toList());
+        return toBtcMarkets(getCryptoAssetsWithoutBitcoin()
+                .filter(currency -> !currency.equals(CryptoAssetRepository.XMR)));
     }
 
     public static List<Market> getAllMarkets() {
@@ -183,5 +171,18 @@ public class MarketRepository {
         return MarketRepository.getAllCryptoAssetMarkets().stream()
                 .filter(e -> e.getMarketCodes().equals(marketCodes))
                 .findAny();
+    }
+
+    // Bitcoin is one of the crypto assets, but it has no market against itself
+    private static Stream<CryptoAsset> getCryptoAssetsWithoutBitcoin() {
+        return CryptoAssetRepository.getCryptoAssets().stream()
+                .filter(currency -> !currency.equals(CryptoAssetRepository.BITCOIN));
+    }
+
+    private static List<Market> toBtcMarkets(Stream<CryptoAsset> cryptoAssets) {
+        return cryptoAssets
+                .map(currency -> new Market(currency.getCode(), "BTC", currency.getName(), "Bitcoin"))
+                .distinct()
+                .collect(Collectors.toList());
     }
 }
