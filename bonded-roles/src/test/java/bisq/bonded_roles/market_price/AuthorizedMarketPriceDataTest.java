@@ -21,8 +21,6 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.i18n.Res;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.util.TreeMap;
@@ -39,12 +37,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class AuthorizedMarketPriceDataTest {
     // No runtime derives a market from this code
     private static final String UNKNOWN_CURRENCY_CODE = "ZZZ";
-
-    @BeforeAll
-    static void setUpResources() {
-        // MarketPriceProvider reads a display name from the resources
-        Res.setAndApplyLanguageTag("en");
-    }
 
     @Test
     void parsedDataHasTheHashOfTheSentDataIfTheReceiverDoesNotKnowAMarket() throws Exception {
