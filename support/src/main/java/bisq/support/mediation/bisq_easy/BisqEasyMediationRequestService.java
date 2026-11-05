@@ -134,6 +134,13 @@ public class BisqEasyMediationRequestService implements Service, ConfidentialMes
         UserIdentity myUserIdentity = channel.getMyUserIdentity();
         checkArgument(!bannedUserService.isUserProfileBanned(myUserIdentity.getUserProfile()));
 
+        // Every client (desktop, API, mobile node) requests mediation through this method, so the trade log message is
+        // sent here and not by each caller. It is sent after the checks above, so a refused request leaves nothing in
+        // the chat. It is sent before the channel is in mediation, so it goes to the peer only. The mediator gets it
+        // with the chat messages of the request, so it is added before the request collects them.
+        String tradeLogMessage = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", myUserIdentity.getUserName());
+        bisqEasyOpenTradeChannelService.sendTradeLogMessage(tradeLogMessage, channel);
+
         UserProfile peer = channel.getPeer();
         NetworkId mediatorNetworkId = mediator.getNetworkId();
         // The mediator ignores a request which carries a message of another trade, channel or sender. The channel can
