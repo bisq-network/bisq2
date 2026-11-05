@@ -21,6 +21,7 @@ import bisq.api.access.AllowUnauthenticated;
 import bisq.api.access.permissions.PermissionService;
 import bisq.api.dto.config.ApiCapabilitiesDto;
 import bisq.api.dto.config.TradeAmountLimitsDto;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.rest_api.endpoints.chat.private_chat.PrivateChatRestApi;
 import bisq.api.rest_api.endpoints.access.AccessApi;
 import bisq.api.rest_api.endpoints.chat.public_chat.PublicChatRestApi;
@@ -108,6 +109,7 @@ class ConfigRestApiTest {
         assertThat(ApiFeature.CONTACTS.getKey()).isEqualTo("contacts");
         assertThat(ApiFeature.PUBLIC_CHAT.getKey()).isEqualTo("public-chat");
         assertThat(ApiFeature.CLIENT_MANAGEMENT.getKey()).isEqualTo("client-management");
+        assertThat(ApiFeature.BANNED_ACCOUNT_DATA.getKey()).isEqualTo("banned-account-data");
     }
 
     /**
@@ -187,6 +189,12 @@ class ConfigRestApiTest {
                     }
                     yield true;
                 }
+                case BANNED_ACCOUNT_DATA -> {
+                    assertThat(hasEndpoint(TradeRestApi.class, "/trades", "/{tradeId}/account-data-banned"))
+                            .as("banned-account-data must expose GET /trades/{tradeId}/account-data-banned")
+                            .isTrue();
+                    yield true;
+                }
             };
             assertThat(checked).isTrue();
         }
@@ -230,7 +238,8 @@ class ConfigRestApiTest {
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(OpenTradeItemsService.class, RETURNS_DEEP_STUBS),
                 mock(PermissionService.class),
-                false);
+                false,
+                new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS)));
         try {
             Method method = SubscriptionService.class.getDeclaredMethod("findWebSocketService", Topic.class);
             method.setAccessible(true);

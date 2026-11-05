@@ -2,6 +2,7 @@ package bisq.common.util;
 
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.file.FileReaderUtils;
+import bisq.common.platform.OS;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -11,12 +12,17 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 @Slf4j
 public class FileMutatorUtilsTest {
@@ -70,6 +76,70 @@ public class FileMutatorUtilsTest {
         assertThat(tempDirPath).doesNotExist();
         assertThat(subDirPath1).doesNotExist();
         assertThat(nestedPath).doesNotExist();
+    }
+
+    @Test
+    void testDeleteFileOrDirectoryDeletesLinksButNotTheirTargets(@TempDir Path tempDirPath) throws IOException {
+        Path outsideDirPath = tempDirPath.resolve("outside");
+        Path outsideFilePath = outsideDirPath.resolve("keep.txt");
+        FileMutatorUtils.createDirectories(outsideDirPath);
+        FileMutatorUtils.writeToPath("keep", outsideFilePath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath.resolve("sub"));
+        Path rootLinkPath = tempDirPath.resolve("rootLink");
+        try {
+            Files.createSymbolicLink(dirPath.resolve("sub").resolve("linkToOutside"), outsideDirPath);
+            Files.createSymbolicLink(dirPath.resolve("linkToFile"), outsideFilePath);
+            Files.createSymbolicLink(rootLinkPath, outsideDirPath);
+        } catch (UnsupportedOperationException | IOException e) {
+            assumeTrue(false, "Symbolic links are not supported here: " + e);
+        }
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+        FileMutatorUtils.deleteFileOrDirectory(rootLinkPath);
+
+        assertThat(dirPath).doesNotExist();
+        assertThat(rootLinkPath).doesNotExist();
+        assertThat(outsideFilePath).exists();
+    }
+
+    // Files.walkFileTree reports a junction as a directory and would enter it; symbolic links do not cover this.
+    @Test
+    void testDeleteFileOrDirectoryDeletesJunctionsButNotTheirTargets(@TempDir Path tempDirPath) throws Exception {
+        assumeTrue(OS.isWindows(), "Junctions exist only on Windows");
+        Path outsideDirPath = tempDirPath.resolve("outside");
+        Path outsideFilePath = outsideDirPath.resolve("keep.txt");
+        FileMutatorUtils.createDirectories(outsideDirPath);
+        FileMutatorUtils.writeToPath("keep", outsideFilePath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath.resolve("sub"));
+        Path rootJunctionPath = tempDirPath.resolve("rootJunction");
+        createJunction(dirPath.resolve("sub").resolve("junctionToOutside"), outsideDirPath);
+        createJunction(rootJunctionPath, outsideDirPath);
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+        FileMutatorUtils.deleteFileOrDirectory(rootJunctionPath);
+
+        assertThat(dirPath).doesNotExist();
+        assertThat(rootJunctionPath).doesNotExist();
+        assertThat(outsideFilePath).exists();
+    }
+
+    // Files.walkFileTree lists a junction before preVisitDirectory, so a dangling junction fails the listing.
+    @Test
+    void testDeleteFileOrDirectoryDeletesADanglingJunction(@TempDir Path tempDirPath) throws Exception {
+        assumeTrue(OS.isWindows(), "Junctions exist only on Windows");
+        Path targetPath = tempDirPath.resolve("target");
+        FileMutatorUtils.createDirectories(targetPath);
+        Path dirPath = tempDirPath.resolve("dir");
+        FileMutatorUtils.createDirectories(dirPath);
+        FileMutatorUtils.writeToPath("file", dirPath.resolve("file.txt"));
+        createJunction(dirPath.resolve("danglingJunction"), targetPath);
+        Files.delete(targetPath);
+
+        FileMutatorUtils.deleteFileOrDirectory(dirPath);
+
+        assertThat(dirPath).doesNotExist();
     }
 
     @Test
@@ -190,9 +260,61 @@ public class FileMutatorUtilsTest {
     }
 
     @Test
+    void testCopyDirectoryWithDirPathsToSkip(@TempDir Path tempDirPath) throws IOException {
+        Path srcDirPath = tempDirPath.resolve("srcdir4");
+        Path destDirPath = tempDirPath.resolve("destdir4");
+        FileMutatorUtils.createDirectories(srcDirPath.resolve("tor").resolve("data"));
+        FileMutatorUtils.createDirectories(srcDirPath.resolve("db").resolve("data"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("torrc"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("data").resolve("state"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("db").resolve("data").resolve("store"));
+        FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of(), Set.of(Paths.get("tor", "data")));
+        assertTrue(Files.exists(destDirPath.resolve("tor").resolve("torrc")));
+        assertFalse(Files.exists(destDirPath.resolve("tor").resolve("data")));
+        assertTrue(Files.exists(destDirPath.resolve("db").resolve("data").resolve("store")));
+    }
+
+    @Test
+    void testCopyDirectoryDoesNotEnterASkippedDirectory(@TempDir Path tempDirPath) throws IOException {
+        Path srcDirPath = tempDirPath.resolve("srcdir5");
+        Path destDirPath = tempDirPath.resolve("destdir5");
+        Path skippedDirPath = srcDirPath.resolve("tor").resolve("data");
+        FileMutatorUtils.createDirectories(skippedDirPath);
+        FileMutatorUtils.writeToPath("abc".getBytes(), srcDirPath.resolve("tor").resolve("torrc"));
+        FileMutatorUtils.writeToPath("abc".getBytes(), skippedDirPath.resolve("state"));
+        try {
+            // Unreadable: listing the directory would fail the copy
+            Files.setPosixFilePermissions(skippedDirPath, Set.of());
+        } catch (UnsupportedOperationException e) {
+            assumeTrue(false, "POSIX permissions are not supported here");
+        }
+        assumeFalse(Files.isReadable(skippedDirPath), "The directory stays readable, for example for root");
+
+        try {
+            FileMutatorUtils.copyDirectory(srcDirPath, destDirPath, Set.of(), Set.of(), Set.of(Paths.get("tor", "data")));
+        } finally {
+            Files.setPosixFilePermissions(skippedDirPath, PosixFilePermissions.fromString("rwx------"));
+        }
+
+        assertTrue(Files.exists(destDirPath.resolve("tor").resolve("torrc")));
+        assertFalse(Files.exists(destDirPath.resolve("tor").resolve("data")));
+    }
+
+    @Test
     void testCopyResourceDirectory(@TempDir Path tempDirPath) throws Exception {
         Path targetDirPath = tempDirPath.resolve("resourceCopy");
         FileMutatorUtils.copyResourceDirectory("bisq/common/util/", targetDirPath);
         assertTrue(Files.exists(targetDirPath.resolve("FileMutatorUtilsTest.class")));
+    }
+
+    private static void createJunction(Path junctionPath, Path targetPath) throws IOException, InterruptedException {
+        // mklink /J needs no administrator rights, unlike a symbolic link on Windows.
+        Process process = new ProcessBuilder("cmd", "/c", "mklink", "/J",
+                junctionPath.toString(), targetPath.toString())
+                .redirectErrorStream(true)
+                .start();
+        String output = new String(process.getInputStream().readAllBytes());
+        assertTrue(process.waitFor(30, TimeUnit.SECONDS), "mklink did not finish");
+        assertEquals(0, process.exitValue(), output);
     }
 }

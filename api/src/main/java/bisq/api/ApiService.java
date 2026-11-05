@@ -29,6 +29,7 @@ import bisq.api.access.persistence.ApiAccessStoreService;
 import bisq.api.access.session.SessionService;
 import bisq.api.access.transport.ApiAccessTransportService;
 import bisq.api.access.transport.TlsContextService;
+import bisq.api.offerbook.RecordedOfferItems;
 import bisq.api.rest_api.PairingApiResourceConfig;
 import bisq.api.rest_api.RestApiResourceConfig;
 import bisq.api.rest_api.endpoints.access.AccessApi;
@@ -40,6 +41,7 @@ import bisq.api.rest_api.endpoints.config.ConfigRestApi;
 import bisq.api.rest_api.endpoints.contacts.ContactsRestApi;
 import bisq.api.rest_api.endpoints.devices.DevicesRestApi;
 import bisq.api.rest_api.endpoints.explorer.ExplorerRestApi;
+import bisq.api.rest_api.endpoints.info.InfoRestApi;
 import bisq.api.rest_api.endpoints.market_price.MarketPriceRestApi;
 import bisq.api.rest_api.endpoints.offers.OfferbookRestApi;
 import bisq.api.rest_api.endpoints.payment_accounts.UserDefinedPaymentAccountsRestApi;
@@ -123,6 +125,8 @@ public class ApiService implements Service {
     private final AlertNotificationsService alertNotificationsService;
     private final Observable<State> state = new Observable<>(State.NEW);
     private final Object pairingQrCodeLock = new Object();
+    // Guarded by pairingQrCodeLock
+    private boolean pairingQrCodeCreationStopped;
     @Nullable
     private Pin pairingCodePin;
     private Optional<Scheduler> pairingCodeScheduler = Optional.empty();
@@ -175,6 +179,7 @@ public class ApiService implements Service {
                         ? pairingService::hasPermissions
                         : clientId -> true;
 
+        RecordedOfferItems recordedOfferItems = new RecordedOfferItems(userService, bondedRolesService);
         if (apiConfig.isWebsocketEnabled()) {
             webSocketService = Optional.of(new WebSocketService(apiConfig,
                     tlsContextService,
@@ -191,7 +196,8 @@ public class ApiService implements Service {
                     // connection behind, so registration revalidates against the store. The grant
                     // is what answers that: a revocation withdraws it first and keeps the profile
                     // until its cleanup succeeds.
-                    clientAuthorizedCheck));
+                    clientAuthorizedCheck,
+                    recordedOfferItems));
         } else {
             webSocketService = Optional.empty();
         }
@@ -211,13 +217,16 @@ public class ApiService implements Service {
 
         OfferbookRestApi offerbookRestApi = new OfferbookRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
-                userService);
+                userService,
+                bisqEasyService,
+                recordedOfferItems);
         TradeRestApi tradeRestApi = new TradeRestApi(chatService,
                 bondedRolesService.getMarketPriceService(),
                 userService,
                 supportedService,
                 tradeService,
-                closedTradeItemsService);
+                closedTradeItemsService,
+                bisqEasyService);
         TradeChatMessagesRestApi tradeChatMessagesRestApi = new TradeChatMessagesRestApi(chatService, userService);
         PrivateChatRestApi privateChatRestApi = new PrivateChatRestApi(chatService, userService);
         PublicChatRestApi publicChatRestApi = new PublicChatRestApi(chatService, userService);
@@ -237,6 +246,7 @@ public class ApiService implements Service {
         DevicesRestApi devicesRestApi = new DevicesRestApi(deviceRegistrationService, clientAuthorizedCheck);
         ConfigRestApi configRestApi = new ConfigRestApi();
         ContactsRestApi contactsRestApi = new ContactsRestApi(userService);
+        InfoRestApi infoRestApi = new InfoRestApi();
 
         ResourceConfig resourceConfig;
         if (apiConfig.isRestEnabled() || apiConfig.isWebsocketEnabled()) {
@@ -263,7 +273,8 @@ public class ApiService implements Service {
                     userProfileRestApi,
                     devicesRestApi,
                     configRestApi,
-                    contactsRestApi);
+                    contactsRestApi,
+                    infoRestApi);
         } else {
             resourceConfig = new PairingApiResourceConfig(accessApi);
         }
@@ -272,7 +283,8 @@ public class ApiService implements Service {
                 resourceConfig,
                 webSocketService,
                 sessionAuthenticationService,
-                tlsContextService);
+                tlsContextService,
+                apiAccessTransportService);
     }
 
     @Override
@@ -295,8 +307,10 @@ public class ApiService implements Service {
         setState(State.STARTING);
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
 
-        // REST API and Websocket are handled inside httpServerBootstrapService
-        futures.add(httpServerBootstrapService.initialize());
+        // REST API and Websocket are handled inside httpServerBootstrapService. With the TOR transport the server
+        // starts once the Tor transport has initialized, because it listens where that Tor connects.
+        futures.add(apiAccessTransportService.awaitTransport()
+                .thenCompose(ready -> httpServerBootstrapService.initialize()));
         futures.add(alertNotificationsService.initialize());
 
         futures.add(apiAccessTransportService.initialize());
@@ -348,6 +362,11 @@ public class ApiService implements Service {
             pairingCodePin.unbind();
             pairingCodePin = null;
         }
+        // Under the lock, so that a regeneration still in progress cannot write the file again after we deleted it.
+        synchronized (pairingQrCodeLock) {
+            pairingQrCodeCreationStopped = true;
+            pairingService.deletePairingQrCodeFile();
+        }
         List<CompletableFuture<Boolean>> futures = new ArrayList<>();
         futures.add(alertNotificationsService.shutdown());
         futures.add(apiAccessTransportService.shutdown());
@@ -361,6 +380,10 @@ public class ApiService implements Service {
 
     public void createPairingQrCode() {
         synchronized (pairingQrCodeLock) {
+            if (pairingQrCodeCreationStopped) {
+                log.info("Skipping pairing QR code creation as we are shutting down");
+                return;
+            }
             if (webSocketService.isEmpty()) {
                 log.warn("Cannot create pairing QR code: WebSocket service not initialized");
                 return;

@@ -102,6 +102,9 @@ public class ConfigRestApi extends RestApiBase {
      * endpoint returns 404, which the client reads as "none of these recent features are supported"
      * and hides them all. So adding a feature to a client only needs a key here; no client-side
      * version checks.
+     * <p>
+     * Kept for already deployed clients; new clients read the features from {@code GET /info}
+     * ({@link bisq.api.rest_api.endpoints.info.InfoRestApi}) during the handshake.
      */
     @GET
     @Path("/capabilities")

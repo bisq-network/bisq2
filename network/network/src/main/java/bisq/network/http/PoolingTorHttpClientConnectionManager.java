@@ -33,6 +33,7 @@ import org.apache.hc.core5.annotation.Internal;
 import org.apache.hc.core5.annotation.ThreadingBehavior;
 import org.apache.hc.core5.function.Resolver;
 import org.apache.hc.core5.http.*;
+import org.apache.hc.core5.http.config.Http1Config;
 import org.apache.hc.core5.http.config.RegistryBuilder;
 import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.apache.hc.core5.http.io.HttpConnectionFactory;
@@ -66,9 +67,20 @@ class PoolingTorHttpClientConnectionManager
     public static final int DEFAULT_MAX_TOTAL_CONNECTIONS = 25;
     public static final int DEFAULT_MAX_CONNECTIONS_PER_ROUTE = 5;
 
+    // The servers are not under Bisq's control. These limits bound the status line and the headers of a response, and
+    // are set here so that they do not depend on the defaults of the httpcore5 version: 5.4.2 had no limit for the
+    // number of headers and the line length.
+    static final HttpConnectionFactory<ManagedHttpClientConnection> CONNECTION_FACTORY =
+            ManagedHttpClientConnectionFactory.builder()
+                    .http1Config(Http1Config.custom()
+                            .setMaxHeaderCount(100)
+                            .setMaxLineLength(8192)
+                            .setMaxEmptyLineCount(10)
+                            .build())
+                    .build();
+
     private final HttpClientConnectionOperator connectionOperator;
     private final ManagedConnPool<HttpRoute, ManagedHttpClientConnection> pool;
-    private final HttpConnectionFactory<ManagedHttpClientConnection> connFactory;
     private final AtomicBoolean closed;
 
     private volatile Resolver<HttpRoute, SocketConfig> socketConfigResolver;
@@ -82,8 +94,7 @@ class PoolingTorHttpClientConnectionManager
                                 .build()),
                 PoolConcurrencyPolicy.STRICT,
                 PoolReusePolicy.LIFO,
-                TimeValue.NEG_ONE_MILLISECOND,
-                null);
+                TimeValue.NEG_ONE_MILLISECOND);
     }
 
     @Internal
@@ -91,8 +102,7 @@ class PoolingTorHttpClientConnectionManager
             final HttpClientConnectionOperator httpClientConnectionOperator,
             final PoolConcurrencyPolicy poolConcurrencyPolicy,
             final PoolReusePolicy poolReusePolicy,
-            final TimeValue timeToLive,
-            final HttpConnectionFactory<ManagedHttpClientConnection> connFactory) {
+            final TimeValue timeToLive) {
         super();
         this.connectionOperator = Args.notNull(httpClientConnectionOperator, "Connection operator");
         switch (poolConcurrencyPolicy != null ? poolConcurrencyPolicy : PoolConcurrencyPolicy.STRICT) {
@@ -128,7 +138,6 @@ class PoolingTorHttpClientConnectionManager
             default:
                 throw new IllegalArgumentException("Unexpected PoolConcurrencyPolicy value: " + poolConcurrencyPolicy);
         }
-        this.connFactory = connFactory != null ? connFactory : ManagedHttpClientConnectionFactory.INSTANCE;
         this.closed = new AtomicBoolean(false);
     }
 
@@ -254,7 +263,7 @@ class PoolingTorHttpClientConnectionManager
                         if (conn != null) {
                             conn.activate();
                         } else {
-                            poolEntry.assignConnection(connFactory.createConnection(null));
+                            poolEntry.assignConnection(CONNECTION_FACTORY.createConnection(null));
                         }
                         this.endpoint = new InternalConnectionEndpoint(poolEntry);
                         if (LOG.isDebugEnabled()) {
@@ -347,7 +356,7 @@ class PoolingTorHttpClientConnectionManager
         }
         final PoolEntry<HttpRoute, ManagedHttpClientConnection> poolEntry = internalEndpoint.getPoolEntry();
         if (!poolEntry.hasConnection()) {
-            poolEntry.assignConnection(connFactory.createConnection(null));
+            poolEntry.assignConnection(CONNECTION_FACTORY.createConnection(null));
         }
         final HttpRoute route = poolEntry.getRoute();
         final HttpHost firstHop = route.getProxyHost() != null ? route.getProxyHost() : route.getTargetHost();

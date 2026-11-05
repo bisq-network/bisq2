@@ -23,6 +23,7 @@ import bisq.common.util.StringUtils;
 import bisq.network.http.utils.HttpException;
 import bisq.network.http.utils.HttpLogSanitizer;
 import bisq.network.http.utils.HttpMethod;
+import bisq.network.http.utils.ResponseBodyTooLargeException;
 import bisq.network.http.utils.Socks5ProxyProvider;
 import com.runjva.sourceforge.jsocks.protocol.Socks5Proxy;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +38,7 @@ import org.apache.hc.core5.http.HttpEntity;
 import org.apache.hc.core5.http.HttpHost;
 import org.apache.hc.core5.http.io.SocketConfig;
 import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.io.CloseMode;
 import org.apache.hc.core5.util.Timeout;
 
 import java.io.IOException;
@@ -45,6 +47,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.*;
@@ -52,29 +55,34 @@ import static com.google.common.base.Preconditions.*;
 @Slf4j
 public class TorHttpClient extends BaseHttpClient {
     private final Socks5ProxyProvider socks5ProxyProvider;
-    private CloseableHttpClient closeableHttpClient;
+    // Written by the request thread, read by the thread which calls shutdown
+    private volatile CloseableHttpClient closeableHttpClient;
     private volatile boolean shutdownStarted;
 
-    public TorHttpClient(String baseUrl, String logBaseUrl, String userAgent, Socks5ProxyProvider socks5ProxyProvider) {
-        super(baseUrl, logBaseUrl, userAgent);
+    public TorHttpClient(String baseUrl,
+                         String logBaseUrl,
+                         String userAgent,
+                         int maxResponseBodyBytes,
+                         Socks5ProxyProvider socks5ProxyProvider) {
+        super(baseUrl, logBaseUrl, userAgent, maxResponseBodyBytes);
         this.socks5ProxyProvider = socks5ProxyProvider;
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
         shutdownStarted = true;
-        if (closeableHttpClient == null) {
+        // Read once: the request thread sets the field to null when its request ends.
+        CloseableHttpClient client = closeableHttpClient;
+        if (client == null) {
             hasPendingRequest = false;
             return CompletableFuture.completedFuture(true);
         }
 
+        ExecutorService executor = ExecutorFactory.newSingleThreadExecutor("TorHttpClient-shutdown");
         CompletableFuture<Boolean> future = CompletableFuture.supplyAsync(() -> {
                     try {
                         try {
-                            if (closeableHttpClient != null) {
-                                closeableHttpClient.close();
-                                closeableHttpClient = null;
-                            }
+                            client.close();
                         } catch (IOException ignore) {
                         }
                         return true;
@@ -82,8 +90,9 @@ public class TorHttpClient extends BaseHttpClient {
                         log.error("Error at shutdown", e);
                         return false;
                     }
-                }, ExecutorFactory.newSingleThreadExecutor("TorHttpClient-shutdown"))
-                .orTimeout(500, TimeUnit.MILLISECONDS);
+                }, executor)
+                .orTimeout(500, TimeUnit.MILLISECONDS)
+                .whenComplete((result, throwable) -> executor.shutdown());
         hasPendingRequest = false;
         return future;
     }
@@ -119,13 +128,20 @@ public class TorHttpClient extends BaseHttpClient {
                 .setSocksProxyAddress(socksAddress)
                 .setSoTimeout(Timeout.ofSeconds(30))
                 .build());
+        CloseableHttpClient client = null;
         try {
-            closeableHttpClient = checkNotNull(HttpClients.custom()
+            client = checkNotNull(HttpClients.custom()
                     .setConnectionManager(cm)
                     .setDefaultRequestConfig(RequestConfig.custom()
                             .setResponseTimeout(Timeout.ofSeconds(30))
                             .build()) // Timeout waiting for response
                     .build());
+            closeableHttpClient = client;
+            if (shutdownStarted) {
+                // shutdown() ran between the check at the start and this store, so it saw no client to close. The
+                // finally block closes this one.
+                return "";
+            }
             var uri = URI.create(baseUrl);
 
             // Create the appropriate HTTP request based on the method
@@ -149,15 +165,15 @@ public class TorHttpClient extends BaseHttpClient {
 
             optionalHeader.ifPresent(header -> request.setHeader(header.getFirst(), header.getSecond()));
             var target = new HttpHost(uri.getScheme(), uri.getHost(), uri.getPort());
-            return closeableHttpClient.execute(target, request, response -> processResponse(response, safeParam, ts));
+            return client.execute(target, request, response -> processResponse(response, safeParam, ts));
         } catch (Throwable t) {
             String message = "Error at doRequestWithProxy with url " + logBaseUrl + " and param " + safeParam +
                     ". Throwable=" + t.getMessage();
             throw new IOException(message, t);
         } finally {
-            if (closeableHttpClient != null) {
-                closeableHttpClient.close();
-                closeableHttpClient = null;
+            closeableHttpClient = null;
+            if (client != null) {
+                client.close();
             }
             hasPendingRequest = false;
         }
@@ -219,7 +235,20 @@ public class TorHttpClient extends BaseHttpClient {
      */
     String readBody(ClassicHttpResponse response) throws IOException {
         HttpEntity entity = response.getEntity();
-        return entity == null ? "" : inputStreamToString(entity.getContent());
+        if (entity == null) {
+            return "";
+        }
+        try {
+            return inputStreamToString(entity.getContent());
+        } catch (ResponseBodyTooLargeException e) {
+            // Apache closes the response after the handler and reads the rest of the body to reuse the connection,
+            // also an endless body. Closing the client first closes the connection.
+            CloseableHttpClient client = closeableHttpClient;
+            if (client != null) {
+                client.close(CloseMode.IMMEDIATE);
+            }
+            throw e;
+        }
     }
 
     /**

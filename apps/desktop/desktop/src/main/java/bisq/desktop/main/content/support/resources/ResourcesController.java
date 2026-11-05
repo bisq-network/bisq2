@@ -18,7 +18,9 @@
 package bisq.desktop.main.content.support.resources;
 
 import bisq.application.InstanceLock;
+import bisq.common.application.ApplicationVersion;
 import bisq.common.file.FileMutatorUtils;
+import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
 import bisq.common.platform.PlatformUtils;
 import bisq.common.threading.ExecutorFactory;
@@ -34,10 +36,13 @@ import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.tac.TacController;
 import bisq.i18n.Res;
 import bisq.mu_sig.MuSigService;
+import bisq.network.NetworkService;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.persistence.PersistenceService;
 import bisq.persistence.backup.BackupFileInfo;
 import bisq.presentation.formatters.TimeFormatter;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -49,6 +54,7 @@ import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
@@ -67,7 +73,9 @@ public class ResourcesController implements Controller {
     private final PersistenceService persistenceService;
     private final SettingsService settingsService;
     private final MuSigService muSigService;
+    private final NetworkService networkService;
     private Pin backupLocationPin;
+    private Optional<Pin> torTransportStatePin = Optional.empty();
 
     public ResourcesController(ServiceProvider serviceProvider) {
         appDataDirPath = serviceProvider.getConfig().getAppDataDirPath();
@@ -75,6 +83,7 @@ public class ResourcesController implements Controller {
         settingsService = serviceProvider.getSettingsService();
         persistenceService = serviceProvider.getPersistenceService();
         muSigService = serviceProvider.getMuSigService();
+        networkService = serviceProvider.getNetworkService();
 
         model = new ResourcesModel();
         view = new ResourcesView(model, this);
@@ -89,6 +98,14 @@ public class ResourcesController implements Controller {
 
         model.setMusigEnabled(muSigService.isActivated());
 
+        model.getLocalVersionDetails().set(getLocalVersionDetails(Optional.empty()));
+        // The running Tor tells its version once the Tor transport has initialized, which can be after this view opens
+        torTransportStatePin = networkService.findServiceNode(TransportType.TOR)
+                .map(serviceNode -> (TorTransportService) serviceNode.getTransportService())
+                .map(torTransportService -> torTransportService.getTransportState().addObserver(transportState ->
+                        UIThread.run(() -> model.getLocalVersionDetails()
+                                .set(getLocalVersionDetails(torTransportService.getTorVersion())))));
+
         fillBackupSnapshots();
     }
 
@@ -97,6 +114,8 @@ public class ResourcesController implements Controller {
         model.getBackupButtonDefault().unbind();
         model.getBackupButtonDisabled().unbind();
         backupLocationPin.unbind();
+        torTransportStatePin.ifPresent(Pin::unbind);
+        torTransportStatePin = Optional.empty();
 
         model.getBackupSnapshotStoreItems().clear();
     }
@@ -106,7 +125,7 @@ public class ResourcesController implements Controller {
     }
 
     void onOpenTorLogFile() {
-        PlatformUtils.open(appDataDirPath.resolve("tor").resolve("debug.log"));
+        PlatformUtils.open(TorTransportService.getTorLogPath(appDataDirPath));
     }
 
     void onOpenDataDir() {
@@ -142,14 +161,7 @@ public class ResourcesController implements Controller {
                             return;
                         }
                         try {
-                            // Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
-                            // We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
-                            // the file descriptor, thus reading the file for the copy would release our own lock and disable the
-                            // single instance protection for the rest of the session.
-                            FileMutatorUtils.copyDirectory(appDataDirPath,
-                                    destinationPath,
-                                    Set.of("log"),
-                                    Set.of(InstanceLock.LOCK_FILE_NAME));
+                            copyDataDirectory(appDataDirPath, destinationPath);
                             new Popup().feedback(Res.get("support.resources.backup.success", destinationPath)).show();
                         } catch (IOException e) {
                             new Popup().error(e).show();
@@ -206,6 +218,54 @@ public class ResourcesController implements Controller {
 
     void onOpenCommunity() {
         Browser.open("https://matrix.to/#/%23bisq:bitcoin.kyoto");
+    }
+
+    /**
+     * Copies the data directory for a backup.
+     * <p>
+     * Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
+     * The rotated log of Tor (tor-stdout.log.1) has another extension, so it is excluded by the name which the Tor
+     * library gives it.
+     * We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
+     * the file descriptor, thus reading the file for the copy would release our own lock and disable the
+     * single instance protection for the rest of the session.
+     * The data directory of Tor holds only Tor's cache. Tor runs in a sandbox and can write there, so
+     * Bisq must not open its files (a link or a named pipe there could make the copy read other files
+     * or block). The record of the Tor library whether a sandboxed Tor wrote that directory is left out with it:
+     * copied back next to another data directory of Tor, it would describe that one, and a Tor without the sandbox
+     * could then read what a sandboxed Tor wrote there instead of starting on a cleared data directory.
+     * The node installs the Tor bundle (with its version file) and sandy again at its next start of Tor when they
+     * are missing, so the backup leaves them out. It keeps external_tor.config, which can hold the password of an
+     * external Tor (ControlPassword) in plain text.
+     */
+    @VisibleForTesting
+    static void copyDataDirectory(Path appDataDirPath, Path destinationPath) throws IOException {
+        FileMutatorUtils.copyDirectory(appDataDirPath,
+                destinationPath,
+                Set.of("log"),
+                Set.of(InstanceLock.LOCK_FILE_NAME,
+                        TorTransportService.getRotatedTorLogPath(appDataDirPath).getFileName().toString(),
+                        TorTransportService.getTorDataModePath(appDataDirPath).getFileName().toString()),
+                Set.of(Paths.get("tor", "data"), Paths.get("tor", "bin"), Paths.get("tor", "sandy")));
+    }
+
+    private static String getLocalVersionDetails(Optional<String> runningTorVersion) {
+        String versionString = ApplicationVersion.getVersion() != null ?
+                ApplicationVersion.getVersion().getVersionAsString() : Res.get("data.na");
+        String commitHash = ApplicationVersion.getBuildCommitShortHash() != null ?
+                ApplicationVersion.getBuildCommitShortHash() : Res.get("data.na");
+        if (runningTorVersion.isPresent()) {
+            return Res.get("support.resources.localVersion.details.runningTor",
+                    versionString, commitHash, runningTorVersion.get());
+        }
+
+        // Without the version of the running Tor, the version of the Tor bundle of this build
+        String torBinaryVersion = ApplicationVersion.getTorBinaryVersionString() != null ?
+                ApplicationVersion.getTorBinaryVersionString() : Res.get("data.na");
+        String torVersion = ApplicationVersion.getTorVersionString() != null ?
+                ApplicationVersion.getTorVersionString() : Res.get("data.na");
+        return Res.get("support.resources.localVersion.details",
+                versionString, commitHash, torBinaryVersion, torVersion);
     }
 
     private void fillBackupSnapshots() {

@@ -39,12 +39,12 @@ update-set-branch () {
   BISQ_REPO_TAG_OR_BRANCH=$1
 
   echo "[*] Checking out branch ${BISQ_REPO_TAG_OR_BRANCH}"
-  sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_REPO_TAG_OR_BRANCH}"
+  sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git checkout ${BISQ_REPO_TAG_OR_BRANCH} && git submodule update --init"
 }
 
 update-pull-current-branch () {
   echo "[*] Pulling current branch"
-  sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git pull --ff"
+  sudo -H -i -u "${BISQ_USER}" sh -c "cd ${BISQ_HOME}/${BISQ_REPO_NAME} && git pull --ff && git submodule update --init"
 }
 
 update-show-status () {

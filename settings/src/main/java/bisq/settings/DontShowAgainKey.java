@@ -34,7 +34,9 @@ public enum DontShowAgainKey {
     ARBITRATOR_LEAVE_CHANNEL_WARNING("arbitrator.leaveChannel.warning"),
     HYPERLINKS_OPEN_IN_BROWSER("hyperlinks.openInBrowser"),
     SEND_MSG_OFFER_ONLY_WARN("sendMsgOfferOnlyWarn"),
-    SEND_OFFER_MSG_TEXT_ONLY_WARN("sendOfferMsgTextOnlyWarn");
+    SEND_OFFER_MSG_TEXT_ONLY_WARN("sendOfferMsgTextOnlyWarn"),
+    // The prefix of the keys of the notices about a weak level of the Tor sandbox, one key for each set of weaknesses
+    TOR_SANDBOX_WEAK_LEVEL("torSandbox.weakLevel");
 
     @Getter
     private final String key;

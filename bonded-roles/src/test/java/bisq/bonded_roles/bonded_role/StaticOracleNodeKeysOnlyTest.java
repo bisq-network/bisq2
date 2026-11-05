@@ -26,23 +26,18 @@ import bisq.common.network.clear_net_address_types.LocalHostAddressTypeFacade;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.services.data.DataService;
-import bisq.network.p2p.services.data.storage.StorableTypesRegistry;
-import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
-import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedDistributedData;
-import bisq.persistence.PersistenceService;
 import bisq.security.SignatureUtil;
 import bisq.security.keys.KeyGeneration;
 import bisq.security.keys.PubKey;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
 
-import java.nio.file.Path;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -59,11 +54,7 @@ import static org.mockito.Mockito.when;
  * give this authority (see docs/specifications/bonded-roles/authorized-data.md).
  */
 class StaticOracleNodeKeysOnlyTest {
-    @TempDir
-    Path tempDir;
-
-    private DataService dataService;
-    private AuthenticatedDataStorageService store;
+    private final List<AuthorizedData> publications = new ArrayList<>();
     private AuthorizedBondedRolesService authorizedBondedRolesService;
     private KeyPair oracleKeyPair;
     // The key pair of the network ID of the oracle nodes of the test
@@ -71,11 +62,11 @@ class StaticOracleNodeKeysOnlyTest {
 
     @BeforeEach
     void setUp() {
-        StorableTypesRegistry.register(AuthorizedOracleNode.class, AuthorizedOracleNode.META_DATA);
-        dataService = new DataService(new PersistenceService(tempDir));
-        store = dataService.getStorageService()
-                .getOrCreateAuthenticatedDataStore(AuthorizedOracleNode.class.getSimpleName())
-                .join();
+        // These generated keys belong to the service's test configuration, not the network store's static keys.
+        // Supply publications directly so background storage pruning cannot remove the test inputs.
+        DataService dataService = mock(DataService.class);
+        when(dataService.getAuthenticatedPayloadStreamByStoreName(AuthorizedOracleNode.class.getSimpleName()))
+                .thenAnswer(invocation -> publications.stream());
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
         identityKeyPair = KeyGeneration.generateDefaultEcKeyPair();
@@ -87,18 +78,12 @@ class StaticOracleNodeKeysOnlyTest {
                 true);
     }
 
-    @AfterEach
-    void tearDown() {
-        store.getPersistence().persistAsync(store.getPersistableStore().getClone()).join();
-        dataService.shutdown();
-    }
-
     // The static oracle node key decides, not staticPublicKeysProvided, which the publisher sets
     @Test
     void oracleNodeOfAStaticOracleNodeKeyIsListed() throws GeneralSecurityException {
         AuthorizedOracleNode oracleNode = createOracleNode(Hex.encode(oracleKeyPair.getPublic().getEncoded()), false);
 
-        storeAndNotify(oracleNode, oracleKeyPair);
+        publishAndNotify(oracleNode, oracleKeyPair);
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).containsExactly(oracleNode);
     }
@@ -107,7 +92,7 @@ class StaticOracleNodeKeysOnlyTest {
     void oracleNodeWithStaticFlagOfAStaticOracleNodeKeyIsListed() throws GeneralSecurityException {
         AuthorizedOracleNode oracleNode = createOracleNode(Hex.encode(oracleKeyPair.getPublic().getEncoded()), true);
 
-        storeAndNotify(oracleNode, oracleKeyPair);
+        publishAndNotify(oracleNode, oracleKeyPair);
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).containsExactly(oracleNode);
     }
@@ -118,7 +103,7 @@ class StaticOracleNodeKeysOnlyTest {
         String nonStaticKeyAsHex = Hex.encode(nonStaticKeyPair.getPublic().getEncoded());
         authorizedBondedRolesService.getBondedRoles().add(new BondedRole(createOracleRole(nonStaticKeyAsHex)));
 
-        storeAndNotify(createOracleNode(nonStaticKeyAsHex, false), nonStaticKeyPair);
+        publishAndNotify(createOracleNode(nonStaticKeyAsHex, false), nonStaticKeyPair);
 
         assertThat(authorizedBondedRolesService.getAuthorizedOracleNodes()).isEmpty();
         assertThat(authorizedBondedRolesService.isOracleNodeKeyAllowed(nonStaticKeyAsHex)).isFalse();
@@ -150,15 +135,11 @@ class StaticOracleNodeKeysOnlyTest {
                 .containsExactlyInAnyOrder(oracleRole, mediatorRole);
     }
 
-    // Oracle discovery reads stored publications. Insert directly because the test supplies its own static key set.
-    // The key pair of the network ID publishes the oracle node, as oracle nodes do. The network storage accepts the
-    // authorized key as publisher only if it is a static key of the code (see
-    // docs/specifications/network/storage-ownership.md), which the generated keys of this test are not.
-    private void storeAndNotify(AuthorizedOracleNode oracleNode, KeyPair authorizedKeyPair)
+    // Oracle discovery reads publications through DataService, using the static key set supplied to the service.
+    private void publishAndNotify(AuthorizedOracleNode oracleNode, KeyPair authorizedKeyPair)
             throws GeneralSecurityException {
         AuthorizedData publication = authorize(oracleNode, authorizedKeyPair);
-        AddAuthenticatedDataRequest request = AddAuthenticatedDataRequest.from(store, publication, identityKeyPair);
-        store.getPersistableStore().getMap().put(request.getStorageKey(), request);
+        publications.add(publication);
         authorizedBondedRolesService.onAuthorizedDataAdded(publication);
     }
 
