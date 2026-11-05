@@ -40,8 +40,8 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
    restrictions of the stored alerts. The protocol processes a queued event which has a transition from the current
    state of the trade, as it does after a change of the state. The other events stay in the event queue.
 4. During a halt of trading, or when the version of the node is below the minimum version for trading, the trade
-   service does not apply the queued events at startup. They stay in the event queue, and the protocol applies them
-   after the next change of the state.
+   service does not apply the queued events at startup. They stay in the event queue. When the restriction ends, the
+   trade service applies the queued events of each trade once, as in rule 3.
 5. A queued event whose handler fails at startup makes the trade fail, and the protocol reports the failure to the
    trade peer, as for a new message. When the queued events of one trade fail at startup in another way, the node logs
    the failure and continues with the next trade. The start of the trade service does not fail, as for the items of
@@ -78,6 +78,9 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   minimum version for trading, to stop the handlers of the protocol. The node ignores a new trade message during such
   a restriction (see "Same restrictions as a new message" in [Startup replay](../network/startup-replay.md)), so it
   does not process a queued one either.
+- Rule 4, end of a restriction: after the restriction, the node processes new trade messages again. Without the step
+  at the end, a queued event with a transition from the stored state would wait for a change of the state which only
+  the event itself causes, or for the next start without a restriction (see rule 3).
 - Rule 5: one stored trade must not stop the start of the node or the other trades.
 - Rule 6: the protocol records the type of each event which changed the state, and it does not queue an event of a
   recorded type. The protocols use a type with only state-changing transitions for at most one change of the state:
@@ -138,15 +141,6 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
   - Why it remains: the change is limited to the persistence of the event queue.
   - What would remove it: the redaction also removes the queued trade messages of a trade whose date for the
     redaction has passed.
-  - Who decides: the developers.
-- **Restriction at startup.** A queued event which has a transition from the stored state waits during a restriction
-  of trading at startup (rule 4). When the restriction ends, the node does not apply the queued events. It applies
-  them at the next change of the state or at the next start without a restriction.
-  - Why it remains: the trade services apply the trade restrictions when they accept a message or start an action,
-    and they do nothing when a restriction ends. A step at the end of a restriction belongs to the decision how a node
-    handles the trade messages of a restriction (see "Open trades across versions" in
-    [Trade restrictions](trade-restrictions.md)).
-  - What would remove it: the trade services apply the queued events again when a restriction of trading ends.
   - Who decides: the developers.
 - **State and event queue of one write.** The node writes a trade in another thread than the protocol, and the write
   reads the state of the trade and its event queue one after the other. While the protocol applies a queued event, a
