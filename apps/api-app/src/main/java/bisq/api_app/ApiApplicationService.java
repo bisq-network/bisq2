@@ -55,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
 import java.awt.*;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -102,7 +103,7 @@ public class ApiApplicationService extends JavaSeApplicationService {
         walletService = Optional.empty();
 
         networkService = new NetworkService(NetworkServiceConfig.from(config.getAppDataDirPath(),
-                getConfig("network")),
+                getConfig("network"), getConfigFile(), getCommandLineConfig()),
                 persistenceService,
                 securityService.getKeyBundleService(),
                 securityService.getHashCashProofOfWorkService(),
@@ -257,28 +258,30 @@ public class ApiApplicationService extends JavaSeApplicationService {
         }
 
         // Move shutdown work off the current thread and use ExecutorFactory.commonForkJoinPool() instead.
-        // We shut down services in opposite order as they are initialized
-        return supplyAsync(() -> apiService.shutdown()
-                .thenCompose(result -> closedTradeItemsService.shutdown())
-                .thenCompose(result -> openTradeItemsService.shutdown())
-                .thenCompose(result -> bisqEasyService.shutdown())
-                .thenCompose(result -> tradeService.shutdown())
-                .thenCompose(result -> supportService.shutdown())
-                .thenCompose(result -> chatService.shutdown())
-                .thenCompose(result -> offerService.shutdown())
-                .thenCompose(result -> notificationService.shutdown())
-                .thenCompose(result -> settingsService.shutdown())
-                .thenCompose(result -> burningmanService.shutdown())
-                .thenCompose(result -> accountService.shutdown())
-                .thenCompose(result -> userService.shutdown())
-                .thenCompose(result -> contractService.shutdown())
-                .thenCompose(result -> bondedRolesService.shutdown())
-                .thenCompose(result -> identityService.shutdown())
-                .thenCompose(result -> networkService.shutdown())
-                .thenCompose(result -> walletService.map(Service::shutdown)
-                        .orElse(CompletableFuture.completedFuture(true)))
-                .thenCompose(result -> securityService.shutdown())
-                .thenCompose(result -> memoryReportService.shutdown())
+        // We shut down services in opposite order as they are initialized. A service which fails does not stop the
+        // shutdown of the later services.
+        return supplyAsync(() -> shutdownInOrder(List.of(
+                        () -> apiService.shutdown(),
+                        () -> closedTradeItemsService.shutdown(),
+                        () -> openTradeItemsService.shutdown(),
+                        () -> bisqEasyService.shutdown(),
+                        () -> tradeService.shutdown(),
+                        () -> supportService.shutdown(),
+                        () -> chatService.shutdown(),
+                        () -> offerService.shutdown(),
+                        () -> notificationService.shutdown(),
+                        () -> settingsService.shutdown(),
+                        () -> burningmanService.shutdown(),
+                        () -> accountService.shutdown(),
+                        () -> userService.shutdown(),
+                        () -> contractService.shutdown(),
+                        () -> bondedRolesService.shutdown(),
+                        () -> identityService.shutdown(),
+                        () -> networkService.shutdown(),
+                        () -> walletService.map(Service::shutdown)
+                                .orElse(CompletableFuture.completedFuture(true)),
+                        () -> securityService.shutdown(),
+                        () -> memoryReportService.shutdown()))
                 .orTimeout(10, TimeUnit.SECONDS)
                 .handle((result, throwable) -> {
                     if (throwable != null) {

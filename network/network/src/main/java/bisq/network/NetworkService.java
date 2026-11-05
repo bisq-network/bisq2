@@ -69,9 +69,11 @@ import bisq.security.keys.KeyBundleService;
 import bisq.security.keys.TorKeyPair;
 import bisq.security.pow.equihash.EquihashProofOfWorkService;
 import bisq.security.pow.hashcash.HashCashProofOfWorkService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.net.InetAddress;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -217,6 +219,7 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
         // We use anyOf to complete as soon as we got at least one transport node initialized
         return CompletableFutureUtils.anyOf(initializedDefaultNodeByTransport.values())
                 .thenApply(node -> {
+                    logFailedTransports(initializedDefaultNodeByTransport);
                     if (node != null) {
                         messageDeliveryStatusService.ifPresent(MessageDeliveryStatusService::initialize);
                         resendMessageService.ifPresent(ResendMessageService::initialize);
@@ -475,12 +478,18 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
      *               and exception messages emitted by the returned client.
      *               Pass the same value as {@code url} when nothing in the
      *               URL is sensitive.
+     * @param maxResponseBodyBytes The largest response body which the client reads. A larger body fails the request.
      */
-    public BaseHttpClient getHttpClient(String url, String logUrl, String userAgent, TransportType transportType) {
+    public BaseHttpClient getHttpClient(String url,
+                                        String logUrl,
+                                        String userAgent,
+                                        TransportType transportType,
+                                        int maxResponseBodyBytes) {
         if (Objects.requireNonNull(transportType) == TransportType.TOR) {
-            return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
+            return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, maxResponseBodyBytes,
+                    serviceNodesByTransport.getSocksProxy(transportType), socks5ProxyAddress);
         }
-        return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType);
+        return httpClientsByTransport.getHttpClient(url, logUrl, userAgent, transportType, maxResponseBodyBytes);
     }
 
     public Map<TransportType, Observable<Node.State>> getDefaultNodeStateByTransportType() {
@@ -595,10 +604,36 @@ public class NetworkService extends RateLimitedPersistenceClient<NetworkServiceS
                 .orElse(CompletableFuture.failedFuture(new UnsupportedOperationException("Calling publishOnionService requires to have a TorTransportService running.")));
     }
 
+    /**
+     * @return the address on which a server which {@link #publishOnionService} publishes has to listen, or empty
+     * without the Tor transport. Known once the Tor transport has initialized.
+     */
+    public Optional<InetAddress> findOnionServiceBindAddress() {
+        return serviceNodesByTransport.findServiceNode(TOR)
+                .map(ServiceNode::getTransportService)
+                .map(TorTransportService.class::cast)
+                .map(TorTransportService::getOnionServiceBindAddress);
+    }
+
 
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
+
+    /**
+     * The network is ready with its first initialized transport, so the failure of another one, for example a refused
+     * start of Tor next to I2P, fails no start and would otherwise reach no log.
+     */
+    @VisibleForTesting
+    static void logFailedTransports(Map<TransportType, CompletableFuture<Node>> initializedDefaultNodeByTransport) {
+        initializedDefaultNodeByTransport.forEach((transportType, initializedDefaultNode) ->
+                initializedDefaultNode.whenComplete((node, throwable) -> {
+                    if (throwable != null) {
+                        log.error("The {} transport failed to initialize. The network runs without it.",
+                                transportType, throwable);
+                    }
+                }));
+    }
 
     private void requestReferenceTime() {
         transportStatePins.forEach(Pin::unbind);

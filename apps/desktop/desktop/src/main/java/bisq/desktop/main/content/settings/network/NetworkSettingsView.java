@@ -27,6 +27,7 @@ import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.settings.SettingsViewUtils;
 import bisq.i18n.Res;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -50,6 +51,9 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
     private final MaterialTextField i2cpAddress, bi2pGrpcAddress;
     private final Button resetToDefaultsButton, shutdownButton;
     private final Switch ignoreDiffAdjustFromSecManagerSwitch;
+    private final Switch allowPluggableTransportsSwitch;
+    private final Label pluggableTransportsNote;
+    private final Button torShutdownButton;
     private final MaterialTextField difficultyAdjustmentFactor;
     private Subscription ignoreDiffAdjustFromSecManagerSwitchPin;
 
@@ -119,6 +123,27 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         HBox buttons = new HBox(10, resetToDefaultsButton, shutdownButton);
 
+        // Tor options
+        Label torOptionsHeadline = SettingsViewUtils.getHeadline(Res.get("settings.network.tor.headline"));
+
+        allowPluggableTransportsSwitch = new Switch(Res.get("settings.network.tor.allowPluggableTransports"));
+        ImageView pluggableTransportsInfoIcon = ImageUtil.getImageViewById("info");
+        pluggableTransportsInfoIcon.setOpacity(0.6);
+        Tooltip.install(pluggableTransportsInfoIcon,
+                new BisqTooltip(Res.get("settings.network.tor.allowPluggableTransports.info")));
+        HBox pluggableTransportsHBox = new HBox(10, allowPluggableTransportsSwitch, pluggableTransportsInfoIcon);
+        pluggableTransportsHBox.setAlignment(Pos.CENTER_LEFT);
+
+        pluggableTransportsNote = new Label();
+        pluggableTransportsNote.setWrapText(true);
+        pluggableTransportsNote.getStyleClass().add("bisq-text-grey-9");
+
+        torShutdownButton = new Button(Res.get("settings.network.shutdown"));
+        torShutdownButton.setDefaultButton(true);
+
+        VBox.setMargin(torShutdownButton, new Insets(10, 0, 0, 0));
+        VBox torOptionsVBox = new VBox(10, pluggableTransportsHBox, pluggableTransportsNote, torShutdownButton);
+
         // Difficulty adjustment
         Label difficultyAdjustmentHeadline = new Label(Res.get("settings.network.difficultyAdjustmentFactor.headline"));
         difficultyAdjustmentHeadline.getStyleClass().add("large-thin-headline");
@@ -140,6 +165,7 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
                /* transportOptionsHeadlineHBox, separator(), transportOptionsVBox,
                 i2pOptionsHeadline, separator(), i2pOptionsVBox,
                 buttons,*/
+                torOptionsHeadline, separator(), torOptionsVBox,
                 difficultyAdjustmentHeadline, separator(), difficultyAdjustmentVBox
         );
 
@@ -203,6 +229,30 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
 
         shutdownButton.setOnAction(e -> controller.onApplyAndShutdown());
 
+        allowPluggableTransportsSwitch.setSelected(model.getAllowPluggableTransports().get());
+        BooleanBinding pluggableTransportsUnavailable = model.getAllowPluggableTransportsUnavailableText().isNotEmpty();
+        allowPluggableTransportsSwitch.disableProperty().bind(pluggableTransportsUnavailable);
+        pluggableTransportsNote.textProperty().bind(model.getAllowPluggableTransportsUnavailableText());
+        pluggableTransportsNote.visibleProperty().bind(pluggableTransportsUnavailable);
+        pluggableTransportsNote.managedProperty().bind(pluggableTransportsUnavailable);
+        allowPluggableTransportsSwitch.setOnAction(e -> {
+            if (allowPluggableTransportsSwitch.isSelected()) {
+                // Only the action button allows them. Closing the popup, also with Escape or Enter, keeps them off.
+                new Popup().warning(Res.get("settings.network.tor.allowPluggableTransports.warn"))
+                        .actionButtonText(Res.get("settings.network.tor.allowPluggableTransports.warn.accept"))
+                        .onAction(() -> controller.onToggleAllowPluggableTransports(true))
+                        .closeButtonText(Res.get("settings.network.tor.allowPluggableTransports.warn.cancel"))
+                        .onClose(() -> UIThread.runOnNextRenderFrame(() ->
+                                allowPluggableTransportsSwitch.setSelected(false)))
+                        .show();
+            } else {
+                controller.onToggleAllowPluggableTransports(false);
+            }
+        });
+        torShutdownButton.visibleProperty().bind(model.getTorShutdownButtonVisible());
+        torShutdownButton.managedProperty().bind(model.getTorShutdownButtonVisible());
+        torShutdownButton.setOnAction(e -> controller.onApplyTorSettingsAndShutdown());
+
         i2cpAddress.validate();
         bi2pGrpcAddress.validate();
 
@@ -238,6 +288,15 @@ public class NetworkSettingsView extends View<VBox, NetworkSettingsModel, Networ
         useEmbedded.setOnAction(null);
         resetToDefaultsButton.setOnAction(null);
         shutdownButton.setOnAction(null);
+
+        allowPluggableTransportsSwitch.disableProperty().unbind();
+        pluggableTransportsNote.textProperty().unbind();
+        pluggableTransportsNote.visibleProperty().unbind();
+        pluggableTransportsNote.managedProperty().unbind();
+        allowPluggableTransportsSwitch.setOnAction(null);
+        torShutdownButton.visibleProperty().unbind();
+        torShutdownButton.managedProperty().unbind();
+        torShutdownButton.setOnAction(null);
 
         i2cpAddress.resetValidation();
         bi2pGrpcAddress.resetValidation();

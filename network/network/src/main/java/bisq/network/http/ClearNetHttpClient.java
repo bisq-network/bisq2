@@ -44,12 +44,16 @@ public class ClearNetHttpClient extends BaseHttpClient {
     private Proxy proxy;
     private HttpURLConnection connection;
 
-    public ClearNetHttpClient(String baseUrl, String logBaseUrl, String userAgent) {
-        super(baseUrl, logBaseUrl, userAgent);
+    public ClearNetHttpClient(String baseUrl, String logBaseUrl, String userAgent, int maxResponseBodyBytes) {
+        super(baseUrl, logBaseUrl, userAgent, maxResponseBodyBytes);
     }
 
-    public ClearNetHttpClient(String baseUrl, String logBaseUrl, String userAgent, Proxy proxy) {
-        super(baseUrl, logBaseUrl, userAgent);
+    public ClearNetHttpClient(String baseUrl,
+                              String logBaseUrl,
+                              String userAgent,
+                              int maxResponseBodyBytes,
+                              Proxy proxy) {
+        super(baseUrl, logBaseUrl, userAgent, maxResponseBodyBytes);
         this.proxy = proxy;
     }
 
@@ -136,7 +140,21 @@ public class ClearNetHttpClient extends BaseHttpClient {
 
             InputStream errorStream = connection.getErrorStream();
             if (errorStream != null) {
-                String error = inputStreamToString(errorStream);
+                String error;
+                try {
+                    error = inputStreamToString(errorStream);
+                } catch (IOException e) {
+                    // As in TorHttpClient: a body which cannot be read, or which is above the limit, does not turn
+                    // the answer of the server into a transport failure, so that its status code decides about retries.
+                    log.info("Received unreadable body ({}) with responseCode {} from {}. Response took: {} ms. param: {}",
+                            e.getClass().getSimpleName(),
+                            responseCode,
+                            logBaseUrl,
+                            System.currentTimeMillis() - ts,
+                            safeParam);
+                    closeQuietly(errorStream);
+                    throw new HttpException("", responseCode);
+                }
                 errorStream.close();
                 log.info("Received errorMsg '{}' with responseCode {} from {}. Response took: {} ms. param: {}",
                         HttpLogSanitizer.loggableBody(error),
@@ -169,6 +187,13 @@ public class ClearNetHttpClient extends BaseHttpClient {
             } catch (Throwable ignore) {
             }
             hasPendingRequest = false;
+        }
+    }
+
+    private static void closeQuietly(InputStream inputStream) {
+        try {
+            inputStream.close();
+        } catch (IOException ignore) {
         }
     }
 }

@@ -27,12 +27,14 @@ import bisq.common.network.Address;
 import bisq.common.network.ClearnetAddress;
 import bisq.common.network.TransportType;
 import bisq.common.observable.Pin;
+import bisq.common.platform.OS;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
+import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -51,6 +53,8 @@ import java.util.Set;
 
 @Slf4j
 public class NetworkSettingsController implements Controller {
+    private static final String TOR_SANDBOX_CONFIG_PATH = "application.network.configByTransportType.tor.sandbox";
+
     @Getter
     private final NetworkSettingsView view;
     private final NetworkSettingsModel model;
@@ -62,6 +66,7 @@ public class NetworkSettingsController implements Controller {
     private final Set<Subscription> subscriptions = new HashSet<>();
     private Pin ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin;
+    private boolean configuredAllowPluggableTransports;
 
     public NetworkSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -106,6 +111,22 @@ public class NetworkSettingsController implements Controller {
         model.getUseEmbeddedI2PRouter().set(i2pConfig.getBoolean("embeddedRouter"));
         model.getI2cpAddress().set(new ClearnetAddress(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
         model.getBi2pGrpcAddress().set(new ClearnetAddress(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
+
+        // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart.
+        Config torSandboxConfig = updatedRootConfig.getConfig(TOR_SANDBOX_CONFIG_PATH);
+        configuredAllowPluggableTransports = torSandboxConfig.getBoolean("allowPluggableTransports");
+        model.getAllowPluggableTransports().set(configuredAllowPluggableTransports);
+        model.getTorShutdownButtonVisible().set(false);
+        if (!torSandboxConfig.getBoolean("enabled")) {
+            model.getAllowPluggableTransportsUnavailableText()
+                    .set(Res.get("settings.network.tor.allowPluggableTransports.sandboxDisabled"));
+        } else if (OS.isWindows()) {
+            // The Tor library refuses pluggable transports in the sandbox on Windows.
+            model.getAllowPluggableTransportsUnavailableText()
+                    .set(Res.get("settings.network.tor.allowPluggableTransports.windows"));
+        } else {
+            model.getAllowPluggableTransportsUnavailableText().set("");
+        }
 
         subscriptions.add(EasyBind.subscribe(model.getI2cpAddress(), e -> onDataChanged()));
         subscriptions.add(EasyBind.subscribe(model.getBi2pGrpcAddress(), e -> onDataChanged()));
@@ -153,6 +174,11 @@ public class NetworkSettingsController implements Controller {
         }
     }
 
+    @VisibleForTesting
+    NetworkSettingsModel getModel() {
+        return model;
+    }
+
     void onResetToDefaults() {
         applyDefaults();
         onDataChanged();
@@ -168,8 +194,20 @@ public class NetworkSettingsController implements Controller {
         onDataChanged();
     }
 
+    void onToggleAllowPluggableTransports(boolean selected) {
+        model.getAllowPluggableTransports().set(selected);
+        model.getTorShutdownButtonVisible().set(selected != configuredAllowPluggableTransports);
+    }
+
     void onApplyAndShutdown() {
-        writeCustomConfig();
+        writeNetworkConfig();
+        shutDownHandler.shutdown();
+    }
+
+    void onApplyTorSettingsAndShutdown() {
+        // Only the changed entry, so that the other entries keep following the defaults of new releases
+        writeCustomConfig(Map.of(TOR_SANDBOX_CONFIG_PATH + ".allowPluggableTransports",
+                model.getAllowPluggableTransports().get()));
         shutDownHandler.shutdown();
     }
 
@@ -177,7 +215,7 @@ public class NetworkSettingsController implements Controller {
         model.getShutdownButtonVisible().set(true);
     }
 
-    private void writeCustomConfig() {
+    private void writeNetworkConfig() {
         List<String> supportedTransportTypesOverride = model.getSelectedTransportOption().get().getTransportTypes().stream()
                 .map(Enum::name)
                 .toList();
@@ -185,7 +223,7 @@ public class NetworkSettingsController implements Controller {
         Address i2cpAddress = model.getI2cpAddress().get();
         Address bi2pGrpcAddress = model.getBi2pGrpcAddress().get();
 
-        Config newConfig = ConfigFactory.parseMap(Map.of(
+        writeCustomConfig(Map.of(
                 "application.network.supportedTransportTypes", supportedTransportTypesOverride,
                 "application.network.configByTransportType.i2p.embeddedRouter", useEmbeddedI2PRouter,
                 "application.network.configByTransportType.i2p.i2cpHost", i2cpAddress.getHost(),
@@ -193,7 +231,10 @@ public class NetworkSettingsController implements Controller {
                 "application.network.configByTransportType.i2p.bi2pGrpcHost", bi2pGrpcAddress.getHost(),
                 "application.network.configByTransportType.i2p.bi2pGrpcPort", bi2pGrpcAddress.getPort()
         ));
+    }
 
+    private void writeCustomConfig(Map<String, Object> entries) {
+        Config newConfig = ConfigFactory.parseMap(entries);
         Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
         Config config = newConfig
                 .withFallback(customConfig)

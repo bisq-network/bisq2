@@ -2,6 +2,7 @@ package bisq.gradle.packaging.jpackage
 
 import bisq.gradle.packaging.OS
 import bisq.gradle.packaging.getOS
+import org.gradle.api.GradleException
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Path
@@ -14,6 +15,7 @@ import java.util.concurrent.TimeUnit
 class PackageFactory(private val jPackagePath: Path, private val jPackageConfig: JPackageConfig) {
 
     companion object {
+        private const val JPACKAGE_TIMEOUT_MINUTES = 15L
         private val FILE_PERMISSIONS: Set<PosixFilePermission> = PosixFilePermissions.fromString("rw-r--r--")
         private val EXECUTABLE_PERMISSIONS: Set<PosixFilePermission> = PosixFilePermissions.fromString("rwxr-xr-x")
         private val EXECUTE_PERMISSIONS: Set<PosixFilePermission> = setOf(
@@ -36,6 +38,9 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         val packageFormatConfigs = jPackageConfig.packageFormatConfigs
         val perPackageCommand = packageFormatConfigs.packageFormats
                 .map { Pair(it.fileExtension, packageFormatConfigs.createArgumentsForJPackage(it) + listOf("--type", it.fileExtension)) }
+
+        // A package of an earlier run must not pass for the result of this run
+        perPackageCommand.forEach { deletePackageFiles(it.first) }
 
         perPackageCommand.forEach { filetypeAndCustomCommands ->
             val commonArgs: Map<String, String> =
@@ -61,7 +66,8 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
 
             arguments.addAll(filetypeAndCustomCommands.second)
 
-            runJPackage(arguments)
+            val logFile = runJPackage(filetypeAndCustomCommands.first, arguments)
+            checkPackageFileCreated(filetypeAndCustomCommands.first, logFile)
         }
     }
 
@@ -82,12 +88,7 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         arguments.add(tempPath.toAbsolutePath().toString())
         arguments.addAll(jPackageConfig.packageFormatConfigs.appImageArguments)
 
-        // The packages are created from this image, so unlike for the packages themselves we have to
-        // be sure that jpackage is done with it and did not fail.
-        val process = runJPackage(arguments)
-        if (!process.waitFor(15, TimeUnit.MINUTES) || process.exitValue() != 0) {
-            throw IllegalStateException("JPackage failed to create the app image.")
-        }
+        runJPackage("app-image", arguments)
 
         val appImagePath = appImageDirPath.resolve(jPackageConfig.appConfig.name)
         normalizePermissions(appImagePath)
@@ -107,7 +108,11 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
         }
     }
 
-    private fun runJPackage(arguments: List<String>): Process {
+    /**
+     * Runs jpackage for the package type (the value of --type), fails the build unless it succeeds and returns the
+     * file with its output.
+     */
+    private fun runJPackage(type: String, arguments: List<String>): File {
         val jPackageBinaryPath = jPackagePath.toAbsolutePath().toString()
         // Depending on the JDK, jpackage either takes the file modes of the app image over into the
         // package tree or re-creates the files there with the umask of the build session, so the umask
@@ -119,24 +124,53 @@ class PackageFactory(private val jPackagePath: Path, private val jPackageConfig:
                     listOf(jPackageBinaryPath) + arguments
                 }
 
-        val processBuilder = ProcessBuilder(commandLine)
-                .inheritIO()
-
-        val process: Process = processBuilder.start()
-        process.waitFor(2, TimeUnit.MINUTES)
-
-        // @alvasw
-        // On Linux that causes a build failure at the packager task.
-        // On Windows the exe cannot start up as it seems the running process still has some resources blocked.
-        // I reduce the timeout to 2 minutes, that seems to work in my tests
-        /* process.waitFor(15, TimeUnit.MINUTES)
-
-         val exitCode = process.exitValue()
-         if (exitCode != 0) {
-             throw IllegalStateException("JPackage failed with exit code $exitCode.")
-         }*/
-        return process
+        // The standard output of the Gradle daemon goes nowhere, so jpackage writes into a file of the build
+        val logFile = jPackageConfig.outputDirPath.parent.resolve("jpackage_$type.log").toFile()
+        val process: Process = ProcessBuilder(commandLine)
+                .redirectErrorStream(true)
+                .redirectOutput(logFile)
+                .start()
+        waitForSuccess(process, type, commandLine, logFile)
+        return logFile
     }
+
+    private fun waitForSuccess(process: Process, fileExtension: String, command: List<String>, logFile: File) {
+        val hasFinished = process.waitFor(JPACKAGE_TIMEOUT_MINUTES, TimeUnit.MINUTES)
+        if (!hasFinished) {
+            process.destroyForcibly()
+            throw GradleException("jpackage did not create the $fileExtension package within " +
+                    "$JPACKAGE_TIMEOUT_MINUTES minutes. Its output is in $logFile. Command: ${command.joinToString(" ")}")
+        }
+
+        val exitCode = process.exitValue()
+        if (exitCode != 0) {
+            throw GradleException("jpackage failed with exit code $exitCode for the $fileExtension package. Its " +
+                    "output is in $logFile. Command: ${command.joinToString(" ")}")
+        }
+    }
+
+    private fun checkPackageFileCreated(fileExtension: String, logFile: File) {
+        val packageFiles = findPackageFiles(fileExtension)
+        if (packageFiles.size != 1) {
+            throw GradleException("jpackage exited with 0, but ${jPackageConfig.outputDirPath} contains " +
+                    "${packageFiles.size} $fileExtension packages instead of one: ${packageFiles.joinToString(", ")}. " +
+                    "Its output is in $logFile.")
+        }
+    }
+
+    private fun deletePackageFiles(fileExtension: String) {
+        findPackageFiles(fileExtension).forEach { packageFile ->
+            if (!packageFile.delete()) {
+                throw GradleException("Couldn't delete the package of an earlier run: ${packageFile.absolutePath}")
+            }
+        }
+    }
+
+    private fun findPackageFiles(fileExtension: String): List<File> =
+            jPackageConfig.outputDirPath.toFile()
+                    .listFiles { file -> file.isFile && file.name.endsWith(".$fileExtension") }
+                    ?.toList()
+                    ?: emptyList()
 
     private fun createAppImageArguments(appConfig: JPackageAppConfig): Map<String, String> =
             mapOf(

@@ -41,6 +41,11 @@ import java.util.stream.Collectors;
 
 @Slf4j
 public class ExplorerService extends HttpRequestService<ExplorerService.RequestData, Tx> {
+    // The JSON of a transaction has at most about 4 bytes per weight unit: the explorer writes each witness byte as hex
+    // in the witness and again in the asm of the script. A standard transaction has at most 400,000 weight units, so
+    // its JSON stays below about 1.7 MB.
+    private static final int MAX_RESPONSE_BODY_BYTES = 4 * 1024 * 1024;
+
     private static ExecutorService getExecutorService() {
         return ExecutorFactory.newCachedThreadPool(ExplorerService.class.getSimpleName(),
                 1,
@@ -51,7 +56,8 @@ public class ExplorerService extends HttpRequestService<ExplorerService.RequestD
     public ExplorerService(ExplorerService.Config conf, NetworkService networkService) {
         super(conf,
                 networkService,
-                getExecutorService());
+                getExecutorService(),
+                MAX_RESPONSE_BODY_BYTES);
     }
 
     @Override

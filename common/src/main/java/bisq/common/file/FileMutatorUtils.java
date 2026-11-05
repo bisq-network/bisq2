@@ -33,6 +33,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.FileSystems;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
@@ -41,12 +42,11 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class FileMutatorUtils {
@@ -82,6 +82,14 @@ public class FileMutatorUtils {
     }
 
     /**
+     * @return the setting of setup, or true if setup was not called. POSIX permissions are only set if the file
+     * system also supports them.
+     */
+    public static boolean supportsPosixPermissions() {
+        return supportsPosixPermissions;
+    }
+
+    /**
      * The `File.deleteOnExit` method is not suited for long-running processes as it never removes the added files,
      * thus leading to a memory leak.
      * See: <a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6664633">...</a>
@@ -107,25 +115,64 @@ public class FileMutatorUtils {
     }
 
     /**
-     * Recursively delete a file or directory. If the path does not exist, do nothing.
+     * Recursively delete a file or directory. If the path does not exist, do nothing. A symbolic link and, on Windows,
+     * a junction are deleted themselves, never what they point to, also inside the directory. A process which can
+     * write the directory, such as the sandboxed Tor in its data directory, then cannot make the caller delete files
+     * elsewhere, as long as it does not write the directory during the deletion.
      *
      * @param path The path to delete
      * @throws IOException if an I/O error occurs
      */
     public static void deleteFileOrDirectory(Path path) throws IOException {
-        if (Files.exists(path)) {
-            // Use try-with-resources to ensure the walk stream is closed
-            try (var stream = Files.walk(path)) {
-                stream.sorted(Comparator.reverseOrder()) // delete children before parents
-                        .forEach(p -> {
-                            try {
-                                Files.delete(p);
-                            } catch (IOException e) {
-                                throw new RuntimeException("Failed to delete: " + p, e);
-                            }
-                        });
-            }
+        if (!Files.exists(path, LinkOption.NOFOLLOW_LINKS)) {
+            return;
         }
+        if (isLinkOrJunction(path)) {
+            Files.delete(path);
+            return;
+        }
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) throws IOException {
+                if (attributes.isOther()) {
+                    // A junction: Files.walkFileTree reports it as a directory and would enter it.
+                    Files.delete(dir);
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+                Files.delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException exception) throws IOException {
+                // Files.walkFileTree lists a junction before preVisitDirectory, so a junction whose target is
+                // missing or cannot be listed ends here.
+                if (isLinkOrJunction(file)) {
+                    Files.delete(file);
+                    return FileVisitResult.CONTINUE;
+                }
+                throw exception;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exception) throws IOException {
+                if (exception != null) {
+                    throw exception;
+                }
+                Files.delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+
+    private static boolean isLinkOrJunction(Path path) throws IOException {
+        BasicFileAttributes attributes = Files.readAttributes(path, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
+        return attributes.isSymbolicLink() || (attributes.isDirectory() && attributes.isOther());
     }
 
     /**
@@ -348,35 +395,79 @@ public class FileMutatorUtils {
                                      Path destinationDirPath,
                                      Set<String> extensionsToSkip,
                                      Set<String> fileNamesToSkip) throws IOException {
-        AtomicReference<IOException> exception = new AtomicReference<>();
-        try (Stream<Path> stream = Files.walk(sourceDirPath)) {
-            stream.forEach(source -> {
-                boolean shouldSkip = false;
-                if (!Files.isDirectory(source)) {
-                    String fileName = source.getFileName().toString();
-                    shouldSkip = fileNamesToSkip.contains(fileName);
-                    int lastDotIndex = fileName.lastIndexOf('.');
-                    if (!shouldSkip && lastDotIndex > 0) {
-                        String extension = fileName.substring(lastDotIndex + 1);
-                        shouldSkip = extensionsToSkip.contains(extension);
-                    }
-                }
+        copyDirectory(sourceDirPath, destinationDirPath, extensionsToSkip, fileNamesToSkip, Set.of());
+    }
 
-                if (!shouldSkip) {
-                    Path relativePath = sourceDirPath.relativize(source);
-                    Path destinationPath = destinationDirPath.resolve(relativePath);
-                    try {
-                        Files.copy(source, destinationPath);
-                        applyDefaultPermissions(destinationPath);
-                    } catch (IOException e) {
-                        exception.set(e);
-                    }
+    /**
+     * Like {@link #copyDirectory(Path, Path, Set, Set)}.
+     *
+     * @param dirPathsToSkip Directories, relative to sourceDirPath, which are not copied. No file in them is opened.
+     *                       Use this for directories which another program writes, for example the data directory of
+     *                       the sandboxed Tor.
+     */
+    public static void copyDirectory(Path sourceDirPath,
+                                     Path destinationDirPath,
+                                     Set<String> extensionsToSkip,
+                                     Set<String> fileNamesToSkip,
+                                     Set<Path> dirPathsToSkip) throws IOException {
+        Set<Path> absoluteDirPathsToSkip = dirPathsToSkip.stream()
+                .map(sourceDirPath::resolve)
+                .collect(Collectors.toSet());
+        AtomicReference<IOException> exception = new AtomicReference<>();
+        Files.walkFileTree(sourceDirPath, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attributes) {
+                // A skipped directory is not entered: the walker opens it but reads no entry of it, so no file in it is
+                // listed or opened. A junction (isOther) is not entered either, because it leads elsewhere.
+                if (attributes.isOther() || isSkippedDir(dir)) {
+                    return FileVisitResult.SKIP_SUBTREE;
                 }
-            });
-        }
+                copy(dir);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                if (!isSkipped(file.getFileName().toString(), extensionsToSkip, fileNamesToSkip)) {
+                    copy(file);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(Path file, IOException e) {
+                // A skipped directory which cannot be opened does not matter
+                if (!isSkippedDir(file)) {
+                    exception.set(e);
+                }
+                return FileVisitResult.CONTINUE;
+            }
+
+            private boolean isSkippedDir(Path path) {
+                return absoluteDirPathsToSkip.stream().anyMatch(path::startsWith);
+            }
+
+            private void copy(Path source) {
+                Path destinationPath = destinationDirPath.resolve(sourceDirPath.relativize(source));
+                try {
+                    Files.copy(source, destinationPath);
+                    applyDefaultPermissions(destinationPath);
+                } catch (IOException e) {
+                    exception.set(e);
+                }
+            }
+        });
         if (exception.get() != null) {
             throw exception.get();
         }
+    }
+
+    private static boolean isSkipped(String fileName, Set<String> extensionsToSkip, Set<String> fileNamesToSkip) {
+        if (fileNamesToSkip.contains(fileName)) {
+            return true;
+        }
+        int lastDotIndex = fileName.lastIndexOf('.');
+        return lastDotIndex > 0 && extensionsToSkip.contains(fileName.substring(lastDotIndex + 1));
     }
 
     public static void copyResourceDirectory(String resourceDir,

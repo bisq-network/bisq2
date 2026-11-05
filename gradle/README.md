@@ -1,5 +1,27 @@
 # Gradle Notes
 
+## Build JDK
+
+`gradle.properties` pins the Java update (`releaseBuild.javaVersion`) and the vendor (`releaseBuild.javaVendor`) of the
+JDK which runs Gradle, the same for every operating system. `verifyBuildEnvironment` (part of `check` of the root build
+and of the `apps`, `apps/desktop` and `network` builds) accepts every build of that update: the version numbers of the
+JDK must start with those of the pin, so `21.0.13.0.3+1` passes for `21.0.13`, and `21.0.13` fails for `21.0.1`. The
+pin holds version numbers only. The task logs the runtime version and the Zulu build of the JDK.
+
+Azul builds an update more than once, and an installer may offer only the latest build: Zulu `21.54.107`
+(`21.0.13+9`) and `21.54.109` (`21.0.13.0.3+1`) are both builds of 21.0.13, and the Homebrew cask `zulu@21` has only
+the latest. The two compile the same classes: their javac and the classes it compiles against differ only in version
+strings. They differ in their runtime (21.54.109 removes the emSign roots from `cacerts`), and the installers bundle the
+JDK of the build as their runtime. So a release build needs one exact build: `verifyReleaseEnvironment` also requires
+the runtime build (`releaseBuild.javaRuntimeVersion`) and the Zulu build (`releaseBuild.javaVendorVersion`).
+
+CI requests this exact build, Zulu `21.0.13+9`, on every runner. `verifyGithubActionsSecurity` requires every
+`java-version` of a workflow to be `releaseBuild.javaRuntimeVersion`, and that to be a build of
+`releaseBuild.javaVersion`. Update the CI workflows, pinned properties, and toolchain URLs together when changing the
+build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
+
+See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
+
 ## Gradle Wrapper Verification
 
 `verifyGradleWrapperSecurity` (part of the root `check`) and the CI workflow compare `gradlew`, `gradlew.bat`,
@@ -24,6 +46,17 @@ checksum file to match an unreviewed file.
 
 See [the specification](../docs/specifications/development/gradle-wrapper-verification.md).
 
+## Docker Base Image Java Version
+
+`verifyDockerJavaVersion` (part of the root `check`) requires every `azul/zulu-openjdk` base image in a Dockerfile
+under `apps/` to use the tag of `releaseBuild.javaVersion` (`<version>` or `<version>-jre`) together with the image
+index digest. The digest selects the image. The tag shows the version to reviewers and to the check, which cannot read
+the version from the digest.
+
+When `releaseBuild.javaVersion` changes, update the tag and the digest in the same change. The index digest of a tag
+is the `Docker-Content-Digest` header of the registry manifest request for that tag. Azul rebuilds the tags, so the
+digest of a tag changes over time.
+
 ## Dependency Verification
 
 Bisq 2 uses Gradle dependency verification with:
@@ -39,7 +72,8 @@ The committed verification files are:
 - `gradle/dependency-checksum-fallback-allowlist.tsv`
 
 The root `resolveAndVerifyDependencies` task resolves every resolvable configuration in the Bisq 2 composite build,
-including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, and `network/tor` included builds.
+including the root build and the `build-logic`, `apps`, `apps/desktop`, `network`, `tor`, and `tor/build-logic`
+included builds.
 
 The audit runs in one Gradle invocation through dependencies on the included builds' tasks. Each build keeps its own
 `.gradle/dependency-verification/inventory.tsv` relative to its build root. These inventories survive `clean` and
@@ -75,12 +109,32 @@ To generate their metadata for a specific dependency, run this command from the 
 ```
 
 The [init script](resolve-ide-artifacts.gradle) registers the task for this invocation. Replace the coordinate with
-`group:name:version` for another dependency. The helper requests both sources and Javadoc; both archives must be
-published. Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
+`group:name:version` for another dependency; a comma-separated list resolves several dependencies. The helper requests
+the classifiers in `-PverificationClassifiers`, by default `sources,javadoc`; each requested archive must be published.
+Omit `--write-verification-metadata pgp,sha256` to verify them against the existing metadata instead.
 
 Review the generated diff and verify new signatures or checksums before committing. Metadata generation records
-downloaded artifacts; it does not independently establish their trustworthiness. This helper handles one dependency;
-`resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+downloaded artifacts; it does not independently establish their trustworthiness. The helper handles only the listed
+dependencies; `resolveAndVerifyDependencies` still does not automatically resolve IDE artifacts for every dependency.
+
+### Key servers
+
+The metadata turns the key servers off (`<key-servers enabled="false"/>`). Gradle then verifies signatures only with
+the keys in `gradle/verification-keyring.keys` and never waits for a key server; a lookup at `pgp.mit.edu` once took
+more than 20 minutes. A key which the keyring lacks fails the verification instead of being downloaded, so a
+successful `resolveAndVerifyDependencies` shows that the keyring has every key which the builds need.
+`verifyDependencySignaturePolicy` requires exactly one such element: Gradle applies each `<key-servers>` element in
+order, so a second element could turn the key servers on again.
+
+Keep the line in the committed metadata, also when keys must be downloaded. The setting applies to builds which
+verify dependencies. When Gradle writes the metadata (`--write-verification-metadata`) or exports the keyring
+(`--export-keys`), it still downloads missing keys from the key servers, unless `--offline` is given. It then logs
+`Will use key servers to download missing keys`, and it keeps the line when it rewrites the metadata.
+
+- `refreshDependencyVerificationKeyring` runs Gradle with `--export-keys` and leaves the metadata unchanged.
+- For a new dependency whose signing key is not in the keyring, add `--export-keys` to the metadata generation, so that
+  Gradle writes the downloaded keys into the keyring. Review the added keys before committing them. Then run
+  `resolveAndVerifyDependencies`, which fails if the keyring still lacks a key.
 
 ### Verifying and refreshing build dependencies
 
@@ -104,7 +158,7 @@ Refresh the keyring first so newly available signing keys are present before Gra
 `gradle/verification-metadata.xml`. This avoids adding checksum fallbacks for artifacts whose signatures can now be
 verified.
 
-`refreshDependencyVerificationKeyring` wraps:
+`refreshDependencyVerificationKeyring` wraps the following command:
 
 ```bash
 ./gradlew help --refresh-keys --export-keys
@@ -125,13 +179,15 @@ Checksum fallback artifacts must be reviewed in `gradle/dependency-checksum-fall
 Keep the allowlist exact and sorted. `verifyDependencySignaturePolicy` fails when a fallback artifact is missing from
 the allowlist, when an allowlist entry is stale, or when an entry has no rationale.
 
-Gradle verifies an artifact by its checksum only if the artifact has no signature or if every key which signed it is
-ignored. The policy treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key
-couldn't be downloaded` or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry
-for the module names a key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`,
-`sha1`, `sha256` and `sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in `gradle/verification-metadata.xml`, not only
-the resolved dependency graph, because Gradle also verifies parent POMs, imported BOMs and artifacts of other platforms
-against it. Entries for versions no build uses therefore also need an allowlist entry until they are removed.
+Gradle checks every checksum which the metadata declares for an artifact, also for a signed artifact. A checksum is the
+only verification of an artifact if the artifact has no signature or if every key which signed it is ignored. The policy
+treats a checksum as fallback if it has a reason (Gradle writes `Artifact is not signed`, `A key couldn't be downloaded`
+or `PGP signature verification failed!`) or if neither a `pgp` entry nor a `trusted-key` entry for the module names a
+key which is not ignored. This applies to every checksum kind which Gradle verifies (`md5`, `sha1`, `sha256` and
+`sha512`), also if the metadata of this repository uses only `sha256` today. It checks every entry in
+`gradle/verification-metadata.xml`, not only the resolved dependency graph, because Gradle also verifies parent POMs,
+imported BOMs and artifacts of other platforms against it. Entries for versions no build uses therefore also need an
+allowlist entry until they are removed.
 
 Gradle writes a reason once and keeps it when it regenerates the metadata. After `refreshDependencyVerificationKeyring`
 adds a key, remove the key from `ignored-keys`, delete the component entries of the artifacts it signs and run
@@ -148,6 +204,39 @@ Executable Maven artifacts, such as `protoc` and `protoc-gen-grpc-java`, must al
 `gradle/verification-metadata.xml` for the resolved classifier. `verifyDependencySignaturePolicy` fails when a resolved
 executable is covered only by a broad trusted-key rule or when executable metadata remains for an older unresolved
 version of the same tool.
+
+### Trusted key of java-diff-utils
+
+The key `D477D51812E692011DB11E66A6EA2E2BF22E0543` has no user ID in the keyring, so it cannot be attributed to anyone.
+The metadata trusts it only for `io.github.java-diff-utils:java-diff-utils` and `java-diff-utils-parent` in the version
+which the build resolves, not for the whole group. When `--write-verification-metadata` records a new version of these
+artifacts, Gradle can trust the key for the whole group again. Replace such an entry with `trusting` entries for the
+new version.
+
+### Pinned JavaFX artifacts
+
+The JavaFX platform jars contain native libraries. The `org.openjfx` trusted key accepts every artifact which this key
+signs, so the metadata also pins the exact bytes of the JavaFX artifacts with `sha256` entries. Gradle checks the
+signature and the checksum. These entries cover the platform jars of all release platforms (`linux`, `linux-aarch64`,
+`mac`, `mac-aarch64`, `win`), the plain jars and the POMs.
+
+In `pgp,sha256` mode, Gradle writes no checksum for an artifact which a trusted key covers, so these entries need a
+separate run. After a JavaFX update (`javafx` in `gradle/libs.versions.toml`), remove the components of the old
+version and run:
+
+```bash
+v=21.0.13
+./gradlew resolveAndVerifyDependencies :resolveIdeArtifactsForVerification \
+  --init-script gradle/resolve-ide-artifacts.gradle \
+  -PverificationDependency=org.openjfx:javafx-base:$v,org.openjfx:javafx-controls:$v,org.openjfx:javafx-graphics:$v,org.openjfx:javafx-media:$v,org.openjfx:javafx-swing:$v \
+  -PverificationClassifiers=linux,linux-aarch64,mac,mac-aarch64,win \
+  --write-verification-metadata sha256
+```
+
+In `sha256` mode, Gradle writes a checksum for every resolved artifact. Keep only the new `org.openjfx` components,
+for example with `git add -p gradle/verification-metadata.xml`, and discard the other changes. Then run the same
+command without `--write-verification-metadata sha256`. This run checks the signatures and the new checksums of all
+platform jars, also of the platforms which the host does not use. Finally run `dependencySignatureReport`.
 
 The audit's functional checks use isolated composite builds and a local Maven repository. With Python 3 and the
 Gradle wrapper distribution already available, run them without accessing remote artifact repositories:

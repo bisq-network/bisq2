@@ -18,6 +18,7 @@
 package bisq.api.rest_api.endpoints.trades;
 
 import bisq.api.web_socket.domain.ClosedTradeItemsService;
+import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPrice;
 import bisq.bonded_roles.market_price.MarketPriceProvider;
 import bisq.bonded_roles.market_price.MarketPriceProviderInfo;
@@ -136,7 +137,7 @@ class TradeRestApiTakeOfferAmountTest {
         when(tradeService.getBisqEasyTradeService()).thenReturn(bisqEasyTradeService);
 
         TradeRestApi api = new TradeRestApi(chatService, marketPriceService, userService, supportService, tradeService,
-                closedTradeItemsService);
+                closedTradeItemsService, mock(BisqEasyService.class));
 
         BisqEasyOffer offer = mock(BisqEasyOffer.class);
         when(offer.getId()).thenReturn(OFFER_ID);

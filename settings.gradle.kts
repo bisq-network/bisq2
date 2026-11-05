@@ -1,6 +1,5 @@
 pluginManagement {
     repositories {
-        mavenLocal()
         gradlePluginPortal()
     }
     includeBuild("build-logic")
@@ -30,7 +29,6 @@ include("burningman")
 include("chat")
 include("common")
 include("contract")
-include("daemon")
 include("desktop-automation")
 include("desktop-automation-contract")
 include("evolution")
@@ -54,3 +52,8 @@ include("wallet")
 
 includeBuild("apps")
 includeBuild("network")
+// tor/ is the Git submodule tor. A clone without its submodules has an empty tor/.
+if (!file("tor/settings.gradle.kts").isFile) {
+    throw GradleException("The Git submodule tor/ is missing. Run: git submodule update --init")
+}
+includeBuild("tor")

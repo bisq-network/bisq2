@@ -17,21 +17,39 @@
 
 package bisq.api.rest_api.endpoints.settings;
 
+import bisq.api.dto.settings.SettingsApiVersionDto;
+import bisq.common.application.ApplicationVersion;
+import bisq.settings.SettingsService;
+import jakarta.ws.rs.core.Response;
 import org.junit.jupiter.api.Test;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import java.util.Map;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+
+// The blank/trim rules are covered by ImageVersionTest; these guard what deployed clients read here.
 class SettingsRestApiVersionTest {
     @Test
-    void reportsNoImageVersionWhenNotSet() {
-        assertThat(SettingsRestApi.resolveImageVersion(null)).isNull();
-        assertThat(SettingsRestApi.resolveImageVersion("")).isNull();
-        assertThat(SettingsRestApi.resolveImageVersion("   ")).isNull();
+    void reportsPlainCoreVersion() {
+        assertThat(getVersion(Map.of()).version()).isEqualTo(ApplicationVersion.getVersion().toString());
+    }
+
+    // Deployed clients key their config caches on it, so dropping it here would go unnoticed.
+    @Test
+    void reportsImageVersionWhenSet() {
+        assertThat(getVersion(Map.of("BISQ_IMAGE_VERSION", " 2.1.13.0 ")).imageVersion()).isEqualTo("2.1.13.0");
     }
 
     @Test
-    void reportsGranularImageVersionWhenSet() {
-        assertThat(SettingsRestApi.resolveImageVersion("2.1.11.2")).isEqualTo("2.1.11.2");
-        assertThat(SettingsRestApi.resolveImageVersion(" 2.1.11.3-rc1 ")).isEqualTo("2.1.11.3-rc1");
+    void reportsNoImageVersionWhenNotSet() {
+        assertThat(getVersion(Map.of()).imageVersion()).isNull();
+    }
+
+    private static SettingsApiVersionDto getVersion(Map<String, String> env) {
+        Response response = new SettingsRestApi(mock(SettingsService.class), env::get).getVersion();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        return (SettingsApiVersionDto) response.getEntity();
     }
 }

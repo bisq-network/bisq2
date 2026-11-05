@@ -189,10 +189,10 @@ class ConfidentialMessageServiceDeliveryTest {
             addingThread.join(TimeUnit.SECONDS.toMillis(TIMEOUT_SECONDS));
             assertFalse(addingThread.isAlive());
 
-            // One thread processes the messages in their order. When the listener has the next message, the
-            // notification of the first message was submitted.
+            // Both callbacks for the next message run after all notifications of the first message were submitted.
             receive(nextMessage);
-            await(() -> listener.messages.contains(nextMessage));
+            await(() -> listener.messages.contains(nextMessage) &&
+                    listener.confidentialMessages.contains(nextMessage));
             awaitNotifications();
         } finally {
             pausingAppender.release.countDown();
@@ -215,15 +215,16 @@ class ConfidentialMessageServiceDeliveryTest {
 
         receive(message);
         receive(message);
-        // One thread processes the messages in their order. When the listener has the next message in both calls, all
-        // notifications were submitted.
+        // Processing submits callbacks in order, but the notification pool can run them in another order.
         receive(nextMessage);
-        await(() -> listener.messages.contains(nextMessage) && listener.confidentialMessages.contains(nextMessage));
+        await(() -> listener.messages.contains(nextMessage) &&
+                listener.confidentialMessages.contains(nextMessage));
         awaitNotifications();
 
-        // New messages reach the listener in parallel tasks, so the order of the calls is not defined
-        assertEquals(1, Collections.frequency(listener.messages, message));
-        assertEquals(1, Collections.frequency(listener.confidentialMessages, message));
+        assertEquals(2, listener.messages.size());
+        assertEquals(Set.of(message, nextMessage), Set.copyOf(listener.messages));
+        assertEquals(2, listener.confidentialMessages.size());
+        assertEquals(Set.of(message, nextMessage), Set.copyOf(listener.confidentialMessages));
     }
 
     // The confidential message services must add the listener before the service nodes add it, otherwise it would
