@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedState;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedWords;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.scene.layout.Region;
@@ -31,7 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import java.util.List;
 
 @Slf4j
 public class SetupWalletWizardBackupController implements Controller {
@@ -68,25 +68,16 @@ public class SetupWalletWizardBackupController implements Controller {
         loadSeedWordsAsync(walletService);
     }
 
-    private void setSeedWords(List<String> seedWords) {
-        if (seedWords.size() != model.getSEED_WORD_COUNT()) {
-            throw new IllegalArgumentException(
-                    "Expected " + model.getSEED_WORD_COUNT() + " seed words, but got " + seedWords.size()
-            );
-        }
-        for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
-            model.getSeedWords()[i].set(seedWords.get(i));
-        }
-    }
-
     private void loadSeedWordsAsync(WalletService walletService) {
         model.getSeedState().set(SeedState.LOADING);
         walletService.getSeedWords(walletPassword.get())
-                .thenAccept(seedWords ->
-                        UIThread.run(() -> {
-                            setSeedWords(seedWords);
-                            model.getSeedState().set(SeedState.SUCCESS);
-                        }))
+                .thenAccept(seedWords -> {
+                    SeedWords.requireValidCount(seedWords);
+                    UIThread.run(() -> {
+                        model.getSeedWords().setAll(seedWords);
+                        model.getSeedState().set(SeedState.SUCCESS);
+                    });
+                })
                 .exceptionally(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
