@@ -17,6 +17,7 @@
 
 package bisq.chat.mu_sig.open_trades;
 
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.chat.priv.PendingTradeChatMessages;
 import bisq.network.NetworkService;
@@ -39,12 +40,15 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 /**
@@ -94,6 +98,24 @@ class MuSigOpenTradeChannelServiceTest {
         service.onMessage(message);
 
         assertEquals(Set.of(message), channel.getChatMessages());
+    }
+
+    // The trade service can create the channel after the lookup of a message found none, and process the pending
+    // messages before the message became pending. The message must still reach the channel
+    // (rule 4 of docs/specifications/trade/pending-trade-messages.md).
+    @Test
+    void messageWhoseChannelIsCreatedWhileItBecomesPendingIsAdded() {
+        MuSigOpenTradeChannel channel = createChannel();
+        MuSigOpenTradeChannelService spiedService = spy(service);
+        AtomicBoolean firstLookup = new AtomicBoolean(true);
+        doAnswer(invocation -> firstLookup.getAndSet(false) ? Optional.empty() : invocation.callRealMethod())
+                .when(spiedService).findChannel(any(ChatMessage.class));
+        MuSigOpenTradeMessage message = textMessage(taker, TRADE_ID, "message");
+
+        spiedService.onMessage(message);
+
+        assertEquals(Set.of(message), channel.getChatMessages());
+        assertEquals(0, spiedService.getNumPendingMessages());
     }
 
     @Test

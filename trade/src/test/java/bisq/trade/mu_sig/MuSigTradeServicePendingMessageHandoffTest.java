@@ -60,6 +60,7 @@ import bisq.security.keys.PubKey;
 import bisq.security.keys.TorKeyGeneration;
 import bisq.settings.SettingsService;
 import bisq.trade.ServiceProvider;
+import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.trade.mu_sig.messages.network.MuSigReportErrorMessage;
 import bisq.trade.mu_sig.messages.network.PaymentInitiatedMessage_E;
@@ -107,6 +108,7 @@ import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -131,6 +133,7 @@ class MuSigTradeServicePendingMessageHandoffTest {
 
     private Server server;
     private ServiceProvider serviceProvider;
+    private NetworkService networkService;
     private UserService userService;
     private IdentityService identityService;
     private NetworkId peerNetworkId;
@@ -147,7 +150,7 @@ class MuSigTradeServicePendingMessageHandoffTest {
                 .build()
                 .start();
 
-        NetworkService networkService = mock(NetworkService.class);
+        networkService = mock(NetworkService.class);
         when(networkService.getConfidentialMessageServices()).thenReturn(Set.of());
         when(networkService.confidentialSend(any(), any(), any()))
                 .thenReturn(CompletableFuture.completedFuture(new SendMessageResult()));
@@ -380,6 +383,32 @@ class MuSigTradeServicePendingMessageHandoffTest {
         assertThat(service.getPendingTradeMessages().isEmpty())
                 .as("the node passed the pending message to the protocol after the take offer request")
                 .isTrue();
+    }
+
+    // A copy of the take offer request of an existing trade is dropped before its validation
+    // (docs/specifications/trade/take-offer-request-validation.md). A rejection of the copy, for example because the
+    // offer was closed when it was taken, would send a report which fails the trade at the taker.
+    @Test
+    void copyOfTheTakeOfferRequestOfAnExistingTradeIsDroppedWithoutARejection() throws Exception {
+        service.initialize().get(5, SECONDS);
+        stubTheMakerOfTheOffer("my-account");
+        SetupTradeMessage_A copy = mock(SetupTradeMessage_A.class);
+        when(copy.getTradeId()).thenReturn(trade.getId());
+        when(copy.getSender()).thenReturn(peerNetworkId);
+        when(copy.getReceiver()).thenReturn(myNetworkId);
+        when(copy.getContract()).thenReturn(trade.getContract());
+
+        try (MockedStatic<MuSigTakeOfferRequestValidator> validator =
+                     mockStatic(MuSigTakeOfferRequestValidator.class)) {
+            validator.when(() -> MuSigTakeOfferRequestValidator.validateOffer(any(), any()))
+                    .thenThrow(new TradeProtocolException("The offer was closed when it was taken",
+                            TradeProtocolFailure.OFFER_NOT_AVAILABLE));
+            service.onMessage(copy);
+        }
+        awaitIdleExecutor();
+
+        verify(networkService, never()).confidentialSend(any(MuSigReportErrorMessage.class), any(), any());
+        assertThat(trade.getTradeState()).isEqualTo(MuSigTradeState.INIT);
     }
 
     // The executor of the service has one thread and a queue, so it runs the tasks one after the other, in the order of

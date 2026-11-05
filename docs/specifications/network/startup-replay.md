@@ -106,16 +106,6 @@ A listener which registers in one step receives the earlier messages in the orde
 copy defined no order. A new message can now reach such a listener while it still receives the earlier messages. New
 messages already reach the listeners in parallel tasks, so this adds no new kind of concurrency.
 
-## Known limitations
-
-- **Listeners which do not register in one step.** The MuSig trade, mediation and arbitration services replay a
-  hash-based copy of the processed messages and register after the replay. For them, a message which the node
-  processes between the two steps is lost or arrives twice, and a message whose hash code throws stops their whole
-  replay.
-  - Why it remains: the work on MuSig is deferred.
-  - What would remove it: the registration in one step, as for the other services.
-  - Who decides: the developers.
-
 ## Not covered
 
 Local data which a service restores at startup, for example its own trades, is not part of this rule. A stored trade
