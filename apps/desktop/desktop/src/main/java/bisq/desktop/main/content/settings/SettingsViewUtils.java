@@ -51,6 +51,8 @@ public class SettingsViewUtils {
      * Shows the value in a settings text field and passes a typed value to {@code onCommit}. The field passes the typed
      * text only when it loses the focus, when the user presses Enter, or when the returned subscription is
      * unsubscribed, and only if the text differs from the shown value and the validators of the field accept it.
+     * While the field has the focus, a change of the value replaces the text only if the text still shows the
+     * previous value. A typed value stays for the commit.
      * <p>
      * A bidirectional binding of the text would write each valid prefix of a typed value, e.g. 9 % while the user
      * types 90 %.
@@ -73,7 +75,8 @@ public class SettingsViewUtils {
             }
         };
         ChangeListener<T> valueListener = (observable, oldValue, newValue) -> {
-            if (!field.textInputFocusedProperty().get()) {
+            // Text which shows the old value is not a typed value. If it stayed, the commit would write it back.
+            if (!field.textInputFocusedProperty().get() || field.getText().equals(converter.toString(oldValue))) {
                 field.setText(converter.toString(newValue));
             }
         };

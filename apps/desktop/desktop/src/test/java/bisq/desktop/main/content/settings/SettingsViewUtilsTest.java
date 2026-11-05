@@ -25,6 +25,10 @@ import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
 import javafx.beans.property.DoubleProperty;
 import javafx.event.ActionEvent;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.fxmisc.easybind.Subscription;
 import org.junit.jupiter.api.AfterEach;
@@ -33,9 +37,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
+import org.testfx.util.WaitForAsyncUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static bisq.desktop.testutil.JavaFxToolkitExtension.runOnFxThread;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -50,11 +56,16 @@ import static org.mockito.Mockito.when;
 @ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
 class SettingsViewUtilsTest {
+    // Only guards against a hang. Building the first scene in a cold JVM can take over 10 s on a busy CI runner.
+    private static final long FX_TIMEOUT_SECONDS = 60;
+
     private final List<Number> committedValues = new ArrayList<>();
     private DoubleProperty value;
     private StringConverter<Number> converter;
     private MaterialTextField field;
     private Subscription pin;
+    private Stage stage;
+    private Button otherFocusTarget;
 
     @BeforeEach
     void setUp() {
@@ -78,6 +89,9 @@ class SettingsViewUtilsTest {
 
     @AfterEach
     void tearDown() {
+        if (stage != null) {
+            runOnFxThread(stage::close);
+        }
         Transitions.setSettingsService(null);
     }
 
@@ -144,7 +158,73 @@ class SettingsViewUtilsTest {
         assertThat(field.getText()).isEqualTo(converter.toString(0.08));
     }
 
+    @Test
+    void focusLossCommitsOnlyAValidTypedValue() throws Exception {
+        showWithOtherFocusTarget();
+        runOnFxThread(() -> {
+            field.requestFocus();
+            field.setText("7");
+        });
+        assertThat(field.textInputFocusedProperty().get()).isTrue();
+
+        runOnFxThread(() -> otherFocusTarget.requestFocus());
+        assertThat(committedValues).hasSize(1);
+        assertThat(committedValues.get(0).doubleValue()).isCloseTo(0.07, within(1e-9));
+
+        runOnFxThread(() -> {
+            field.requestFocus();
+            field.setText("90");
+            otherFocusTarget.requestFocus();
+        });
+        assertThat(committedValues).hasSize(1);
+        assertThat(field.isValidProperty().get()).isFalse();
+    }
+
+    // Another client, e.g. Bisq Connect, can change the setting while the field has the focus. If the field kept the
+    // old text, the focus loss would take it for a typed value and write the old value back.
+    @Test
+    void uneditedFieldFollowsTheValueWhileFocusedAndFocusLossDoesNotWriteTheOldValue() throws Exception {
+        showWithOtherFocusTarget();
+        runOnFxThread(() -> field.requestFocus());
+        assertThat(field.textInputFocusedProperty().get()).isTrue();
+
+        runOnFxThread(() -> value.set(0.03));
+        assertThat(field.getText()).isEqualTo(converter.toString(0.03));
+
+        runOnFxThread(() -> otherFocusTarget.requestFocus());
+        assertThat(committedValues).isEmpty();
+        assertThat(value.get()).isEqualTo(0.03);
+    }
+
+    @Test
+    void typedValueIsKeptWhenTheValueChangesWhileFocusedAndFocusLossCommitsIt() throws Exception {
+        showWithOtherFocusTarget();
+        runOnFxThread(() -> {
+            field.requestFocus();
+            field.setText("8");
+            value.set(0.03);
+        });
+        assertThat(field.textInputFocusedProperty().get()).isTrue();
+        assertThat(field.getText()).isEqualTo("8");
+
+        runOnFxThread(() -> otherFocusTarget.requestFocus());
+        assertThat(committedValues).hasSize(1);
+        assertThat(committedValues.get(0).doubleValue()).isCloseTo(0.08, within(1e-9));
+    }
+
     private void pressEnter() {
         field.getTextInputControl().fireEvent(new ActionEvent());
+    }
+
+    private void showWithOtherFocusTarget() throws Exception {
+        WaitForAsyncUtils.asyncFx(() -> {
+            otherFocusTarget = new Button();
+            stage = new Stage();
+            stage.setScene(new Scene(new VBox(field, otherFocusTarget)));
+            stage.show();
+            stage.toFront();
+            stage.requestFocus();
+        }).get(FX_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+        WaitForAsyncUtils.waitForFxEvents();
     }
 }
