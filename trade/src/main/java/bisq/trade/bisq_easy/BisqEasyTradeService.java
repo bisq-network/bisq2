@@ -269,6 +269,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message) {
         String tradeId = message.getTradeId();
+        // A closed trade gets no protocol again, so its message would only take one of the places of the pending
+        // messages (rule 7 of docs/specifications/trade/pending-trade-messages.md)
+        if (isTradeNoLongerOpen(tradeId)) {
+            log.info("We drop a message of type {} of trade {}, which is no longer open.",
+                    message.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId));
+            return;
+        }
         protocolRegistry.findOrKeepAsPending(message).ifPresentOrElse(protocol -> {
                     if (isMessageOfTradePeer(message, protocol)) {
                         handleBisqEasyTradeMessage(message, protocol);
@@ -488,11 +495,23 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // The closed trade is added before the open trade is removed. A copy of the store for a write between the two steps
     // then contains the trade twice instead of not at all, and prunePersisted removes the open copy at the next start.
     public void closeTrade(BisqEasyTrade trade, UserProfile myUserProfile, UserProfile peerUserProfile) {
+        // A closed trade has no protocol, so it can never apply its queued events. A queued trade message can carry
+        // private data of the peer, so the closed trade does not keep it (rule 8 of
+        // docs/specifications/trade/queued-trade-messages.md).
+        // A thread which found the protocol before the removal can still pass a message to it after the clear. We do
+        // not handle that case. The desktop app closes a trade only in a final state (doArchiveTrade), and Fsm ignores
+        // every event in a final state. Only the REST call CLOSE_TRADE closes a trade in another state, and the message
+        // would have to arrive at the moment of the close. A closed state of the Fsm besides its transitions would
+        // weaken its design for that case (known limitation "Message during the close of a trade" of the same
+        // specification).
+        BisqEasyProtocol protocol = protocolRegistry.remove(trade.getId());
+        if (protocol != null) {
+            protocol.clearEventQueue();
+        }
         BisqEasyClosedTrade bisqEasyClosedTrade = new BisqEasyClosedTrade(trade, myUserProfile, peerUserProfile);
         persistableStore.getClosedTrades().add(bisqEasyClosedTrade);
         persistableStore.getTrades().remove(trade);
 
-        protocolRegistry.remove(trade.getId());
         persist();
     }
 
@@ -567,6 +586,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         if (rejection.isPresent()) {
             log.warn("We reject the take offer request. tradeId={}", tradeId, rejection.get());
             reportTakeOfferRejection(bisqEasyTrade, rejection.get());
+            // The trade of the request gets no protocol (rule 7 of
+            // docs/specifications/trade/pending-trade-messages.md). A copy of the request with other content can still
+            // be accepted, also before this line runs, and then loses these messages. We do not prevent that: the
+            // taker gets our report and fails the trade from any state (limitation "Copies of a take offer request
+            // with different results" of that specification).
+            protocolRegistry.removePendingMessagesOfTrade(tradeId).forEach(pendingMessage ->
+                    log.info("We drop the pending message of type {} of trade {}, whose request we rejected.",
+                            pendingMessage.getClass().getSimpleName(), StringUtils.sanitizeForLog(tradeId)));
             return Optional.empty();
         }
         persist();
@@ -753,6 +780,13 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     @VisibleForTesting
     boolean wasTradeIdUsed(String tradeId) {
         return persistableStore.wasTradeIdUsed(tradeId);
+    }
+
+    // A trade whose ID was used and which is not an open trade was closed, or deleted from the history. The store adds a
+    // new trade to the open trades before it stores its ID, so a trade which is created right now is not seen as such a
+    // trade.
+    private boolean isTradeNoLongerOpen(String tradeId) {
+        return wasTradeIdUsed(tradeId) && findOpenTrade(tradeId).isEmpty();
     }
 
     private ReadOnlyObservableSet<BisqEasyTrade> getAllTrades() {

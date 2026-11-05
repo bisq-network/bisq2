@@ -28,6 +28,7 @@ import bisq.identity.Identity;
 import bisq.network.identity.NetworkId;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
+import bisq.trade.bisq_easy.protocol.BisqEasyClosedTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyBtcAddressMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatSentMessage;
@@ -46,6 +47,7 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.inState;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.sellerAsMakerTrade;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.userProfile;
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS;
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS;
 import static bisq.trade.bisq_easy.protocol.BisqEasyTradeState.SELLER_RECEIVED_FIAT_SENT_CONFIRMATION;
@@ -141,6 +143,20 @@ class BisqEasyTradeServiceQueuedTradeMessagesTest {
         assertEquals(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
                 storedTrade.getState());
         assertEquals(1, storedTrade.getEventQueue().size());
+    }
+
+    // A closed trade has no protocol, so it can never apply its queued trade messages, and they can carry private data
+    // of the peer (rule 8 of docs/specifications/trade/queued-trade-messages.md)
+    @Test
+    void closedTradeKeepsNoQueuedTradeMessage() {
+        BisqEasyTradeService service = startServiceWith(trade);
+        service.onMessage(confirmFiatSent());
+        assertEquals(1, trade.getEventQueue().size());
+
+        service.closeTrade(trade, userProfile(makerNetworkId), userProfile(takerNetworkId));
+
+        BisqEasyClosedTrade closedTrade = service.getClosedTrades().stream().findFirst().orElseThrow();
+        assertEquals(0, closedTrade.toProto(false).getTrade().getQueuedTradeMessagesCount());
     }
 
     // A store whose write contains the state after the Bitcoin address, but still the queued confirmation which the
