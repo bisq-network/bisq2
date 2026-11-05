@@ -41,6 +41,7 @@ public class SetupWalletWizardModel extends NavigationModel {
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty skipThisStepHyperLinkVisible = new SimpleBooleanProperty(false);
