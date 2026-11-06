@@ -1143,6 +1143,20 @@ class MuSigProtocolTest {
         return mediationResult;
     }
 
+    // The trade stores the types of the events which changed its state, so that the protocol does not queue a copy of a
+    // processed message after a restart (docs/specifications/trade/queued-trade-messages.md).
+    @Test
+    void processedEventTypesAreRestoredWithTheTrade() throws UnresolvableProtobufException {
+        String processedType = PaymentReceivedMessage_F.class.getName();
+        bisq.trade.protobuf.Trade proto = createTrade().toProto(false).toBuilder()
+                .addProcessedEventTypes(processedType)
+                .build();
+
+        MuSigTrade restored = MuSigTrade.fromProto(proto);
+
+        assertThat(restored.getProcessedEventTypes()).containsExactly(processedType);
+    }
+
     private static MuSigTrade createTrade() {
         return createTrade(true, false);
     }

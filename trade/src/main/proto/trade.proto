@@ -95,6 +95,10 @@ message Trade {
 
   // The trade messages which wait in the event queue of the state machine of the trade
   repeated TradeMessage queuedTradeMessages = 33;
+
+  // The class names of the events which changed the state of the trade. The state machine does not queue a later event
+  // of such a type.
+  repeated string processedEventTypes = 34;
 }
 message TradeMessage {
   string id = 1;

@@ -89,8 +89,10 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                           BisqEasyTradeParty taker,
                           BisqEasyTradeParty maker,
                           TradeLifecycleState lifecycleState,
-                          Set<Event> queuedEvents) {
-        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, queuedEvents);
+                          Set<Event> queuedEvents,
+                          Set<String> processedEventTypes) {
+        super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, queuedEvents,
+                processedEventTypes);
 
         stateObservable().addObserver(s -> tradeState.set((BisqEasyTradeState) s));
     }
@@ -130,7 +132,8 @@ public final class BisqEasyTrade extends Trade<BisqEasyOffer, BisqEasyContract, 
                     TradeParty.protoToBisqEasyTradeParty(proto.getTaker()),
                     TradeParty.protoToBisqEasyTradeParty(proto.getMaker()),
                     TradeLifecycleState.fromProto(proto.getLifecycleState()),
-                    queuedTradeMessagesFromProto(proto));
+                    queuedTradeMessagesFromProto(proto),
+                    processedEventTypesFromProto(proto));
             if (proto.hasErrorMessage()) {
                 trade.setErrorMessage(proto.getErrorMessage());
             }

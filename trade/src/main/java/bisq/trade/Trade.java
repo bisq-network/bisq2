@@ -40,6 +40,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Nullable;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -98,6 +99,7 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 taker,
                 maker,
                 lifecycleState,
+                Set.of(),
                 Set.of());
     }
 
@@ -109,8 +111,9 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                     P taker,
                     P maker,
                     TradeLifecycleState lifecycleState,
-                    Set<Event> queuedEvents) {
-        super(state, queuedEvents);
+                    Set<Event> queuedEvents,
+                    Set<String> processedEventTypes) {
+        super(state, queuedEvents, processedEventTypes);
 
         this.contract = contract;
         this.id = id;
@@ -122,6 +125,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     }
 
     protected bisq.trade.protobuf.Trade.Builder getTradeBuilder(boolean serializeForHash) {
+        // The state machine sets the new state before it records the type of the event as processed. So we read the
+        // processed event types before the state, and we never write a type without the state which its event produced
+        // (docs/specifications/trade/queued-trade-messages.md).
+        List<String> processedEventTypes = getProcessedEventTypes().stream().sorted().toList();
         bisq.trade.protobuf.Trade.Builder builder = bisq.trade.protobuf.Trade.newBuilder()
                 .setContract(contract.toProto(serializeForHash))
                 .setId(id)
@@ -130,7 +137,8 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
                 .setTaker(taker.toProto(serializeForHash))
                 .setMaker(maker.toProto(serializeForHash))
                 .setState(getState().name())
-                .setLifecycleState(getLifecycleState().toProtoEnum());
+                .setLifecycleState(getLifecycleState().toProtoEnum())
+                .addAllProcessedEventTypes(processedEventTypes);
         Optional.ofNullable(getErrorMessage()).ifPresent(builder::setErrorMessage);
         Optional.ofNullable(getErrorStackTrace()).ifPresent(builder::setErrorStackTrace);
         Optional.ofNullable(getPeersErrorMessage()).ifPresent(builder::setPeersErrorMessage);
@@ -161,6 +169,10 @@ public abstract class Trade<T extends Offer<?, ?>, C extends Contract<T>, P exte
     protected static Set<Event> queuedTradeMessagesFromProto(bisq.trade.protobuf.Trade proto) {
         return ProtobufUtils.fromProtoStreamSkippingInvalid(proto.getQueuedTradeMessagesList(), TradeMessage::fromProto)
                 .collect(Collectors.toSet());
+    }
+
+    protected static Set<String> processedEventTypesFromProto(bisq.trade.protobuf.Trade proto) {
+        return Set.copyOf(proto.getProcessedEventTypesList());
     }
 
     protected void setErrorMessage(String errorMessage) {
