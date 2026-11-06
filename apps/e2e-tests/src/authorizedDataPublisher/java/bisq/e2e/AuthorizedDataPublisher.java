@@ -44,6 +44,7 @@ import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -165,9 +166,11 @@ final class AuthorizedDataPublisher {
     }
 
     private void publishAlerts(boolean haltTrading, Optional<String> minVersion, List<AppType> appTypes) {
-        lastAlerts = appTypes.stream()
-                .map(appType -> publishAlert(haltTrading, minVersion, appType))
-                .toList();
+        // Records each published alert at once, so that remove clears it if a later app type fails
+        List<AuthorizedAlertData> published = new ArrayList<>();
+        lastAlerts = published;
+        appTypes.forEach(appType -> published.add(publishAlert(haltTrading, minVersion, appType)));
+        lastAlerts = List.copyOf(published);
     }
 
     private AuthorizedAlertData publishAlert(boolean haltTrading, Optional<String> minVersion, AppType appType) {
