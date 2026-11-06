@@ -44,7 +44,10 @@ import bisq.user.reputation.data.AuthorizedProofOfBurnData;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,12 +61,12 @@ import static com.google.common.base.Preconditions.checkState;
  * as for all authorized data (docs/specifications/network/storage-ownership.md), except the AuthorizedOracleNode. The
  * commands:
  * <ul>
- *     <li>{@code require <version>}: an emergency alert for the desktop app which requires this version for trading,
- *     with the fields which the security manager tab of the desktop app sets</li>
- *     <li>{@code halt}: an emergency alert for the desktop app which halts trading</li>
+ *     <li>{@code require <version> <app type>...}: an emergency alert for each app type which requires this version
+ *     for trading, with the fields which the security manager tab of the desktop app sets</li>
+ *     <li>{@code halt <app type>...}: an emergency alert for each app type which halts trading</li>
  *     <li>{@code ban-mediator <profile ID>}: an alert which bans the role of this mediator, as the security manager tab
  *     of the desktop app publishes it. Needs the command {@code mediator} for this profile before.</li>
- *     <li>{@code remove}: removes the alert which the last of these commands published</li>
+ *     <li>{@code remove}: removes the alerts which the last of these commands published</li>
  *     <li>{@code difficulty <factor>}: a difficulty adjustment of the security manager</li>
  *     <li>{@code remove-difficulty}: removes the difficulty adjustment</li>
  *     <li>{@code oracle}: the data of a root oracle node with this key, its AuthorizedOracleNode and its role, as an
@@ -102,7 +105,7 @@ final class AuthorizedDataPublisher {
     // of the oracle node
     private final String devProfileId;
     private final Map<String, AuthorizedBondedRole> mediatorRolesByProfileId = new HashMap<>();
-    private Optional<AuthorizedAlertData> lastAlert = Optional.empty();
+    private List<AuthorizedAlertData> lastAlerts = List.of();
     private Optional<AuthorizedDifficultyAdjustmentData> difficultyAdjustment = Optional.empty();
     private Optional<AuthorizedOracleNode> oracleNode = Optional.empty();
 
@@ -121,10 +124,13 @@ final class AuthorizedDataPublisher {
         String[] parts = command.split(" ");
         switch (parts[0]) {
             case "require" -> {
-                checkArgument(parts.length == 2, "require needs a version");
-                publishAlert(false, Optional.of(parts[1]));
+                checkArgument(parts.length >= 3, "require needs a version and at least one app type");
+                publishAlerts(false, Optional.of(parts[1]), appTypes(parts, 2));
             }
-            case "halt" -> publishAlert(true, Optional.empty());
+            case "halt" -> {
+                checkArgument(parts.length >= 2, "halt needs at least one app type");
+                publishAlerts(true, Optional.empty(), appTypes(parts, 1));
+            }
             case "ban-mediator" -> {
                 checkArgument(parts.length == 2, "ban-mediator needs a profile ID");
                 publishBanOfMediator(parts[1]);
@@ -155,7 +161,19 @@ final class AuthorizedDataPublisher {
         }
     }
 
-    private void publishAlert(boolean haltTrading, Optional<String> minVersion) {
+    private static List<AppType> appTypes(String[] parts, int from) {
+        return Arrays.stream(parts, from, parts.length).map(AppType::valueOf).toList();
+    }
+
+    private void publishAlerts(boolean haltTrading, Optional<String> minVersion, List<AppType> appTypes) {
+        // Records each published alert at once, so that remove clears it if a later app type fails
+        List<AuthorizedAlertData> published = new ArrayList<>();
+        lastAlerts = published;
+        appTypes.forEach(appType -> published.add(publishAlert(haltTrading, minVersion, appType)));
+        lastAlerts = List.copyOf(published);
+    }
+
+    private AuthorizedAlertData publishAlert(boolean haltTrading, Optional<String> minVersion, AppType appType) {
         String message = haltTrading ? "Trading is halted" : "Version " + minVersion.orElseThrow() + " is required";
         AuthorizedAlertData alert = new AuthorizedAlertData(UUID.randomUUID().toString(),
                 System.currentTimeMillis(),
@@ -169,9 +187,9 @@ final class AuthorizedDataPublisher {
                 devProfileId,
                 true,
                 Optional.empty(),
-                AppType.DESKTOP);
+                appType);
         networkService().publishAuthorizedData(alert, devKeyPair).join();
-        lastAlert = Optional.of(alert);
+        return alert;
     }
 
     private void publishBanOfMediator(String profileId) {
@@ -191,13 +209,13 @@ final class AuthorizedDataPublisher {
                 Optional.empty(),
                 AppType.DESKTOP);
         networkService().publishAuthorizedData(ban, devKeyPair).join();
-        lastAlert = Optional.of(ban);
+        lastAlerts = List.of(ban);
     }
 
     private void removeAlert() {
-        AuthorizedAlertData alert = lastAlert.orElseThrow(() -> new IllegalStateException("No alert to remove"));
-        networkService().removeAuthorizedData(alert, devKeyPair).join();
-        lastAlert = Optional.empty();
+        checkState(!lastAlerts.isEmpty(), "No alert to remove");
+        lastAlerts.forEach(alert -> networkService().removeAuthorizedData(alert, devKeyPair).join());
+        lastAlerts = List.of();
     }
 
     private void publishDifficultyAdjustment(double factor) {

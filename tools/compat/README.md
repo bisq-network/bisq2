@@ -181,13 +181,17 @@ which uses the code of Bisq. The tests cover:
   node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
   time to live of one minute, an expired session gets HTTP 401, and the client gets a new one. A second client pairs
   with a node of this checkout, which promotes nothing, and trades with the baseline as maker and as taker.
-- `AlertAcrossVersionsTest`: a security manager publishes an emergency alert for the desktop app which requires
-  version 2.1.14 for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A maker of the
-  baseline gets the take offer request of a taker of this checkout, but it does not create the trade and does not
-  answer, so the trade of the taker stays in its first state. Nodes of this checkout know the alert and trade with each
-  other. After the security manager removes the alert, the baseline trades again. An alert which halts trading stops
-  the takes and the steps of an open trade on both versions. After its removal, the open trade completes, and both
-  versions take offers again.
+- `AlertAcrossVersionsTest`: a security manager publishes emergency alerts for `DESKTOP` (the app type of the api-app
+  of the baseline) and `MOBILE_NODE` (the app type of the api-app of this checkout) which require version 2.1.14 for
+  trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A taker of this checkout refuses
+  the offer of a maker of the baseline with `MAKER_VERSION_BELOW_MIN_REQUIRED`, because that maker would drop the take
+  offer request without an answer. Nodes of this checkout know the alert and trade with each other. After the security
+  manager removes the alert, the baseline trades again. An alert which halts trading stops the takes and the steps of
+  an open trade on both versions. After its removal, the open trade completes, and both
+  versions take offers again. An alert which halts trading only for `DESKTOP` stops the baseline, while nodes of this
+  checkout trade with each other to the end. With an alert which requires 2.1.14 only for `DESKTOP`, no alert
+  restricts a node of this checkout, but it still refuses the offer of the baseline, which stands for a desktop maker
+  that the alert restricts, and nodes of this checkout trade with each other to the end.
 - `MediationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node with a dev key. It publishes
   the roles of two mediators, one of each version, as the oracle node of this checkout publishes them. A trader of the
   baseline requests mediation, and the mediator of this checkout answers both traders and gets the chat of the trade.

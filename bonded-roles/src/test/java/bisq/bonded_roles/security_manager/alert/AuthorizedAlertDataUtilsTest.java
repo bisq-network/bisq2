@@ -20,7 +20,11 @@ package bisq.bonded_roles.security_manager.alert;
 import bisq.bonded_roles.release.AppType;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -220,6 +224,60 @@ class AuthorizedAlertDataUtilsTest {
                 Stream.of(valid, malformed), AppType.DESKTOP);
 
         assertThat(result).contains("2.1.10");
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingOfAnyMakerPicksTheHighestOverMakerAppTypes() {
+        AuthorizedAlertData desktop = createAlert("req-desktop", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.15"));
+        AuthorizedAlertData mobileNode = createAlert("req-mobile-node", AppType.MOBILE_NODE, 30, AlertType.EMERGENCY, false, true, Optional.of("2.1.14"));
+        AuthorizedAlertData mobileClient = createAlert("req-mobile-client", AppType.MOBILE_CLIENT, 50, AlertType.EMERGENCY, false, true, Optional.of("9.9.9"));
+
+        Optional<String> result = AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(
+                List.of(desktop, mobileNode, mobileClient));
+
+        assertThat(result).contains("2.1.15");
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingOfAnyMakerUsesTheMostRecentAlertPerAppType() {
+        AuthorizedAlertData desktopOld = createAlert("req-desktop-old", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("2.1.16"));
+        AuthorizedAlertData desktopNew = createAlert("req-desktop-new", AppType.DESKTOP, 30, AlertType.EMERGENCY, false, true, Optional.of("2.1.14"));
+        AuthorizedAlertData unspecified = createAlert("req-all", AppType.UNSPECIFIED, 20, AlertType.EMERGENCY, false, true, Optional.of("2.1.15"));
+
+        Optional<String> result = AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(
+                List.of(desktopOld, desktopNew, unspecified));
+
+        // DESKTOP: the newest alert requires 2.1.14. MOBILE_NODE: the UNSPECIFIED alert requires 2.1.15.
+        assertThat(result).contains("2.1.15");
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingOfAnyMakerIsEmptyWithoutMakerAlerts() {
+        AuthorizedAlertData mobileClient = createAlert("req-mobile-client", AppType.MOBILE_CLIENT, 10, AlertType.EMERGENCY, false, true, Optional.of("0.9.0"));
+
+        assertThat(AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(List.of())).isEmpty();
+        assertThat(AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(List.of(mobileClient))).isEmpty();
+    }
+
+    @Test
+    void findMinRequiredVersionForTradingOfAnyMakerReturnsAMinVersionWhichCannotBeCompared() {
+        AuthorizedAlertData desktop = createAlert("req-desktop", AppType.DESKTOP, 10, AlertType.EMERGENCY, false, true, Optional.of("9999999999"));
+        AuthorizedAlertData mobileNode = createAlert("req-mobile-node", AppType.MOBILE_NODE, 20, AlertType.EMERGENCY, false, true, Optional.of("2.1.15"));
+
+        Optional<String> result = AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(
+                List.of(desktop, mobileNode));
+
+        assertThat(result).contains("9999999999");
+    }
+
+    // Fails when a new app type is added, so that its author decides whether it makes offers
+    @Test
+    void makerAppTypesCoverEveryAppTypeExceptUnspecifiedAndMobileClient() {
+        Set<AppType> otherAppTypes = Arrays.stream(AppType.values())
+                .filter(appType -> !AuthorizedAlertDataUtils.MAKER_APP_TYPES.contains(appType))
+                .collect(Collectors.toSet());
+
+        assertThat(otherAppTypes).containsExactlyInAnyOrder(AppType.UNSPECIFIED, AppType.MOBILE_CLIENT);
     }
 
     // ---- helpers ----

@@ -389,11 +389,11 @@ final class ApiClient {
     }
 
     /**
-     * The alert which restricts trading of the desktop app on the node, or a JSON null without such an alert. The
-     * api-app uses the app type of the desktop app. Only nodes of this checkout have this topic.
+     * The alert which restricts trading of this app type on the node, or a JSON null without such an alert. The
+     * api-app itself follows the alerts for MOBILE_NODE. Only nodes of this checkout have this topic.
      */
-    JsonNode tradeRestrictingAlert() {
-        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of("DESKTOP"));
+    JsonNode tradeRestrictingAlert(String appType) {
+        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of(appType));
     }
 
     private JsonNode subscriptionSnapshot(String topic) {
