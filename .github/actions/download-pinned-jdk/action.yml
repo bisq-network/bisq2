@@ -1,0 +1,50 @@
+name: Download pinned JDK
+description: Downloads the Zulu JDK archive of the pinned build for the runner and verifies its SHA-256.
+
+outputs:
+  path:
+    description: Path of the verified JDK archive
+    value: ${{ steps.download.outputs.path }}
+
+runs:
+  using: composite
+  steps:
+    - id: download
+      shell: bash
+      run: |
+        set -euo pipefail
+        # The archives the toolchain resolver selects, see build-logic/toolchain-resolver.
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64)
+            archive=zulu21.54.107-ca-jdk21.0.13-linux_x64.zip
+            sha256=1f0eaaf5604af472a8293def42fbc27c19666839f270da9e8b5a26491e019bd8 ;;
+          Linux-ARM64)
+            archive=zulu21.54.107-ca-jdk21.0.13-linux_aarch64.tar.gz
+            sha256=783460592bc66c9290b14c32a537b29da812bd62ad53bf6cb565355bca7ea563 ;;
+          macOS-X64)
+            archive=zulu21.54.107-ca-jdk21.0.13-macosx_x64.tar.gz
+            sha256=a6211ef2de128e72519556ea24c7ecb316ec5589b6ed705aef81c889b4233581 ;;
+          macOS-ARM64)
+            archive=zulu21.54.107-ca-jdk21.0.13-macosx_aarch64.tar.gz
+            sha256=7682fcbbc3a164352d36c09c96b2aa91841c8bbafdb9a9a7f5f04db6d290a624 ;;
+          Windows-X64)
+            archive=zulu21.54.107-ca-jdk21.0.13-win_x64.zip
+            sha256=69e9fd7afafe0d70235884f8d9ab15cf8a4b43215b27900d710841e1fb3c7126 ;;
+          *)
+            echo "No pinned JDK archive for ${RUNNER_OS} ${RUNNER_ARCH}" >&2
+            exit 1 ;;
+        esac
+        download_dir="${RUNNER_TEMP}/pinned-jdk"
+        mkdir -p "${download_dir}"
+        cd "${download_dir}"
+        curl -fsSL --retry 3 --retry-all-errors --proto '=https' --proto-redir '=https' -o "${archive}" "https://cdn.azul.com/zulu/bin/${archive}"
+        if command -v sha256sum >/dev/null 2>&1; then
+          actual=$(sha256sum "${archive}" | cut -d ' ' -f 1)
+        else
+          actual=$(shasum -a 256 "${archive}" | cut -d ' ' -f 1)
+        fi
+        if [ "${actual}" != "${sha256}" ]; then
+          echo "${archive} does not match the pinned SHA-256: ${actual}" >&2
+          exit 1
+        fi
+        echo "path=${download_dir}/${archive}" >> "${GITHUB_OUTPUT}"

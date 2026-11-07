@@ -23,5 +23,8 @@ The Java update version does not identify a unique Zulu build. A broader CI requ
 which may report a different `java.version` and fail release verification. It can also change release build inputs
 without a reviewed configuration change.
 
-When the build JDK changes, update the CI requests, pinned environment properties, and toolchain URLs in the same
-change set. See [the Gradle notes](../../../gradle/README.md) for the current values.
+CI must verify the selected JDK archive against its pinned SHA-256 before installation and reject a mismatch.
+
+When the build JDK changes, update the CI requests, pinned environment properties, toolchain URLs and the archive table
+of `.github/actions/download-pinned-jdk` in the same change set. See [the Gradle notes](../../../gradle/README.md) for
+the current values.

@@ -15,10 +15,12 @@ strings. They differ in their runtime (21.54.109 removes the emSign roots from `
 JDK of the build as their runtime. So a release build needs one exact build: `verifyReleaseEnvironment` also requires
 the runtime build (`releaseBuild.javaRuntimeVersion`) and the Zulu build (`releaseBuild.javaVendorVersion`).
 
-CI requests this exact build, Zulu `21.0.13+9`, on every runner. `verifyGithubActionsSecurity` requires every
-`java-version` of a workflow to be `releaseBuild.javaRuntimeVersion`, and that to be a build of
-`releaseBuild.javaVersion`. Update the CI workflows, pinned properties, and toolchain URLs together when changing the
-build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
+CI installs this exact build, Zulu `21.0.13+9`, on every runner: `.github/actions/download-pinned-jdk` downloads the
+archive of the pinned build from its URL, verifies its SHA-256 and hands the file to setup-java, and the build runs
+`verifyReleaseEnvironment` on the installed JDK. `verifyGithubActionsSecurity` requires every `java-version` of a
+workflow to be `releaseBuild.javaRuntimeVersion`, and that to be a build of `releaseBuild.javaVersion`. Update the CI
+workflows, the archive table of the action, pinned properties, and toolchain URLs together when changing the build
+JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
 
 See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
 

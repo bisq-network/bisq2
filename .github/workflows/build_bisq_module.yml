@@ -31,11 +31,16 @@ jobs:
             shasum -a 256 -c gradle/wrapper/gradle-wrapper.sha256
           fi
 
+      - name: Download pinned JDK
+        id: pinned_jdk
+        uses: ./.github/actions/download-pinned-jdk
+
       - name: Setup Java JDK
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           java-version: '21.0.13+9'
-          distribution: 'zulu'
+          distribution: 'jdkfile'
+          jdk-file: ${{ steps.pinned_jdk.outputs.path }}
           check-latest: false
 
       - name: Setup Gradle
@@ -47,7 +52,7 @@ jobs:
       - name: Build Bisq, apps, desktop, and network
         id: build_composite
         shell: bash
-        run: ./gradlew --continue :build-logic:build build :apps:build :apps:desktop:build :network:build
+        run: ./gradlew --continue verifyReleaseEnvironment :build-logic:build build :apps:build :apps:desktop:build :network:build
 
       # Tor has its own dependency verification metadata. Run it even if another module fails.
       - name: Build Tor
