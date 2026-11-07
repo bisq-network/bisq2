@@ -20,8 +20,10 @@ package bisq.desktop.main.content.wallet;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.observable.FxBindings;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Navigation;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.ContentTabController;
 import bisq.desktop.main.content.wallet.coin_management.WalletCoinManagementController;
 import bisq.desktop.main.content.wallet.dashboard.WalletDashboardController;
@@ -39,7 +41,7 @@ public class WalletController extends ContentTabController<WalletModel> {
     @Getter
     private final WalletView view;
     private final Optional<WalletService> walletService;
-    private Pin isWalletInitializedPin;
+    private Pin walletStatePin;
 
     public WalletController(ServiceProvider serviceProvider) {
         super(new WalletModel(), NavigationTarget.WALLET, serviceProvider);
@@ -63,18 +65,35 @@ public class WalletController extends ContentTabController<WalletModel> {
     public void onActivate() {
         super.onActivate();
 
-        walletService.ifPresent(service ->
-                isWalletInitializedPin = FxBindings.bind(model.getIsWalletInitialized()).to(service.getWalletInitialized()));
+        walletService.ifPresent(service -> {
+            walletStatePin = FxBindings.bind(model.getWalletState()).to(service.getState());
+            service.refreshState();
+        });
     }
 
     @Override
     public void onDeactivate() {
         super.onDeactivate();
 
-        if (isWalletInitializedPin != null) {
-            isWalletInitializedPin.unbind();
-            isWalletInitializedPin = null;
+        if (walletStatePin != null) {
+            walletStatePin.unbind();
+            walletStatePin = null;
         }
+    }
+
+    void onUnlockWallet(String password) {
+        walletService.ifPresent(service -> service.openOrCreateWallet(password)
+                .whenComplete((nothing, throwable) -> UIThread.run(() -> {
+                    if (throwable != null && walletStatePin != null) {
+                        new Popup().warning(WalletOpenErrors.toMessage(throwable))
+                                .owner(view.getRoot())
+                                .show();
+                    }
+                })));
+    }
+
+    void onRetryWalletConnection() {
+        walletService.ifPresent(WalletService::refreshState);
     }
 
     void onSetupWalletButtonClicked() {
