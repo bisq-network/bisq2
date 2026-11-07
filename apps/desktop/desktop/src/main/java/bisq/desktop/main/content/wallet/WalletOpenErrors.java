@@ -20,6 +20,7 @@ package bisq.desktop.main.content.wallet;
 import bisq.i18n.Res;
 import bisq.wallet.WalletException;
 
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
 public class WalletOpenErrors {
@@ -27,19 +28,24 @@ public class WalletOpenErrors {
     }
 
     public static String toMessage(Throwable throwable) {
-        Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
-                ? throwable.getCause()
-                : throwable;
-        if (cause instanceof WalletException walletException) {
-            return switch (walletException.getReason()) {
+        Optional<WalletException> walletException = findWalletException(throwable);
+        if (walletException.isPresent()) {
+            return switch (walletException.get().getReason()) {
                 case WRONG_PASSWORD -> Res.get("wallet.protectWallet.error.wrongPassword");
                 case DAEMON_UNAVAILABLE, CLIENT_NOT_READY -> Res.get("wallet.protectWallet.error.daemonUnavailable");
                 case CALL_TIMED_OUT -> Res.get("wallet.protectWallet.error.timedOut");
                 case INVALID_REQUEST -> Res.get("wallet.protectWallet.error.openRefused",
-                        walletException.getDetail().orElse(walletException.getMessage()));
+                        walletException.get().getDetail().orElse(walletException.get().getMessage()));
                 default -> Res.get("wallet.protectWallet.error.daemonError");
             };
         }
         return Res.get("wallet.protectWallet.error.daemonError");
+    }
+
+    static Optional<WalletException> findWalletException(Throwable throwable) {
+        Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
+                ? throwable.getCause()
+                : throwable;
+        return cause instanceof WalletException walletException ? Optional.of(walletException) : Optional.empty();
     }
 }
