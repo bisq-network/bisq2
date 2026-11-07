@@ -245,7 +245,7 @@ public class NetworkSettingsController implements Controller {
                 .setJson(false)             // keep HOCON instead of JSON
                 .setFormatted(true));       // pretty print
 
-        Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Path customConfigFilePath = appConfig.getCustomConfigFilePath();
         try {
             FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
         } catch (IOException e) {

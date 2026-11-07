@@ -122,6 +122,10 @@ public abstract class ApplicationService implements Service {
             this.checkInstanceLock = checkInstanceLock;
         }
 
+        public Path getCustomConfigFilePath() {
+            return appDataDirPath.resolve(CUSTOM_CONFIG_FILE_NAME);
+        }
+
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
             com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
             com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
@@ -129,8 +133,7 @@ public abstract class ApplicationService implements Service {
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
             return true;
         }
 
@@ -141,8 +144,7 @@ public abstract class ApplicationService implements Service {
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
         }
     }
 

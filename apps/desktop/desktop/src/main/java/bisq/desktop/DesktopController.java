@@ -240,7 +240,6 @@ public class DesktopController extends NavigationController {
             if (httpServerErrorMessage != null) {
                 UIThread.run(() -> {
                     ApplicationService.Config appConfig = serviceProvider.getConfig();
-                    Path appDataDirPath = appConfig.getAppDataDirPath();
                     new Popup()
                             .failure(Res.get("settings.bisqConnect.server.failure.header"),
                                     httpServerErrorMessage,
@@ -253,7 +252,7 @@ public class DesktopController extends NavigationController {
                                     appConfig.removeNodeFromCustomConfig("application.api");
                                     serviceProvider.getShutDownHandler().shutdown();
                                 } catch (IOException e) {
-                                    Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+                                    Path customConfigFilePath = appConfig.getCustomConfigFilePath();
                                     log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
                                     new Popup().error(e).show();
                                 }
