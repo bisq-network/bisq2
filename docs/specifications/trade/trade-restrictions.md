@@ -8,9 +8,12 @@ a node does while such an alert exists.
 - A halt of trading is an emergency alert with `haltTrading`.
 - A minimum version for trading is an emergency alert with `requireVersionForTrading` and a `minVersion`. The node
   uses the newest such alert.
-- An alert applies to a node if its app type is the app type of the node, or `UNSPECIFIED`. The desktop app and the
-  api-app use the app type `DESKTOP`, and a mobile node uses `MOBILE_NODE`. A mobile client trades through the api-app
-  of its trusted node, so the alert for `DESKTOP` applies to its trades.
+- An alert applies to a node if its app type is the app type of the node, or `UNSPECIFIED`. The desktop app uses the
+  app type `DESKTOP`. A mobile node and the api-app use `MOBILE_NODE`: the api-app is the trusted node of mobile
+  clients and ships after the desktop app, so an alert for the desktop app does not stop it. A mobile client trades
+  through its trusted node, so the alert of the app type of that node applies to its trades: `MOBILE_NODE` for the
+  api-app, `DESKTOP` for a desktop app which serves mobile clients. Releases of the api-app up to 2.1.15 use
+  `DESKTOP`.
 - The version of a node is the version of Bisq 2 which it runs. A mobile node contains Bisq 2, and a mobile release
   can contain an earlier version than the current desktop release.
 
@@ -57,12 +60,13 @@ a node does while such an alert exists.
   taker and maker differ, the decision of the taker can be wrong:
   - The alert of the taker requires a version which the alert of the maker does not require, or no alert applies to
     the maker. The node of the taker refuses a maker which would accept the take. Example: an alert for `DESKTOP`
-    requires 2.1.14 and no alert for `MOBILE_NODE` exists. Desktop users and mobile clients cannot take the offers of
-    mobile nodes which contain 2.1.13.
+    requires 2.1.14 and no alert for `MOBILE_NODE` exists. Desktop users cannot take the offers of mobile nodes which
+    contain 2.1.13.
   - The alert of the maker requires a version which the alert of the taker does not require, or no alert applies to
     the taker. The node of the taker does not refuse the restricted maker, and the take hangs as without rule 3.
     Example: an alert for `MOBILE_NODE` requires 2.1.14 and no alert for `DESKTOP` exists. A desktop user takes the
-    offer of a mobile node which contains 2.1.13.
+    offer of a mobile node which contains 2.1.13. In the other direction: an alert for `DESKTOP` requires 2.1.15 and
+    no alert for `MOBILE_NODE` exists. A mobile client takes the offer of a desktop user with 2.1.14.
   - An alert with `UNSPECIFIED` applies to every node of version 2.1.14 or later, but to no node up to 2.1.13 (see
     Compatibility). The node of a taker therefore refuses makers up to 2.1.13, although the alert does not restrict
     them.
@@ -70,6 +74,11 @@ a node does while such an alert exists.
     which trades, `DESKTOP` and `MOBILE_NODE`, with the same `minVersion`. Then the first two cases do not occur. If
     no mobile release contains this version yet, the alert stops trading on mobile nodes until such a release exists.
     The security manager does not use `UNSPECIFIED` for a minimum version as long as nodes up to 2.1.13 trade.
+  - An alert for `DESKTOP` only, for example right after a desktop release which no trusted node contains yet, keeps
+    trusted nodes and mobile nodes trading, at the cost of the second case above for the offers of desktop users. For
+    a halt of trading which concerns every node, for example a bug in the trade protocol, the security manager
+    publishes it for `DESKTOP` and for `MOBILE_NODE`, as a desktop node under a halt drops the trade messages of
+    nodes which the halt does not restrict.
   - What would remove it: the maker states its app type in its profile or offer, covered by its signature. The node of
     the taker then uses the alert which applies to the maker.
   - Who decides: the developers.
