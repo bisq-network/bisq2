@@ -205,15 +205,17 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
         });
     }
 
+    private void showStartupErrorPopup(String errorMessage) {
+        new Popup().error(Res.get("popup.startup.error", errorMessage))
+                .closeButtonText(Res.get("action.shutDown"))
+                .onClose(this::exitJavaFXPlatform)
+                .show();
+    }
+
     private void setupStartupAndShutdownErrorHandlers() {
         applicationService.getStartupErrorMessage().addObserver(errorMessage -> {
             if (errorMessage != null) {
-                UIThread.run(() ->
-                        new Popup().error(Res.get("popup.startup.error", errorMessage))
-                                .closeButtonText(Res.get("action.shutDown"))
-                                .onClose(this::exitJavaFXPlatform)
-                                .show()
-                );
+                UIThread.run(() -> showStartupErrorPopup(errorMessage));
             }
         });
         applicationService.getShutDownErrorMessage().addObserver(errorMessage -> {
