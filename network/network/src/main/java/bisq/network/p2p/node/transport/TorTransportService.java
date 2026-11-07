@@ -8,6 +8,7 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.TorSandboxConfig;
 import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
@@ -87,6 +88,10 @@ public class TorTransportService implements TransportService {
 
     // The directory of the embedded Tor below the data directory of the application
     public static final String TOR_DIR_NAME = "tor";
+    // Configuration entries of the Tor transport in the configuration of the application
+    public static final String SANDBOX_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH;
+    public static final String ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH =
+            TorSandboxConfig.BISQ2_CONFIG_PATH + ".allowPluggableTransports";
     // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
     // for (tor/README.md, the levels of the sandbox). Its weaker levels have other names.
     private static final String BASE_SANDBOX_LEVEL = "base";

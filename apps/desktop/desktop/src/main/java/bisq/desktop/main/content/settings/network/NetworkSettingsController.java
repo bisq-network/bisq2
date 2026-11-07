@@ -33,6 +33,7 @@ import bisq.desktop.common.observable.FxBindings;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
+import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.settings.SettingsService;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
@@ -53,7 +54,6 @@ import java.util.Set;
 
 @Slf4j
 public class NetworkSettingsController implements Controller {
-    private static final String TOR_SANDBOX_CONFIG_PATH = "application.network.configByTransportType.tor.sandbox";
 
     @Getter
     private final NetworkSettingsView view;
@@ -113,7 +113,7 @@ public class NetworkSettingsController implements Controller {
         model.getBi2pGrpcAddress().set(new ClearnetAddress(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
 
         // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart.
-        Config torSandboxConfig = updatedRootConfig.getConfig(TOR_SANDBOX_CONFIG_PATH);
+        Config torSandboxConfig = updatedRootConfig.getConfig(TorTransportService.SANDBOX_CONFIG_PATH);
         configuredAllowPluggableTransports = torSandboxConfig.getBoolean("allowPluggableTransports");
         model.getAllowPluggableTransports().set(configuredAllowPluggableTransports);
         model.getTorShutdownButtonVisible().set(false);
@@ -206,7 +206,7 @@ public class NetworkSettingsController implements Controller {
 
     void onApplyTorSettingsAndShutdown() {
         // Only the changed entry, so that the other entries keep following the defaults of new releases
-        writeCustomConfig(Map.of(TOR_SANDBOX_CONFIG_PATH + ".allowPluggableTransports",
+        writeCustomConfig(Map.of(TorTransportService.ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH,
                 model.getAllowPluggableTransports().get()));
         shutDownHandler.shutdown();
     }
