@@ -17,17 +17,25 @@
 
 package bisq.application;
 
+import bisq.common.file.FileMutatorUtils;
 import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
+import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValueFactory;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -68,6 +76,56 @@ public class TypesafeConfigUtils {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Appends one line {@code path=value} per entry to bisq.conf, where it overrides an earlier value of the path.
+     * Unlike a rewrite of the file, it keeps the comments and substitutions of the user, and the user undoes it by
+     * removing the lines. Bisq writes the new content into a temporary file next to bisq.conf, parses it as the start
+     * parses bisq.conf, and only then moves it over bisq.conf, so that a failure leaves bisq.conf as it was.
+     *
+     * @param entries values which typesafe config takes, for example a boolean, a string or a list
+     * @throws IOException if the file cannot be read or written, or if bisq.conf with the lines does not parse to the
+     *                     values, for example because the file has a syntax error, so that the application would
+     *                     ignore the file and the lines with it
+     */
+    public static void appendToCustomConfig(Path appDataDirPath, Map<String, ?> entries) throws IOException {
+        Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        // A bisq.conf which links to another file stays a link, and the other file gets the lines
+        Path targetPath = Files.exists(customConfigFilePath) ? customConfigFilePath.toRealPath() : customConfigFilePath;
+        String content = Files.exists(targetPath) ? Files.readString(targetPath, StandardCharsets.UTF_8) : "";
+        String separator = content.isEmpty() || content.endsWith("\n") ? "" : "\n";
+        String newContent = content + separator + String.join("\n", toConfigLines(entries)) + "\n";
+        Path tempFilePath = Files.createTempFile(targetPath.toAbsolutePath().getParent(),
+                ApplicationService.CUSTOM_CONFIG_FILE_NAME + ".", ".tmp");
+        try {
+            FileMutatorUtils.writeToPath(newContent, tempFilePath);
+            // In the directory of bisq.conf, so that a relative include resolves as at the start
+            Config newConfig = ConfigFactory.parseFile(tempFilePath.toFile());
+            for (Map.Entry<String, ?> entry : entries.entrySet()) {
+                Object expected = ConfigValueFactory.fromAnyRef(entry.getValue()).unwrapped();
+                if (!expected.equals(newConfig.getValue(entry.getKey()).unwrapped())) {
+                    throw new IOException(customConfigFilePath + " does not take the line " +
+                            toConfigLines(Map.of(entry.getKey(), entry.getValue())).get(0));
+                }
+            }
+            FileMutatorUtils.replaceFile(tempFilePath, targetPath);
+        } catch (ConfigException e) {
+            throw new IOException(customConfigFilePath + " cannot be parsed: " + e.getMessage(), e);
+        } finally {
+            Files.deleteIfExists(tempFilePath);
+        }
+    }
+
+    /**
+     * @return the lines {@code path=value} which {@link #appendToCustomConfig} appends, sorted by path, for example
+     * {@code a.b=false}, {@code a.c=""} and {@code a.d=[]}
+     */
+    public static List<String> toConfigLines(Map<String, ?> entries) {
+        return new TreeMap<>(entries).entrySet().stream()
+                .map(entry -> entry.getKey() + "=" +
+                        ConfigValueFactory.fromAnyRef(entry.getValue()).render(ConfigRenderOptions.concise()))
+                .toList();
     }
 
     // Accept both formats: "--app-name=bisq" and "--app-name bisq"

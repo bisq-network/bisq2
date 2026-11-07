@@ -17,16 +17,131 @@
 
 package bisq.application;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static bisq.application.TypesafeConfigUtils.coerce;
 import static bisq.application.TypesafeConfigUtils.mapCustomArgsToTypesafeEntries;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class TypesafeConfigUtilsTest {
+    private static final String SANDBOX_ENABLED = "application.network.configByTransportType.tor.sandbox.enabled";
+
+    @Test
+    void anAppendedEntryOverridesTheFileAndKeepsItsCommentsAndSubstitutions(@TempDir Path appDataDirPath)
+            throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        String content = """
+                # bridges of the user
+                bridgePort = 443
+                application.network.configByTransportType.tor {
+                    sandbox.enabled = true
+                    torrcOverrides.ORPort = ${bridgePort}
+                }""";
+        Files.writeString(configFilePath, content, StandardCharsets.UTF_8);
+
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false));
+
+        String newContent = Files.readString(configFilePath, StandardCharsets.UTF_8);
+        assertEquals(content + "\n" + SANDBOX_ENABLED + "=false\n", newContent);
+        assertOnlyTheConfigFileIsLeft(appDataDirPath);
+        Config config = ConfigFactory.parseFile(configFilePath.toFile()).resolve();
+        assertFalse(config.getBoolean(SANDBOX_ENABLED));
+        assertEquals(443, config.getInt("application.network.configByTransportType.tor.torrcOverrides.ORPort"));
+    }
+
+    @Test
+    void anEntryAppendedWithoutAFileCreatesIt(@TempDir Path appDataDirPath) throws IOException {
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false));
+
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        assertEquals(SANDBOX_ENABLED + "=false\n", Files.readString(configFilePath, StandardCharsets.UTF_8));
+    }
+
+    // For example the choice to use no bridges, which sets a string and a list
+    @Test
+    void entriesOfOtherTypesAreAppendedSortedAndParseToTheirValues(@TempDir Path appDataDirPath) throws IOException {
+        String torPath = "application.network.configByTransportType.tor";
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Files.writeString(configFilePath, torPath + " { builtInBridges = \"obfs4\" }\n", StandardCharsets.UTF_8);
+
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath,
+                Map.of(torPath + ".builtInBridges", "", torPath + ".bridges", List.of()));
+
+        String content = Files.readString(configFilePath, StandardCharsets.UTF_8);
+        assertTrue(content.endsWith(torPath + ".bridges=[]\n" + torPath + ".builtInBridges=\"\"\n"), content);
+        Config config = ConfigFactory.parseFile(configFilePath.toFile());
+        assertEquals("", config.getString(torPath + ".builtInBridges"));
+        assertTrue(config.getStringList(torPath + ".bridges").isEmpty());
+    }
+
+    // The application ignores a bisq.conf which it cannot parse, and an appended entry with it
+    @Test
+    void aFileWhichCannotBeParsedIsLeftAsItIs(@TempDir Path appDataDirPath) throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        String content = "application.network {\n";
+        Files.writeString(configFilePath, content, StandardCharsets.UTF_8);
+
+        IOException exception = assertThrows(IOException.class,
+                () -> TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false)));
+
+        assertTrue(exception.getMessage().contains("cannot be parsed"));
+        assertEquals(content, Files.readString(configFilePath, StandardCharsets.UTF_8));
+        assertOnlyTheConfigFileIsLeft(appDataDirPath);
+    }
+
+    // The start parses bisq.conf as a file, so an include relative to it is valid
+    @Test
+    void anIncludeRelativeToTheFileIsAccepted(@TempDir Path appDataDirPath) throws IOException {
+        Files.writeString(appDataDirPath.resolve("bridges.conf"), "bridgePort = 443\n", StandardCharsets.UTF_8);
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Files.writeString(configFilePath, "include required(\"bridges.conf\")\n", StandardCharsets.UTF_8);
+
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false));
+
+        Config config = ConfigFactory.parseFile(configFilePath.toFile()).resolve();
+        assertFalse(config.getBoolean(SANDBOX_ENABLED));
+        assertEquals(443, config.getInt("bridgePort"));
+    }
+
+    @Test
+    void aLinkedFileGetsTheLinesAndTheLinkStays(@TempDir Path appDataDirPath, @TempDir Path otherDirPath)
+            throws IOException {
+        Path linkTargetPath = otherDirPath.resolve("my-bisq.conf");
+        Files.writeString(linkTargetPath, "# mine\n", StandardCharsets.UTF_8);
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        try {
+            Files.createSymbolicLink(configFilePath, linkTargetPath);
+        } catch (UnsupportedOperationException | IOException e) {
+            Assumptions.abort("The file system does not support symbolic links: " + e.getMessage());
+        }
+
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false));
+
+        assertTrue(Files.isSymbolicLink(configFilePath));
+        assertEquals("# mine\n" + SANDBOX_ENABLED + "=false\n",
+                Files.readString(linkTargetPath, StandardCharsets.UTF_8));
+    }
+
+    private static void assertOnlyTheConfigFileIsLeft(Path appDataDirPath) throws IOException {
+        try (Stream<Path> files = Files.list(appDataDirPath)) {
+            assertEquals(List.of(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME)), files.toList());
+        }
+    }
 
     @Test
     void testMapCustomArgsAppNameWithEqualsSyntax() {
