@@ -18,9 +18,11 @@
 package bisq.desktop_app;
 
 import bisq.application.AnotherInstanceRunningException;
+import bisq.application.ApplicationService;
 import bisq.application.Executable;
 import bisq.application.InstanceLockException;
 import bisq.application.InstanceLockUnavailableException;
+import bisq.application.TypesafeConfigUtils;
 import bisq.desktop.DesktopController;
 import bisq.desktop.common.threading.UIScheduler;
 import bisq.desktop.common.threading.UIThread;
@@ -36,6 +38,8 @@ import javax.swing.SwingUtilities;
 import java.awt.GraphicsEnvironment;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
 import static bisq.common.platform.PlatformUtils.EXIT_FAILURE;
 
@@ -215,10 +219,60 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
                 .show();
     }
 
+    // A failed start which a change of bisq.conf fixes. It is no bug, so the popup offers no bug report. Each choice
+    // writes into bisq.conf and shuts down; closing the popup, also with Escape or Enter, only shuts down.
+    private void showStartupFailurePopup(StartupFailurePopupContent content) {
+        // Wide enough for three buttons whose texts say that Bisq shuts down
+        Popup popup = new Popup()
+                .headline(content.headline())
+                .width(900)
+                .warning(content.message())
+                .closeButtonText(Res.get("action.shutDown"))
+                .onClose(this::exitJavaFXPlatform);
+        List<StartupFailurePopupContent.Choice> choices = content.choices();
+        if (!choices.isEmpty()) {
+            popup.actionButtonText(choices.get(0).buttonText())
+                    .onAction(() -> applyStartupChoiceAndExit(content.headline(), choices.get(0)));
+        }
+        if (choices.size() > 1) {
+            popup.secondaryActionButtonText(choices.get(1).buttonText())
+                    .onSecondaryAction(() -> applyStartupChoiceAndExit(content.headline(), choices.get(1)));
+        }
+        popup.show();
+    }
+
+    private void applyStartupChoiceAndExit(String headline, StartupFailurePopupContent.Choice choice) {
+        ApplicationService.Config config = applicationService.getConfig();
+        Map<String, Object> configEntries = choice.configEntries();
+        try {
+            TypesafeConfigUtils.appendToCustomConfig(config.getAppDataDirPath(), configEntries);
+        } catch (Exception e) {
+            // Usually a file of the user which Bisq cannot write or parse, not a bug, so the popup gives the manual way
+            // out instead of a bug report. The message of a FileSystemException is only the path, so the class says
+            // what failed. Not only IOException: this popup is the only way left to shut down.
+            log.error("Could not write the choice into bisq.conf", e);
+            String reason = e.getClass().getSimpleName() + ": " + e.getMessage();
+            new Popup().headline(headline)
+                    .warning(Res.get("popup.startup.error.choice.writeFailed",
+                            config.getCustomConfigFilePath().toAbsolutePath().toString(),
+                            reason, String.join("\n", TypesafeConfigUtils.toConfigLines(configEntries))))
+                    .closeButtonText(Res.get("action.shutDown"))
+                    .onClose(this::exitJavaFXPlatform)
+                    .show();
+            return;
+        }
+        log.warn("Appended to {}: {}", config.getCustomConfigFilePath(),
+                TypesafeConfigUtils.toConfigLines(configEntries));
+        exitJavaFXPlatform();
+    }
+
     private void setupStartupAndShutdownErrorHandlers() {
         applicationService.getStartupErrorMessage().addObserver(errorMessage -> {
             if (errorMessage != null) {
-                UIThread.run(() -> showStartupErrorPopup(errorMessage));
+                UIThread.run(() -> applicationService.findStartupFailure()
+                        .flatMap(startupFailure -> StartupFailurePopups.findContent(startupFailure, errorMessage,
+                                applicationService.getConfig()))
+                        .ifPresentOrElse(this::showStartupFailurePopup, () -> showStartupErrorPopup(errorMessage)));
             }
         });
         applicationService.getShutDownErrorMessage().addObserver(errorMessage -> {

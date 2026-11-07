@@ -90,6 +90,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final Observable<String> shutDownErrorMessage = new Observable<>();
     @Getter
     private final Observable<String> startupErrorMessage = new Observable<>();
+    // Set before startupErrorMessage, so that its popup can offer a change of bisq.conf which fixes the failure
+    private volatile Optional<Throwable> startupFailure = Optional.empty();
 
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -326,6 +328,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         }
                     } else {
                         log.error("Initializing applicationService failed", throwable);
+                        startupFailure = Optional.of(throwable);
                         startupErrorMessage.set(getStartupErrorMessage(throwable));
                     }
                     setState(State.FAILED);
@@ -384,6 +387,11 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                     return false;
                 }), commonForkJoinPool())
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
+    }
+
+    // The exception of a failed start. A start which completed without success has none.
+    Optional<Throwable> findStartupFailure() {
+        return startupFailure;
     }
 
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
