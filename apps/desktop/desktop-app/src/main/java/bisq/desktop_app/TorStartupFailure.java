@@ -19,11 +19,12 @@ package bisq.desktop_app;
 
 import bisq.network.p2p.node.transport.TorTransportService;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
  * A failed start of Tor which a choice of the user fixes, which Bisq then writes into bisq.conf. The Tor library
- * decides it from its own checks and the refusals of sandy. It tells a refusal of sandy from an exit of Tor by the
+ * decides both from its own checks and the refusals of sandy. It tells a refusal of sandy from an exit of Tor by the
  * status record of sandy, which Tor cannot write, not by what Tor wrote. A missing record also counts as a refusal,
  * so a compromised Tor which fills the disk can cause one at a later start (tor-startup.md, Known gaps).
  */
@@ -32,7 +33,18 @@ sealed interface TorStartupFailure {
     record SandboxUnavailable() implements TorStartupFailure {
     }
 
+    // The sandbox does not let Tor start the pluggable transports of the bridges
+    record PluggableTransportsNotAllowed(List<String> transportNames) implements TorStartupFailure {
+        public PluggableTransportsNotAllowed {
+            transportNames = List.copyOf(transportNames);
+        }
+    }
+
     static Optional<TorStartupFailure> find(Throwable startFailure) {
+        Optional<List<String>> notAllowedTransports = TorTransportService.findPluggableTransportsNotAllowed(startFailure);
+        if (notAllowedTransports.isPresent()) {
+            return Optional.of(new PluggableTransportsNotAllowed(notAllowedTransports.get()));
+        }
         return TorTransportService.isSandboxUnavailable(startFailure) ?
                 Optional.of(new SandboxUnavailable()) :
                 Optional.empty();

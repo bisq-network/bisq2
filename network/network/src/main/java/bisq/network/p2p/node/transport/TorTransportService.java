@@ -94,6 +94,9 @@ public class TorTransportService implements TransportService {
     public static final String SANDBOX_ENABLED_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH + ".enabled";
     public static final String ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH =
             TorSandboxConfig.BISQ2_CONFIG_PATH + ".allowPluggableTransports";
+    private static final String TOR_CONFIG_PATH = "application.network.configByTransportType.tor";
+    public static final String BUILT_IN_BRIDGES_CONFIG_PATH = TOR_CONFIG_PATH + ".builtInBridges";
+    public static final String BRIDGES_CONFIG_PATH = TOR_CONFIG_PATH + ".bridges";
     // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
     // for (tor/README.md, the levels of the sandbox). Its weaker levels have other names.
     private static final String BASE_SANDBOX_LEVEL = "base";

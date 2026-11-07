@@ -31,6 +31,9 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static bisq.network.p2p.node.transport.TorTransportService.ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH;
+import static bisq.network.p2p.node.transport.TorTransportService.BRIDGES_CONFIG_PATH;
+import static bisq.network.p2p.node.transport.TorTransportService.BUILT_IN_BRIDGES_CONFIG_PATH;
 import static bisq.network.p2p.node.transport.TorTransportService.SANDBOX_ENABLED_CONFIG_PATH;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,6 +41,10 @@ class TorStartupFailurePopupsTest {
     private static final Path CONFIG_FILE_PATH = Path.of("data", "bisq.conf").toAbsolutePath();
     private static final String ERROR = "Bisq did not start Tor, because it cannot run Tor in its sandbox on this system";
     private static final TorStartupFailure SANDBOX_UNAVAILABLE = new TorStartupFailure.SandboxUnavailable();
+    private static final TorStartupFailure TRANSPORTS_NOT_ALLOWED =
+            new TorStartupFailure.PluggableTransportsNotAllowed(List.of("obfs4", "snowflake"));
+    private static final Map<String, Object> NO_BRIDGES = Map.of(BUILT_IN_BRIDGES_CONFIG_PATH, "",
+            BRIDGES_CONFIG_PATH, List.of());
 
     @BeforeAll
     static void setUp() {
@@ -46,7 +53,7 @@ class TorStartupFailurePopupsTest {
 
     @Test
     void aSandboxWhichCannotRunTorOffersToTurnItOff() {
-        StartupFailurePopupContent content = create(SANDBOX_UNAVAILABLE, Set.of());
+        StartupFailurePopupContent content = create(SANDBOX_UNAVAILABLE, false, Set.of());
 
         assertThat(content.headline()).isEqualTo("Tor cannot run in its sandbox");
         assertThat(content.message())
@@ -62,7 +69,7 @@ class TorStartupFailurePopupsTest {
         String longError = ERROR + "\n" + "x".repeat(5000);
 
         StartupFailurePopupContent content = TorStartupFailurePopups.create(SANDBOX_UNAVAILABLE, longError,
-                path -> false, CONFIG_FILE_PATH);
+                false, path -> false, CONFIG_FILE_PATH);
 
         assertThat(content.message())
                 .hasSizeLessThanOrEqualTo(2200)
@@ -75,10 +82,51 @@ class TorStartupFailurePopupsTest {
     // The command line overrides bisq.conf, so writing the choice there would not change the next start
     @Test
     void aSandboxWhichCannotRunTorOffersNoChoiceWhileTheCommandLineSetsIt() {
-        StartupFailurePopupContent content = create(SANDBOX_UNAVAILABLE, Set.of(SANDBOX_ENABLED_CONFIG_PATH));
+        StartupFailurePopupContent content = create(SANDBOX_UNAVAILABLE, false, Set.of(SANDBOX_ENABLED_CONFIG_PATH));
 
         assertThat(content.choices()).isEmpty();
         assertThat(content.message()).contains("an option that sets " + SANDBOX_ENABLED_CONFIG_PATH);
+    }
+
+    // Allowing the transports weakens the sandbox less than turning it off, so only that is offered
+    @Test
+    void refusedTransportsOfferToAllowThemOrToUseNoBridges() {
+        StartupFailurePopupContent content = create(TRANSPORTS_NOT_ALLOWED, false, Set.of());
+
+        assertThat(content.headline()).isEqualTo("Tor cannot use your bridges");
+        assertThat(content.message())
+                .contains("pluggable transports obfs4, snowflake")
+                .contains("Allowing them reduces some sandbox protections")
+                .contains("Bisq adds your choice to " + CONFIG_FILE_PATH);
+        assertThat(entriesOf(content)).containsExactly(Map.of(ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH, true),
+                NO_BRIDGES);
+    }
+
+    // On Windows Tor cannot start the transports in its sandbox, so allowing them would not help
+    @Test
+    void refusedTransportsOnWindowsOfferToUseNoBridgesOrToTurnTheSandboxOff() {
+        StartupFailurePopupContent content = create(TRANSPORTS_NOT_ALLOWED, true, Set.of());
+
+        assertThat(content.message())
+                .contains("On Windows, Tor cannot start these programs in its sandbox")
+                .contains("including your wallet and private keys")
+                .doesNotContain("Allowing them");
+        assertThat(entriesOf(content)).containsExactly(NO_BRIDGES, Map.of(SANDBOX_ENABLED_CONFIG_PATH, false));
+    }
+
+    @Test
+    void refusedTransportsLeaveOutTheChoicesWhichTheCommandLineOverrides() {
+        StartupFailurePopupContent onlyBridges = create(TRANSPORTS_NOT_ALLOWED, false,
+                Set.of(ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH));
+        assertThat(entriesOf(onlyBridges)).containsExactly(NO_BRIDGES);
+        assertThat(onlyBridges.message()).contains("an option that sets " + ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH);
+
+        StartupFailurePopupContent none = create(TRANSPORTS_NOT_ALLOWED, false,
+                Set.of(ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH, BRIDGES_CONFIG_PATH));
+        assertThat(none.choices()).isEmpty();
+        assertThat(none.message())
+                .contains("an option that sets " + ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH + ", " + BRIDGES_CONFIG_PATH)
+                .doesNotContain("Bisq adds your choice");
     }
 
     // A renamed or retyped entry of the configuration would make a choice fail at the next start or have no effect
@@ -86,11 +134,13 @@ class TorStartupFailurePopupsTest {
     void everyEntryWhichAChoiceWritesHasTheTypeOfTheDesktopConfiguration() {
         Config desktopConfig = ConfigFactory.parseResources("desktop.conf").resolve();
         List<Map<String, Object>> allEntries = Stream.of(
-                        create(SANDBOX_UNAVAILABLE, Set.of()))
+                        create(SANDBOX_UNAVAILABLE, false, Set.of()),
+                        create(TRANSPORTS_NOT_ALLOWED, false, Set.of()),
+                        create(TRANSPORTS_NOT_ALLOWED, true, Set.of()))
                 .flatMap(content -> entriesOf(content).stream())
                 .toList();
 
-        assertThat(allEntries).hasSize(1);
+        assertThat(allEntries).hasSize(5);
         allEntries.forEach(entries -> entries.forEach((path, value) -> {
             assertThat(desktopConfig.hasPath(path)).as(path).isTrue();
             assertThat(desktopConfig.getValue(path).valueType()).as(path)
@@ -98,9 +148,11 @@ class TorStartupFailurePopupsTest {
         }));
     }
 
-    private static StartupFailurePopupContent create(TorStartupFailure failure, Set<String> pathsSetOnCommandLine) {
+    private static StartupFailurePopupContent create(TorStartupFailure failure,
+                                                     boolean isWindows,
+                                                     Set<String> pathsSetOnCommandLine) {
         Predicate<String> isSetOnCommandLine = pathsSetOnCommandLine::contains;
-        return TorStartupFailurePopups.create(failure, ERROR, isSetOnCommandLine, CONFIG_FILE_PATH);
+        return TorStartupFailurePopups.create(failure, ERROR, isWindows, isSetOnCommandLine, CONFIG_FILE_PATH);
     }
 
     private static List<Map<String, Object>> entriesOf(StartupFailurePopupContent content) {

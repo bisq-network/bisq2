@@ -294,24 +294,22 @@ of Tor, and in the sandbox also of sandy. There Tor can rewrite that file, so th
 the exit status and the status record, and then the quote, labeled as written by sandy and by Tor in its sandbox and
 not verified by Bisq. A start without the sandbox quotes the file without the label.
 
-When the bridges need pluggable transports which the configuration does not allow, the start error of the desktop
-application names the transports and the ways out: allow them with `sandbox.allowPluggableTransports`, except on
-Windows, where the sandbox cannot run them; remove the bridges or use bridges without pluggable transports; or turn the
-sandbox off. Its switch in the network settings is out of reach after a failed start, so the message names the entries
-which the user adds to `bisq.conf`. It names no path of the user, because the error popup copies its message into a bug
-report.
+Two failed starts of Tor get the popup of a failed start which a change of `bisq.conf` fixes
+(`docs/specifications/desktop/startup-failure-popup.md`), instead of the error popup with the bug report. The node
+knows both only from its own checks and the refusals of sandy (`SandboxUnavailableException` of the Tor library and its
+subclass `PluggableTransportsNotAllowedException`). It tells a refusal of sandy from an end of a sandboxed Tor by the
+status record of sandy, which Tor cannot write, not by what Tor wrote. A missing record also counts as a refusal, so a
+compromised Tor can still cause the offer to turn the sandbox off at a later start (see Known gaps):
 
-A failed start of Tor which a choice of the user fixes gets the popup of a failed start which a change of `bisq.conf`
-fixes (`docs/specifications/desktop/startup-failure-popup.md`), instead of the error popup with the bug report. The node
-knows such a failure only from its own checks and the refusals of sandy (`SandboxUnavailableException` of the Tor
-library). It tells a refusal of sandy from an end of a sandboxed Tor by the status record of sandy, which Tor cannot
-write, not by what Tor wrote. A missing record also counts as a refusal, so a compromised Tor can still cause the offer
-to turn the sandbox off at a later start (see Known gaps):
-
-- When Tor cannot run in the sandbox on this system for another reason than refused pluggable transports, the popup
-  "Tor cannot run in its sandbox" shows the error and offers to turn the sandbox off (`sandbox.enabled=false`). The
-  popup shows at most the first 1200 characters of the error, which can quote the standard error of sandy and Tor, so
-  that the text about the choice, its risk and how to undo it is never cut off; `bisq.log` has the full error.
+- When the bridges need pluggable transports which the configuration does not allow, the popup "Tor cannot use your
+  bridges" names the transports and what each choice costs. It offers to allow them
+  (`sandbox.allowPluggableTransports=true`), or on Windows, where the sandbox cannot run them, to turn the sandbox off
+  (`sandbox.enabled=false`). In both cases it also offers to use no bridges (`builtInBridges=""` and `bridges=[]`).
+  It does not offer to turn the sandbox off outside Windows, because allowing the transports weakens the sandbox less.
+- When Tor cannot run in the sandbox on this system for another reason, the popup "Tor cannot run in its sandbox"
+  shows the error and offers to turn the sandbox off (`sandbox.enabled=false`). The popup shows at most the first 1200
+  characters of the error, which can quote the standard error of sandy and Tor, so that the text about the choice, its
+  risk and how to undo it is never cut off; `bisq.log` has the full error.
 
 An external Tor, including the Tor of Whonix and of bisq-mobile, runs without the sandbox of the node.
 `TorService.getSandboxStatus()` names the level of the sandbox, or why Tor runs without it, for the user interface.
