@@ -22,6 +22,7 @@ import bisq.common.monetary.Coin;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.wallet.WalletTxListItem;
 import bisq.presentation.formatters.AmountFormatter;
+import bisq.wallet.vo.BalanceBreakdown;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -38,6 +39,8 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nullable;
+
 import java.util.Comparator;
 import java.util.function.Predicate;
 
@@ -46,22 +49,22 @@ import java.util.function.Predicate;
 public class WalletDashboardModel implements Model {
     private final ObjectProperty<Coin> balanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedBtcBalanceProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(balanceAsCoinProperty.get()),
+            () -> formatBalance(balanceAsCoinProperty.get()),
             balanceAsCoinProperty
     );
     private final ObjectProperty<Coin> availableBalanceAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedAvailableBalanceProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(availableBalanceAsCoinProperty.get()),
+            () -> formatBalance(availableBalanceAsCoinProperty.get()),
             availableBalanceAsCoinProperty
     );
     private final ObjectProperty<Coin> reservedFundsAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedReservedFundsProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(reservedFundsAsCoinProperty.get()),
+            () -> formatBalance(reservedFundsAsCoinProperty.get()),
             reservedFundsAsCoinProperty
     );
     private final ObjectProperty<Coin> lockedFundsAsCoinProperty = new SimpleObjectProperty<>(Coin.fromValue(0, "BTC"));
     private final ObservableValue<String> formattedLockedFundsProperty = Bindings.createStringBinding(
-            () -> AmountFormatter.formatBaseAmount(lockedFundsAsCoinProperty.get()),
+            () -> formatBalance(lockedFundsAsCoinProperty.get()),
             lockedFundsAsCoinProperty
     );
     private final StringProperty formattedCurrencyConverterAmountProperty = new SimpleStringProperty();
@@ -105,5 +108,27 @@ public class WalletDashboardModel implements Model {
     };
 
     public WalletDashboardModel() {
+    }
+
+    // The wallet service holds no balance until the daemon answered the first time.
+    static String formatBalance(@Nullable Coin balance) {
+        return AmountFormatter.formatBaseAmount(balance == null ? Coin.asBtcFromValue(0) : balance);
+    }
+
+    // Everything the wallet holds, including funds it cannot spend yet
+    @Nullable
+    static Coin totalOf(@Nullable BalanceBreakdown balanceBreakdown) {
+        if (balanceBreakdown == null) {
+            return null;
+        }
+        return Coin.asBtcFromValue(balanceBreakdown.getConfirmed()
+                + balanceBreakdown.getTrustedPending()
+                + balanceBreakdown.getUntrustedPending()
+                + balanceBreakdown.getImmature());
+    }
+
+    @Nullable
+    static Coin availableOf(@Nullable BalanceBreakdown balanceBreakdown) {
+        return balanceBreakdown == null ? null : Coin.asBtcFromValue(balanceBreakdown.getSpendable());
     }
 }
