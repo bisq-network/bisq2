@@ -301,6 +301,18 @@ sandbox off. Its switch in the network settings is out of reach after a failed s
 which the user adds to `bisq.conf`. It names no path of the user, because the error popup copies its message into a bug
 report.
 
+A failed start of Tor which a choice of the user fixes gets the popup of a failed start which a change of `bisq.conf`
+fixes (`docs/specifications/desktop/startup-failure-popup.md`), instead of the error popup with the bug report. The node
+knows such a failure only from its own checks and the refusals of sandy (`SandboxUnavailableException` of the Tor
+library). It tells a refusal of sandy from an end of a sandboxed Tor by the status record of sandy, which Tor cannot
+write, not by what Tor wrote. A missing record also counts as a refusal, so a compromised Tor can still cause the offer
+to turn the sandbox off at a later start (see Known gaps):
+
+- When Tor cannot run in the sandbox on this system for another reason than refused pluggable transports, the popup
+  "Tor cannot run in its sandbox" shows the error and offers to turn the sandbox off (`sandbox.enabled=false`). The
+  popup shows at most the first 1200 characters of the error, which can quote the standard error of sandy and Tor, so
+  that the text about the choice, its risk and how to undo it is never cut off; `bisq.log` has the full error.
+
 An external Tor, including the Tor of Whonix and of bisq-mobile, runs without the sandbox of the node.
 `TorService.getSandboxStatus()` names the level of the sandbox, or why Tor runs without it, for the user interface.
 
@@ -352,7 +364,8 @@ credentials would let the connections of different user profiles share circuits,
   start names the session as the likely cause.
 - A compromised Tor in the sandbox which fills the file system through `data/` can make sandy fail to create its
   status record at a later start, which the node takes for a refusal before Tor ran and answers with the advice to
-  turn the sandbox off. If the user follows it, the node clears `data/` before Tor runs without the sandbox.
+  turn the sandbox off, in the desktop application with the button which does it. If the user follows it, the node
+  clears `data/` before Tor runs without the sandbox.
 - The isolation check of an external Tor reads the configuration which that Tor reports. A Tor which reports a false
   configuration, or a filter in front of Tor which does not report it, as onion-grater on Whonix, is not checked.
 - With Tor and I2P, which the network settings of the desktop application offer, the network of the node is ready with

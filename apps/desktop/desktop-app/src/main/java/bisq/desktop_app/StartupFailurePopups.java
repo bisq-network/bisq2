@@ -37,7 +37,7 @@ final class StartupFailurePopups {
                                                   ApplicationService.Config config);
     }
 
-    private static final List<ContentProvider> CONTENT_PROVIDERS = List.of();
+    private static final List<ContentProvider> CONTENT_PROVIDERS = List.of(TorStartupFailurePopups::findContent);
 
     // The content of the first provider which recognizes the failure
     static Optional<StartupFailurePopupContent> findContent(Throwable startupFailure,

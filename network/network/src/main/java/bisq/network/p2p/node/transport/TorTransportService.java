@@ -15,6 +15,7 @@ import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
 import bisq.network.tor.process.TorDirectories;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import com.google.common.annotations.VisibleForTesting;
@@ -90,6 +91,7 @@ public class TorTransportService implements TransportService {
     public static final String TOR_DIR_NAME = "tor";
     // Configuration entries of the Tor transport in the configuration of the application
     public static final String SANDBOX_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH;
+    public static final String SANDBOX_ENABLED_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH + ".enabled";
     public static final String ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH =
             TorSandboxConfig.BISQ2_CONFIG_PATH + ".allowPluggableTransports";
     // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
@@ -274,6 +276,19 @@ public class TorTransportService implements TransportService {
                 .map(PluggableTransportsNotAllowedException.class::cast)
                 .map(PluggableTransportsNotAllowedException::getTransportNames)
                 .findFirst();
+    }
+
+    /**
+     * @return whether Tor did not start because Bisq cannot run it in the sandbox on this system, so that turning the
+     * sandbox off lets it start. The Tor library throws {@link SandboxUnavailableException} only for its checks before
+     * Tor runs and for refusals of sandy, which it tells by the status record of sandy, not by what Tor wrote. A missing
+     * record counts as a refusal, which a compromised Tor that fills the disk can cause (tor-startup.md, Known gaps).
+     * Refused pluggable transports are excluded: the user has other ways out there
+     * ({@link #findPluggableTransportsNotAllowed}).
+     */
+    public static boolean isSandboxUnavailable(Throwable startFailure) {
+        return findPluggableTransportsNotAllowed(startFailure).isEmpty() &&
+                Throwables.getCausalChain(startFailure).stream().anyMatch(SandboxUnavailableException.class::isInstance);
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {
