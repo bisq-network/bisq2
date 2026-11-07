@@ -255,8 +255,10 @@ them. A user who turned the sandbox off, or who uses an external Tor, gets no no
 Pluggable transports are programs which Tor starts for bridges. The sandbox lets Tor start them only if
 `sandbox.allowPluggableTransports` is `true`; it is `false` by default. The network settings of the desktop
 application have a switch for it, which asks for a confirmation before it allows them, writes only this value into
-`bisq.conf` of the data directory, and takes effect after a restart; the switch is disabled while the sandbox is off
-and on Windows. With the value `true`, Tor may start the programs of the transports of the configured bridges, and
+`bisq.conf` of the data directory, and takes effect after a restart; the switch is disabled while the sandbox is off,
+on Windows, and while a program argument or a JVM option sets the value, which overrides `bisq.conf`. The switch and
+the note about a sandbox which is off show the values of the next start: the command line over the current `bisq.conf`
+over the defaults. With the value `true`, Tor may start the programs of the transports of the configured bridges, and
 they end with Tor. On Linux, obfs4 keeps the network of the sandbox and connects through the egress broker; with meek,
 webtunnel, snowflake or conjure, Tor and its transports get the network of the system. On macOS every transport gets
 the network of the system. There the sandbox lets Tor and its transports reach the certificate verifier of the system

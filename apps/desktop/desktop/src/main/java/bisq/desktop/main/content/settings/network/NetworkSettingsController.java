@@ -112,8 +112,14 @@ public class NetworkSettingsController implements Controller {
         model.getI2cpAddress().set(new ClearnetAddress(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
         model.getBi2pGrpcAddress().set(new ClearnetAddress(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
 
-        // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart.
-        Config torSandboxConfig = updatedRootConfig.getConfig(TorTransportService.SANDBOX_CONFIG_PATH);
+        // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart. The program
+        // arguments and JVM options win over bisq.conf there, so the switch shows their value. Only the switch, which
+        // writes only its own entry: the other fields write all their entries, which must not copy the command line
+        // into bisq.conf.
+        Config torSandboxConfig = appConfig.getCommandLineConfig()
+                .withFallback(updatedRootConfig)
+                .resolve()
+                .getConfig(TorTransportService.SANDBOX_CONFIG_PATH);
         configuredAllowPluggableTransports = torSandboxConfig.getBoolean("allowPluggableTransports");
         model.getAllowPluggableTransports().set(configuredAllowPluggableTransports);
         model.getTorShutdownButtonVisible().set(false);
@@ -124,6 +130,11 @@ public class NetworkSettingsController implements Controller {
             // The Tor library refuses pluggable transports in the sandbox on Windows.
             model.getAllowPluggableTransportsUnavailableText()
                     .set(Res.get("settings.network.tor.allowPluggableTransports.windows"));
+        } else if (appConfig.isSetOnCommandLine(TorTransportService.ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH)) {
+            // The option overrides what the switch would write into bisq.conf
+            model.getAllowPluggableTransportsUnavailableText()
+                    .set(Res.get("settings.network.tor.allowPluggableTransports.commandLine",
+                            TorTransportService.ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH, configuredAllowPluggableTransports));
         } else {
             model.getAllowPluggableTransportsUnavailableText().set("");
         }
