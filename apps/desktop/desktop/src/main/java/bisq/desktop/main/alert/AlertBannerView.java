@@ -50,7 +50,7 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
     final Label headline = new Label();
     final Label message = new Label();
     private Timeline slideInRightTimeline, slideOutTopTimeline;
-    private Subscription isVisiblePin, alertTypePin, isBisqEasyNotificationVisiblePin;
+    private Subscription isVisiblePin, alertTypePin, isNotificationPanelVisiblePin;
 
     public AlertBannerView(AlertBannerModel model, AlertBannerController controller) {
         super(new BorderPane(), model, controller);
@@ -123,7 +123,7 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
             }
         });
 
-        isBisqEasyNotificationVisiblePin = EasyBind.subscribe(model.getIsBisqEasyNotificationVisible(), isVisible ->
+        isNotificationPanelVisiblePin = EasyBind.subscribe(model.getIsNotificationPanelVisible(), isVisible ->
             root.setPadding(isVisible ? PADDING_WITH_NOTIFICATION : DEFAULT_PADDING));
 
         message.heightProperty().addListener(heightListener);
@@ -138,7 +138,7 @@ public class AlertBannerView extends View<BorderPane, AlertBannerModel, AlertBan
 
         isVisiblePin.unsubscribe();
         alertTypePin.unsubscribe();
-        isBisqEasyNotificationVisiblePin.unsubscribe();
+        isNotificationPanelVisiblePin.unsubscribe();
 
         message.heightProperty().removeListener(heightListener);
 

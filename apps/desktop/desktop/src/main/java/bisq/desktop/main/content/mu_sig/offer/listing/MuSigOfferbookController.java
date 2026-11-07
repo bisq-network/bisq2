@@ -22,6 +22,8 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodUtil;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.bonded_roles.market_price.MarketPriceService;
+import bisq.chat.ChatChannelDomain;
+import bisq.chat.notifications.ChatNotificationService;
 import bisq.common.asset.CryptoAsset;
 import bisq.common.asset.CryptoAssetRepository;
 import bisq.common.market.Market;
@@ -83,8 +85,9 @@ public class MuSigOfferbookController implements Controller {
     private final UserIdentityService userIdentityService;
     private final ReputationService reputationService;
     private final AccountService accountService;
+    private final ChatNotificationService chatNotificationService;
     private Pin offersPin, selectedMarketPin, favouriteMarketsPin, marketPriceByCurrencyMapPin, selectedMuSigOfferPin,
-            userProfileIgnoredPin;
+            userProfileIgnoredPin, offerNotificationPin;
     private Subscription selectedMarketItemPin, marketsSearchBoxTextPin, selectedMarketFilterPin, selectedMarketSortTypePin,
             selectedOffersFilterPin, activeMarketPaymentsCountPin, selectedMarketPricePin, selectedMarketTypePin,
             selectedMarketFromModelPin;
@@ -99,6 +102,7 @@ public class MuSigOfferbookController implements Controller {
         userIdentityService = serviceProvider.getUserService().getUserIdentityService();
         reputationService = serviceProvider.getUserService().getReputationService();
         accountService = serviceProvider.getAccountService();
+        chatNotificationService = serviceProvider.getChatService().getChatNotificationService();
 
         model = new MuSigOfferbookModel();
         view = new MuSigOfferbookView(model, this);
@@ -294,6 +298,17 @@ public class MuSigOfferbookController implements Controller {
         userProfileIgnoredPin = userProfileService.getIgnoredUserProfileIds().addObserver(() ->
                 UIThread.run(this::updateFilteredMuSigOfferListItems));
 
+        chatNotificationService.consume(ChatChannelDomain.MU_SIG_OFFERBOOK);
+        offerNotificationPin = chatNotificationService.getChangedNotification().addObserver(notification -> {
+            if (notification == null) {
+                return;
+            }
+
+            if (notification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OFFERBOOK && notification.isNotConsumed()) {
+                UIThread.run(() -> chatNotificationService.consume(ChatChannelDomain.MU_SIG_OFFERBOOK));
+            }
+        });
+
         updateFilteredMarketItems();
         updateFavouriteMarketItems();
         updateFilteredMuSigOfferListItems();
@@ -324,6 +339,7 @@ public class MuSigOfferbookController implements Controller {
         selectedMarketFromModelPin.unsubscribe();
         selectedMuSigOfferPin.unbind();
         userProfileIgnoredPin.unbind();
+        offerNotificationPin.unbind();
     }
 
     void onSelectMarketItem(MuSigMarketItem marketItem) {

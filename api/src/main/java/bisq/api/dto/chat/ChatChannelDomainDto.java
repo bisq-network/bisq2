@@ -22,5 +22,6 @@ public enum ChatChannelDomainDto {
     BISQ_EASY_OPEN_TRADES,
     DISCUSSION,
     SUPPORT,
+    MU_SIG_OFFERBOOK,
     MU_SIG_OPEN_TRADES
 }
