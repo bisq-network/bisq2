@@ -122,7 +122,10 @@ public class DesktopExecutable extends Executable<DesktopApplicationService> {
     @Override
     protected void onApplicationServiceInitialized(Boolean result, Throwable throwable) {
         if (desktopController == null) {
-            UIThread.run(() -> new Popup().error(throwable).show());
+            // A failed start without an exception has the popup of its startup error message
+            if (throwable != null) {
+                UIThread.run(() -> new Popup().error(throwable).show());
+            }
             return;
         }
         UIThread.run(() -> desktopController.onApplicationServiceInitialized(result, throwable));

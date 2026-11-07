@@ -278,8 +278,9 @@ public class DesktopController extends NavigationController {
             return;
         }
 
+        // A failed start completes with false. The popup of its startup error message, which DesktopExecutable shows,
+        // tells the user what failed, so a second popup here would only cover it.
         if (result == null || !result) {
-            new Popup().warning("Initialising applicationService failed.").show();
             return;
         }
 
