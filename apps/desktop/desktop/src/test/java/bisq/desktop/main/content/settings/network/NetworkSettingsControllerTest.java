@@ -181,8 +181,8 @@ class NetworkSettingsControllerTest {
                     }
                 }
                 """.formatted(sandboxEnabled, allowPluggableTransports));
-        ApplicationService.Config config = new ApplicationService.Config(rootConfig, appDataDirPath, "Bisq2",
-                false, 0, false, "", false, false, 0, false, false);
+        ApplicationService.Config config = new ApplicationService.Config(rootConfig, ConfigFactory.empty(),
+                appDataDirPath, "Bisq2", false, 0, false, "", false, false, 0, false, false);
         ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         when(serviceProvider.getConfig()).thenReturn(config);
         when(serviceProvider.getShutDownHandler()).thenReturn(shutDownHandler);
