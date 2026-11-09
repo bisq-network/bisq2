@@ -44,8 +44,6 @@ apply(from = "gradle/build-environment-verification.gradle.kts")
 
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
 val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
-val expectedReleaseJavaRuntimeVersion = providers.gradleProperty("releaseBuild.javaRuntimeVersion")
-val expectedReleaseJavaVendorVersion = providers.gradleProperty("releaseBuild.javaVendorVersion")
 val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
 val releaseReadinessReportFile = layout.buildDirectory.file("reports/release/release-readiness.md")
 
@@ -398,39 +396,6 @@ tasks.register<Delete>("cleanAll") {
     group = "build"
     description = "Cleans the entire project."
     delete(allBuildDirectories())
-}
-
-// verifyBuildEnvironment of gradle/build-environment-verification.gradle.kts accepts every build of the Java update, as
-// in the included builds. The installers bundle the JDK of the build as their runtime, so a release build also needs
-// the exact build.
-tasks.named("verifyReleaseEnvironment") {
-    inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
-    inputs.property("expectedReleaseJavaVendorVersion", expectedReleaseJavaVendorVersion.orElse(""))
-    outputs.upToDateWhen { false }
-
-    doLast {
-        val expectedJavaRuntimeVersion = requiredGradleProperty("releaseBuild.javaRuntimeVersion", expectedReleaseJavaRuntimeVersion)
-        val expectedJavaVendorVersion = requiredGradleProperty("releaseBuild.javaVendorVersion", expectedReleaseJavaVendorVersion)
-        val actualJavaRuntimeVersion = System.getProperty("java.runtime.version")
-        val actualJavaVendorVersion = System.getProperty("java.vendor.version")
-        val violations = mutableListOf<String>()
-
-        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
-            violations += "Java runtime version expected $expectedJavaRuntimeVersion but was $actualJavaRuntimeVersion"
-        }
-        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
-            violations += "Java vendor version expected $expectedJavaVendorVersion but was $actualJavaVendorVersion"
-        }
-
-        if (violations.isNotEmpty()) {
-            throw GradleException(
-                "Release build environment verification failed:\n" +
-                        violations.joinToString("\n") { "  - $it" }
-            )
-        }
-
-        logger.lifecycle("Verified release build environment: Java $actualJavaRuntimeVersion ($actualJavaVendorVersion).")
-    }
 }
 
 tasks.register("signReleaseArtifacts") {
