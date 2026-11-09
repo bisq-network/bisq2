@@ -269,9 +269,39 @@ class OfferbookRestApiTest {
 
     @Test
     void fixedPriceOfBisqConnectIsPublishedInTheCanonicalForm() throws Exception {
+        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+
+        Response actual = createOffer(chatService, "ZELLE");
+
+        assertThat(actual.getStatus()).as(() -> String.valueOf(actual.getEntity()))
+                .isEqualTo(Response.Status.CREATED.getStatusCode());
+        ArgumentCaptor<BisqEasyOfferbookMessage> published = ArgumentCaptor.forClass(BisqEasyOfferbookMessage.class);
+        verify(chatService.getBisqEasyOfferbookChannelService())
+                .publishChatMessage(published.capture(), any(UserIdentity.class));
+        FixPriceSpec priceSpec = (FixPriceSpec) published.getValue().getBisqEasyOffer().orElseThrow().getPriceSpec();
+        // The amounts of the canonical factories, and the value derived from the price which the user entered
+        assertThat(priceSpec.getPriceQuote()).isEqualTo(PriceQuote.from(Coin.asBtcFromFaceValue(1.0),
+                Fiat.fromValue(643_211_234L, "USD")));
+        assertThat(priceSpec.getPriceQuote().getValue()).isEqualTo(643_211_234L);
+    }
+
+    // Each payment method of an offer must support the currency of its market (rule 2 of
+    // docs/specifications/offer/payment-methods.md). SEPA supports only EUR.
+    @Test
+    void offerWithAPaymentMethodOfAnotherCurrencyIsRejectedAndNotPublished() throws Exception {
+        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+
+        Response actual = createOffer(chatService, "SEPA");
+
+        assertThat(actual.getStatus()).as(() -> String.valueOf(actual.getEntity()))
+                .isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        verify(chatService.getBisqEasyOfferbookChannelService(), never())
+                .publishChatMessage(any(BisqEasyOfferbookMessage.class), any(UserIdentity.class));
+    }
+
+    private Response createOffer(ChatService chatService, String fiatPaymentMethod) throws Exception {
         // The endpoint writes the text of the offer message
         Res.setAndApplyLanguageTag("en");
-        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
         BisqEasyOfferbookChannelService channelService = chatService.getBisqEasyOfferbookChannelService();
         when(channelService.findChannel(market)).thenReturn(Optional.of(new BisqEasyOfferbookChannel(market)));
         when(channelService.publishChatMessage(any(BisqEasyOfferbookMessage.class), any(UserIdentity.class)))
@@ -292,7 +322,7 @@ class OfferbookRestApiTest {
         CreateOfferRequest request = new CreateOfferRequest(DirectionDto.SELL,
                 new MarketDto("BTC", "USD", "Bitcoin", "US Dollar"),
                 Set.of("MAIN_CHAIN"),
-                Set.of("SEPA"),
+                Set.of(fiatPaymentMethod),
                 new QuoteSideFixedAmountSpecDto(1000_0000),
                 JsonMapperProvider.get().readValue(MOBILE_FIX_PRICE_SPEC_JSON, PriceSpecDto.class),
                 Set.of("en"));
@@ -302,16 +332,7 @@ class OfferbookRestApiTest {
 
         ArgumentCaptor<Object> response = ArgumentCaptor.forClass(Object.class);
         verify(asyncResponse).resume(response.capture());
-        Response actual = (Response) response.getValue();
-        assertThat(actual.getStatus()).as(() -> String.valueOf(actual.getEntity()))
-                .isEqualTo(Response.Status.CREATED.getStatusCode());
-        ArgumentCaptor<BisqEasyOfferbookMessage> published = ArgumentCaptor.forClass(BisqEasyOfferbookMessage.class);
-        verify(channelService).publishChatMessage(published.capture(), any(UserIdentity.class));
-        FixPriceSpec priceSpec = (FixPriceSpec) published.getValue().getBisqEasyOffer().orElseThrow().getPriceSpec();
-        // The amounts of the canonical factories, and the value derived from the price which the user entered
-        assertThat(priceSpec.getPriceQuote()).isEqualTo(PriceQuote.from(Coin.asBtcFromFaceValue(1.0),
-                Fiat.fromValue(643_211_234L, "USD")));
-        assertThat(priceSpec.getPriceQuote().getValue()).isEqualTo(643_211_234L);
+        return (Response) response.getValue();
     }
 
     private OfferbookRestApi api() {

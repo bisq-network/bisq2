@@ -20,6 +20,7 @@ package bisq.chat.bisq_easy.offerbook;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.common.market.Market;
 import bisq.common.monetary.Coin;
@@ -119,6 +120,60 @@ class BisqEasyOfferbookMessageTest {
         assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(received));
     }
 
+    // A taker pays with one of the payment methods of the offer, so each of them must support the currency of the
+    // market (rule 1 of docs/specifications/offer/payment-methods.md)
+    @Test
+    void messageWithAnOfferWhosePaymentMethodDoesNotSupportTheCurrencyOfTheMarketCannotBeCreated() {
+        assertThrows(IllegalArgumentException.class, () -> message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, BTC_USD, FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)))));
+        assertThrows(IllegalArgumentException.class, () -> message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, BTC_EUR, FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE)))));
+    }
+
+    @Test
+    void receivedMessageWithAnOfferWhosePaymentMethodDoesNotSupportTheCurrencyOfTheMarketFailsAtParsing() {
+        BisqEasyOfferbookMessage message = message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, BTC_USD, FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE))));
+        bisq.chat.protobuf.ChatMessage.Builder builder = message.toProto(false).toBuilder();
+        builder.getBisqEasyOfferbookMessageBuilder().getBisqEasyOfferBuilder()
+                .clearQuoteSidePaymentSpecs()
+                .addQuoteSidePaymentSpecs(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))
+                        .toProto(false));
+        bisq.chat.protobuf.ChatMessage received = builder.build();
+
+        assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false)));
+        assertThrows(UnresolvableProtobufException.class, () -> BisqEasyOfferbookMessage.fromProto(received));
+    }
+
+    // Only the name of a payment method is part of the offer. A receiver resolves a custom name which equals the name
+    // of a payment rail to that payment rail (rule 4 of docs/specifications/offer/payment-methods.md)
+    @Test
+    void receivedMessageWithACustomPaymentMethodNamedLikeAPaymentRailOfAnotherCurrencyFailsAtParsing() {
+        BisqEasyOfferbookMessage withCustomName = message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, BTC_USD, FiatPaymentMethod.fromCustomName("SEPA"))));
+        BisqEasyOfferbookMessage withOtherCustomName = message(maker.getPubKey().getId(),
+                Optional.of(offer(maker, BTC_USD, FiatPaymentMethod.fromCustomName("Sepa transfer"))));
+
+        assertThrows(UnresolvableProtobufException.class,
+                () -> BisqEasyOfferbookMessage.fromProto(withCustomName.toProto(false)));
+        assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(withOtherCustomName.toProto(false)));
+    }
+
+    @Test
+    void messageWithAnOfferWhosePaymentMethodsSupportTheCurrencyOfTheMarketCanBeCreatedAndParsed() {
+        for (FiatPaymentMethod paymentMethod : List.of(
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE),
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.REVOLUT),
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.WISE),
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK),
+                FiatPaymentMethod.fromCustomName("My local bank"))) {
+            BisqEasyOfferbookMessage message = message(maker.getPubKey().getId(),
+                    Optional.of(offer(maker, BTC_USD, paymentMethod)));
+
+            assertEquals(message, assertDoesNotThrow(() -> BisqEasyOfferbookMessage.fromProto(message.toProto(false))));
+        }
+    }
+
     @Test
     void messageInTheChannelOfTheMarketOfItsOfferCanBeCreatedAndParsed() {
         BisqEasyOfferbookMessage message = message(BisqEasyOfferbookChannel.createId(BTC_EUR),
@@ -185,13 +240,24 @@ class BisqEasyOfferbookMessageTest {
     }
 
     private static BisqEasyOffer offer(NetworkId maker, PriceSpec priceSpec) {
+        return offer(maker, BTC_EUR, priceSpec, FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK));
+    }
+
+    private static BisqEasyOffer offer(NetworkId maker, Market market, FiatPaymentMethod fiatPaymentMethod) {
+        return offer(maker, market, new MarketPriceSpec(), fiatPaymentMethod);
+    }
+
+    private static BisqEasyOffer offer(NetworkId maker,
+                                       Market market,
+                                       PriceSpec priceSpec,
+                                       FiatPaymentMethod fiatPaymentMethod) {
         return new BisqEasyOffer(maker,
                 Direction.BUY,
-                BTC_EUR,
+                market,
                 new BaseSideFixedAmountSpec(100_000),
                 priceSpec,
                 List.of(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
-                List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.NATIONAL_BANK)),
+                List.of(fiatPaymentMethod),
                 "",
                 List.of("en"),
                 "1.0.0");

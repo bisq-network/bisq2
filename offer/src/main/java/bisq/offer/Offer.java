@@ -133,6 +133,20 @@ public abstract class Offer<B extends PaymentMethodSpec<?>, Q extends PaymentMet
         }
     }
 
+    /**
+     * Rule 1 of docs/specifications/offer/payment-methods.md: the payment methods of each side support the currency of
+     * that side of the market. The offerbook messages check this rule. {@link #verify()} does not check it, so that
+     * stored trades and mediation cases with an offer of an earlier list of currencies keep loading.
+     */
+    public void verifyPaymentMethodsSupportMarket() {
+        checkArgument(baseSidePaymentMethodSpecs.stream()
+                        .allMatch(spec -> spec.getPaymentMethod().supportsCurrency(market.getBaseCurrencyCode())),
+                "Each base side payment method of an offer must support the base currency of the market of the offer");
+        checkArgument(quoteSidePaymentMethodSpecs.stream()
+                        .allMatch(spec -> spec.getPaymentMethod().supportsCurrency(market.getQuoteCurrencyCode())),
+                "Each quote side payment method of an offer must support the quote currency of the market of the offer");
+    }
+
     @Override
     public abstract bisq.offer.protobuf.Offer toProto(boolean serializeForHash);
 
