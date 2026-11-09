@@ -116,6 +116,23 @@ class TransitionsTransitOutTest {
     }
 
     @Test
+    void stepFadedInAgainDuringItsSlideOutStaysInContent() throws InterruptedException {
+        runOnFxThread(() -> {
+            // Next
+            showStep(secondStep, firstStep, false);
+            // The wizard is closed and opened again before the slide-out of the first step has finished. Its first
+            // view change has no old view, so it fades the step in (TradeWizardView and the other wizards).
+            content.getChildren().setAll(firstStep);
+            Transitions.fadeIn(firstStep);
+        });
+        Thread.sleep(ANIMATIONS_DONE_MS);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(content.getChildren()).containsExactly(firstStep);
+        assertThat(firstStep.getOpacity()).isEqualTo(1);
+    }
+
+    @Test
     void stepWhichIsNotShownAgainIsRemovedAfterItsSlideOut() throws InterruptedException {
         runOnFxThread(() -> {
             // Like OnboardingView and TacView, keep the old step in the pane while it slides out

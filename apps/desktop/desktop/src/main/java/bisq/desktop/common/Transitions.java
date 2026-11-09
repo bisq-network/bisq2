@@ -116,6 +116,7 @@ public class Transitions {
             }
             return fadeTransition;
         }
+        stopTransitOut(node);
 
         if (dontUseAnimations()) {
             node.setOpacity(1);
@@ -189,6 +190,7 @@ public class Transitions {
         if (node == null) {
             return;
         }
+        stopTransitOut(node);
         FadeTransition fade = new FadeTransition(ManagedDuration.millis(duration), node);
         node.setOpacity(0);
         fade.setFromValue(0);
@@ -445,8 +447,9 @@ public class Transitions {
     }
 
     // A wizard shows a step again while that step still slides out if the user clicks Next and then Back before the
-    // slide-out has finished. The slide-out must not remove the step from its parent at its end.
-    private static void stopTransitOut(Region nodeIn) {
+    // slide-out has finished, or closes and reopens the wizard in that time (the reopened wizard fades the step in).
+    // The slide-out must not remove the step from its parent at its end.
+    private static void stopTransitOut(Node nodeIn) {
         if (nodeIn.getProperties().remove(TRANSIT_OUT_TIMELINE_KEY) instanceof Timeline timeline) {
             timeline.stop();
         }
