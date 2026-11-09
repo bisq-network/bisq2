@@ -70,6 +70,9 @@ jobs:
       github.event.workflow_run.head_repository.full_name == github.repository
     needs: verify
     runs-on: ubuntu-24.04
+    # TX_TOKEN is a secret of this environment, which allows only the main branch. A workflow on another branch cannot
+    # read it.
+    environment: transifex
     outputs:
       t_matrix: ${{ steps.calculate-pushes.outputs.t_matrix || '{"include":[]}' }}
       has_translation_changes: ${{ steps.calculate-pushes.outputs.has_translation_changes }}
@@ -246,7 +249,7 @@ jobs:
           has_transifex_secret: ${{ secrets.TX_TOKEN != '' }}
         run: |
           if [ "$has_transifex_secret" != "true" ]; then
-            echo "The secret \"TX_TOKEN\" has not been set; please go to \"settings > secrets and variables\" to create it"
+            echo "The secret \"TX_TOKEN\" has not been set; please create it in \"settings > environments > transifex\""
             exit 1
           fi
 
@@ -276,6 +279,7 @@ jobs:
     if: needs.calculate_and_push_sources.outputs.t_matrix != '{"include":[]}'
     needs: calculate_and_push_sources
     runs-on: ubuntu-24.04
+    environment: transifex
     # PHASE 1: Dynamic batching with controlled parallelism
     # Batches are generated dynamically based on changed locales only
     # Uses scripts/generate_transifex_batches.py for optimal batch configuration
