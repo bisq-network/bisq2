@@ -31,6 +31,7 @@ import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.burningman.BurningmanService;
 import bisq.chat.ChatService;
 import bisq.common.observable.Observable;
+import bisq.common.observable.Pin;
 import bisq.common.platform.OS;
 import bisq.common.util.ExceptionUtil;
 import bisq.contract.ContractService;
@@ -63,6 +64,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
+
+import javax.annotation.Nullable;
 
 import static bisq.common.threading.ExecutorFactory.commonForkJoinPool;
 import static java.util.concurrent.CompletableFuture.supplyAsync;
@@ -110,6 +113,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final ClosedTradeItemsService closedTradeItemsService;
     private final MuSigService muSigService;
     private final BurningmanService burningmanService;
+    @Nullable
+    private Pin walletPollingPin;
     public DesktopApplicationService(String[] args, ShutDownHandler shutDownHandler) {
         super("desktop", args);
 
@@ -282,7 +287,17 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> walletService
                         .map(walletService -> {
                             setState(State.INITIALIZE_WALLET);
-                            return walletService.initialize();
+                            return walletService.initialize().thenApply(initialized -> {
+                                // The wallet UI exists only with MuSig activated, so the daemon is polled only then.
+                                walletPollingPin = settingsService.getMuSigActivated().addObserver(activated -> {
+                                    if (Boolean.TRUE.equals(activated)) {
+                                        walletService.startPolling();
+                                    } else {
+                                        walletService.stopPolling();
+                                    }
+                                });
+                                return initialized;
+                            });
                         })
                         .orElseGet(() -> CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> {
@@ -359,8 +374,14 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> bondedRolesService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> identityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> networkService.shutdown().exceptionally(this::logError))
-                .thenCompose(result -> walletService.map(service -> service.shutdown().exceptionally(this::logError))
-                        .orElse(CompletableFuture.completedFuture(true)))
+                .thenCompose(result -> {
+                    if (walletPollingPin != null) {
+                        walletPollingPin.unbind();
+                        walletPollingPin = null;
+                    }
+                    return walletService.map(service -> service.shutdown().exceptionally(this::logError))
+                            .orElse(CompletableFuture.completedFuture(true));
+                })
                 .thenCompose(result -> securityService.shutdown().exceptionally(this::logError))
                 .thenCompose(result -> memoryReportService.shutdown().exceptionally(this::logError))
                 .orTimeout(SHUTDOWN_TIMEOUT_SEC, TimeUnit.SECONDS)

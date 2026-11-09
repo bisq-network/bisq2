@@ -428,6 +428,7 @@ class WalletServiceGrpcTest {
     void theBalanceIsPolledWhileTheWalletIsOpenAndTransactionsFollowAChange() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
+        polling.startPolling();
         polling.openOrCreateWallet("Wallet-Pa55!").get();
         awaitBalance(polling, 2000);
         requests.clear();
@@ -441,6 +442,7 @@ class WalletServiceGrpcTest {
     void anIncomingPaymentThatIsStillPendingRefreshesTheTransactions() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
+        polling.startPolling();
         polling.openOrCreateWallet("Wallet-Pa55!").get();
         awaitBalance(polling, 2000);
         Thread.sleep(150);
@@ -454,6 +456,7 @@ class WalletServiceGrpcTest {
     void anUnreachableDaemonIsProbedByThePollUntilItIsBack() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
+        polling.startPolling();
         polling.openOrCreateWallet("Wallet-Pa55!").get();
         awaitBalance(polling, 2000);
         daemon.failure = Status.UNAVAILABLE;
@@ -490,6 +493,7 @@ class WalletServiceGrpcTest {
     void nothingIsPolledWhileTheWalletIsNotSetUp() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
+        polling.startPolling();
 
         Thread.sleep(300);
 
@@ -500,12 +504,87 @@ class WalletServiceGrpcTest {
     void aRestartedDaemonIsNoticedByThePollWithoutAUserAction() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
+        polling.startPolling();
         polling.openOrCreateWallet("Wallet-Pa55!").get();
         awaitBalance(polling, 2000);
 
         daemon.walletOpen = false;
 
         awaitState(polling, WalletService.State.LOCKED);
+    }
+
+    @Test
+    void theDaemonIsNotPolledUntilPollingIsStarted() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        requests.clear();
+        Thread.sleep(300);
+        assertFalse(requests.stream().anyMatch(GetBalanceRequest.class::isInstance));
+    }
+
+    @Test
+    void startingThePollTwiceProbesOnce() throws Exception {
+        WalletService polling = pollingService(Duration.ofSeconds(30));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        requests.clear();
+        polling.startPolling();
+        polling.startPolling();
+        Thread.sleep(300);
+        assertEquals(1, requests.stream().filter(GetBalanceRequest.class::isInstance).count());
+    }
+
+    @Test
+    void thePollCanBeStartedAgainAfterAStop() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        polling.stopPolling();
+        daemon.balance = 3000;
+        polling.startPolling();
+        awaitBalance(polling, 3000);
+    }
+
+    @Test
+    void shutdownEndsThePoll() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        polling.shutdown().join();
+        // A poll that survived the shutdown would fail on the closed channel and turn the state UNAVAILABLE.
+        Thread.sleep(300);
+        assertEquals(WalletService.State.OPEN, polling.getState().get());
+    }
+
+    @Test
+    void startingThePollProbesTheStateAtOnce() throws Exception {
+        WalletService polling = pollingService(Duration.ofSeconds(30));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        daemon.walletOpen = false;
+        polling.startPolling();
+        awaitState(polling, WalletService.State.LOCKED);
+    }
+
+    @Test
+    void stoppingThePollEndsTheDaemonCalls() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        polling.stopPolling();
+        Thread.sleep(100);
+        requests.clear();
+        Thread.sleep(300);
+        assertTrue(requests.isEmpty());
     }
 
     @Test

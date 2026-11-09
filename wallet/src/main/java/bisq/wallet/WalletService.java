@@ -136,25 +136,33 @@ public class WalletService implements Service {
             log.info("WalletService was disabled");
             return CompletableFuture.completedFuture(false);
         }
-        return client.initialize().thenApply(result -> {
-            refreshState();
-            if (refreshScheduler == null) {
-                refreshScheduler = Scheduler.run(this::refreshWhileOpen)
-                        .host(this)
-                        .runnableName("refreshWallet")
-                        .periodically(refreshInterval.toMillis());
-            }
-            return result;
-        });
+        return client.initialize();
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        stopPolling();
+        return client.shutdown();
+    }
+
+    // The periodic poll runs only while started; the desktop starts it with the MuSig setting, as the wallet UI exists
+    // only then. Until the first probe the state keeps its initial value.
+    public synchronized void startPolling() {
+        if (refreshScheduler != null) {
+            return;
+        }
+        refreshState();
+        refreshScheduler = Scheduler.run(this::refreshWhileOpen)
+                .host(this)
+                .runnableName("refreshWallet")
+                .periodically(refreshInterval.toMillis());
+    }
+
+    public synchronized void stopPolling() {
         if (refreshScheduler != null) {
             refreshScheduler.stop();
             refreshScheduler = null;
         }
-        return client.shutdown();
     }
 
     public ReadOnlyObservable<State> getState() {

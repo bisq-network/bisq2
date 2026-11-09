@@ -54,6 +54,14 @@ public class MockWalletService extends WalletService {
     }
 
     @Override
+    public void startPolling() {
+    }
+
+    @Override
+    public void stopPolling() {
+    }
+
+    @Override
     public CompletableFuture<Void> refreshState() {
         applyState(walletExists ? State.OPEN : State.NOT_SET_UP);
         return CompletableFuture.completedFuture(null);
