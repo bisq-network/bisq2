@@ -12,6 +12,9 @@ import java.util.*
  * Resolves the Zulu JDK of the requested platform. Azul builds one JDK per architecture, and a JDK of another
  * architecture does not run, so the resolver returns nothing for a platform without a known build. Gradle then
  * reports that no toolchain can be provisioned, instead of installing a JDK which cannot start.
+ *
+ * The Java 21 builds must be at or above releaseBuild.javaVersion, the minimum which verifyBuildEnvironment requires.
+ * Update them when that minimum is raised.
  */
 @Suppress("UnstableApiUsage")
 abstract class BisqToolchainResolver : JavaToolchainResolver {
@@ -38,11 +41,11 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
                 Architecture.X86_64 -> when (javaVersion) {
                     11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15-ca-jdk11.0.20-linux_x64.zip"
                     17 -> "https://cdn.azul.com/zulu/bin/zulu17.44.15-ca-jdk17.0.8-linux_x64.zip"
-                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.107-ca-jdk21.0.13-linux_x64.zip"
+                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.109-ca-jdk21.0.13.0.3-linux_x64.zip"
                     else -> null
                 }
                 Architecture.AARCH64 -> when (javaVersion) {
-                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.107-ca-jdk21.0.13-linux_aarch64.tar.gz"
+                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.109-ca-jdk21.0.13.0.3-linux_aarch64.tar.gz"
                     else -> null
                 }
                 else -> null
@@ -54,7 +57,7 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
             11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15_1-ca-jdk11.0.20-macosx_" + macOsArchName + ".tar.gz"
             15 -> "https://cdn.azul.com/zulu/bin/zulu15.46.17-ca-jdk15.0.10-macosx_" + macOsArchName + ".tar.gz"
             17 -> "https://cdn.azul.com/zulu/bin/zulu17.44.15_1-ca-jdk17.0.8-macosx_" + macOsArchName + ".tar.gz"
-            21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.107-ca-jdk21.0.13-macosx_" + macOsArchName + ".tar.gz"
+            21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.109-ca-jdk21.0.13.0.3-macosx_" + macOsArchName + ".tar.gz"
             else -> null
         }
     }
@@ -64,7 +67,7 @@ abstract class BisqToolchainResolver : JavaToolchainResolver {
                 Architecture.X86_64 -> when (javaVersion) {
                     11 -> "https://cdn.azul.com/zulu/bin/zulu11.66.15-ca-jdk11.0.20-win_x64.zip"
                     17 -> "https://cdn.azul.com/zulu/bin/zulu17.44.15-ca-jdk17.0.8-win_x64.zip"
-                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.107-ca-jdk21.0.13-win_x64.zip"
+                    21 -> "https://cdn.azul.com/zulu/bin/zulu21.54.109-ca-jdk21.0.13.0.3-win_x64.zip"
                     else -> null
                 }
                 else -> null

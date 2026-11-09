@@ -2,23 +2,22 @@
 
 ## Build JDK
 
-`gradle.properties` pins the Java update (`releaseBuild.javaVersion`) and the vendor (`releaseBuild.javaVendor`) of the
-JDK which runs Gradle, the same for every operating system. `verifyBuildEnvironment` (part of `check` of the root build
-and of the `apps`, `apps/desktop` and `network` builds) accepts every build of that update: the version numbers of the
-JDK must start with those of the pin, so `21.0.13.0.3+1` passes for `21.0.13`, and `21.0.13` fails for `21.0.1`. The
-pin holds version numbers only. The task logs the runtime version and the Zulu build of the JDK.
+`gradle.properties` holds the minimum Java version (`releaseBuild.javaVersion`) and the vendor
+(`releaseBuild.javaVendor`) of the JDK which runs Gradle, the same for every operating system.
+`verifyBuildEnvironment` (part of `check` of the root build and of the `apps`, `apps/desktop` and `network` builds)
+accepts every build of the vendor with the same feature version at or above the minimum: for `21.0.13.0.3`,
+`21.0.13.0.3+1` and `21.0.14+7` pass, while `21.0.13+9` and `25.0.1` fail. The build number is not compared.
+`verifyReleaseEnvironment` runs the same check. The task logs the runtime version and the Zulu build of the JDK.
 
-Azul builds an update more than once, and an installer may offer only the latest build: Zulu `21.54.107`
-(`21.0.13+9`) and `21.54.109` (`21.0.13.0.3+1`) are both builds of 21.0.13, and the Homebrew cask `zulu@21` has only
-the latest. The two compile the same classes: their javac and the classes it compiles against differ only in version
-strings. They differ in their runtime (21.54.109 removes the emSign roots from `cacerts`), and the installers bundle the
-JDK of the build as their runtime. So a release build needs one exact build: `verifyReleaseEnvironment` also requires
-the runtime build (`releaseBuild.javaRuntimeVersion`) and the Zulu build (`releaseBuild.javaVendorVersion`).
+Azul builds an update more than once and not for every platform at the same time: Zulu `21.54.107` (`21.0.13+9`) and
+`21.54.109` (`21.0.13.0.3+1`) are both builds of 21.0.13, and Azul lists only the latest. So the build does not pin one
+exact build. The installers bundle the JDK of the build as their runtime: build releases with the newest Zulu build of
+the feature version, and raise the minimum when a release must not ship without a fix of a newer build. The minimum is
+`21.0.13.0.3` because `21.54.109` removes the emSign roots from `cacerts`.
 
-CI requests this exact build, Zulu `21.0.13+9`, on every runner. `verifyGithubActionsSecurity` requires every
-`java-version` of a workflow to be `releaseBuild.javaRuntimeVersion`, and that to be a build of
-`releaseBuild.javaVersion`. Update the CI workflows, pinned properties, and toolchain URLs together when changing the
-build JDK. The current toolchain URLs select Zulu `21.54.107`, which corresponds to `21.0.13+9`.
+CI requests the feature version (`java-version: '21'`) with `check-latest: true`, so each runner installs the newest
+Zulu build for its platform. `verifyGithubActionsSecurity` requires this in every `actions/setup-java` step. The
+toolchain URLs select Zulu `21.54.109` (`21.0.13.0.3`); update them when the minimum is raised.
 
 See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
 
@@ -49,13 +48,11 @@ See [the specification](../docs/specifications/development/gradle-wrapper-verifi
 ## Docker Base Image Java Version
 
 `verifyDockerJavaVersion` (part of the root `check`) requires every `azul/zulu-openjdk` base image in a Dockerfile
-under `apps/` to use the tag of `releaseBuild.javaVersion` (`<version>` or `<version>-jre`) together with the image
-index digest. The digest selects the image. The tag shows the version to reviewers and to the check, which cannot read
-the version from the digest.
+under `apps/` to use the tag of the feature version of `releaseBuild.javaVersion` (`<feature>` or `<feature>-jre`)
+together with the image index digest. The digest selects the image.
 
-When `releaseBuild.javaVersion` changes, update the tag and the digest in the same change. The index digest of a tag
-is the `Docker-Content-Digest` header of the registry manifest request for that tag. Azul rebuilds the tags, so the
-digest of a tag changes over time.
+Azul rebuilds the tags, so the digest of a tag changes over time. Dependabot proposes the digest of the newest build.
+The index digest of a tag is the `Docker-Content-Digest` header of the registry manifest request for that tag.
 
 ## Dependency Verification
 
