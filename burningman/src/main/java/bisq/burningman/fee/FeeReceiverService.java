@@ -131,7 +131,7 @@ public class FeeReceiverService implements Service {
 
     @VisibleForTesting
     static int findIndex(List<Long> weights, long target) {
-        int currentRange = 0;
+        long currentRange = 0;
         for (int i = 0; i < weights.size(); i++) {
             currentRange += weights.get(i);
             if (currentRange >= target) {
