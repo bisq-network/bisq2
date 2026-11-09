@@ -1,8 +1,9 @@
 name: CodeQL
 
-# Replaces the CodeQL default setup, which cannot check out the tor submodule or select the JDK of the release pin. Its
-# Java analysis fails since ubuntu-latest moved to Ubuntu 26, whose default Java 25 Gradle 9.0 cannot run the build on.
-# Turn the default setup off when this workflow is merged, because both cannot upload results for the same language.
+# Replaces the CodeQL default setup, which cannot check out the tor submodule or select the JDK the build requires. Its
+# Java analysis fails since the default Ubuntu runner moved to Ubuntu 26, whose default Java 25 Gradle 9.0 cannot run
+# the build on. Turn the default setup off when this workflow is merged, because both cannot upload results for the same
+# language.
 on:
   push:
     branches: [ main, 'release-candidate-*' ]
@@ -54,9 +55,9 @@ jobs:
         if: matrix.build-mode == 'manual'
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: '21.0.13+9'
+          java-version: '21'
           distribution: 'zulu'
-          check-latest: false
+          check-latest: true
 
       - name: Setup Gradle
         if: matrix.build-mode == 'manual'
