@@ -22,8 +22,9 @@
 # pre-built `installDist` artifact instead of rebuilding from source each time.
 #
 # Pinned by MULTI-ARCH INDEX digest so the build is reproducible AND buildx can resolve both
-# amd64 and arm64 from it (Azul rebuilds the tags). Bump the tag and the digest with releaseBuild.javaVersion.
-FROM azul/zulu-openjdk:21.0.13@sha256:d8dfc321e3c9f1eb4ad89a990e9e945fbcced250f7d9715fe247495862f95e3c AS build
+# amd64 and arm64 from it (Azul rebuilds the tags). The tag is the Java feature version of releaseBuild.javaVersion,
+# and Dependabot proposes the digest of its newest build.
+FROM azul/zulu-openjdk:21@sha256:98ff9b5e207ea56c6dd1044a7d28b646c27f21b53993356de2f8c39111dc5d88 AS build
 WORKDIR /src
 COPY . .
 # The commit this image is built from, e.g. --build-arg BUILD_COMMIT=$(git rev-parse HEAD). .dockerignore leaves out
@@ -44,8 +45,8 @@ RUN --mount=type=cache,target=/root/.gradle \
 
 # ── Runtime stage: minimal JRE + the built distribution ───────────
 # Azul Zulu JRE to match the build JDK vendor (and bisq1's runtime), pinned by MULTI-ARCH
-# INDEX digest for reproducibility + arm64. Bump the tag and the digest with the build stage JDK.
-FROM azul/zulu-openjdk:21.0.13-jre@sha256:ce3861478cfc6abac68ed3fc39a8488fe2c0f1600209bafa9306dae6a758cdc4
+# INDEX digest for reproducibility + arm64. Keep the tag and the digest in step with the build stage JDK.
+FROM azul/zulu-openjdk:21-jre@sha256:278cbb0d64129dc9a1af7552f2a207e8d743bff85c6b9dad8f48491642fa93c0
 
 LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
       org.opencontainers.image.description="Headless Bisq2 node exposing the api-app REST/WebSocket API, e.g. for mobile clients" \
