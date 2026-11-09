@@ -1,8 +1,9 @@
 name: CodeQL
 
-# Replaces the CodeQL default setup, which cannot check out the tor submodule or select the JDK of the release pin. Its
-# Java analysis fails since ubuntu-latest moved to Ubuntu 26, whose default Java 25 Gradle 9.0 cannot run the build on.
-# Turn the default setup off when this workflow is merged, because both cannot upload results for the same language.
+# Replaces the CodeQL default setup, which cannot check out the tor submodule or select the JDK the build requires. Its
+# Java analysis fails since the default Ubuntu runner moved to Ubuntu 26, whose default Java 25 Gradle 9.0 cannot run
+# the build on. Turn the default setup off when this workflow is merged, because both cannot upload results for the same
+# language.
 on:
   push:
     branches: [ main, 'release-candidate-*' ]
@@ -25,6 +26,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     permissions:
+      # The CodeQL action reads the workflow run, which needs this permission in a private repository.
+      actions: read
       contents: read
       security-events: write
     strategy:
@@ -35,15 +38,11 @@ jobs:
             build-mode: manual
           - language: actions
             build-mode: none
-          - language: javascript-typescript
-            build-mode: none
-          - language: python
-            build-mode: none
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          # Only the Java build needs the submodule. The other languages analyze the files of this repository only.
+          # Only the Java build needs the submodule.
           submodules: ${{ matrix.build-mode == 'manual' }}
           persist-credentials: false
 
@@ -56,9 +55,9 @@ jobs:
         if: matrix.build-mode == 'manual'
         uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
-          java-version: '21.0.13+9'
+          java-version: '21'
           distribution: 'zulu'
-          check-latest: false
+          check-latest: true
 
       - name: Setup Gradle
         if: matrix.build-mode == 'manual'
