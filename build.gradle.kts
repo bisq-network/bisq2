@@ -44,8 +44,6 @@ apply(from = "gradle/build-environment-verification.gradle.kts")
 
 val gradleWrapperChecksums = layout.projectDirectory.file("gradle/wrapper/gradle-wrapper.sha256")
 val expectedReleaseJavaVersion = providers.gradleProperty("releaseBuild.javaVersion")
-val expectedReleaseJavaRuntimeVersion = providers.gradleProperty("releaseBuild.javaRuntimeVersion")
-val expectedReleaseJavaVendorVersion = providers.gradleProperty("releaseBuild.javaVendorVersion")
 val expectedReleaseGradleVersion = providers.gradleProperty("releaseBuild.gradleVersion")
 val releaseReadinessReportFile = layout.buildDirectory.file("reports/release/release-readiness.md")
 
@@ -398,39 +396,6 @@ tasks.register<Delete>("cleanAll") {
     group = "build"
     description = "Cleans the entire project."
     delete(allBuildDirectories())
-}
-
-// verifyBuildEnvironment of gradle/build-environment-verification.gradle.kts accepts every build of the Java update, as
-// in the included builds. The installers bundle the JDK of the build as their runtime, so a release build also needs
-// the exact build.
-tasks.named("verifyReleaseEnvironment") {
-    inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
-    inputs.property("expectedReleaseJavaVendorVersion", expectedReleaseJavaVendorVersion.orElse(""))
-    outputs.upToDateWhen { false }
-
-    doLast {
-        val expectedJavaRuntimeVersion = requiredGradleProperty("releaseBuild.javaRuntimeVersion", expectedReleaseJavaRuntimeVersion)
-        val expectedJavaVendorVersion = requiredGradleProperty("releaseBuild.javaVendorVersion", expectedReleaseJavaVendorVersion)
-        val actualJavaRuntimeVersion = System.getProperty("java.runtime.version")
-        val actualJavaVendorVersion = System.getProperty("java.vendor.version")
-        val violations = mutableListOf<String>()
-
-        if (actualJavaRuntimeVersion != expectedJavaRuntimeVersion) {
-            violations += "Java runtime version expected $expectedJavaRuntimeVersion but was $actualJavaRuntimeVersion"
-        }
-        if (actualJavaVendorVersion != expectedJavaVendorVersion) {
-            violations += "Java vendor version expected $expectedJavaVendorVersion but was $actualJavaVendorVersion"
-        }
-
-        if (violations.isNotEmpty()) {
-            throw GradleException(
-                "Release build environment verification failed:\n" +
-                        violations.joinToString("\n") { "  - $it" }
-            )
-        }
-
-        logger.lifecycle("Verified release build environment: Java $actualJavaRuntimeVersion ($actualJavaVendorVersion).")
-    }
 }
 
 tasks.register("signReleaseArtifacts") {
@@ -1461,7 +1426,7 @@ tasks.register("verifyGradleWrapperSecurity") {
 
 tasks.register("verifyGithubActionsSecurity") {
     group = "verification"
-    description = "Verifies GitHub Actions workflows use pinned actions and non-floating build environments."
+    description = "Verifies GitHub Actions workflows use pinned actions and runners and the pinned Java feature version."
 
     val workflowFiles = fileTree(".github/workflows") {
         include("*.yml")
@@ -1470,13 +1435,10 @@ tasks.register("verifyGithubActionsSecurity") {
 
     inputs.files(workflowFiles)
     inputs.property("expectedReleaseJavaVersion", expectedReleaseJavaVersion.orElse(""))
-    inputs.property("expectedReleaseJavaRuntimeVersion", expectedReleaseJavaRuntimeVersion.orElse(""))
     outputs.upToDateWhen { false }
 
     doLast {
         val expectedJavaVersion = expectedReleaseJavaVersion.orNull?.trim()
-        val expectedJavaRuntimeVersion = expectedReleaseJavaRuntimeVersion.orNull?.trim()
-        val expectedJavaBuildVersion = expectedJavaRuntimeVersion?.removeSuffix("-LTS")
         val violations = mutableListOf<String>()
         val usesRegex = Regex("""^\s*-?\s*uses:\s*([^#\s]+)(?:\s+#\s*(.+))?\s*$""")
         val floatingRunnerRegex = Regex("""\b(ubuntu|macos|windows)-latest\b""", RegexOption.IGNORE_CASE)
@@ -1486,26 +1448,19 @@ tasks.register("verifyGithubActionsSecurity") {
         val variableComparisonRegex = Regex("""\bvars\.[A-Za-z0-9_]+\s*==\s*'[^']*'""")
         val javaVersionRegex = Regex("""^\s*java-version:\s*([^#]+?)(?:\s+#.*)?$""")
         val javaMatrixRegex = Regex("""^\s*java:\s*\[([^]]+)]\s*(?:#.*)?$""")
-        val exactJavaVersionRegex = Regex("""\d+(?:\.\d+){2,}\+\d+""")
         val checkLatestTrueRegex = Regex("""^\s*check-latest:\s*['"]?true['"]?\s*$""", RegexOption.IGNORE_CASE)
-        val checkLatestFalseRegex = Regex("""^\s*check-latest:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val stepStartRegex = Regex("""^(\s*)-\s+[A-Za-z_][A-Za-z0-9_-]*\s*:.*$""")
 
-        // Compared by version numbers: 21.0.13+9-LTS and 21.0.13.0.3+1-LTS are both builds of the update 21.0.13
-        fun isBuildOf(runtimeVersion: String, javaVersion: String): Boolean = runCatching {
-            val updateNumbers = Runtime.Version.parse(javaVersion).version()
-            Runtime.Version.parse(runtimeVersion).version().take(updateNumbers.size) == updateNumbers
-        }.getOrDefault(false)
-
+        // CI installs the newest Azul build of the feature version on each runner. verifyBuildEnvironment then checks
+        // that it is at or above releaseBuild.javaVersion.
+        val expectedJavaFeatureVersion = expectedJavaVersion
+            ?.takeIf { it.isNotEmpty() }
+            ?.let { runCatching { Runtime.Version.parse(it).feature().toString() }.getOrNull() }
         if (expectedJavaVersion.isNullOrEmpty()) {
             violations += "Missing releaseBuild.javaVersion in gradle.properties"
-        }
-        if (expectedJavaRuntimeVersion.isNullOrEmpty()) {
-            violations += "Missing releaseBuild.javaRuntimeVersion in gradle.properties"
-        } else if (!expectedJavaVersion.isNullOrEmpty() && !isBuildOf(expectedJavaRuntimeVersion, expectedJavaVersion)) {
-            violations += "releaseBuild.javaRuntimeVersion $expectedJavaRuntimeVersion is no build of " +
-                "releaseBuild.javaVersion $expectedJavaVersion"
+        } else if (expectedJavaFeatureVersion == null) {
+            violations += "releaseBuild.javaVersion $expectedJavaVersion is no Java version"
         }
 
         fun cleanYamlScalar(value: String): String {
@@ -1558,8 +1513,8 @@ tasks.register("verifyGithubActionsSecurity") {
 
                     if (actionRef.startsWith("actions/setup-java@")) {
                         val setupJavaStepLines = stepLinesAfter(lines, index)
-                        if (setupJavaStepLines.none { checkLatestFalseRegex.matches(it) }) {
-                            violations += "$workflowPath:$lineNumber uses actions/setup-java without check-latest: false"
+                        if (setupJavaStepLines.none { checkLatestTrueRegex.matches(it) }) {
+                            violations += "$workflowPath:$lineNumber uses actions/setup-java without check-latest: true"
                         }
                     }
                 }
@@ -1582,12 +1537,11 @@ tasks.register("verifyGithubActionsSecurity") {
                 val javaVersionMatch = javaVersionRegex.find(line)
                 if (javaVersionMatch != null) {
                     val javaVersion = cleanYamlScalar(javaVersionMatch.groupValues[1])
-                    if (!javaVersion.startsWith("\${{") && !exactJavaVersionRegex.matches(javaVersion)) {
-                        violations += "$workflowPath:$lineNumber uses a floating Java version: ${line.trim()}"
-                    } else if (!javaVersion.startsWith("\${{") &&
-                        !expectedJavaBuildVersion.isNullOrEmpty() &&
-                        javaVersion != expectedJavaBuildVersion) {
-                        violations += "$workflowPath:$lineNumber uses Java version $javaVersion but releaseBuild.javaRuntimeVersion is $expectedJavaRuntimeVersion"
+                    if (!javaVersion.startsWith("\${{") &&
+                        expectedJavaFeatureVersion != null &&
+                        javaVersion != expectedJavaFeatureVersion) {
+                        violations += "$workflowPath:$lineNumber uses Java version $javaVersion but must use " +
+                            "$expectedJavaFeatureVersion, the feature version of releaseBuild.javaVersion"
                     }
                 }
 
@@ -1598,16 +1552,11 @@ tasks.register("verifyGithubActionsSecurity") {
                         .map { cleanYamlScalar(it) }
                         .filter { it.isNotEmpty() && !it.startsWith("\${{") }
                         .forEach {
-                            if (!exactJavaVersionRegex.matches(it)) {
-                                violations += "$workflowPath:$lineNumber uses a floating Java matrix version: $it"
-                            } else if (!expectedJavaBuildVersion.isNullOrEmpty() && it != expectedJavaBuildVersion) {
-                                violations += "$workflowPath:$lineNumber uses Java matrix version $it but releaseBuild.javaRuntimeVersion is $expectedJavaRuntimeVersion"
+                            if (expectedJavaFeatureVersion != null && it != expectedJavaFeatureVersion) {
+                                violations += "$workflowPath:$lineNumber uses Java matrix version $it but must use " +
+                                    "$expectedJavaFeatureVersion, the feature version of releaseBuild.javaVersion"
                             }
                         }
-                }
-
-                if (checkLatestTrueRegex.matches(line)) {
-                    violations += "$workflowPath:$lineNumber sets check-latest: true"
                 }
             }
         }
@@ -1625,7 +1574,7 @@ tasks.register("verifyGithubActionsSecurity") {
 
 tasks.register("verifyDockerJavaVersion") {
     group = "verification"
-    description = "Verifies Docker images use the Azul Zulu release of releaseBuild.javaVersion, pinned by digest."
+    description = "Verifies Docker images use Azul Zulu of the Java feature version of the build, pinned by digest."
 
     val dockerFiles = fileTree("apps") {
         include("**/Dockerfile")
@@ -1638,11 +1587,13 @@ tasks.register("verifyDockerJavaVersion") {
 
     doLast {
         val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
+        val expectedJavaFeatureVersion = runCatching { Runtime.Version.parse(expectedJavaVersion).feature().toString() }
+            .getOrElse { throw GradleException("releaseBuild.javaVersion $expectedJavaVersion is no Java version") }
         val violations = mutableListOf<String>()
-        // The digest pins the image. The tag only shows its version to reviewers and to this check, so both
-        // must change together when the JDK is updated.
+        // The digest pins the image. The tag is the feature version, so Dependabot proposes the digest of its newest
+        // build.
         val zuluImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*azul/zulu-openjdk(\S*)""", RegexOption.IGNORE_CASE)
-        val pinnedZuluImageRegex = Regex(""":(\d+\.\d+\.\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
+        val pinnedZuluImageRegex = Regex(""":(\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
 
         dockerFiles.files.sortedBy { it.path }.forEach { dockerFile ->
             val dockerPath = rootProject.relativePath(dockerFile)
@@ -1650,10 +1601,10 @@ tasks.register("verifyDockerJavaVersion") {
                 val imageMatch = zuluImageRegex.find(line) ?: return@forEachIndexed
                 val pinnedMatch = pinnedZuluImageRegex.matchEntire(imageMatch.groupValues[1])
                 if (pinnedMatch == null) {
-                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<version>[-jre]@sha256:<digest>"
-                } else if (pinnedMatch.groupValues[1] != expectedJavaVersion) {
-                    violations += "$dockerPath:${index + 1} uses Java version ${pinnedMatch.groupValues[1]} " +
-                            "but releaseBuild.javaVersion is $expectedJavaVersion"
+                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<feature version>[-jre]@sha256:<digest>"
+                } else if (pinnedMatch.groupValues[1] != expectedJavaFeatureVersion) {
+                    violations += "$dockerPath:${index + 1} uses Java ${pinnedMatch.groupValues[1]} " +
+                            "but the feature version of releaseBuild.javaVersion is $expectedJavaFeatureVersion"
                 }
             }
         }
