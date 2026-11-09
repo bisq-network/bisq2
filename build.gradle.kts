@@ -1609,7 +1609,7 @@ tasks.register("verifyGithubActionsSecurity") {
 
 tasks.register("verifyDockerJavaVersion") {
     group = "verification"
-    description = "Verifies Docker images use the Azul Zulu release of releaseBuild.javaVersion, pinned by digest."
+    description = "Verifies Docker images use Azul Zulu of the Java feature version of the build, pinned by digest."
 
     val dockerFiles = fileTree("apps") {
         include("**/Dockerfile")
@@ -1622,11 +1622,13 @@ tasks.register("verifyDockerJavaVersion") {
 
     doLast {
         val expectedJavaVersion = requiredGradleProperty("releaseBuild.javaVersion", expectedReleaseJavaVersion)
+        val expectedJavaFeatureVersion = runCatching { Runtime.Version.parse(expectedJavaVersion).feature().toString() }
+            .getOrElse { throw GradleException("releaseBuild.javaVersion $expectedJavaVersion is no Java version") }
         val violations = mutableListOf<String>()
-        // The digest pins the image. The tag only shows its version to reviewers and to this check, so both
-        // must change together when the JDK is updated.
+        // The digest pins the image. The tag is the feature version, so Dependabot proposes the digest of its newest
+        // build.
         val zuluImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*azul/zulu-openjdk(\S*)""", RegexOption.IGNORE_CASE)
-        val pinnedZuluImageRegex = Regex(""":(\d+\.\d+\.\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
+        val pinnedZuluImageRegex = Regex(""":(\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
 
         dockerFiles.files.sortedBy { it.path }.forEach { dockerFile ->
             val dockerPath = rootProject.relativePath(dockerFile)
@@ -1634,10 +1636,10 @@ tasks.register("verifyDockerJavaVersion") {
                 val imageMatch = zuluImageRegex.find(line) ?: return@forEachIndexed
                 val pinnedMatch = pinnedZuluImageRegex.matchEntire(imageMatch.groupValues[1])
                 if (pinnedMatch == null) {
-                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<version>[-jre]@sha256:<digest>"
-                } else if (pinnedMatch.groupValues[1] != expectedJavaVersion) {
-                    violations += "$dockerPath:${index + 1} uses Java version ${pinnedMatch.groupValues[1]} " +
-                            "but releaseBuild.javaVersion is $expectedJavaVersion"
+                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<feature version>[-jre]@sha256:<digest>"
+                } else if (pinnedMatch.groupValues[1] != expectedJavaFeatureVersion) {
+                    violations += "$dockerPath:${index + 1} uses Java ${pinnedMatch.groupValues[1]} " +
+                            "but the feature version of releaseBuild.javaVersion is $expectedJavaFeatureVersion"
                 }
             }
         }
