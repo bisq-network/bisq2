@@ -91,10 +91,24 @@ public final class BisqEasyTradeTestData {
                                       long quoteAmount,
                                       PriceSpec priceSpec,
                                       String appVersion) {
+        return offer(id, makerNetworkId, Direction.SELL, quoteAmount, priceSpec, appVersion);
+    }
+
+    // The maker of a buy offer is the buyer.
+    public static BisqEasyOffer buyOffer(String id, NetworkId makerNetworkId, long quoteAmount) {
+        return offer(id, makerNetworkId, Direction.BUY, quoteAmount, new MarketPriceSpec(), "2.1.13");
+    }
+
+    private static BisqEasyOffer offer(String id,
+                                       NetworkId makerNetworkId,
+                                       Direction direction,
+                                       long quoteAmount,
+                                       PriceSpec priceSpec,
+                                       String appVersion) {
         return new BisqEasyOffer(id,
                 System.currentTimeMillis(),
                 makerNetworkId,
-                Direction.SELL,
+                direction,
                 MarketRepository.getUSDBitcoinMarket(),
                 new QuoteSideFixedAmountSpec(quoteAmount),
                 priceSpec,
@@ -148,6 +162,28 @@ public final class BisqEasyTradeTestData {
                 contract.getOffer(),
                 contract.getTaker().getNetworkId(),
                 makerIdentity.getNetworkId());
+    }
+
+    // The maker of a buy offer is the buyer.
+    public static BisqEasyTrade buyerAsMakerTrade(BisqEasyContract contract, Identity makerIdentity) {
+        return new BisqEasyTrade(contract,
+                true,
+                false,
+                makerIdentity,
+                contract.getOffer(),
+                contract.getTaker().getNetworkId(),
+                makerIdentity.getNetworkId());
+    }
+
+    // The taker of a buy offer is the seller.
+    public static BisqEasyTrade sellerAsTakerTrade(BisqEasyContract contract, Identity takerIdentity) {
+        return new BisqEasyTrade(contract,
+                false,
+                true,
+                takerIdentity,
+                contract.getOffer(),
+                takerIdentity.getNetworkId(),
+                contract.getMaker().getNetworkId());
     }
 
     // A trade in the given state, as it would be read from the store.
