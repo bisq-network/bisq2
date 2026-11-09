@@ -32,6 +32,10 @@ public class BitcoinAddressValidationTest {
                 BitcoinAddressValidation.canonicalize("bitcoin:bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4"));
         assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
                 BitcoinAddressValidation.canonicalize("BITCOIN:BC1QW508D6QEJXTDG4Y5R3ZARVARY0C5XW7KV8F3T4"));
+        assertEquals("bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4",
+                BitcoinAddressValidation.canonicalize(" bitcoin:bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4 "));
+        assertEquals("", BitcoinAddressValidation.canonicalize("bitcoin:"));
+        assertEquals("", BitcoinAddressValidation.canonicalize("bitcoin:?amount=1"));
 
         // base58 is case-sensitive: never altered (prefix/params still stripped)
         assertEquals("1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
