@@ -25,6 +25,7 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.TransitionedView;
 import bisq.desktop.common.view.View;
 import bisq.settings.SettingsService;
+import javafx.animation.Animation;
 import javafx.animation.FadeTransition;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
@@ -92,6 +93,8 @@ public class Transitions {
     private static SettingsService settingsService;
     private static final Map<String, Timeline> removeEffectTimeLineByNodeId = new HashMap<>();
     private static final Map<String, ChangeListener<Effect>> effectChangeListenerByNodeId = new HashMap<>();
+    // Key of the running slide-out timeline of transitRightOut and transitLeftOut in the properties of the node
+    private static final String TRANSIT_OUT_TIMELINE_KEY = "Transitions.transitOutTimeline";
 
     public static FadeTransition fadeIn(Node node) {
         return fadeIn(node, ManagedDuration.getDefaultDurationMillis());
@@ -414,31 +417,39 @@ public class Transitions {
     }
 
     public static void transitRightOut(Region nodeIn, Region nodeOut) {
+        stopTransitOut(nodeIn);
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInLeft(nodeIn, () -> {
         })).after(ManagedDuration.getQuoterOfDefaultDurationMillis());
-        slideOutRight(nodeOut, () -> {
-            Parent parent = nodeOut.getParent();
-            if (parent != null) {
-                if (parent instanceof Pane pane) {
-                    pane.getChildren().remove(nodeOut);
-                }
-            }
-        });
+        transitOut(nodeOut, true);
     }
 
     public static void transitLeftOut(Region nodeIn, Region nodeOut) {
+        stopTransitOut(nodeIn);
         nodeIn.setOpacity(0);
         UIScheduler.run(() -> slideInRight(nodeIn, () -> {
         })).after(ManagedDuration.getQuoterOfDefaultDurationMillis());
-        slideOutLeft(nodeOut, () -> {
-            Parent parent = nodeOut.getParent();
-            if (parent != null) {
-                if (parent instanceof Pane pane) {
-                    pane.getChildren().remove(nodeOut);
-                }
+        transitOut(nodeOut, false);
+    }
+
+    private static void transitOut(Region nodeOut, boolean slideOutRight) {
+        Timeline timeline = slideOutHorizontal(nodeOut, ManagedDuration.getQuoterOfDefaultDuration(), () -> {
+            nodeOut.getProperties().remove(TRANSIT_OUT_TIMELINE_KEY);
+            if (nodeOut.getParent() instanceof Pane pane) {
+                pane.getChildren().remove(nodeOut);
             }
-        });
+        }, slideOutRight);
+        if (timeline.getStatus() == Animation.Status.RUNNING) {
+            nodeOut.getProperties().put(TRANSIT_OUT_TIMELINE_KEY, timeline);
+        }
+    }
+
+    // A wizard shows a step again while that step still slides out if the user clicks Next and then Back before the
+    // slide-out has finished. The slide-out must not remove the step from its parent at its end.
+    private static void stopTransitOut(Region nodeIn) {
+        if (nodeIn.getProperties().remove(TRANSIT_OUT_TIMELINE_KEY) instanceof Timeline timeline) {
+            timeline.stop();
+        }
     }
 
     public static void transitInNewTab(Region nodeIn) {
