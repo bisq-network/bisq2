@@ -24,6 +24,8 @@ import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.exceptions.TradeProtocolException;
+import bisq.trade.exceptions.TradeProtocolFailure;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -77,6 +79,17 @@ class BisqEasyBtcAddressMessageHandlerTest {
 
         assertThrows(IllegalArgumentException.class, () -> handle(trade, "bitcoin:" + ADDRESS + "?amount=0.01"));
 
+        assertTrue(trade.getBitcoinPaymentData().isEmpty());
+    }
+
+    @Test
+    void tooLongAddressIsRejectedAsInvalidPaymentData() {
+        BisqEasyTrade trade = sellersTrade(BitcoinPaymentRail.MAIN_CHAIN);
+
+        TradeProtocolException exception = assertThrows(TradeProtocolException.class,
+                () -> handle(trade, ADDRESS + ADDRESS));
+
+        assertEquals(TradeProtocolFailure.INVALID_BITCOIN_PAYMENT_DATA, exception.getTradeProtocolFailure());
         assertTrue(trade.getBitcoinPaymentData().isEmpty());
     }
 

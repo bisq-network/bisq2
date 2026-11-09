@@ -17,19 +17,15 @@
 
 package bisq.trade.bisq_easy.protocol.messages;
 
-import bisq.account.payment_method.BitcoinPaymentRail;
-import bisq.common.util.StringUtils;
-import bisq.common.validation.BitcoinAddressValidation;
-import bisq.common.validation.LightningInvoiceValidation;
 import bisq.common.validation.RequestedAmountValidation;
 import bisq.trade.ServiceProvider;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.handler.BisqEasyTradeMessageHandler;
+import bisq.trade.bisq_easy.validation.BisqEasyBitcoinPaymentDataValidator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 @Slf4j
@@ -43,18 +39,9 @@ public class BisqEasyBtcAddressMessageHandler extends BisqEasyTradeMessageHandle
     @Override
     protected void verify(BisqEasyBtcAddressMessage message) {
         String bitcoinPaymentData = message.getBitcoinPaymentData();
-        checkArgument(StringUtils.isNotEmpty(bitcoinPaymentData), "Bitcoin payment data must not be empty");
-
-        boolean isMainChain = trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail() == BitcoinPaymentRail.MAIN_CHAIN;
-        if (isMainChain) {
-            // We do not check for the min. length as we do not enforce the validation in the UI
-            checkArgument(bitcoinPaymentData.length() <= BitcoinAddressValidation.MAX_LENGTH,
-                    "Bitcoin address length must not be longer than " + BitcoinAddressValidation.MAX_LENGTH);
-        } else {
-            // We do not check for the min. length as we do not enforce the validation in the UI
-            checkArgument(bitcoinPaymentData.length() <= LightningInvoiceValidation.MAX_LENGTH,
-                    "Lightning invoice length must not be longer than " + LightningInvoiceValidation.MAX_LENGTH);
-        }
+        // Invalid data is a mistake of the buyer, not a bug, so the trade fails with an expected failure (#5210)
+        BisqEasyBitcoinPaymentDataValidator.validate(bitcoinPaymentData,
+                trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail());
         // The seller's wallet pays the amount which the data requests, for example from its QR code
         // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
         RequestedAmountValidation.checkRequestsOnlyAmount(bitcoinPaymentData, trade.getContract().getBaseSideAmount());
