@@ -289,8 +289,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                             setState(State.INITIALIZE_WALLET);
                             return walletService.initialize().thenApply(initialized -> {
                                 // The wallet UI exists only with MuSig activated, so the daemon is polled only then.
-                                walletPollingPin = settingsService.getMuSigActivated().addObserver(activated -> {
-                                    if (Boolean.TRUE.equals(activated)) {
+                                // The service's flag is the effective one: dev mode and the saved setting.
+                                walletPollingPin = muSigService.getMuSigActivated().addObserver(activated -> {
+                                    if (activated) {
                                         walletService.startPolling();
                                     } else {
                                         walletService.stopPolling();
