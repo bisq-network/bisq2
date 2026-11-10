@@ -25,8 +25,8 @@ update-set-branch "${BISQ_REPO_TAG_OR_BRANCH}"
 update-clean-install-oracle
 
 echo "[*] Installing bisq2-oracle systemd service"
-sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/oracle-node/oracle-node-app/service-scripts/bisq2-oracle.service" "${SYSTEMD_SERVICE_HOME}"
-sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/oracle-node/oracle-node-app/service-scripts/bisq2-oracle.env" "${SYSTEMD_ENV_HOME}"
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/oracle-node-app/service-scripts/bisq2-oracle.service" "${SYSTEMD_SERVICE_HOME}"
+sudo -H -i -u "${ROOT_USER}" install -c -o "${ROOT_USER}" -g "${ROOT_GROUP}" -m 644 "${BISQ_HOME}/${BISQ_REPO_NAME}/apps/oracle-node-app/service-scripts/bisq2-oracle.env" "${SYSTEMD_ENV_HOME}"
 
 echo '[*] Part 1 of service installation done'
 echo "[*] To finalize installation, see README.md for part 2 and 3"
