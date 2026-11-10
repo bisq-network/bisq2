@@ -30,6 +30,7 @@ import bisq.common.encoding.Hex;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
+import bisq.network.p2p.services.data.BroadcastResult;
 import bisq.network.p2p.services.data.storage.DataStorageResult;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedSequentialData;
@@ -166,14 +167,17 @@ final class AuthorizedDataPublisher {
     }
 
     private void publishAlerts(boolean haltTrading, Optional<String> minVersion, List<AppType> appTypes) {
-        // Records each published alert at once, so that remove clears it if a later app type fails
+        // Each alert is recorded before its publication, so that remove also clears an alert whose publication failed
         List<AuthorizedAlertData> published = new ArrayList<>();
         lastAlerts = published;
-        appTypes.forEach(appType -> published.add(publishAlert(haltTrading, minVersion, appType)));
+        appTypes.forEach(appType -> publishAlert(haltTrading, minVersion, appType, published));
         lastAlerts = List.copyOf(published);
     }
 
-    private AuthorizedAlertData publishAlert(boolean haltTrading, Optional<String> minVersion, AppType appType) {
+    private void publishAlert(boolean haltTrading,
+                              Optional<String> minVersion,
+                              AppType appType,
+                              List<AuthorizedAlertData> published) {
         String message = haltTrading ? "Trading is halted" : "Version " + minVersion.orElseThrow() + " is required";
         AuthorizedAlertData alert = new AuthorizedAlertData(UUID.randomUUID().toString(),
                 System.currentTimeMillis(),
@@ -188,8 +192,8 @@ final class AuthorizedDataPublisher {
                 true,
                 Optional.empty(),
                 appType);
-        networkService().publishAuthorizedData(alert, devKeyPair).join();
-        return alert;
+        published.add(alert);
+        awaitBroadcast(networkService().publishAuthorizedData(alert, devKeyPair).join());
     }
 
     private void publishBanOfMediator(String profileId) {
@@ -212,10 +216,20 @@ final class AuthorizedDataPublisher {
         lastAlerts = List.of(ban);
     }
 
+    // The alerts stay until the next publication replaces them, as a test repeats a remove until both versions
+    // removed them. Each repeat sends fresh removal requests.
     private void removeAlert() {
-        checkState(!lastAlerts.isEmpty(), "No alert to remove");
-        lastAlerts.forEach(alert -> networkService().removeAuthorizedData(alert, devKeyPair).join());
-        lastAlerts = List.of();
+        for (AuthorizedAlertData alert : List.copyOf(lastAlerts)) {
+            awaitBroadcast(networkService().removeAuthorizedData(alert, devKeyPair).join());
+        }
+    }
+
+    // The outer future completes when the broadcast starts, so this waits for the sends on all transports
+    private static void awaitBroadcast(BroadcastResult broadcastResult) {
+        int numSuccess = broadcastResult.stream()
+                .mapToInt(transportResult -> transportResult.join().getNumSuccess())
+                .sum();
+        checkState(numSuccess > 0, "No peer received the broadcast, or the local store refused the request");
     }
 
     private void publishDifficultyAdjustment(double factor) {
