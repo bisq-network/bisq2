@@ -42,12 +42,15 @@ import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.protobuf.WalletGrpc;
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.util.concurrent.ListenableFuture;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import io.grpc.Status;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 import static bisq.common.util.CompletableFutureUtils.toCompletableFuture;
 
@@ -109,60 +112,123 @@ public class WalletGrpcClient implements Service {
 
     public void encryptWallet(String password) {
         var request = EncryptWalletRequest.newBuilder().setPassword(password).build();
-        blockingStub.encryptWallet(request);
+        callBlocking("EncryptWallet", stub -> stub.encryptWallet(request));
     }
 
     public void decryptWallet(String password) {
         var request = DecryptWalletRequest.newBuilder().setPassword(password).build();
-        blockingStub.decryptWallet(request);
+        callBlocking("DecryptWallet", stub -> stub.decryptWallet(request));
     }
 
     public CompletableFuture<GetSeedWordsResponse> getSeedWords() {
         var request = GetSeedWordsRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.getSeedWords(request));
+        return call("GetSeedWords", stub -> stub.getSeedWords(request));
     }
 
     public CompletableFuture<IsWalletReadyResponse> isWalletReady() {
         var request = IsWalletReadyRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.isWalletReady(request));
+        return call("IsWalletReady", stub -> stub.isWalletReady(request));
     }
 
     public CompletableFuture<GetUnusedAddressResponse> getUnusedAddress() {
         var request = GetUnusedAddressRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.getUnusedAddress(request));
+        return call("GetUnusedAddress", stub -> stub.getUnusedAddress(request));
     }
 
     public CompletableFuture<GetNewAddressResponse> getNewAddress() {
         var request = GetNewAddressRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.getNewAddress(request));
+        return call("GetNewAddress", stub -> stub.getNewAddress(request));
     }
 
     public CompletableFuture<GetWalletAddressesResponse> requestWalletAddresses() {
         var request = GetWalletAddressesRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.getWalletAddresses(request));
+        return call("GetWalletAddresses", stub -> stub.getWalletAddresses(request));
     }
 
     public CompletableFuture<ListTransactionsResponse> listTransactions() {
         var request = ListTransactionsRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.listTransactions(request));
+        return call("ListTransactions", stub -> stub.listTransactions(request));
     }
 
     public CompletableFuture<ListUtxosResponse> listUtxos() {
         var request = ListUtxosRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.listUtxos(request));
+        return call("ListUtxos", stub -> stub.listUtxos(request));
     }
 
     public CompletableFuture<SendToAddressResponse> sendToAddress(SendToAddressRequest request) {
-        return toCompletableFuture(futureStub.sendToAddress(request));
+        return call("SendToAddress", stub -> stub.sendToAddress(request));
     }
 
     public CompletableFuture<IsWalletEncryptedResponse> isWalletEncrypted() {
         var request = IsWalletEncryptedRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.isWalletEncrypted(request));
+        return call("IsWalletEncrypted", stub -> stub.isWalletEncrypted(request));
     }
 
     public CompletableFuture<GetBalanceResponse> requestBalance() {
         var request = GetBalanceRequest.newBuilder().build();
-        return toCompletableFuture(futureStub.getBalance(request));
+        return call("GetBalance", stub -> stub.getBalance(request));
+    }
+
+    private <T> CompletableFuture<T> call(String rpcName,
+                                          Function<WalletGrpc.WalletFutureStub, ListenableFuture<T>> invocation) {
+        WalletGrpc.WalletFutureStub stub = futureStub;
+        if (stub == null) {
+            return CompletableFuture.failedFuture(clientNotReady(rpcName));
+        }
+        CompletableFuture<T> source;
+        try {
+            source = toCompletableFuture(invocation.apply(stub));
+        } catch (RuntimeException e) {
+            return CompletableFuture.failedFuture(toWalletException(rpcName, e));
+        }
+        CompletableFuture<T> result = new CompletableFuture<>();
+        source.whenComplete((response, throwable) -> {
+            if (throwable == null) {
+                result.complete(response);
+            } else if (source.isCancelled()) {
+                result.cancel(false);
+            } else {
+                result.completeExceptionally(toWalletException(rpcName, throwable));
+            }
+        });
+        result.whenComplete((response, throwable) -> {
+            if (result.isCancelled()) {
+                source.cancel(true);
+            }
+        });
+        return result;
+    }
+
+    private <T> T callBlocking(String rpcName, Function<WalletGrpc.WalletBlockingStub, T> invocation) {
+        WalletGrpc.WalletBlockingStub stub = blockingStub;
+        if (stub == null) {
+            throw clientNotReady(rpcName);
+        }
+        try {
+            return invocation.apply(stub);
+        } catch (RuntimeException e) {
+            throw toWalletException(rpcName, e);
+        }
+    }
+
+    private static WalletException clientNotReady(String rpcName) {
+        String message = rpcName + " called while the wallet client is not initialized";
+        log.warn(message);
+        return new WalletException(WalletException.Reason.CLIENT_NOT_READY, message, null);
+    }
+
+    private static WalletException toWalletException(String rpcName, Throwable throwable) {
+        Status status = Status.fromThrowable(throwable);
+        WalletException.Reason reason = switch (status.getCode()) {
+            case FAILED_PRECONDITION -> WalletException.Reason.WALLET_NOT_OPEN;
+            case PERMISSION_DENIED -> WalletException.Reason.WRONG_PASSWORD;
+            case UNAVAILABLE -> WalletException.Reason.DAEMON_UNAVAILABLE;
+            case UNIMPLEMENTED -> WalletException.Reason.UNSUPPORTED_CALL;
+            default -> WalletException.Reason.DAEMON_ERROR;
+        };
+        String message = rpcName + " failed with " + status.getCode() +
+                (status.getDescription() == null ? "" : ": " + status.getDescription());
+        log.warn(message);
+        return new WalletException(reason, message, throwable);
     }
 }
