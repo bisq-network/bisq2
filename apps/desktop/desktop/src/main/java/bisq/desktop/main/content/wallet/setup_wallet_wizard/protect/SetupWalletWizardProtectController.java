@@ -88,6 +88,10 @@ public class SetupWalletWizardProtectController implements Controller {
         return model.getPassword().get();
     }
 
+    public void setInputLocked(boolean locked) {
+        model.getInputLocked().set(locked);
+    }
+
     void onConfirmSkipProtectStep() {
         model.getShouldShowSkipProtectStepOverlay().set(false);
         navigationButtonsVisibleHandler.accept(true);
