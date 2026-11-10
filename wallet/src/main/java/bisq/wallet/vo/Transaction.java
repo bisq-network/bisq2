@@ -27,6 +27,7 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Getter
 @EqualsAndHashCode
@@ -59,5 +60,9 @@ public final class Transaction {
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
+    }
+
+    public Optional<Date> findDate() {
+        return date.getTime() == 0 ? Optional.empty() : Optional.of(date);
     }
 }
