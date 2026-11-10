@@ -19,6 +19,7 @@ package bisq.e2e;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Order;
@@ -36,9 +37,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Emergency alerts of a security manager across the versions. The alerts are for the desktop app, as the security
- * manager tab of the desktop app publishes them. The api-app uses the app type of the desktop app as well. The
- * authorized data publisher of the source set authorizedDataPublisher publishes the alerts as a node of this checkout.
+ * Emergency alerts of a security manager across the versions. The api-app of the released version uses the app type
+ * DESKTOP, and the api-app of this checkout uses MOBILE_NODE. So the security manager publishes one alert for each app
+ * type, as docs/specifications/trade/trade-restrictions.md asks. The authorized data publisher of the source set
+ * authorizedDataPublisher publishes the alerts as a node of this checkout.
  * <p>
  * An alert which requires this version for trading (alert-enforcement-v2113 of the release test plan). With this
  * alert, the security manager moves the users to this version before the cutoff date of signature V1.
@@ -56,6 +58,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  *     <li>After the security manager removes the alert, the open trade continues, and both versions take offers again.
  *     </li>
  * </ul>
+ * An alert which halts trading only for the desktop app (alert-desktop-only-spares-api-app). It stops the released
+ * version, whose api-app uses DESKTOP, but not the api-app of this checkout: a trusted node ships after the desktop
+ * app, and an alert for the desktop app must not stop it.
+ * <p>
+ * An alert which requires this version only for the desktop app (alert-desktop-only-checks-desktop-maker). It does not
+ * restrict the api-app of this checkout, but that api-app still refuses the offer of the released version, which stands
+ * for a desktop maker that the alert restricts: the taker does not know the app type of the maker.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -63,6 +72,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class AlertAcrossVersionsTest {
     private static final String SECURITY_MANAGER = "security-manager";
     private static final String REQUIRED_VERSION = "2.1.14";
+    private static final String DESKTOP = "DESKTOP";
+    private static final String MOBILE_NODE = "MOBILE_NODE";
     // The lines which nodes in dev mode log when their store of alerts added or removed an entry
     private static final String ALERT_ADDED = "Method: add success; map entry: AuthorizedAlertData";
     private static final String ALERT_REMOVED = "Method: remove success; map entry: AuthorizedAlertData";
@@ -71,11 +82,21 @@ class AlertAcrossVersionsTest {
 
     private MixedVersionNetwork network;
     private ApiClient securityManager;
+    // The app types of the alerts which the last publishAlert published, as the publisher removes all of them
+    private List<String> publishedAppTypes = List.of();
 
     @BeforeAll
     void startNetwork() throws Exception {
         network = new MixedVersionNetwork("alert-across-versions");
         securityManager = network.startAuthorizedDataPublisher(SECURITY_MANAGER);
+    }
+
+    // A test which failed before it removed its alerts would leave them active for the next tests
+    @AfterEach
+    void removeAlertLeftByFailedTest() throws Exception {
+        if (!publishedAppTypes.isEmpty()) {
+            removeAlert();
+        }
     }
 
     @AfterAll
@@ -97,7 +118,7 @@ class AlertAcrossVersionsTest {
         OffersAcrossVersionsTest.awaitOffers(securityManager, List.of(offerOfNewMaker), "the new node sees the offer");
         OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(offerOfOldMaker), "the new node sees the offer");
 
-        publishAlert("require " + REQUIRED_VERSION,
+        publishAlert("require " + REQUIRED_VERSION, List.of(DESKTOP, MOBILE_NODE),
                 alert -> alert.path("minVersion").asText().equals(REQUIRED_VERSION));
 
         // The old node does not take an offer
@@ -153,7 +174,7 @@ class AlertAcrossVersionsTest {
         OffersAcrossVersionsTest.awaitOffers(network.oldApi, List.of(offerOfNewMaker), "the old node sees the offer");
         OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(offerOfOldMaker), "the new node sees the offer");
 
-        publishAlert("halt", alert -> alert.path("haltTrading").asBoolean(false));
+        publishAlert("halt", List.of(DESKTOP, MOBILE_NODE), alert -> alert.path("haltTrading").asBoolean(false));
 
         // Neither version takes an offer
         ApiClient.ApiException refusalOfOld = assertThrows(ApiClient.ApiException.class,
@@ -192,25 +213,98 @@ class AlertAcrossVersionsTest {
                 Trades.QUOTE_AMOUNT, Trades.BTC_ADDRESS);
     }
 
-    // Publishes an alert and waits until the old node stores it and the new node reports it
-    private void publishAlert(String command, Predicate<JsonNode> isReportedAlert) throws Exception {
+    @Test
+    @Order(3)
+    void alertWhichHaltsTradingOnlyForTheDesktopAppDoesNotStopTheApiAppOfThisVersion() throws Exception {
+        long baseAmount = Trades.baseAmount(network.priceServer);
+
+        String offerOfNewMaker = Trades.createOffer(network.newApi, "SELL");
+        OffersAcrossVersionsTest.awaitOffers(network.oldApi, List.of(offerOfNewMaker), "the old node sees the offer");
+        OffersAcrossVersionsTest.awaitOffers(securityManager, List.of(offerOfNewMaker), "the new node sees the offer");
+
+        publishAlert("halt", List.of(DESKTOP), alert -> alert.path("haltTrading").asBoolean(false));
+        assertTrue(network.newApi.tradeRestrictingAlert(MOBILE_NODE).isNull(),
+                "No alert restricts the api-app of this version");
+
+        // The old node, whose api-app uses DESKTOP, does not take an offer
+        ApiClient.ApiException refusalOfOld = assertThrows(ApiClient.ApiException.class,
+                () -> network.oldApi.takeOffer(offerOfNewMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
+                        "ZELLE"),
+                "The old node must not take an offer while trading is halted for the desktop app");
+        assertEquals(400, refusalOfOld.status, refusalOfOld.getMessage());
+        assertTrue(refusalOfOld.getMessage().contains("Trading is on halt"), refusalOfOld.getMessage());
+
+        // Nodes of this version trade with each other to the end
+        String tradeId = securityManager.takeOffer(offerOfNewMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
+                "ZELLE");
+        Trades.completeAfterTake(network.newApi, securityManager, "SELL", tradeId, baseAmount, Trades.QUOTE_AMOUNT,
+                Trades.BTC_ADDRESS);
+
+        removeAlert();
+    }
+
+    @Test
+    @Order(4)
+    void apiAppOfThisVersionRefusesAMakerWhichAnAlertOnlyForTheDesktopAppRestricts() throws Exception {
+        long baseAmount = Trades.baseAmount(network.priceServer);
+
+        String offerOfNewMaker = Trades.createOffer(network.newApi, "SELL");
+        String offerOfOldMaker = Trades.createOffer(network.oldApi, "SELL");
+        OffersAcrossVersionsTest.awaitOffers(securityManager, List.of(offerOfNewMaker), "the new node sees the offer");
+        OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(offerOfOldMaker), "the new node sees the offer");
+
+        publishAlert("require " + REQUIRED_VERSION, List.of(DESKTOP),
+                alert -> alert.path("minVersion").asText().equals(REQUIRED_VERSION));
+        assertTrue(network.newApi.tradeRestrictingAlert(MOBILE_NODE).isNull(),
+                "No alert restricts the api-app of this version");
+
+        // The old maker, whose api-app uses DESKTOP, would acknowledge the take offer request and drop it
+        int openTradesBefore = network.newApi.openTrades().size();
+        ApiClient.ApiException makerRefusal = assertThrows(ApiClient.ApiException.class,
+                () -> network.newApi.takeOffer(offerOfOldMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
+                        "ZELLE"),
+                "The new node must not take the offer of a maker which the alert for the desktop app restricts");
+        assertEquals(400, makerRefusal.status, makerRefusal.getMessage());
+        assertTrue(makerRefusal.getMessage().contains("MAKER_VERSION_BELOW_MIN_REQUIRED"), makerRefusal.getMessage());
+        assertEquals(openTradesBefore, network.newApi.openTrades().size(), "The new node must not create a trade");
+
+        // Nodes of this version trade with each other to the end
+        String tradeId = securityManager.takeOffer(offerOfNewMaker, baseAmount, Trades.QUOTE_AMOUNT, "MAIN_CHAIN",
+                "ZELLE");
+        Trades.completeAfterTake(network.newApi, securityManager, "SELL", tradeId, baseAmount, Trades.QUOTE_AMOUNT,
+                Trades.BTC_ADDRESS);
+
+        removeAlert();
+    }
+
+    // Publishes one alert for each app type and waits until the old node stores them and the new node reports them
+    private void publishAlert(String command, List<String> appTypes, Predicate<JsonNode> isReportedAlert)
+            throws Exception {
         long storedBefore = network.countLogLines(network.oldNode.getName(), ALERT_ADDED);
-        network.runPublisherCommand(SECURITY_MANAGER, command);
-        MixedVersionNetwork.await("the old node stores the alert", Trades.STEP_TIMEOUT,
-                () -> network.countLogLines(network.oldNode.getName(), ALERT_ADDED) > storedBefore);
-        MixedVersionNetwork.await("the new node knows the alert", Trades.STEP_TIMEOUT,
-                () -> isReportedAlert.test(network.newApi.tradeRestrictingAlert()));
+        network.runPublisherCommand(SECURITY_MANAGER, command + " " + String.join(" ", appTypes));
+        publishedAppTypes = List.copyOf(appTypes);
+        MixedVersionNetwork.await("the old node stores the alerts", Trades.STEP_TIMEOUT,
+                () -> network.countLogLines(network.oldNode.getName(), ALERT_ADDED) >= storedBefore + appTypes.size());
+        for (String appType : appTypes) {
+            MixedVersionNetwork.await("the new node knows the alert for " + appType, Trades.STEP_TIMEOUT,
+                    () -> isReportedAlert.test(network.newApi.tradeRestrictingAlert(appType)));
+        }
         Thread.sleep(ALERT_APPLIED.toMillis());
     }
 
-    // Removes the last alert and waits until the old node removes it and the new node no longer reports it
+    // Removes the last alerts and waits until the old node removes them and the new node no longer reports them
     private void removeAlert() throws Exception {
+        List<String> appTypes = publishedAppTypes;
+        publishedAppTypes = List.of();
         long removedBefore = network.countLogLines(network.oldNode.getName(), ALERT_REMOVED);
         network.runPublisherCommand(SECURITY_MANAGER, "remove");
-        MixedVersionNetwork.await("the old node removes the alert", Trades.STEP_TIMEOUT,
-                () -> network.countLogLines(network.oldNode.getName(), ALERT_REMOVED) > removedBefore);
-        MixedVersionNetwork.await("the new node removes the alert", Trades.STEP_TIMEOUT,
-                () -> network.newApi.tradeRestrictingAlert().isNull());
+        MixedVersionNetwork.await("the old node removes the alerts", Trades.STEP_TIMEOUT,
+                () -> network.countLogLines(network.oldNode.getName(), ALERT_REMOVED)
+                        >= removedBefore + appTypes.size());
+        for (String appType : appTypes) {
+            MixedVersionNetwork.await("the new node removes the alert for " + appType, Trades.STEP_TIMEOUT,
+                    () -> network.newApi.tradeRestrictingAlert(appType).isNull());
+        }
         Thread.sleep(ALERT_APPLIED.toMillis());
     }
 }

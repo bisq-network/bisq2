@@ -126,6 +126,7 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // Written from the alert-set observer thread, read from trade calls on other threads
     private volatile boolean haltTrading;
     private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
+    private volatile Optional<String> minRequiredVersionOfMaker = Optional.empty();
     @Nullable
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin, chatChannelsPin;
     @Nullable
@@ -658,6 +659,8 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                 alertService.getAuthorizedAlertDataSet().stream(), appType);
         minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
                 alertService.getAuthorizedAlertDataSet().stream(), appType);
+        minRequiredVersionOfMaker = AuthorizedAlertDataUtils.findMinRequiredVersionForTradingOfAnyMaker(
+                alertService.getAuthorizedAlertDataSet());
     }
 
     private void verifyTradingNotOnHalt() {
@@ -678,9 +681,11 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
     // hang without an error. The node of the taker refuses the take instead. The version of the maker is the higher of
     // the version of its user profile, which the maker signed when it published the profile, and the version which
     // created the offer. Before the cutoff date of signature V1, a relay can change the version of an offer without
-    // signature V2. A maker without a readable version is refused (see docs/specifications/trade/trade-restrictions.md).
+    // signature V2. A maker without a readable version is refused. The app type of the maker is unknown, so the
+    // highest min. version of any app type which makes offers applies, independent of the app type of this node
+    // (see docs/specifications/trade/trade-restrictions.md).
     private void verifyMakerMeetsMinVersionForTrading(BisqEasyOffer bisqEasyOffer) {
-        Optional<String> minRequiredVersion = minRequiredVersionForTrading;
+        Optional<String> minRequiredVersion = minRequiredVersionOfMaker;
         if (minRequiredVersion.isPresent()
                 && !isMakerVersionAtLeast(bisqEasyOffer, new Version(minRequiredVersion.get()))) {
             throw TradeRestrictedException.makerVersionBelowMinRequired(minRequiredVersion.get());
