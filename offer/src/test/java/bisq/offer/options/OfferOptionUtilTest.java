@@ -17,8 +17,15 @@
 
 package bisq.offer.options;
 
+import bisq.account.accounts.Account;
 import bisq.account.accounts.AccountPayload;
+import bisq.account.accounts.fiat.SepaAccountPayload;
+import bisq.account.accounts.fiat.UserDefinedFiatAccountPayload;
+import bisq.account.accounts.fiat.ZelleAccountPayload;
 import bisq.account.payment_method.PaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentMethod;
+import bisq.account.payment_method.fiat.FiatPaymentRail;
+import bisq.common.encoding.Hex;
 import bisq.common.util.ByteArrayUtils;
 import bisq.security.DigestUtil;
 import com.google.protobuf.Message;
@@ -27,12 +34,16 @@ import org.junit.jupiter.api.Test;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 public class OfferOptionUtilTest {
 
@@ -130,5 +141,74 @@ public class OfferOptionUtilTest {
         public String getAccountDataDisplayString() {
             throw new UnsupportedOperationException("Not required for this test");
         }
+    }
+
+    @Test
+    void createAccountOptionSaltsTheAccountIdAndHashesThePayloadWithTheOfferId() {
+        SepaAccountPayload payload = new SepaAccountPayload("payload-1", "Alice",
+                "DE89370400440532013000", "DEUTDEFF", "DE", List.of("DE", "FR"));
+        PaymentMethod<?> paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA);
+        Account<?, ?> account = accountOf("account-1", paymentMethod, payload);
+
+        AccountOption option = OfferOptionUtil.createAccountOption(account, "offer-1");
+
+        assertEquals(paymentMethod, option.getPaymentMethod());
+        assertEquals(Hex.encode(DigestUtil.hash("account-1offer-1".getBytes(StandardCharsets.UTF_8))),
+                option.getSaltedAccountId());
+        assertArrayEquals(DigestUtil.hash(ByteArrayUtils.concat(payload.serializeForHash(),
+                        "offer-1".getBytes(StandardCharsets.UTF_8))),
+                option.getSaltedAccountPayloadHash());
+        assertEquals(Optional.of("DE"), option.getCountryCode());
+        assertEquals(List.of("DE", "FR"), option.getAcceptedCountryCodes());
+        assertTrue(option.getBankId().isEmpty());
+        assertTrue(option.getAcceptedBanks().isEmpty());
+    }
+
+    @Test
+    void createAccountOptionCarriesTheCountryOfASingleCountryRail() {
+        ZelleAccountPayload payload = new ZelleAccountPayload("payload-2", "Alice", "alice@example.com");
+        Account<?, ?> account = accountOf("account-2",
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE), payload);
+
+        AccountOption option = OfferOptionUtil.createAccountOption(account, "offer-1");
+
+        assertEquals(Optional.of("US"), option.getCountryCode());
+        assertEquals(List.of("US"), option.getAcceptedCountryCodes());
+        assertTrue(option.getBankId().isEmpty());
+        assertTrue(option.getAcceptedBanks().isEmpty());
+    }
+
+    @Test
+    void createAccountOptionLeavesCountryAndBankDataEmptyForPayloadsWithoutThem() {
+        UserDefinedFiatAccountPayload payload = new UserDefinedFiatAccountPayload("payload-4", "custom data");
+        Account<?, ?> account = accountOf("account-4", FiatPaymentMethod.fromCustomName("Custom"), payload);
+
+        AccountOption option = OfferOptionUtil.createAccountOption(account, "offer-1");
+
+        assertTrue(option.getCountryCode().isEmpty());
+        assertTrue(option.getAcceptedCountryCodes().isEmpty());
+        assertTrue(option.getBankId().isEmpty());
+        assertTrue(option.getAcceptedBanks().isEmpty());
+    }
+
+    @Test
+    void createAccountOptionSaltsDifferentlyPerOffer() {
+        ZelleAccountPayload payload = new ZelleAccountPayload("payload-3", "Alice", "alice@example.com");
+        Account<?, ?> account = accountOf("account-3",
+                FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE), payload);
+
+        AccountOption first = OfferOptionUtil.createAccountOption(account, "offer-1");
+        AccountOption second = OfferOptionUtil.createAccountOption(account, "offer-2");
+
+        assertNotEquals(first.getSaltedAccountId(), second.getSaltedAccountId());
+        assertFalse(Arrays.equals(first.getSaltedAccountPayloadHash(), second.getSaltedAccountPayloadHash()));
+    }
+
+    private static Account<?, ?> accountOf(String id, PaymentMethod<?> paymentMethod, AccountPayload<?> payload) {
+        Account account = mock(Account.class);
+        when(account.getId()).thenReturn(id);
+        when(account.getPaymentMethod()).thenReturn(paymentMethod);
+        when(account.getAccountPayload()).thenReturn(payload);
+        return account;
     }
 }
