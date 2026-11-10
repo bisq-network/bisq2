@@ -38,6 +38,8 @@ import bisq.wallet.vo.Utxo;
 import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
+
+import com.google.common.net.InetAddresses;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,6 +53,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
+import static com.google.common.base.Preconditions.checkArgument;
 
 @Slf4j
 public class WalletService implements Service {
@@ -92,10 +96,20 @@ public class WalletService implements Service {
         private final boolean mock;
 
         public Config(boolean enabled, String host, int port, boolean mock) {
+            String trimmedHost = host.trim();
+            // The channel is plaintext, so the wallet password and the seed words would cross the network unencrypted
+            checkArgument(mock || !enabled || isLoopback(trimmedHost),
+                    "application.wallet.host must be localhost or a loopback IP address such as 127.0.0.1 or ::1 " +
+                            "while the connection to the wallet daemon is plaintext, but is %s", host);
             this.enabled = enabled;
-            this.host = host;
+            this.host = trimmedHost;
             this.port = port;
             this.mock = mock;
+        }
+
+        private static boolean isLoopback(String host) {
+            return host.equalsIgnoreCase("localhost")
+                    || (InetAddresses.isInetAddress(host) && InetAddresses.forString(host).isLoopbackAddress());
         }
 
         public static Config from(com.typesafe.config.Config config) {
