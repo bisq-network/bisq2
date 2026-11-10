@@ -352,6 +352,16 @@ class MuSigTradeServiceTest {
     // A stored trade keeps its queued trade messages, and the trade service applies them at startup with the trade
     // restrictions of the stored alerts (docs/specifications/trade/queued-trade-messages.md). The protocol has a
     // transition for an error report of the peer from every state.
+    // The service replays the processed messages and registers in one step, so that a message which the node processes
+    // at the same time is neither lost nor delivered twice (docs/specifications/network/startup-replay.md)
+    @Test
+    void serviceRegistersInOneStepWithTheReplayOfTheProcessedMessages() throws Exception {
+        try (MediationFixture fixture = new MediationFixture(true)) {
+            verify(fixture.networkService).subscribeToConfidentialMessages(fixture.service);
+            verify(fixture.networkService, never()).addConfidentialMessageListener(any());
+        }
+    }
+
     @Test
     void queuedTradeMessageOfAStoredTradeIsAppliedAtStartup() throws Exception {
         MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
