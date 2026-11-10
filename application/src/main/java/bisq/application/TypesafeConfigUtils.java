@@ -66,9 +66,7 @@ public class TypesafeConfigUtils {
         Path customConfigFilePath = appDataDirPath.resolve(configName);
         if (Files.exists(customConfigFilePath)) {
             try {
-                com.typesafe.config.Config config = ConfigFactory.parseFile(customConfigFilePath.toFile());
-                config.withFallback(ConfigFactory.defaultReference())
-                        .checkValid(ConfigFactory.defaultReference(), "application");
+                Config config = parseCustomConfigFile(customConfigFilePath);
                 log.info("Using custom config file: {}", customConfigFilePath.toAbsolutePath());
                 return Optional.of(config);
             } catch (Exception e) {
@@ -79,15 +77,27 @@ public class TypesafeConfigUtils {
     }
 
     /**
+     * Parses a file as the start parses bisq.conf. The start ignores a bisq.conf for which this method throws, so
+     * every check of whether the start takes a bisq.conf uses this method. The check of validity also throws for an
+     * unresolved substitution.
+     */
+    private static Config parseCustomConfigFile(Path filePath) {
+        Config config = ConfigFactory.parseFile(filePath.toFile());
+        config.withFallback(ConfigFactory.defaultReference())
+                .checkValid(ConfigFactory.defaultReference(), "application");
+        return config;
+    }
+
+    /**
      * Appends one line {@code path=value} per entry to bisq.conf, where it overrides an earlier value of the path.
-     * Unlike a rewrite of the file, it keeps the comments and substitutions of the user, and the user undoes it by
+     * Unlike a rewrite of the file, it keeps the comments and includes of the user, and the user undoes it by
      * removing the lines. Bisq writes the new content into a temporary file next to bisq.conf, parses it as the start
      * parses bisq.conf, and only then moves it over bisq.conf, so that a failure leaves bisq.conf as it was.
      *
      * @param entries values which typesafe config takes, for example a boolean, a string or a list
-     * @throws IOException if the file cannot be read or written, or if bisq.conf with the lines does not parse to the
-     *                     values, for example because the file has a syntax error, so that the application would
-     *                     ignore the file and the lines with it
+     * @throws IOException if the file cannot be read or written, or if the start would not take bisq.conf with the
+     *                     lines or would not get the values from it, for example because of a syntax error or a
+     *                     substitution, so that the application would ignore the file and the lines with it
      */
     public static void appendToCustomConfig(Path appDataDirPath, Map<String, ?> entries) throws IOException {
         Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
@@ -101,7 +111,7 @@ public class TypesafeConfigUtils {
         try {
             FileMutatorUtils.writeToPath(newContent, tempFilePath);
             // In the directory of bisq.conf, so that a relative include resolves as at the start
-            Config newConfig = ConfigFactory.parseFile(tempFilePath.toFile());
+            Config newConfig = parseCustomConfigFile(tempFilePath);
             for (Map.Entry<String, ?> entry : entries.entrySet()) {
                 Object expected = ConfigValueFactory.fromAnyRef(entry.getValue()).unwrapped();
                 if (!expected.equals(newConfig.getValue(entry.getKey()).unwrapped())) {
@@ -111,7 +121,7 @@ public class TypesafeConfigUtils {
             }
             FileMutatorUtils.replaceFile(tempFilePath, targetPath);
         } catch (ConfigException e) {
-            throw new IOException(customConfigFilePath + " cannot be parsed: " + e.getMessage(), e);
+            throw new IOException(customConfigFilePath + " is not valid: " + e.getMessage(), e);
         } finally {
             Files.deleteIfExists(tempFilePath);
         }

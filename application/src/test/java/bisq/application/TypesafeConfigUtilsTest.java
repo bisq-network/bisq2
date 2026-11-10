@@ -42,15 +42,13 @@ class TypesafeConfigUtilsTest {
     private static final String SANDBOX_ENABLED = "application.network.configByTransportType.tor.sandbox.enabled";
 
     @Test
-    void anAppendedEntryOverridesTheFileAndKeepsItsCommentsAndSubstitutions(@TempDir Path appDataDirPath)
-            throws IOException {
+    void anAppendedEntryOverridesTheFileAndKeepsItsComments(@TempDir Path appDataDirPath) throws IOException {
         Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         String content = """
                 # bridges of the user
-                bridgePort = 443
                 application.network.configByTransportType.tor {
                     sandbox.enabled = true
-                    torrcOverrides.ORPort = ${bridgePort}
+                    torrcOverrides.ORPort = 443
                 }""";
         Files.writeString(configFilePath, content, StandardCharsets.UTF_8);
 
@@ -59,9 +57,28 @@ class TypesafeConfigUtilsTest {
         String newContent = Files.readString(configFilePath, StandardCharsets.UTF_8);
         assertEquals(content + "\n" + SANDBOX_ENABLED + "=false\n", newContent);
         assertOnlyTheConfigFileIsLeft(appDataDirPath);
-        Config config = ConfigFactory.parseFile(configFilePath.toFile()).resolve();
+        Config config = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElseThrow();
         assertFalse(config.getBoolean(SANDBOX_ENABLED));
         assertEquals(443, config.getInt("application.network.configByTransportType.tor.torrcOverrides.ORPort"));
+    }
+
+    // The start ignores a bisq.conf with a substitution, so an appended entry would have no effect
+    @Test
+    void aFileWhichTheStartIgnoresIsLeftAsItIs(@TempDir Path appDataDirPath) throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        String content = """
+                bridgePort = 443
+                application.network.configByTransportType.tor.torrcOverrides.ORPort = ${bridgePort}
+                """;
+        Files.writeString(configFilePath, content, StandardCharsets.UTF_8);
+        assertTrue(TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).isEmpty());
+
+        IOException exception = assertThrows(IOException.class,
+                () -> TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false)));
+
+        assertTrue(exception.getMessage().contains("is not valid"));
+        assertEquals(content, Files.readString(configFilePath, StandardCharsets.UTF_8));
+        assertOnlyTheConfigFileIsLeft(appDataDirPath);
     }
 
     @Test
@@ -99,7 +116,7 @@ class TypesafeConfigUtilsTest {
         IOException exception = assertThrows(IOException.class,
                 () -> TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false)));
 
-        assertTrue(exception.getMessage().contains("cannot be parsed"));
+        assertTrue(exception.getMessage().contains("is not valid"));
         assertEquals(content, Files.readString(configFilePath, StandardCharsets.UTF_8));
         assertOnlyTheConfigFileIsLeft(appDataDirPath);
     }
