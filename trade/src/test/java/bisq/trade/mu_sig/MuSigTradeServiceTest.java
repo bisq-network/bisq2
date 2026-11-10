@@ -389,6 +389,42 @@ class MuSigTradeServiceTest {
         }
     }
 
+    // When the restriction ends, the trade service applies the queued events, as at a start without the restriction
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsAppliedWhenAStoredHaltOfTradingEnds() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            AuthorizedAlertData haltOfTrading = haltOfTrading();
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading);
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().remove(haltOfTrading);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
+            assertThat(storedTrade.getEventQueue()).isEmpty();
+        }
+    }
+
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsNotAppliedWhileAnotherRestrictionRemains() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            AuthorizedAlertData haltOfTrading = haltOfTrading();
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading);
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(minimumVersionForTrading());
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().remove(haltOfTrading);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.DEPOSIT_TX_CONFIRMED);
+            assertThat(storedTrade.getEventQueue()).hasSize(1);
+        }
+    }
+
     private static MuSigTrade withQueuedErrorReportOfPeer(MuSigTrade trade) throws Exception {
         MuSigReportErrorMessage report = new MuSigReportErrorMessage("peer-error", trade.getId(),
                 MuSigProtocol.VERSION, trade.getPeer().getNetworkId(), trade.getMyself().getNetworkId(),
