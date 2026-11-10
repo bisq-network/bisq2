@@ -40,7 +40,7 @@ public final class Utxo {
                     utxo.getTxId(),
                     utxo.getVout(),
                     utxo.getAmount(),
-                    utxo.getAddress(),
+                    utxo.getAddress().getAddress(),
                     utxo.getNumConfirmations()
             );
         } catch (RuntimeException e) {
