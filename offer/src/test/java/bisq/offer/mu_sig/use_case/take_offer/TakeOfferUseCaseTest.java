@@ -37,6 +37,7 @@ import bisq.common.monetary.Fiat;
 import bisq.common.monetary.Monetary;
 import bisq.common.monetary.TradeAmount;
 import bisq.common.monetary.TradeAmountRange;
+import bisq.common.monetary.MonetaryRange;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
@@ -1193,6 +1194,29 @@ public class TakeOfferUseCaseTest {
     }
 
     @Test
+    public void inputAmountLimitsInUsdConvertANonUsdRangeAtTheMarketRate() {
+        Market eurMarket = new Market("BTC", "EUR", "Bitcoin", "Euro");
+        stubEurMarketPrice(eurMarket, PriceQuote.fromFiatPrice(80_000, "EUR"));
+
+        // The offer is priced away from the market: its Bitcoin side follows the offer price,
+        // so the USD equivalent must be taken from the fiat side at the market rate.
+        MuSigOffer offer = offerWithMethods(Direction.BUY, advancedCashMethod);
+        Account<?, ?> acAccount = accountFor(advancedCashMethod);
+        TakeOfferUseCase eurUseCase = createUseCase(market -> List.of(acAccount));
+        when(offer.getMarket()).thenReturn(eurMarket);
+        when(offer.getPriceSpec()).thenReturn(new FixPriceSpec(PriceQuote.fromFiatPrice(100_000, "EUR")));
+        when(offer.getAmountSpec()).thenReturn(new QuoteSideRangeAmountSpec(
+                Fiat.fromFaceValue(1_000, "EUR").getValue(), Fiat.fromFaceValue(3_000, "EUR").getValue()));
+        when(offer.hasAmountRange()).thenReturn(true);
+        eurUseCase.initialize(offer);
+
+        // 1 EUR = 1.25 USD at 80,000 EUR and 100,000 USD per BTC.
+        MonetaryRange limitsInUsd = eurUseCase.getAmountService().getInputAmountLimitsInUsd();
+        assertEquals(usd(1250), limitsInUsd.getMin());
+        assertEquals(usd(3750), limitsInUsd.getMax());
+    }
+
+    @Test
     public void fixedAmountOfferInitializesTradeAmountAndSkipsAmountStep() {
         Account<?, ?> wiseAccount = accountFor(wiseMethod);
         TakeOfferUseCase useCase = createUseCase(market -> List.of(wiseAccount));
@@ -1250,6 +1274,8 @@ public class TakeOfferUseCaseTest {
         assertEquals(usd(3000), useCase.getAmountService().getTradeAmountLimits().getMax().getQuoteSideAmount());
         assertEquals(usd(1000), useCase.getAmountService().getInputAmountLimits().getMin());
         assertEquals(usd(3000), useCase.getAmountService().getInputAmountLimits().getMax());
+        assertEquals(usd(1000), useCase.getAmountService().getInputAmountLimitsInUsd().getMin());
+        assertEquals(usd(3000), useCase.getAmountService().getInputAmountLimitsInUsd().getMax());
         assertEquals(usd(2000), useCase.getAmountService().getFixTradeAmount().getQuoteSideAmount());
         assertEquals(0.5, useCase.getAmountService().getFixAmountSliderValue(), 1e-9);
     }
@@ -1266,6 +1292,7 @@ public class TakeOfferUseCaseTest {
         // WISE is a MODERATE chargeback-risk rail: 50% of the 10k USD absolute maximum.
         assertEquals(usd(5000), useCase.getAmountService().getTradeAmountLimits().getMax().getQuoteSideAmount());
         assertEquals(usd(5000), useCase.getAmountService().getInputAmountLimits().getMax());
+        assertEquals(usd(5000), useCase.getAmountService().getInputAmountLimitsInUsd().getMax());
     }
 
     @Test
