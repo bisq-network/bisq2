@@ -61,9 +61,11 @@ public abstract class ApplicationService implements Service {
     @EqualsAndHashCode
     public static final class Config {
         private static Config from(com.typesafe.config.Config rootConfig,
+                                   com.typesafe.config.Config commandLineConfig,
                                    com.typesafe.config.Config config,
                                    Path appDataDirPath) {
             return new Config(rootConfig,
+                    commandLineConfig,
                     appDataDirPath,
                     config.getString("appName"),
                     config.getBoolean("devMode"),
@@ -78,6 +80,8 @@ public abstract class ApplicationService implements Service {
         }
 
         private final com.typesafe.config.Config rootConfig;
+        // The program arguments and JVM options, which win over bisq.conf
+        private final com.typesafe.config.Config commandLineConfig;
         private final Path appDataDirPath;
         private final String appName;
         private final boolean devMode;
@@ -91,6 +95,7 @@ public abstract class ApplicationService implements Service {
         private final boolean checkInstanceLock;
 
         public Config(com.typesafe.config.Config rootConfig,
+                      com.typesafe.config.Config commandLineConfig,
                       Path appDataDirPath,
                       String appName,
                       boolean devMode,
@@ -103,6 +108,7 @@ public abstract class ApplicationService implements Service {
                       boolean includeThreadListInMemoryReport,
                       boolean checkInstanceLock) {
             this.rootConfig = rootConfig;
+            this.commandLineConfig = commandLineConfig;
             this.appDataDirPath = appDataDirPath;
             this.appName = appName;
             this.devMode = devMode;
@@ -122,6 +128,18 @@ public abstract class ApplicationService implements Service {
             this.checkInstanceLock = checkInstanceLock;
         }
 
+        /**
+         * @return whether a program argument or a JVM option sets the path, which then overrides what the application
+         * writes into bisq.conf
+         */
+        public boolean isSetOnCommandLine(String path) {
+            return commandLineConfig.hasPath(path);
+        }
+
+        public Path getCustomConfigFilePath() {
+            return appDataDirPath.resolve(CUSTOM_CONFIG_FILE_NAME);
+        }
+
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
             com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
             com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
@@ -129,8 +147,7 @@ public abstract class ApplicationService implements Service {
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
             return true;
         }
 
@@ -141,8 +158,7 @@ public abstract class ApplicationService implements Service {
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
         }
     }
 
@@ -199,7 +215,7 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         applicationConfig = rootConfig.getConfig("application");
-        config = Config.from(rootConfig, applicationConfig, appDataDirPath);
+        config = Config.from(rootConfig, getCommandLineConfig(), applicationConfig, appDataDirPath);
 
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {

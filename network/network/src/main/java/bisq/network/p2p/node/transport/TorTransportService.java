@@ -8,12 +8,14 @@ import bisq.common.observable.Observable;
 import bisq.common.observable.map.ObservableHashMap;
 import bisq.network.identity.NetworkId;
 import bisq.network.p2p.node.ConnectionException;
+import bisq.network.tor.TorSandboxConfig;
 import bisq.network.tor.TorSandboxStatus;
 import bisq.network.tor.TorService;
 import bisq.network.tor.TorTransportConfig;
 import bisq.network.tor.onionservice.OnionServiceKey;
 import bisq.network.tor.process.TorDirectories;
 import bisq.network.tor.sandbox.PluggableTransportsNotAllowedException;
+import bisq.network.tor.sandbox.SandboxUnavailableException;
 import bisq.security.keys.KeyBundle;
 import bisq.security.keys.TorKeyPair;
 import com.google.common.annotations.VisibleForTesting;
@@ -87,6 +89,14 @@ public class TorTransportService implements TransportService {
 
     // The directory of the embedded Tor below the data directory of the application
     public static final String TOR_DIR_NAME = "tor";
+    // Configuration entries of the Tor transport in the configuration of the application
+    public static final String SANDBOX_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH;
+    public static final String SANDBOX_ENABLED_CONFIG_PATH = TorSandboxConfig.BISQ2_CONFIG_PATH + ".enabled";
+    public static final String ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH =
+            TorSandboxConfig.BISQ2_CONFIG_PATH + ".allowPluggableTransports";
+    private static final String TOR_CONFIG_PATH = "application.network.configByTransportType.tor";
+    public static final String BUILT_IN_BRIDGES_CONFIG_PATH = TOR_CONFIG_PATH + ".builtInBridges";
+    public static final String BRIDGES_CONFIG_PATH = TOR_CONFIG_PATH + ".bridges";
     // The level of every policy of the Tor library which sandy takes where the host gives everything the policy asks
     // for (tor/README.md, the levels of the sandbox). Its weaker levels have other names.
     private static final String BASE_SANDBOX_LEVEL = "base";
@@ -269,6 +279,19 @@ public class TorTransportService implements TransportService {
                 .map(PluggableTransportsNotAllowedException.class::cast)
                 .map(PluggableTransportsNotAllowedException::getTransportNames)
                 .findFirst();
+    }
+
+    /**
+     * @return whether Tor did not start because Bisq cannot run it in the sandbox on this system, so that turning the
+     * sandbox off lets it start. The Tor library throws {@link SandboxUnavailableException} only for its checks before
+     * Tor runs and for refusals of sandy, which it tells by the status record of sandy, not by what Tor wrote. A missing
+     * record counts as a refusal, which a compromised Tor that fills the disk can cause (tor-startup.md, Known gaps).
+     * Refused pluggable transports are excluded: the user has other ways out there
+     * ({@link #findPluggableTransportsNotAllowed}).
+     */
+    public static boolean isSandboxUnavailable(Throwable startFailure) {
+        return findPluggableTransportsNotAllowed(startFailure).isEmpty() &&
+                Throwables.getCausalChain(startFailure).stream().anyMatch(SandboxUnavailableException.class::isInstance);
     }
 
     private static OnionServiceKey toOnionServiceKey(TorKeyPair torKeyPair) {

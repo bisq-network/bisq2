@@ -255,8 +255,10 @@ them. A user who turned the sandbox off, or who uses an external Tor, gets no no
 Pluggable transports are programs which Tor starts for bridges. The sandbox lets Tor start them only if
 `sandbox.allowPluggableTransports` is `true`; it is `false` by default. The network settings of the desktop
 application have a switch for it, which asks for a confirmation before it allows them, writes only this value into
-`bisq.conf` of the data directory, and takes effect after a restart; the switch is disabled while the sandbox is off
-and on Windows. With the value `true`, Tor may start the programs of the transports of the configured bridges, and
+`bisq.conf` of the data directory, and takes effect after a restart; the switch is disabled while the sandbox is off,
+on Windows, and while a program argument or a JVM option sets the value, which overrides `bisq.conf`. The switch and
+the note about a sandbox which is off show the values of the next start: the command line over the current `bisq.conf`
+over the defaults. With the value `true`, Tor may start the programs of the transports of the configured bridges, and
 they end with Tor. On Linux, obfs4 keeps the network of the sandbox and connects through the egress broker; with meek,
 webtunnel, snowflake or conjure, Tor and its transports get the network of the system. On macOS every transport gets
 the network of the system. There the sandbox lets Tor and its transports reach the certificate verifier of the system
@@ -292,12 +294,22 @@ of Tor, and in the sandbox also of sandy. There Tor can rewrite that file, so th
 the exit status and the status record, and then the quote, labeled as written by sandy and by Tor in its sandbox and
 not verified by Bisq. A start without the sandbox quotes the file without the label.
 
-When the bridges need pluggable transports which the configuration does not allow, the start error of the desktop
-application names the transports and the ways out: allow them with `sandbox.allowPluggableTransports`, except on
-Windows, where the sandbox cannot run them; remove the bridges or use bridges without pluggable transports; or turn the
-sandbox off. Its switch in the network settings is out of reach after a failed start, so the message names the entries
-which the user adds to `bisq.conf`. It names no path of the user, because the error popup copies its message into a bug
-report.
+Two failed starts of Tor get the popup of a failed start which a change of `bisq.conf` fixes
+(`docs/specifications/desktop/startup-failure-popup.md`), instead of the error popup with the bug report. The node
+knows both only from its own checks and the refusals of sandy (`SandboxUnavailableException` of the Tor library and its
+subclass `PluggableTransportsNotAllowedException`). It tells a refusal of sandy from an end of a sandboxed Tor by the
+status record of sandy, which Tor cannot write, not by what Tor wrote. A missing record also counts as a refusal, so a
+compromised Tor can still cause the offer to turn the sandbox off at a later start (see Known gaps):
+
+- When the bridges need pluggable transports which the configuration does not allow, the popup "Tor cannot use your
+  bridges" names the transports and what each choice costs. It offers to allow them
+  (`sandbox.allowPluggableTransports=true`), or on Windows, where the sandbox cannot run them, to turn the sandbox off
+  (`sandbox.enabled=false`). In both cases it also offers to use no bridges (`builtInBridges=""` and `bridges=[]`).
+  It does not offer to turn the sandbox off outside Windows, because allowing the transports weakens the sandbox less.
+- When Tor cannot run in the sandbox on this system for another reason, the popup "Tor cannot run in its sandbox"
+  shows the error and offers to turn the sandbox off (`sandbox.enabled=false`). The popup shows at most the first 1200
+  characters of the error, which can quote the standard error of sandy and Tor, so that the text about the choice, its
+  risk and how to undo it is never cut off; `bisq.log` has the full error.
 
 An external Tor, including the Tor of Whonix and of bisq-mobile, runs without the sandbox of the node.
 `TorService.getSandboxStatus()` names the level of the sandbox, or why Tor runs without it, for the user interface.
@@ -350,7 +362,8 @@ credentials would let the connections of different user profiles share circuits,
   start names the session as the likely cause.
 - A compromised Tor in the sandbox which fills the file system through `data/` can make sandy fail to create its
   status record at a later start, which the node takes for a refusal before Tor ran and answers with the advice to
-  turn the sandbox off. If the user follows it, the node clears `data/` before Tor runs without the sandbox.
+  turn the sandbox off, in the desktop application with the button which does it. If the user follows it, the node
+  clears `data/` before Tor runs without the sandbox.
 - The isolation check of an external Tor reads the configuration which that Tor reports. A Tor which reports a false
   configuration, or a filter in front of Tor which does not report it, as onion-grater on Whonix, is not checked.
 - With Tor and I2P, which the network settings of the desktop application offer, the network of the node is ready with

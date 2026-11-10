@@ -165,6 +165,7 @@ public class InputHandlerTest {
     private WebcamAppModel createModel() {
         return new WebcamAppModel(new ApplicationService.Config(
                 ConfigFactory.empty(),
+                ConfigFactory.empty(),
                 tempDir,
                 "Bisq-Test",
                 false,
