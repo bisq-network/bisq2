@@ -140,10 +140,12 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
+        backButton.disableProperty().bind(model.getBackButtonDisabled());
 
         skipThisStepHyperLink.visibleProperty().bind(model.getSkipThisStepHyperLinkVisible());
         skipThisStepHyperLink.managedProperty().bind(model.getSkipThisStepHyperLinkVisible());
@@ -171,10 +173,12 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
+        nextButton.disableProperty().unbind();
 
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
+        backButton.disableProperty().unbind();
 
         skipThisStepHyperLink.visibleProperty().unbind();
         skipThisStepHyperLink.managedProperty().unbind();

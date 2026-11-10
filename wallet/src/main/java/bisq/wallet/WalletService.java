@@ -26,23 +26,23 @@ import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.PersistenceService;
-import bisq.wallet.protobuf.GetNewAddressResponse;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
-import bisq.wallet.protobuf.GetUnusedAddressResponse;
-import bisq.wallet.protobuf.IsWalletEncryptedResponse;
 import bisq.wallet.protobuf.IsWalletReadyResponse;
+import bisq.wallet.protobuf.PubAddressInfo;
 import bisq.wallet.protobuf.SendToAddressRequest;
 import bisq.wallet.protobuf.SendToAddressResponse;
 import bisq.wallet.receive_address.ReceiveAddressService;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.Utxo;
 import bisq.wallet.vo.AddressBalance;
+import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
@@ -52,6 +52,7 @@ public class WalletService implements Service {
     private final WalletGrpcClient client;
     protected final ReceiveAddressService receiveAddressService;
     protected final Observable<Coin> balance = new Observable<>();
+    protected final Observable<BalanceBreakdown> balanceBreakdown = new Observable<>();
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
     protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
@@ -81,8 +82,14 @@ public class WalletService implements Service {
 
     public WalletService(Config config,
                          PersistenceService persistenceService) {
+        this(config, persistenceService, new WalletGrpcClient(config.host, config.port));
+    }
+
+    WalletService(Config config,
+                  PersistenceService persistenceService,
+                  WalletGrpcClient client) {
         this.config = config;
-        this.client = new WalletGrpcClient(config.host, config.port);
+        this.client = client;
         this.receiveAddressService = new ReceiveAddressService(persistenceService);
     }
 
@@ -109,16 +116,12 @@ public class WalletService implements Service {
         walletInitialized.set(true);
     }
 
-    public void encryptWallet(String password) {
-        client.encryptWallet(password);
+    public CompletableFuture<Void> openOrCreateWallet(String password) {
+        return client.openOrCreateWallet(password).thenApply(response -> null);
     }
 
-    public void decryptWallet(String password) {
-        client.decryptWallet(password);
-    }
-
-    public CompletableFuture<List<String>> getSeedWords() {
-        return client.getSeedWords()
+    public CompletableFuture<List<String>> getSeedWords(String password) {
+        return client.getSeedWords(password)
                 .thenApply(GetSeedWordsResponse::getSeedWordsList);
     }
 
@@ -128,14 +131,16 @@ public class WalletService implements Service {
 
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
         return client.getUnusedAddress()
-                .thenApply(GetUnusedAddressResponse::getAddress)
+                .thenApply(response -> response.getAddress().getAddress())
                 .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
         return client.requestWalletAddresses()
                 .thenApply(response -> {
-                    walletAddresses.setAll(response.getAddressesList());
+                    walletAddresses.setAll(response.getAddressesList().stream()
+                            .map(PubAddressInfo::getAddress)
+                            .toList());
                     return walletAddresses;
                 });
     }
@@ -182,10 +187,10 @@ public class WalletService implements Service {
         });
     }
 
+    // The daemon hands out a fresh unused address per call, but cycles through them once 50 are unused, so an
+    // address can come back together with its stored note.
     public CompletableFuture<ReceiveAddressEntry> createReceiveAddress() {
-        return client.getNewAddress()
-                .thenApply(GetNewAddressResponse::getAddress)
-                .thenApply(this::addReceiveAddress);
+        return getUnusedAddress();
     }
 
     public boolean updateReceiveAddress(ReceiveAddressEntry receiveAddressEntry,
@@ -193,26 +198,29 @@ public class WalletService implements Service {
         return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, note);
     }
 
-    public ReceiveAddressEntry addReceiveAddress(String address) {
-        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(address);
-        receiveAddressService.addReceiveAddressEntry(receiveAddressEntry);
-        return receiveAddressEntry;
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+        return sendToAddress(passphrase, address, amount, OptionalLong.empty());
     }
 
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
-        var builder = SendToAddressRequest.newBuilder();
-        passphrase.ifPresent(builder::setPassphrase);
-        builder.setAddress(address);
-        builder.setAmount(amount);
-        var request = builder.build();
+    // Without a fee rate the daemon applies its default rate.
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase,
+                                                   String address,
+                                                   long amount,
+                                                   OptionalLong feeRatePerKwu) {
+        // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
+        var request = SendToAddressRequest.newBuilder()
+                .setPassphrase(passphrase.orElse(""))
+                .setAddress(PubAddressInfo.newBuilder().setAddress(address))
+                .setAmount(amount);
+        feeRatePerKwu.ifPresent(request::setFeeRatePerKwu);
 
-        return client.sendToAddress(request)
+        return client.sendToAddress(request.build())
                 .thenApply(SendToAddressResponse::getTxId);
     }
 
+    // The daemon's wallet always has a password.
     public CompletableFuture<Boolean> isWalletEncrypted() {
-        return client.isWalletEncrypted()
-                .thenApply(IsWalletEncryptedResponse::getEncrypted);
+        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Coin> requestBalance() {
@@ -220,6 +228,11 @@ public class WalletService implements Service {
                 .thenApply(response -> {
                     var newBalance = Coin.asBtcFromValue(response.getBalance());
                     balance.set(newBalance);
+                    balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
+                            response.getConfirmed(),
+                            response.getTrustedPending(),
+                            response.getUntrustedPending(),
+                            response.getImmature()));
                     return newBalance;
                 });
     }
@@ -245,6 +258,10 @@ public class WalletService implements Service {
 
     public ReadOnlyObservable<Coin> getBalance() {
         return balance;
+    }
+
+    public ReadOnlyObservable<BalanceBreakdown> getBalanceBreakdown() {
+        return balanceBreakdown;
     }
 
     public ReadOnlyObservableSet<Transaction> getTransactions() {

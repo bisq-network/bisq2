@@ -18,12 +18,14 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard;
 
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.Model;
 import bisq.desktop.common.view.Navigation;
 import bisq.desktop.common.view.NavigationController;
 import bisq.desktop.common.view.View;
+import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.backup.SetupWalletWizardBackupController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.protect.SetupWalletWizardProtectController;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.setup_or_restore.SetupWalletWizardSetupOrRestoreController;
@@ -31,6 +33,7 @@ import bisq.desktop.main.content.wallet.setup_wallet_wizard.verify.SetupWalletWi
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
+import bisq.wallet.WalletException;
 import bisq.wallet.WalletService;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
@@ -39,6 +42,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 
 @Slf4j
 public class SetupWalletWizardController extends NavigationController {
@@ -53,6 +57,8 @@ public class SetupWalletWizardController extends NavigationController {
     private final SetupWalletWizardVerifyController setupWalletWizardVerifyController;
     private final WalletService walletService;
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
+    private boolean activated;
+    private boolean walletOpenInProgress;
 
     public SetupWalletWizardController(ServiceProvider serviceProvider) {
         super(NavigationTarget.SETUP_WALLET);
@@ -68,12 +74,14 @@ public class SetupWalletWizardController extends NavigationController {
                 this::setMainButtonsVisibleState);
         setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
-                this::onBack);
+                this::onBack,
+                setupWalletWizardProtectController::getPassword);
         setupWalletWizardVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,
-                this::onBack);
+                this::onBack,
+                setupWalletWizardProtectController::getPassword);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -90,6 +98,7 @@ public class SetupWalletWizardController extends NavigationController {
 
     @Override
     public void onActivate() {
+        activated = true;
         overlayController.setUseEscapeKeyHandler(false);
         overlayController.setEnterKeyHandler(null);
         overlayController.getApplicationRoot().addEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
@@ -101,6 +110,7 @@ public class SetupWalletWizardController extends NavigationController {
 
     @Override
     public void onDeactivate() {
+        activated = false;
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
     }
@@ -128,8 +138,8 @@ public class SetupWalletWizardController extends NavigationController {
         boolean shouldShowHeader = navigationTarget != NavigationTarget.SETUP_OR_RESTORE_WALLET;
         model.getShouldShowHeader().set(shouldShowHeader);
 
-        boolean shouldShowSkipThisStep = navigationTarget == NavigationTarget.SETUP_WALLET_PROTECT;
-        model.getSkipThisStepHyperLinkVisible().set(shouldShowSkipThisStep);
+        // A wallet without a password cannot be created on the daemon, so the password step cannot be skipped.
+        model.getSkipThisStepHyperLinkVisible().set(false);
     }
 
     @Override
@@ -144,6 +154,9 @@ public class SetupWalletWizardController extends NavigationController {
     }
 
     void onNext() {
+        if (walletOpenInProgress) {
+            return;
+        }
         int nextIndex = model.getCurrentIndex().get() + 1;
         if (nextIndex < model.getChildTargets().size()) {
             NavigationTarget currentTarget = model.getNavigationTarget();
@@ -155,22 +168,66 @@ public class SetupWalletWizardController extends NavigationController {
                     return;
                 }
 
-                // Only encrypt if the user actually set a password (i.e., did not skip)
                 if (!setupWalletWizardProtectController.getModel().isSkipProtectStep()) {
-                    String password = setupWalletWizardProtectController.getPassword();
-                    walletService.encryptWallet(password);
+                    openWalletThenNavigateTo(nextIndex);
+                    return;
                 }
             }
-            model.setAnimateRightOut(false);
-            model.getCurrentIndex().set(nextIndex);
-            NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
-            model.getSelectedChildTarget().set(nextTarget);
-            model.getNextButtonDisabled().set(false);
-            Navigation.navigateTo(nextTarget);
+            navigateTo(nextIndex);
         }
     }
 
+    private void openWalletThenNavigateTo(int nextIndex) {
+        String password = setupWalletWizardProtectController.getPassword();
+        walletOpenInProgress = true;
+        model.getNextButtonDisabled().set(true);
+        model.getBackButtonDisabled().set(true);
+        walletService.openOrCreateWallet(password).whenComplete((nothing, throwable) -> UIThread.run(() -> {
+            walletOpenInProgress = false;
+            model.getNextButtonDisabled().set(false);
+            model.getBackButtonDisabled().set(false);
+            if (!activated) {
+                return;
+            }
+            if (throwable == null) {
+                navigateTo(nextIndex);
+            } else {
+                Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
+                        ? throwable.getCause()
+                        : throwable;
+                new Popup().warning(toOpenFailedMessage(cause))
+                        .owner(view.getRoot())
+                        .show();
+            }
+        }));
+    }
+
+    private static String toOpenFailedMessage(Throwable cause) {
+        if (cause instanceof WalletException walletException) {
+            return switch (walletException.getReason()) {
+                case WRONG_PASSWORD -> Res.get("wallet.protectWallet.error.wrongPassword");
+                case DAEMON_UNAVAILABLE, CLIENT_NOT_READY -> Res.get("wallet.protectWallet.error.daemonUnavailable");
+                case INVALID_REQUEST -> Res.get("wallet.protectWallet.error.openRefused",
+                        walletException.getDetail().orElse(walletException.getMessage()));
+                default -> Res.get("wallet.protectWallet.error.daemonError");
+            };
+        }
+        return Res.get("wallet.protectWallet.error.daemonError");
+    }
+
+    private void navigateTo(int nextIndex) {
+        model.setAnimateRightOut(false);
+        model.getCurrentIndex().set(nextIndex);
+        NavigationTarget nextTarget = model.getChildTargets().get(nextIndex);
+        model.getSelectedChildTarget().set(nextTarget);
+        model.getNextButtonDisabled().set(false);
+        Navigation.navigateTo(nextTarget);
+    }
+
     void onBack() {
+        if (walletOpenInProgress) {
+            return;
+        }
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
             model.setAnimateRightOut(true);
@@ -207,8 +264,6 @@ public class SetupWalletWizardController extends NavigationController {
     private void setMainButtonsVisibleState(boolean value) {
         model.getNextButtonVisible().set(value);
         model.getBackButtonVisible().set(value);
-        boolean isProtectStep = model.getNavigationTarget() == NavigationTarget.SETUP_WALLET_PROTECT;
-        model.getSkipThisStepHyperLinkVisible().set(isProtectStep && value);
     }
 
     private void reset() {
