@@ -55,7 +55,7 @@ class TorStartupFailurePopupsTest {
     void aSandboxWhichCannotRunTorOffersToTurnItOff() {
         StartupFailurePopupContent content = create(SANDBOX_UNAVAILABLE, false, Set.of());
 
-        assertThat(content.headline()).isEqualTo("Tor cannot run in its sandbox");
+        assertThat(content.headline()).isEqualTo("Tor cannot run in its security sandbox");
         assertThat(content.message())
                 .startsWith(Res.get("popup.startup.error", ERROR))
                 .contains(SANDBOX_ENABLED_CONFIG_PATH + "=false to " + CONFIG_FILE_PATH);
@@ -74,8 +74,8 @@ class TorStartupFailurePopupsTest {
         assertThat(content.message())
                 .hasSizeLessThanOrEqualTo(2200)
                 .contains("including your wallet and private keys")
-                .contains("To turn the sandbox on again, remove this line")
-                .contains("The full error is in bisq.log");
+                .contains("To turn the sandbox on again, open this file and remove that line")
+                .contains("You can find the full error message in bisq.log");
         assertThat(TorStartupFailurePopups.shortenError(ERROR)).isEqualTo(ERROR);
     }
 
@@ -95,9 +95,9 @@ class TorStartupFailurePopupsTest {
 
         assertThat(content.headline()).isEqualTo("Tor cannot use your bridges");
         assertThat(content.message())
-                .contains("pluggable transports obfs4, snowflake")
-                .contains("Allowing them reduces some sandbox protections")
-                .contains("Bisq adds your choice to " + CONFIG_FILE_PATH);
+                .contains("pluggable transports: obfs4, snowflake")
+                .contains("Allowing them weakens some of the sandbox's protections")
+                .contains("Bisq will save your choice in " + CONFIG_FILE_PATH);
         assertThat(entriesOf(content)).containsExactly(Map.of(ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH, true),
                 NO_BRIDGES);
     }
@@ -108,7 +108,7 @@ class TorStartupFailurePopupsTest {
         StartupFailurePopupContent content = create(TRANSPORTS_NOT_ALLOWED, true, Set.of());
 
         assertThat(content.message())
-                .contains("On Windows, Tor cannot start these programs in its sandbox")
+                .contains("On Windows, Tor cannot start these helper programs inside its security sandbox")
                 .contains("including your wallet and private keys")
                 .doesNotContain("Allowing them");
         assertThat(entriesOf(content)).containsExactly(NO_BRIDGES, Map.of(SANDBOX_ENABLED_CONFIG_PATH, false));
@@ -126,7 +126,7 @@ class TorStartupFailurePopupsTest {
         assertThat(none.choices()).isEmpty();
         assertThat(none.message())
                 .contains("an option that sets " + ALLOW_PLUGGABLE_TRANSPORTS_CONFIG_PATH + ", " + BRIDGES_CONFIG_PATH)
-                .doesNotContain("Bisq adds your choice");
+                .doesNotContain("Bisq will save your choice");
     }
 
     // A renamed or retyped entry of the configuration would make a choice fail at the next start or have no effect
