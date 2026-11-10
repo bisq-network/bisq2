@@ -57,11 +57,11 @@ import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
@@ -78,7 +78,7 @@ class WalletServiceGrpcTest {
     @TempDir
     private Path tempDirPath;
 
-    private final List<Object> requests = Collections.synchronizedList(new ArrayList<>());
+    private final List<Object> requests = new CopyOnWriteArrayList<>();
     private final List<String> unusedAddresses = new ArrayList<>();
     private final RecordingWallet daemon = new RecordingWallet();
     private Server server;
