@@ -20,8 +20,6 @@ package bisq.bonded_roles.market_price;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.proto.UnresolvableProtobufException;
-import bisq.i18n.Res;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,12 +29,6 @@ import static org.assertj.core.api.Assertions.assertThat;
  * for example a price which an earlier version persisted. See docs/specifications/bonded-roles/market-prices.md.
  */
 class MarketPriceStoreTest {
-    @BeforeAll
-    static void setUpResources() {
-        // MarketPriceProvider reads a display name from the resources
-        Res.setAndApplyLanguageTag("en");
-    }
-
     @Test
     void persistedNonPositivePriceIsSkippedAtLoadAndTheOtherPricesAreKept() throws UnresolvableProtobufException {
         MarketPrice usdPrice = marketPrice(PriceQuote.fromFiatPrice(60000, "USD"));
