@@ -29,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static bisq.application.TypesafeConfigUtils.coerce;
@@ -152,6 +154,36 @@ class TypesafeConfigUtilsTest {
         assertTrue(Files.isSymbolicLink(configFilePath));
         assertEquals("# mine\n" + SANDBOX_ENABLED + "=false\n",
                 Files.readString(linkTargetPath, StandardCharsets.UTF_8));
+    }
+
+    // The start parses bisq.conf by its own path, so a relative include resolves from the directory of the link
+    @Test
+    void anIncludeRelativeToALinkedFileResolvesFromTheDirectoryOfTheLink(@TempDir Path appDataDirPath,
+                                                                         @TempDir Path otherDirPath)
+            throws IOException {
+        Files.writeString(appDataDirPath.resolve("bridges.conf"), "bridgePort = 443\n", StandardCharsets.UTF_8);
+        Path linkTargetPath = otherDirPath.resolve("my-bisq.conf");
+        String content = "include required(\"bridges.conf\")\n";
+        Files.writeString(linkTargetPath, content, StandardCharsets.UTF_8);
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        try {
+            Files.createSymbolicLink(configFilePath, linkTargetPath);
+        } catch (UnsupportedOperationException | IOException e) {
+            Assumptions.abort("The file system does not support symbolic links: " + e.getMessage());
+        }
+
+        TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false));
+
+        assertEquals(content + SANDBOX_ENABLED + "=false\n", Files.readString(linkTargetPath, StandardCharsets.UTF_8));
+        Config config = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElseThrow();
+        assertFalse(config.getBoolean(SANDBOX_ENABLED));
+        assertEquals(443, config.getInt("bridgePort"));
+        try (Stream<Path> files = Files.list(appDataDirPath)) {
+            assertEquals(Set.of(configFilePath, appDataDirPath.resolve("bridges.conf")), files.collect(Collectors.toSet()));
+        }
+        try (Stream<Path> files = Files.list(otherDirPath)) {
+            assertEquals(List.of(linkTargetPath), files.toList());
+        }
     }
 
     private static void assertOnlyTheConfigFileIsLeft(Path appDataDirPath) throws IOException {

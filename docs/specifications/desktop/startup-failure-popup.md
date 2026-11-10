@@ -27,8 +27,10 @@ changes `bisq.conf` when the user picks a way out.
    overrides an earlier value of the path. The comments and includes of the user stay.
 7. The application writes the new content into a temporary file next to `bisq.conf`. It parses and checks that file
    with the same code as the start, in the directory of `bisq.conf`, so that a relative include resolves as at the
-   start. It also checks that the file gives each setting its value. Only then does it move the file over `bisq.conf`. If `bisq.conf` links to another file, that file
-   gets the lines and the link stays. If `bisq.conf` does not exist, the application creates it.
+   start. It also checks that the file gives each setting its value. Only then does it move the file over `bisq.conf`.
+   If `bisq.conf` links to another file, that file gets the lines and the link stays. The check still parses a copy
+   in the directory of the link, because the start resolves a relative include from there. If `bisq.conf` does not
+   exist, the application creates it.
 8. If the parse, the check or the write fails, `bisq.conf` stays as it was. The application then shows a warning with
    the path of `bisq.conf`, the reason and the lines which the user can add by hand. The warning offers no bug report,
    because the cause is usually the file of the user. Closing it shuts the application down.

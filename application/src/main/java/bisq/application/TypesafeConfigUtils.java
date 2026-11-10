@@ -108,10 +108,19 @@ public class TypesafeConfigUtils {
         String newContent = content + separator + String.join("\n", toConfigLines(entries)) + "\n";
         Path tempFilePath = Files.createTempFile(targetPath.toAbsolutePath().getParent(),
                 ApplicationService.CUSTOM_CONFIG_FILE_NAME + ".", ".tmp");
+        Path checkedFilePath = tempFilePath;
         try {
             FileMutatorUtils.writeToPath(newContent, tempFilePath);
-            // In the directory of bisq.conf, so that a relative include resolves as at the start
-            Config newConfig = parseCustomConfigFile(tempFilePath);
+            // The start resolves a relative include from the directory of bisq.conf, also if bisq.conf links to a
+            // file in another directory. The check therefore parses a copy in that directory. The move uses the
+            // temporary file next to the linked file, so that the move stays on one file system.
+            Path configDirPath = customConfigFilePath.toAbsolutePath().getParent();
+            if (!tempFilePath.getParent().equals(configDirPath)) {
+                checkedFilePath = Files.createTempFile(configDirPath,
+                        ApplicationService.CUSTOM_CONFIG_FILE_NAME + ".", ".tmp");
+                FileMutatorUtils.writeToPath(newContent, checkedFilePath);
+            }
+            Config newConfig = parseCustomConfigFile(checkedFilePath);
             for (Map.Entry<String, ?> entry : entries.entrySet()) {
                 Object expected = ConfigValueFactory.fromAnyRef(entry.getValue()).unwrapped();
                 if (!expected.equals(newConfig.getValue(entry.getKey()).unwrapped())) {
@@ -124,6 +133,7 @@ public class TypesafeConfigUtils {
             throw new IOException(customConfigFilePath + " is not valid: " + e.getMessage(), e);
         } finally {
             Files.deleteIfExists(tempFilePath);
+            Files.deleteIfExists(checkedFilePath);
         }
     }
 
