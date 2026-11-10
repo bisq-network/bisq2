@@ -68,6 +68,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -551,6 +552,72 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void aPollAnswerWhichArrivesAfterTheStopTriggersNoFollowUp() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.holdBalanceReply = true;
+        awaitHeldBalanceReply();
+        polling.stopPolling();
+        requests.clear();
+        daemon.holdBalanceReply = false;
+        daemon.heldBalanceReply.onNext(GetBalanceResponse.newBuilder().setBalance(3000).build());
+        daemon.heldBalanceReply.onCompleted();
+        Thread.sleep(300);
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void aPollFailureWhichArrivesAfterTheStopTriggersNoProbe() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.holdBalanceReply = true;
+        awaitHeldBalanceReply();
+        polling.stopPolling();
+        requests.clear();
+        daemon.holdBalanceReply = false;
+        daemon.heldBalanceReply.onError(Status.UNAVAILABLE.asRuntimeException());
+        Thread.sleep(300);
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void aPollAnswerOfAStoppedPollTriggersNoFollowUpAfterARestart() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.holdBalanceReply = true;
+        awaitHeldBalanceReply();
+        StreamObserver<GetBalanceResponse> replyOfTheStoppedPoll = daemon.heldBalanceReply;
+        polling.stopPolling();
+        daemon.holdBalanceReply = false;
+        daemon.balance = 3000;
+        daemon.untrustedPending = 500;
+        polling.startPolling();
+        awaitBalance(polling, 3000);
+        requests.clear();
+
+        replyOfTheStoppedPoll.onNext(GetBalanceResponse.newBuilder()
+                .setBalance(3000)
+                .setConfirmed(1500)
+                .setTrustedPending(500)
+                .setUntrustedPending(500)
+                .setImmature(3)
+                .build());
+        replyOfTheStoppedPoll.onCompleted();
+
+        awaitRequest(GetBalanceRequest.class);
+        assertFalse(requests.stream().anyMatch(ListTransactionsRequest.class::isInstance));
+    }
+
+    @Test
     void shutdownEndsThePoll() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
@@ -647,6 +714,14 @@ class WalletServiceGrpcTest {
         return pollingService;
     }
 
+    private void awaitHeldBalanceReply() throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (daemon.heldBalanceReply == null && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertNotNull(daemon.heldBalanceReply, "no balance request was held");
+    }
+
     private void awaitBalance() throws InterruptedException {
         long deadline = System.currentTimeMillis() + 5_000;
         while (walletService.getBalance().get() == null && System.currentTimeMillis() < deadline) {
@@ -691,7 +766,7 @@ class WalletServiceGrpcTest {
         private volatile long untrustedPending = 7;
         private volatile Status failure;
         private volatile boolean holdBalanceReply;
-        private StreamObserver<GetBalanceResponse> heldBalanceReply;
+        private volatile StreamObserver<GetBalanceResponse> heldBalanceReply;
 
         @Override
         public void openOrCreateWallet(OpenOrCreateWalletRequest request, StreamObserver<OpenOrCreateWalletResponse> responseObserver) {

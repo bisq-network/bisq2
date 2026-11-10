@@ -200,9 +200,18 @@ public class WalletService implements Service {
         if (current != State.OPEN) {
             return;
         }
+        Scheduler scheduler = refreshScheduler;
         BalanceBreakdown previousBreakdown = balanceBreakdown.get();
-        pollInFlight = requestBalance().thenAccept(newBalance -> {
-            if (!Objects.equals(balanceBreakdown.get(), previousBreakdown)) {
+        pollInFlight = fetchBalance().whenComplete((newBalance, throwable) -> {
+            // An answer which arrives after the poll was stopped triggers no further call.
+            if (refreshScheduler != scheduler) {
+                return;
+            }
+            if (throwable != null) {
+                if (findState(throwable).isPresent()) {
+                    refreshState();
+                }
+            } else if (!Objects.equals(balanceBreakdown.get(), previousBreakdown)) {
                 requestTransactions();
             }
         });
