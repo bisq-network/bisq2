@@ -51,7 +51,8 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private final ChangeListener<Number> questionIndexListener, answerIndexListener;
     private final Button createWalletSuccessButton, wrongWordGoBackButton;
     private final WizardOverlay wrongWordOverlay, createWalletSuccessOverlay;
-    private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin, shouldShowWrongWordOverlayPin;
+    private Subscription showCreateWalletSuccessPin, transitionSubscriptionPin, shouldShowWrongWordOverlayPin,
+            questionsReadyPin;
     private UIScheduler slideNextQuestionScheduler;
 
     public SetupWalletWizardVerifyView(SetupWalletWizardVerifyModel model,
@@ -131,7 +132,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
 
         model.getCurrentQuestionIndex().addListener(questionIndexListener);
         model.getSelectedAnswerIndex().addListener(answerIndexListener);
-        updateQuestion();
+        questionsReadyPin = EasyBind.subscribe(model.getQuestionsReady(), ready -> updateQuestion());
     }
 
     @Override
@@ -139,6 +140,7 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
         showCreateWalletSuccessPin.unsubscribe();
         transitionSubscriptionPin.unsubscribe();
         shouldShowWrongWordOverlayPin.unsubscribe();
+        questionsReadyPin.unsubscribe();
 
         createWalletSuccessButton.setOnAction(null);
         wrongWordGoBackButton.setOnAction(null);
@@ -155,6 +157,11 @@ public class SetupWalletWizardVerifyView extends View<StackPane, SetupWalletWiza
     private void updateQuestion() {
         int qIdx = model.getCurrentQuestionIndex().get();
         model.getSelectedAnswerIndex().set(SetupWalletWizardVerifyModel.INVALID_INDEX);
+        if (!model.getQuestionsReady().get()) {
+            questionLabel.setText("");
+            Arrays.stream(answerButtons).forEach(btn -> btn.setVisible(false));
+            return;
+        }
         if (qIdx >= model.getQuestionPositions().size()) {
             questionLabel.setText(Res.get("wallet.verifySeeds.success.title"));
             Arrays.stream(answerButtons).forEach(btn -> btn.setVisible(false));
