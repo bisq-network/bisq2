@@ -17,12 +17,17 @@
 
 package bisq.desktop.main.content.authorized_role.mediator;
 
+import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
+import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.common.view.TabController;
 import bisq.desktop.main.content.authorized_role.mediator.bisq_easy.BisqEasyMediatorController;
 import bisq.desktop.main.content.authorized_role.mediator.mu_sig.MuSigMediatorController;
+import bisq.desktop.common.view.TabButton;
 import bisq.desktop.navigation.NavigationTarget;
+import bisq.support.notifications.SupportNotification;
+import bisq.support.notifications.SupportNotificationsService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,21 +38,63 @@ public class MediatorTabController extends TabController<MediatorTabModel> {
     @Getter
     protected final MediatorTabView view;
     private final ServiceProvider serviceProvider;
+    private final SupportNotificationsService supportNotificationsService;
+    private Pin mediatorNotificationsPin;
 
     public MediatorTabController(ServiceProvider serviceProvider) {
         super(new MediatorTabModel(), NavigationTarget.MEDIATOR);
 
         this.serviceProvider = serviceProvider;
+        supportNotificationsService = serviceProvider.getSupportService().getSupportNotificationsService();
 
         view = new MediatorTabView(model, this);
     }
 
     @Override
     public void onActivate() {
+        mediatorNotificationsPin = supportNotificationsService.getChangedNotification().addObserver(this::onChanged);
+
+        UIThread.run(() -> {
+            long bisqEasyNotificationCount = supportNotificationsService.getNotConsumedBisqEasyMediatorNotifications().count();
+            findTabButton(NavigationTarget.BISQ_EASY_MEDIATOR).ifPresent(tabButton ->
+                    tabButton.setNumNotifications(bisqEasyNotificationCount));
+
+            long musigNotificationCount = supportNotificationsService.getNotConsumedMusigMediatorNotifications().count();
+            findTabButton(NavigationTarget.MU_SIG_MEDIATOR).ifPresent(tabButton ->
+                    tabButton.setNumNotifications(musigNotificationCount));
+        });
     }
 
     @Override
     public void onDeactivate() {
+        mediatorNotificationsPin.unbind();
+    }
+
+    private void onChanged(SupportNotification supportNotification) {
+        if (supportNotification == null) {
+            return;
+        }
+    
+        UIThread.run(()-> {
+            switch (supportNotification.getType()) {
+                case BISQ_EASY_MEDIATOR_NOTIFICATION -> {
+                    long count = supportNotificationsService.getNotConsumedBisqEasyMediatorNotifications().count();
+                    findTabButton(NavigationTarget.BISQ_EASY_MEDIATOR).ifPresent(tabButton ->
+                            tabButton.setNumNotifications(count));
+                }
+                case MU_SIG_MEDIATOR_NOTIFICATION -> {
+                    long count = supportNotificationsService.getNotConsumedMusigMediatorNotifications().count();
+                    findTabButton(NavigationTarget.MU_SIG_MEDIATOR).ifPresent(tabButton ->
+                            tabButton.setNumNotifications(count));
+                }
+            }
+        });
+    }
+
+    private Optional<TabButton> findTabButton(NavigationTarget navigationTarget) {
+        return model.getTabButtons().stream()
+                .filter(tabButton -> navigationTarget == tabButton.getNavigationTarget())
+                .findAny();
     }
 
     @Override
