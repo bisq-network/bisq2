@@ -21,20 +21,13 @@ import bisq.desktop.common.view.Model;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedState;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import lombok.Getter;
 
 @Getter
 public class SetupWalletWizardBackupModel implements Model {
-    private final int SEED_WORD_COUNT = 12;
-    private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
+    private final ObservableList<String> seedWords = FXCollections.observableArrayList();
     private final ObjectProperty<SeedState> seedState = new SimpleObjectProperty<>(SeedState.LOADING);
-
-    public SetupWalletWizardBackupModel() {
-        for (int i = 0; i < SEED_WORD_COUNT; i++) {
-            seedWords[i] = new SimpleStringProperty("");
-        }
-    }
 }
 
