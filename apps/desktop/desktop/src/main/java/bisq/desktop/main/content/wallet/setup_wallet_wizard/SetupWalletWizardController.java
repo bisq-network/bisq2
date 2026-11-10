@@ -181,10 +181,12 @@ public class SetupWalletWizardController extends NavigationController {
         walletOpenInProgress = true;
         model.getNextButtonDisabled().set(true);
         model.getBackButtonDisabled().set(true);
+        setupWalletWizardProtectController.setInputLocked(true);
         walletService.openOrCreateWallet(password).whenComplete((nothing, throwable) -> UIThread.run(() -> {
             walletOpenInProgress = false;
             model.getNextButtonDisabled().set(false);
             model.getBackButtonDisabled().set(false);
+            setupWalletWizardProtectController.setInputLocked(false);
             if (!activated) {
                 return;
             }

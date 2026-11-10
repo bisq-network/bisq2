@@ -44,4 +44,5 @@ public class SetupWalletWizardProtectModel implements Model {
     private final StringProperty confirmPassword = new SimpleStringProperty("");
     private final TextMinMaxLengthValidator confirmPasswordValidator = new TextMinMaxLengthValidator(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH);
     private final BooleanProperty shouldShowSkipProtectStepOverlay = new SimpleBooleanProperty(false);
+    private final BooleanProperty inputLocked = new SimpleBooleanProperty(false);
 }
