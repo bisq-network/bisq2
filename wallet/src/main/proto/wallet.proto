@@ -17,6 +17,13 @@
 
 syntax = "proto3";
 
+// Copy of bisq-musig's rpc/src/main/proto/bmp_wallet.proto, the user-facing wallet service that musigd serves from a
+// BMPWallet. Change the contract there first and copy the file over; the two must stay identical (same package,
+// service, method names and field numbers). Copied at bisq-musig commit 6f8517c. The comments on the messages are
+// the daemon's; where they say "bisq2's copy" they mean the proto this file replaced.
+//
+// The messages of the persisted receive address store are in receive_address.proto; they never cross the wire.
+
 package wallet;
 
 option java_multiple_files = true;
@@ -24,18 +31,27 @@ option java_package = "bisq.wallet.protobuf";
 
 // The WalletService definition.
 service Wallet {
+    // Opens the wallet database in the server's wallet directory, creating a fresh wallet if
+    // none exists there yet. Must be called before any other wallet operation. When a wallet is
+    // created, `password` becomes its password and must follow the password rules (see
+    // `OpenOrCreateWalletRequest`), failing with INVALID_ARGUMENT otherwise; a wrong password
+    // for an existing wallet fails with PERMISSION_DENIED.
+    rpc OpenOrCreateWallet (OpenOrCreateWalletRequest) returns (OpenOrCreateWalletResponse);
     rpc IsWalletReady (IsWalletReadyRequest) returns (IsWalletReadyResponse);
-    rpc GetNewAddress (GetNewAddressRequest) returns (GetNewAddressResponse);
     rpc GetUnusedAddress (GetUnusedAddressRequest) returns (GetUnusedAddressResponse);
     rpc GetWalletAddresses (GetWalletAddressesRequest) returns (GetWalletAddressesResponse);
     rpc ListTransactions (ListTransactionsRequest) returns (ListTransactionsResponse);
     rpc ListUtxos (ListUtxosRequest) returns (ListUtxosResponse);
+    // Builds, signs and broadcasts a payment. `passphrase` must be the wallet password
+    // (PERMISSION_DENIED otherwise).
     rpc SendToAddress (SendToAddressRequest) returns (SendToAddressResponse);
-    rpc IsWalletEncrypted (IsWalletEncryptedRequest) returns (IsWalletEncryptedResponse);
     rpc GetBalance (GetBalanceRequest) returns (GetBalanceResponse);
     rpc GetSeedWords (GetSeedWordsRequest) returns (GetSeedWordsResponse);
-    rpc EncryptWallet (EncryptWalletRequest) returns (EncryptWalletResponse);
-    rpc DecryptWallet (DecryptWalletRequest) returns (DecryptWalletResponse);
+    // Re-keys the wallet database from oldPassword to newPassword. Requires the password
+    // currently in force (PERMISSION_DENIED otherwise), and newPassword must follow the password
+    // rules (INVALID_ARGUMENT otherwise). The wallet is always password-protected: a password can
+    // only be replaced, never removed.
+    rpc ChangePassword (ChangePasswordRequest) returns (ChangePasswordResponse);
 }
 
 
@@ -49,19 +65,13 @@ message IsWalletReadyResponse {
 message GetUnusedAddressRequest {}
 
 message GetUnusedAddressResponse {
-    string address = 1;
-}
-
-message GetNewAddressRequest {}
-
-message GetNewAddressResponse {
-    string address = 1;
+    PubAddressInfo address = 1;
 }
 
 message GetWalletAddressesRequest {}
 
 message GetWalletAddressesResponse {
-    repeated string addresses = 1;
+    repeated PubAddressInfo addresses = 1;
 }
 
 message ListTransactionsRequest {}
@@ -77,19 +87,18 @@ message ListUtxosResponse {
 }
 
 message SendToAddressRequest {
-    optional string passphrase = 1;
-    string address = 2;
+    // The wallet password. Required (where bisq2's copy has it `optional`): the wallet is always
+    // password-protected.
+    string passphrase = 1;
+    PubAddressInfo address = 2;
     uint64 amount = 3;
+    // Addition over bisq2's copy: fee rate in satoshis per 1000 weight units. Clients that
+    // don't set it (including bisq2 today) get the server's default rate.
+    optional uint64 feeRatePerKwu = 4;
 }
 
 message SendToAddressResponse {
     string txId = 1;
-}
-
-message IsWalletEncryptedRequest {}
-
-message IsWalletEncryptedResponse {
-    bool encrypted = 1;
 }
 
 message GetBalanceRequest {}
@@ -97,28 +106,54 @@ message GetBalanceRequest {}
 message GetBalanceResponse {
     // Balance in satoshis
     uint64 balance = 1;
+    // Additions over bisq2's copy: the full BDK breakdown, so a client can distinguish settled
+    // funds from pending ones. `balance` above stays the trusted-spendable total for
+    // compatibility.
+    uint64 confirmed = 2;
+    uint64 trustedPending = 3;
+    uint64 untrustedPending = 4;
+    uint64 immature = 5;
 }
 
-message GetSeedWordsRequest {}
+message GetSeedWordsRequest {
+    // The wallet password.
+    string password = 1;
+}
 
 message GetSeedWordsResponse {
     repeated string seedWords = 1;
 }
 
-message EncryptWalletRequest {
+message OpenOrCreateWalletRequest {
+    // The wallet password. When this call creates the wallet, it must follow the password rules:
+    // at least 8 characters, among them at least one lowercase letter, one uppercase letter, one
+    // number and one special character (neither letter nor number); a letter of a script without
+    // case, such as Chinese or Arabic, counts as both lowercase and uppercase. As a regular
+    // expression, which a client can use to check a password before sending it:
+    //   ^(?=.*[\p{Ll}\p{Lo}])(?=.*[\p{Lu}\p{Lo}])(?=.*\p{Nd})(?=.*[^\p{L}\p{Nd}]).{8,}$
+    // The server's `wallet::password::Password` is authoritative; a rejected password fails with
+    // INVALID_ARGUMENT, whose message states the rules in plain English for the user.
     string password = 1;
 }
 
-message EncryptWalletResponse {
+message OpenOrCreateWalletResponse {
     bool success = 1;
 }
 
-message DecryptWalletRequest {
-    string password = 1;
+message ChangePasswordRequest {
+    // The password currently in force.
+    string oldPassword = 1;
+    // The new password; subject to the same rules as `OpenOrCreateWalletRequest.password`.
+    string newPassword = 2;
 }
 
-message DecryptWalletResponse {
+message ChangePasswordResponse {
     bool success = 1;
+}
+
+// A bitcoin address.
+message PubAddressInfo {
+    string address = 1;
 }
 
 message TransactionInput {
@@ -131,7 +166,8 @@ message TransactionInput {
 
 message TransactionOutput {
     uint64 value = 1;
-    string address = 2;
+    // Absent when the script doesn't decode to a standard address.
+    PubAddressInfo address = 2;
     bytes scriptPubKey = 3;
 }
 
@@ -141,7 +177,7 @@ message Transaction {
     repeated TransactionOutput outputs = 3;
     uint64 lockTime = 4;
     uint32 blockHeight = 5;
-    uint64 date = 6; // Unix timestamp
+    uint64 date = 6; // Unix timestamp, in SECONDS (bisq2 decodes it with Instant.ofEpochSecond)
     uint32 numConfirmations = 7;
     uint64 amount = 8;
     bool incoming = 9;
@@ -151,16 +187,7 @@ message Utxo {
     string txId = 1;
     uint32 vout = 2;
     uint64 amount = 3;
-    string address = 4;
+    // Absent when the script doesn't decode to a standard address.
+    PubAddressInfo address = 4;
     uint32 numConfirmations = 5;
-}
-
-message ReceiveAddressEntry {
-  string address = 1;
-  sint64 createdAt = 2;
-  optional string note = 3;
-}
-
-message ReceiveAddressStore {
-  repeated ReceiveAddressEntry receiveAddressEntries = 1;
 }

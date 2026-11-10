@@ -37,7 +37,7 @@ public final class TransactionOutput {
         try {
             return new TransactionOutput(
                     output.getValue(),
-                    output.getAddress(),
+                    output.getAddress().getAddress(),
                     output.getScriptPubKey().toByteArray()
             );
         } catch (RuntimeException e) {

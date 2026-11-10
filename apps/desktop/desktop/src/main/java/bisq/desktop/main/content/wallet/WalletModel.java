@@ -19,13 +19,14 @@ package bisq.desktop.main.content.wallet;
 
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.desktop.main.content.ContentTabModel;
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
+import bisq.wallet.WalletService;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import lombok.Getter;
 
 public class WalletModel extends ContentTabModel {
     @Getter
-    private final BooleanProperty isWalletInitialized = new SimpleBooleanProperty(false);
+    private final ObjectProperty<WalletService.State> walletState = new SimpleObjectProperty<>(WalletService.State.NOT_SET_UP);
 
     @Override
     public NavigationTarget getDefaultNavigationTarget() {
