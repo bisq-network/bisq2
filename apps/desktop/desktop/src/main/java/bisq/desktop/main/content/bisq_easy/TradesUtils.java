@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.bisq_easy;
 
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.encoding.Csv;
 import bisq.common.file.FileMutatorUtils;
 import bisq.common.monetary.Coin;
@@ -126,7 +125,6 @@ public class TradesUtils {
     public static void requestMediation(BisqEasyOpenTradeChannel channel,
                                          BisqEasyContract contract,
                                          BisqEasyMediationRequestService bisqEasyMediationRequestService,
-                                         BisqEasyOpenTradeChannelService channelService,
                                          BannedUserService bannedUserService) {
         if (bannedUserService.isUserProfileBanned(channel.getMyUserIdentity().getUserProfile())) {
             // A banned user cannot request mediation. As in the take offer flow, we don't show a popup.
@@ -147,9 +145,7 @@ public class TradesUtils {
                     .information(Res.get("bisqEasy.mediation.request.confirm.msg"))
                     .actionButtonText(Res.get("bisqEasy.mediation.request.confirm.openMediation"))
                     .onAction(() -> {
-                        // The request carries the chat messages, so the trade log message is added before it.
-                        String encoded = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", channel.getMyUserIdentity().getUserName());
-                        channelService.sendTradeLogMessage(encoded, channel);
+                        // The service sends the trade log message of the request
                         bisqEasyMediationRequestService.requestMediation(channel, contract);
                         new Popup().headline(Res.get("bisqEasy.mediation.request.feedback.headline"))
                                 .feedback(Res.get("bisqEasy.mediation.request.feedback.msg"))
