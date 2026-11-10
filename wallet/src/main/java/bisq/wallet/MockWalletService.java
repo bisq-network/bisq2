@@ -53,14 +53,17 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public void encryptWallet(String password) {
         log.info("encryptWallet");
     }
 
+    @Override
     public void decryptWallet(String password) {
         log.info("decryptWallet");
     }
 
+    @Override
     public CompletableFuture<List<String>> getSeedWords() {
         return CompletableFuture.completedFuture(List.of("car", "van", "lion",
                 "water", "bero", "cycle",
@@ -68,24 +71,29 @@ public class MockWalletService extends WalletService {
                 "wife", "husband", "trade"));
     }
 
+    @Override
     public CompletableFuture<Boolean> isWalletReady() {
         return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
         String address = "1433be6e1769d40d8bcd7b7765333a4e6a";
         return CompletableFuture.completedFuture(address)
                 .thenApply(receiveAddressService::findOrAddReceiveAddressEntry);
     }
 
+    @Override
     public CompletableFuture<ReadOnlyObservableSet<String>> requestWalletAddresses() {
         return CompletableFuture.completedFuture(walletAddresses);
     }
 
+    @Override
     public CompletableFuture<List<Transaction>> listTransactions() {
         return CompletableFuture.completedFuture(List.of());
     }
 
+    @Override
     public CompletableFuture<List<Utxo>> listUtxos() {
         Utxo u1 = new Utxo("tx1", 0, 100000L, "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh", 6);
         Utxo u2 = new Utxo("tx2", 1, 200000L, "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa", 3);
@@ -101,6 +109,7 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(List.of(u1, u2, u3, u4, u5, u6, u7, u8, u9, u10, u11));
     }
 
+    @Override
     public CompletableFuture<ReceiveAddressEntry> createReceiveAddress() {
         String address = "1" + (UUID.randomUUID().toString().replace("-", "")
                 + UUID.randomUUID().toString().replace("-", ""))
@@ -109,18 +118,22 @@ public class MockWalletService extends WalletService {
                 .thenApply(this::addReceiveAddress);
     }
 
+    @Override
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
         return CompletableFuture.completedFuture("69111c8de670d7a12b8c4db85c67485889b30335cdd3fd7f18924104e88e9fc3");
     }
 
+    @Override
     public CompletableFuture<Boolean> isWalletEncrypted() {
         return CompletableFuture.completedFuture(false);
     }
 
+    @Override
     public CompletableFuture<Coin> requestBalance() {
         return CompletableFuture.completedFuture(Coin.asBtcFromValue(2501234));
     }
 
+    @Override
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
         TransactionInput input1 = new TransactionInput(
                 "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2",
