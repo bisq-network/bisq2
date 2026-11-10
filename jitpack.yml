@@ -6,5 +6,6 @@ jdk:
 # Replaces JitPack's default command, which sets the same group on all our projects (-Pgroup).
 # build-logic/bi2p (a Gradle plugin) and apps/desktop/bi2p (an app) then get the same coordinates,
 # Gradle loads the app where it needs the plugin, and the build fails. webcam-app clashes the same way.
+# .github/workflows/jitpack_reproducibility_check.yml runs the same command every week and compares its jars with these.
 install:
   - ./gradlew publishAll
