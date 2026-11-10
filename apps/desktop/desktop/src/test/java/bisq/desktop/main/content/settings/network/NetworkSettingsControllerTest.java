@@ -53,14 +53,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * The switch which allows pluggable transports in the Tor sandbox. Tor reads its sandbox configuration when it starts,
- * so the switch writes only its own entry into bisq.conf and shuts Bisq down.
+ * The switch which allows pluggable transports in the Tor sandbox, and the transport and I2P fields. Tor reads its
+ * sandbox configuration when it starts, so the switch writes only its own entry into bisq.conf and shuts Bisq down.
+ * The other fields write only the entries which the user changed.
  */
 @ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
 class NetworkSettingsControllerTest {
     private static final String SANDBOX_PATH = "application.network.configByTransportType.tor.sandbox";
     private static final String ALLOW_PLUGGABLE_TRANSPORTS = SANDBOX_PATH + ".allowPluggableTransports";
+    private static final String I2P_PATH = "application.network.configByTransportType.i2p";
+    private static final String I2CP_PORT = I2P_PATH + ".i2cpPort";
 
     @TempDir
     Path appDataDirPath;
@@ -183,20 +186,53 @@ class NetworkSettingsControllerTest {
         assertThat(controller.getModel().getAllowPluggableTransportsUnavailableText().get()).isEmpty();
     }
 
-    // The transport and I2P fields write all their entries. A value of the command line must not end up in bisq.conf,
-    // where it would stay after the option is gone.
+    // A value of the command line must not end up in bisq.conf, where it would stay after the option is gone
     @Test
     void applyingTheNetworkSettingsKeepsTheValuesOfBisqConfOverTheCommandLine() throws IOException {
-        String i2cpPort = "application.network.configByTransportType.i2p.i2cpPort";
         Path bisqConfPath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-        Files.writeString(bisqConfPath, i2cpPort + "=7655\n");
+        Files.writeString(bisqConfPath, I2CP_PORT + "=7655\n");
         NetworkSettingsController controller = createController(true, false,
-                ConfigFactory.parseMap(Map.of(i2cpPort, 9000)));
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
+        activateController(controller, false);
+
+        assertThat(controller.getModel().getI2cpAddress().get().getPort()).isEqualTo(9000);
+
+        JavaFxToolkitExtension.runOnFxThread(controller::onApplyAndShutdown);
+
+        assertThat(ConfigFactory.parseFile(bisqConfPath.toFile()).getInt(I2CP_PORT)).isEqualTo(7655);
+    }
+
+    // An unchanged value can come from the command line or from the defaults of the release. Neither belongs into
+    // bisq.conf.
+    @Test
+    void applyingTheNetworkSettingsWritesOnlyTheChangedEntries() throws IOException {
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
+        activateController(controller, false);
+
+        JavaFxToolkitExtension.runOnFxThread(() -> {
+            controller.onToggleUseEmbedded(false);
+            controller.onApplyAndShutdown();
+        });
+
+        Config bisqConf = ConfigFactory.parseFile(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME).toFile());
+        assertThat(bisqConf.getBoolean(I2P_PATH + ".embeddedRouter")).isFalse();
+        assertThat(bisqConf.hasPath(I2CP_PORT)).isFalse();
+        assertThat(bisqConf.hasPath(I2P_PATH + ".i2cpHost")).isFalse();
+        assertThat(bisqConf.hasPath("application.network.supportedTransportTypes")).isFalse();
+        verify(shutDownHandler).shutdown();
+    }
+
+    @Test
+    void applyingUnchangedNetworkSettingsCreatesNoBisqConf() {
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
         activateController(controller, false);
 
         JavaFxToolkitExtension.runOnFxThread(controller::onApplyAndShutdown);
 
-        assertThat(ConfigFactory.parseFile(bisqConfPath.toFile()).getInt(i2cpPort)).isEqualTo(7655);
+        assertThat(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME)).doesNotExist();
+        verify(shutDownHandler).shutdown();
     }
 
     private void activateController(NetworkSettingsController controller, boolean windows) {

@@ -47,10 +47,13 @@ import org.fxmisc.easybind.Subscription;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class NetworkSettingsController implements Controller {
@@ -67,6 +70,7 @@ public class NetworkSettingsController implements Controller {
     private Pin ignoreDiffAdjustmentFromSecManagerPin,
             mostRecentDifficultyAdjustmentFactorOrDefaultPin, difficultyAdjustmentFactorPin;
     private boolean configuredAllowPluggableTransports;
+    private Map<String, Object> configuredNetworkEntries = Map.of();
 
     public NetworkSettingsController(ServiceProvider serviceProvider) {
         settingsService = serviceProvider.getSettingsService();
@@ -84,13 +88,15 @@ public class NetworkSettingsController implements Controller {
         // The rootConfig is already merged with custom config if present at app startup,
         // but not updated when custom config would change.
 
+        // The page shows the values of the next start, where the program arguments and JVM options win over bisq.conf.
         Config rootConfig = appConfig.getRootConfig();
         Config currentCustomConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
-        Config updatedRootConfig = currentCustomConfig
+        Config nextStartConfig = appConfig.getCommandLineConfig()
+                .withFallback(currentCustomConfig)
                 .withFallback(rootConfig)
                 .resolve();
 
-        Config networkConfig = updatedRootConfig.getConfig("application.network");
+        Config networkConfig = nextStartConfig.getConfig("application.network");
         List<TransportType> supportedTransportTypes = new ArrayList<>(networkConfig.getEnumList(TransportType.class, "supportedTransportTypes"));
         if (supportedTransportTypes.size() == 1) {
             switch (supportedTransportTypes.get(0)) {
@@ -111,15 +117,10 @@ public class NetworkSettingsController implements Controller {
         model.getUseEmbeddedI2PRouter().set(i2pConfig.getBoolean("embeddedRouter"));
         model.getI2cpAddress().set(new ClearnetAddress(i2pConfig.getString("i2cpHost"), i2pConfig.getInt("i2cpPort")));
         model.getBi2pGrpcAddress().set(new ClearnetAddress(i2pConfig.getString("bi2pGrpcHost"), i2pConfig.getInt("bi2pGrpcPort")));
+        configuredNetworkEntries = toNetworkEntries();
 
-        // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart. The program
-        // arguments and JVM options win over bisq.conf there, so the switch shows their value. Only the switch, which
-        // writes only its own entry: the other fields write all their entries, which must not copy the command line
-        // into bisq.conf.
-        Config torSandboxConfig = appConfig.getCommandLineConfig()
-                .withFallback(updatedRootConfig)
-                .resolve()
-                .getConfig(TorTransportService.SANDBOX_CONFIG_PATH);
+        // Tor reads its sandbox configuration when it starts, so a change takes effect after a restart.
+        Config torSandboxConfig = nextStartConfig.getConfig(TorTransportService.SANDBOX_CONFIG_PATH);
         configuredAllowPluggableTransports = torSandboxConfig.getBoolean("allowPluggableTransports");
         model.getAllowPluggableTransports().set(configuredAllowPluggableTransports);
         model.getTorShutdownButtonVisible().set(false);
@@ -226,22 +227,34 @@ public class NetworkSettingsController implements Controller {
         model.getShutdownButtonVisible().set(true);
     }
 
+    // Only the changed entries. An unchanged value can come from the command line or from the defaults of this
+    // release. In bisq.conf it would stay after the option is removed or after a new release changes the default.
     private void writeNetworkConfig() {
-        List<String> supportedTransportTypesOverride = model.getSelectedTransportOption().get().getTransportTypes().stream()
-                .map(Enum::name)
-                .toList();
-        boolean useEmbeddedI2PRouter = model.getUseEmbeddedI2PRouter().get();
+        Map<String, Object> changedEntries = toNetworkEntries().entrySet().stream()
+                .filter(entry -> !Objects.equals(entry.getValue(), configuredNetworkEntries.get(entry.getKey())))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        if (!changedEntries.isEmpty()) {
+            writeCustomConfig(changedEntries);
+        }
+    }
+
+    private Map<String, Object> toNetworkEntries() {
+        Map<String, Object> entries = new HashMap<>();
+        TransportOption transportOption = model.getSelectedTransportOption().get();
+        // Null if the configured transport types are a combination which the page does not offer
+        if (transportOption != null) {
+            entries.put("application.network.supportedTransportTypes", transportOption.getTransportTypes().stream()
+                    .map(Enum::name)
+                    .toList());
+        }
         Address i2cpAddress = model.getI2cpAddress().get();
         Address bi2pGrpcAddress = model.getBi2pGrpcAddress().get();
-
-        writeCustomConfig(Map.of(
-                "application.network.supportedTransportTypes", supportedTransportTypesOverride,
-                "application.network.configByTransportType.i2p.embeddedRouter", useEmbeddedI2PRouter,
-                "application.network.configByTransportType.i2p.i2cpHost", i2cpAddress.getHost(),
-                "application.network.configByTransportType.i2p.i2cpPort", i2cpAddress.getPort(),
-                "application.network.configByTransportType.i2p.bi2pGrpcHost", bi2pGrpcAddress.getHost(),
-                "application.network.configByTransportType.i2p.bi2pGrpcPort", bi2pGrpcAddress.getPort()
-        ));
+        entries.put("application.network.configByTransportType.i2p.embeddedRouter", model.getUseEmbeddedI2PRouter().get());
+        entries.put("application.network.configByTransportType.i2p.i2cpHost", i2cpAddress.getHost());
+        entries.put("application.network.configByTransportType.i2p.i2cpPort", i2cpAddress.getPort());
+        entries.put("application.network.configByTransportType.i2p.bi2pGrpcHost", bi2pGrpcAddress.getHost());
+        entries.put("application.network.configByTransportType.i2p.bi2pGrpcPort", bi2pGrpcAddress.getPort());
+        return entries;
     }
 
     private void writeCustomConfig(Map<String, Object> entries) {
