@@ -33,6 +33,8 @@ public class NotificationPanelModel implements Model {
     private final StringProperty buttonText = new SimpleStringProperty();
     @Setter
     private boolean isMediationNotification;
+    @Setter
+    private boolean isMusigNotification;
 
     public NotificationPanelModel() {
     }

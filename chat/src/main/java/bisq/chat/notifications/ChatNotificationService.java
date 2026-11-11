@@ -28,6 +28,7 @@ import bisq.chat.bisq_easy.offerbook.BisqEasyOfferbookMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeMessage;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannelService;
 import bisq.chat.priv.PrivateChatMessage;
 import bisq.chat.two_party.TwoPartyPrivateChatMessage;
 import bisq.common.application.Service;
@@ -42,6 +43,8 @@ import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.storage.DataStorageService;
 import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
+import bisq.offer.mu_sig.MuSigOffer;
+import bisq.offer.mu_sig.MuSigOfferbookService;
 import bisq.persistence.DbSubDirectory;
 import bisq.persistence.Persistence;
 import bisq.persistence.RateLimitedPersistenceClient;
@@ -58,6 +61,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Nullable;
 import com.google.common.annotations.VisibleForTesting;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -98,6 +102,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     private final long startUpDateTime = System.currentTimeMillis();
     @Setter
     private boolean isApplicationFocussed;
+    private volatile boolean muSigOfferbookInitialized;
     // The IDs of the notifications of chat messages which a store pruned before initialize. The stores prune the
     // persisted data when they read it at startup, and our persisted notifications may be read after that. So we
     // remove these notifications at initialize. After initialize, a pruned message removes its notification at once and
@@ -105,9 +110,11 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     // together with initializeCalled.
     @VisibleForTesting
     final Set<String> notificationIdsPrunedBeforeInitialize = new HashSet<>();
+    private Set<String> offerIdsBeforeObserver = new HashSet<>();
     private boolean initializeCalled;
     @Nullable
-    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, ignoredUserProfileIdsPin;
+    private Pin bisqEasyOpenTradeChannelServicePin, bisqEasyOfferbookChannelServicePin, musigOpenTradeChannelServicePin,
+            musigOfferbookChannelPin, musigOfferbookInitializedPin, ignoredUserProfileIdsPin;
     private final Set<Pin> commonPublicChatChannelServicePins = new HashSet<>();
     private final Set<Pin> twoPartyPrivateChatChannelServicePins = new HashSet<>();
     private final Set<Pin> prunedAndExpiredDataRequestPins = new HashSet<>();
@@ -185,6 +192,75 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         bisqEasyOfferbookChannelServicePin = bisqEasyOfferbookChannelService.getChannels().addObserver(() ->
                 onChannelsChanged(bisqEasyOfferbookChannelService.getChannels()));
 
+        MuSigOpenTradeChannelService muSigOpenTradeChannelService = chatService.getMuSigOpenTradeChannelService();
+        musigOpenTradeChannelServicePin = muSigOpenTradeChannelService.getChannels().addObserver(() -> onChannelsChanged(muSigOpenTradeChannelService.getChannels()));
+
+        MuSigOfferbookService muSigOfferbookService = chatService.getMuSigOfferbookService();
+        offerIdsBeforeObserver = muSigOfferbookService.getObservableOffers().stream()
+                .map(MuSigOffer::getId)
+                .collect(Collectors.toSet());
+        musigOfferbookChannelPin = muSigOfferbookService.getObservableOffers().addObserver(new CollectionObserver<>() {
+            @Override
+            public void onAllAdded(Collection<? extends MuSigOffer> offers) {
+                // ObservableCollection replays the current set through onAllAdded when the observer is registered.
+                // Only process offers which were not present before registration, later additions are new offers.
+                offers.stream()
+                        .filter(offer -> !offerIdsBeforeObserver.contains(offer.getId()))
+                        .forEach(this::onAdded);
+                offerIdsBeforeObserver.clear();
+            }
+
+            @Override
+            public void onAdded(MuSigOffer offer) {
+                if (!muSigOfferbookInitialized) {
+                    // MuSigOfferbookService adds its startup replay after this observer is registered. Those offers
+                    // are existing offers, not new offers received during this application session.
+                    return;
+                }
+
+                if (offer.isMyOffer(userIdentityService.getMyUserProfileIds()) ||
+                        userProfileService.isChatUserIgnored(offer.getMakersUserProfileId())) {
+                    return;
+                }
+
+                long pruneDate = System.currentTimeMillis() - MAX_AGE;
+                if (offer.getDate() <= pruneDate) {
+                    // The notification may have been pruned while the offer remains in the offerbook. Do not recreate
+                    // an old unconsumed notification when the offerbook replays its current offers at startup.
+                    return;
+                }
+
+                String offerId = ChatNotification.createId(offer);
+                if (persistableStore.findNotification(offerId).isEmpty()) {
+                    ChatNotification notification = createChatNotificationForMusigOffer(offer);
+                    addNotification(notification);
+                }
+            }
+
+            @Override
+            public void onRemoved(Object element) {
+                if (element instanceof MuSigOffer offer) {
+                    String id = ChatNotification.createId(offer);
+                    removeNotification(id);
+                }
+            }
+
+            @Override
+            public void onCleared() {
+                if (muSigOfferbookInitialized) {
+                    removeMissingMusigOfferNotifications();
+                }
+            }
+        });
+        musigOfferbookInitializedPin = muSigOfferbookService.getInitialized().addObserver(initialized -> {
+            muSigOfferbookInitialized = initialized;
+            if (initialized) {
+                // The offerbook is authoritative only after its startup replay has completed. Reconcile here so an
+                // offer which disappeared while this node was offline cannot leave its persisted notification behind.
+                removeMissingMusigOfferNotifications();
+            }
+        });
+
         chatService.getCommonPublicChatChannelServices().values()
                 .forEach(service -> {
                     Pin pin = service.getChannels().addObserver(() ->
@@ -213,6 +289,19 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         if (bisqEasyOfferbookChannelServicePin != null) {
             bisqEasyOfferbookChannelServicePin.unbind();
             bisqEasyOfferbookChannelServicePin = null;
+        }
+        if (musigOfferbookChannelPin != null) {
+            musigOfferbookChannelPin.unbind();
+            musigOfferbookChannelPin = null;
+        }
+        if (musigOfferbookInitializedPin != null) {
+            musigOfferbookInitializedPin.unbind();
+            musigOfferbookInitializedPin = null;
+        }
+        muSigOfferbookInitialized = false;
+        if (musigOpenTradeChannelServicePin != null) {
+            musigOpenTradeChannelServicePin.unbind();
+            musigOpenTradeChannelServicePin = null;
         }
         chatMessagesByChannelIdPins.values().forEach(Pin::unbind);
         chatMessagesByChannelIdPins.clear();
@@ -329,6 +418,17 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
     /* --------------------------------------------------------------------- */
     // Private
     /* --------------------------------------------------------------------- */
+    private void removeMissingMusigOfferNotifications() {
+        Set<String> offerNotificationIds = chatService.getMuSigOfferbookService().getObservableOffers().stream()
+                .map(ChatNotification::createId)
+                .collect(Collectors.toSet());
+        persistableStore.getNotifications().stream()
+                .filter(notification -> notification.getChatChannelDomain() == ChatChannelDomain.MU_SIG_OFFERBOOK)
+                .map(ChatNotification::getId)
+                .filter(id -> !offerNotificationIds.contains(id))
+                .toList()
+                .forEach(this::removeNotification);
+    }
 
     private void addNotification(ChatNotification notification) {
         boolean wasAdded = false;
@@ -587,6 +687,24 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
                 senderUserProfile);
     }
 
+    // A musig offerbook message is not a real chat message so we add fields to make it
+    // a compatible notification for this store alongside related notifications
+    private ChatNotification createChatNotificationForMusigOffer(MuSigOffer offer) {
+        return new ChatNotification(
+                ChatNotification.createId(offer),
+                "MuSig Offer",
+                "",
+                offer.getDate(),
+                "",
+                ChatChannelDomain.MU_SIG_OFFERBOOK,
+                "",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                false
+        );
+    }
+
     private void maybeDispatchNotification(ChatNotification chatNotification, ChatMessage chatMessage) {
         boolean afterStartUp = isReceivedAfterStartUp(chatNotification);
         boolean domainMatches = testChatChannelDomainPredicate(chatNotification);
@@ -678,9 +796,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
      *   <li>{@link ChatChannelDomain#BISQ_EASY_OPEN_TRADES} — Bisq Easy trade chat
      *       (1-on-1 with the peer, plus mediator when escalated).</li>
      *   <li>{@link ChatChannelDomain#MU_SIG_OPEN_TRADES} — MuSig trade chat
-     *       (analogous to Bisq Easy). Currently not subscribed by
-     *       {@link #initialize()} but whitelisted here so the filter stays correct
-     *       if mobile relay is later wired up for MuSig.</li>
+     *       (analogous to Bisq Easy).</li>
      * </ul>
      * <p>
      * Public chat ({@link ChatChannelDomain#BISQ_EASY_OFFERBOOK},
@@ -699,6 +815,7 @@ public class ChatNotificationService extends RateLimitedPersistenceClient<ChatNo
         return switch (domain) {
             case BISQ_EASY_OPEN_TRADES, MU_SIG_OPEN_TRADES -> true;
             case BISQ_EASY_OFFERBOOK,
+                 MU_SIG_OFFERBOOK,
                  DISCUSSION,
                  SUPPORT,
                  BISQ_EASY_PRIVATE_CHAT, // deprecated, falls back to DISCUSSION
