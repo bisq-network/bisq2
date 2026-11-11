@@ -22,6 +22,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigException;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigParseOptions;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -60,29 +62,35 @@ public class TypesafeConfigUtils {
         return ConfigFactory.parseMap(map);
     }
 
+    /**
+     * @return bisq.conf of the data directory as parsed, before its substitutions are resolved, or empty if there is
+     * no bisq.conf
+     * @throws CustomConfigException if bisq.conf exists but cannot be read, parsed or checked, also if it is a link to
+     *                               a file which does not exist
+     */
     public static Optional<Config> resolveCustomConfig(Path appDataDirPath) {
         // J8 compatible to avoid issues on mobile Samsung devices
         String configName = ApplicationService.CUSTOM_CONFIG_FILE_NAME;
         Path customConfigFilePath = appDataDirPath.resolve(configName);
-        if (Files.exists(customConfigFilePath)) {
-            try {
-                Config config = parseCustomConfigFile(customConfigFilePath);
-                log.info("Using custom config file: {}", customConfigFilePath.toAbsolutePath());
-                return Optional.of(config);
-            } catch (Exception e) {
-                log.error("Could not load custom config file {}", customConfigFilePath.toAbsolutePath(), e);
-            }
+        if (!Files.exists(customConfigFilePath, LinkOption.NOFOLLOW_LINKS)) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        try {
+            Config config = parseCustomConfigFile(customConfigFilePath);
+            log.info("Using custom config file: {}", customConfigFilePath.toAbsolutePath());
+            return Optional.of(config);
+        } catch (ConfigException e) {
+            throw new CustomConfigException(customConfigFilePath.toAbsolutePath(), e);
+        }
     }
 
     /**
-     * Parses a file as the start parses bisq.conf. The start ignores a bisq.conf for which this method throws, so
+     * Parses a file as the start parses bisq.conf. The start fails for a bisq.conf for which this method throws, so
      * every check of whether the start takes a bisq.conf uses this method. The check of validity also throws for an
-     * unresolved substitution.
+     * unresolved substitution. A file which cannot be read throws as well, instead of counting as an empty file.
      */
     private static Config parseCustomConfigFile(Path filePath) {
-        Config config = ConfigFactory.parseFile(filePath.toFile());
+        Config config = ConfigFactory.parseFile(filePath.toFile(), ConfigParseOptions.defaults().setAllowMissing(false));
         config.withFallback(ConfigFactory.defaultReference())
                 .checkValid(ConfigFactory.defaultReference(), "application");
         return config;
@@ -97,7 +105,7 @@ public class TypesafeConfigUtils {
      * @param entries values which typesafe config takes, for example a boolean, a string or a list
      * @throws IOException if the file cannot be read or written, or if the start would not take bisq.conf with the
      *                     lines or would not get the values from it, for example because of a syntax error or a
-     *                     substitution, so that the application would ignore the file and the lines with it
+     *                     substitution, so that the start would fail
      */
     public static void appendToCustomConfig(Path appDataDirPath, Map<String, ?> entries) throws IOException {
         Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);

@@ -141,7 +141,7 @@ public abstract class ApplicationService implements Service {
         }
 
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
             String rendered = config.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
@@ -152,13 +152,22 @@ public abstract class ApplicationService implements Service {
         }
 
         public void removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config newConfig = customConfig.withoutPath(nodePathToRemove);
             String rendered = newConfig.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
             FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
+        }
+
+        // A rewrite of a bisq.conf which cannot be read would replace the settings of the user with the new ones only
+        private com.typesafe.config.Config readCustomConfigForRewrite() throws IOException {
+            try {
+                return TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            } catch (CustomConfigException e) {
+                throw new IOException(e.getMessage(), e);
+            }
         }
     }
 

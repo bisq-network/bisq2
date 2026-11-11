@@ -64,16 +64,16 @@ class TypesafeConfigUtilsTest {
         assertEquals(443, config.getInt("application.network.configByTransportType.tor.torrcOverrides.ORPort"));
     }
 
-    // The start ignores a bisq.conf with a substitution, so an appended entry would have no effect
+    // The start fails for a bisq.conf with a substitution, so an appended entry would have no effect
     @Test
-    void aFileWhichTheStartIgnoresIsLeftAsItIs(@TempDir Path appDataDirPath) throws IOException {
+    void aFileWhichTheStartRefusesIsLeftAsItIs(@TempDir Path appDataDirPath) throws IOException {
         Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
         String content = """
                 bridgePort = 443
                 application.network.configByTransportType.tor.torrcOverrides.ORPort = ${bridgePort}
                 """;
         Files.writeString(configFilePath, content, StandardCharsets.UTF_8);
-        assertTrue(TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).isEmpty());
+        assertThrows(CustomConfigException.class, () -> TypesafeConfigUtils.resolveCustomConfig(appDataDirPath));
 
         IOException exception = assertThrows(IOException.class,
                 () -> TypesafeConfigUtils.appendToCustomConfig(appDataDirPath, Map.of(SANDBOX_ENABLED, false)));
@@ -108,7 +108,7 @@ class TypesafeConfigUtilsTest {
         assertTrue(config.getStringList(torPath + ".bridges").isEmpty());
     }
 
-    // The application ignores a bisq.conf which it cannot parse, and an appended entry with it
+    // The start fails for a bisq.conf which it cannot parse, so an appended entry would have no effect
     @Test
     void aFileWhichCannotBeParsedIsLeftAsItIs(@TempDir Path appDataDirPath) throws IOException {
         Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
@@ -184,6 +184,68 @@ class TypesafeConfigUtilsTest {
         try (Stream<Path> files = Files.list(otherDirPath)) {
             assertEquals(List.of(linkTargetPath), files.toList());
         }
+    }
+
+    @Test
+    void withoutAFileThereIsNoCustomConfig(@TempDir Path appDataDirPath) {
+        assertTrue(TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).isEmpty());
+    }
+
+    // Earlier versions ignored such a file and started without its settings, for example without the bridges or the
+    // torrc override ExcludeNodes
+    @Test
+    void aFileWhichCannotBeParsedStopsTheStart(@TempDir Path appDataDirPath) throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        // Without quotes, {ch} is an object without a value
+        Files.writeString(configFilePath, "application.network.configByTransportType.tor.torrcOverrides.ExcludeNodes = {ch}\n",
+                StandardCharsets.UTF_8);
+
+        CustomConfigException exception = assertThrows(CustomConfigException.class,
+                () -> TypesafeConfigUtils.resolveCustomConfig(appDataDirPath));
+
+        assertEquals(configFilePath.toAbsolutePath(), exception.getCustomConfigFilePath());
+        assertTrue(exception.getMessage().contains(configFilePath.toAbsolutePath().toString()));
+        assertFalse(exception.getReason().isEmpty());
+    }
+
+    // Typesafe config would read a file which it cannot open as an empty file
+    @Test
+    void aFileWhichCannotBeReadStopsTheStart(@TempDir Path appDataDirPath) throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Files.writeString(configFilePath, "application.network.configByTransportType.tor.sandbox.enabled = true\n",
+                StandardCharsets.UTF_8);
+        try {
+            Files.setPosixFilePermissions(configFilePath, Set.of());
+        } catch (UnsupportedOperationException e) {
+            Assumptions.abort("The file system does not support POSIX permissions");
+        }
+        Assumptions.assumeFalse(Files.isReadable(configFilePath), "The user can read files without permission");
+
+        assertThrows(CustomConfigException.class, () -> TypesafeConfigUtils.resolveCustomConfig(appDataDirPath));
+    }
+
+    @Test
+    void aLinkToAMissingFileStopsTheStart(@TempDir Path appDataDirPath, @TempDir Path otherDirPath) {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        try {
+            Files.createSymbolicLink(configFilePath, otherDirPath.resolve("missing.conf"));
+        } catch (UnsupportedOperationException | IOException e) {
+            Assumptions.abort("The file system does not support symbolic links: " + e.getMessage());
+        }
+
+        assertThrows(CustomConfigException.class, () -> TypesafeConfigUtils.resolveCustomConfig(appDataDirPath));
+    }
+
+    // In HOCON, an include without required() may name a missing file. Only bisq.conf itself must exist.
+    @Test
+    void anOptionalIncludeOfAMissingFileIsAccepted(@TempDir Path appDataDirPath) throws IOException {
+        Path configFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Files.writeString(configFilePath, "include \"missing.conf\"\n" +
+                "application.network.configByTransportType.tor.sandbox.enabled = false\n", StandardCharsets.UTF_8);
+
+        Config config = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElseThrow();
+
+        assertFalse(config.getBoolean(SANDBOX_ENABLED));
     }
 
     private static void assertOnlyTheConfigFileIsLeft(Path appDataDirPath) throws IOException {

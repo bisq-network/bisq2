@@ -255,6 +255,8 @@ https://github.com/bisq-network/bisq2/blob/main/apps/desktop/desktop-app/src/mai
 
 As this file gets frequently updated with new releases, one should only use the entries which one wants to override.
 The structure from the default config must be maintained.
+If the file exists but cannot be read or parsed, the application does not start and names the file and the reason
+(see `docs/specifications/application/configuration-file.md`).
 
 #### Example:
 
