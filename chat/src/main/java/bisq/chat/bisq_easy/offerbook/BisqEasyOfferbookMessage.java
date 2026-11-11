@@ -111,6 +111,9 @@ public final class BisqEasyOfferbookMessage extends PublicChatMessage implements
                 fixPriceSpec.verifyCanonical();
             }
         });
+        // A taker pays with one of the payment methods of the offer, so each of them must support the currency of the
+        // market (rule 2 of docs/specifications/offer/payment-methods.md)
+        bisqEasyOffer.ifPresent(BisqEasyOffer::verifyPaymentMethodsSupportMarket);
     }
 
     @Override

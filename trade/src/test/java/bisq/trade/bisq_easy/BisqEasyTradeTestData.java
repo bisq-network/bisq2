@@ -100,7 +100,7 @@ public final class BisqEasyTradeTestData {
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
-                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),
+                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE))),
                 List.of(),
                 List.of("en"),
                 1,
@@ -122,7 +122,7 @@ public final class BisqEasyTradeTestData {
                 BASE_AMOUNT,
                 QUOTE_AMOUNT,
                 new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(bitcoinPaymentRail)),
-                new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
+                new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE)),
                 mediator,
                 new MarketPriceSpec(),
                 60_000_0000);
