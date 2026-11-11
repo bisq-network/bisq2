@@ -74,6 +74,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyReportErrorMessage;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequest;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTakeOfferRequestValidator;
 import bisq.trade.bisq_easy.protocol.messages.BisqEasyTradeMessage;
+import bisq.trade.bisq_easy.validation.BisqEasyBitcoinPaymentDataValidator;
 import bisq.trade.bisq_easy.validation.BisqEasySellerReputationValidator;
 import bisq.trade.bisq_easy.validation.BisqEasyTradeChatChannelValidator;
 import bisq.trade.exceptions.TradeProtocolException;
@@ -402,9 +403,14 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
         applyUserTradeAction(trade, new BisqEasyConfirmFiatSentEvent());
     }
 
-    // The seller's node fails the trade when the data requests another amount than the trade amount
-    // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
+    // The seller's node fails the trade when the data is empty or too long, or when it requests another amount than
+    // the trade amount (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
     public void buyerSendBitcoinPaymentData(BisqEasyTrade trade, String buyersBitcoinPaymentData) {
+        BisqEasyBitcoinPaymentDataValidator.findError(buyersBitcoinPaymentData,
+                        trade.getContract().getBaseSidePaymentMethodSpec().getPaymentMethod().getPaymentRail())
+                .ifPresent(error -> {
+                    throw new IllegalArgumentException(error);
+                });
         long tradeAmount = trade.getContract().getBaseSideAmount();
         RequestedAmountValidation.checkRequestsOnlyAmount(buyersBitcoinPaymentData, tradeAmount);
         applyUserTradeAction(trade, new BisqEasySendBtcAddressEvent(buyersBitcoinPaymentData));

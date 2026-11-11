@@ -9,6 +9,7 @@ In a BISQ Easy trade the buyer sends the seller the data for the bitcoin payment
 3. The seller's node checks rules 1 and 2 when it receives the data, before it stores and shows the data. Data which breaks them fails the trade, and the seller's node reports the failure to the buyer.
 4. The buyer's node does not send data which breaks rules 1 and 2, also when the API asks it to; the API answers with 400. The buyer's desktop application tells the buyer to use data without amount or with the trade amount.
 5. When the buyer's desktop application reads the data from a scanned QR code, it takes the address out of a bitcoin URI, whatever the case of the scheme. It keeps the case of a base58 address and converts all other data, for example a bech32 address or a Lightning invoice, to lower case.
+6. The bitcoin payment data is not empty and not longer than 62 characters for the main chain, the length of the longest address, or 7089 characters for Lightning. The seller's node fails a trade with longer data with the failure reason INVALID_BITCOIN_PAYMENT_DATA, which both sides show as a failure of the trade, not as a bug. The buyer's node does not send such data; the API answers with 400. The buyer's desktop application asks the buyer to copy the data again from the wallet.
 
 ## Reasons
 
@@ -17,6 +18,7 @@ In a BISQ Easy trade the buyer sends the seller the data for the bitcoin payment
 - Rule 3: the buyer chooses the data, and a modified client can send any data. Only the seller's node can protect the seller.
 - Rule 4: an honest buyer whose wallet created an invoice for another amount would otherwise fail the trade at rule 3.
 - Rule 5: wallets encode QR codes in upper case, because QR codes are more compact then. Bech32 addresses and Lightning invoices are case-insensitive, and lower case is the common way to show them. Base58 addresses (starting with `1` or `3`) are case-sensitive: a base58 address in lower case is another, invalid address, which the seller's wallet rejects, so the trade stalls at the payment step.
+- Rule 6: a buyer can paste wrong data, for example an address twice. The seller's node cannot pay to such data, so the trade fails. The failure is a mistake of the buyer, so neither side is asked to report a bug, and the buyer's node stops the data before it is sent (#5210).
 
 ## Limitations
 
@@ -24,4 +26,4 @@ In a BISQ Easy trade the buyer sends the seller the data for the bitcoin payment
 
 ## Compatibility
 
-- No message or storage change. A buyer of an earlier version can send data which breaks rule 1. The seller's node of this version fails such a trade instead of showing the data.
+- The failure reason INVALID_BITCOIN_PAYMENT_DATA is new. A node of an earlier version reads it as UNKNOWN and shows the failure as before. No message or storage change otherwise. A buyer of an earlier version can send data which breaks rule 1. The seller's node of this version fails such a trade instead of showing the data.
