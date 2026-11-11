@@ -205,6 +205,14 @@ public abstract class ApplicationService implements Service {
             throw new RuntimeException(e);
         }
 
+        // The language does not depend on the configuration. It is set up before bisq.conf is read, so that a
+        // message about the configuration can be localized.
+        Locale locale = LocaleRepository.getDefaultLocale();
+        CountryRepository.applyDefaultLocale(locale);
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
+        FiatCurrencyRepository.setLocale(locale);
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
+
         customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
 
         // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
@@ -223,11 +231,6 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
 
-        Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
-        FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
         ResolverConfig.config();
 
         // We check the instance lock after Res is set up, so that the user facing message can be
