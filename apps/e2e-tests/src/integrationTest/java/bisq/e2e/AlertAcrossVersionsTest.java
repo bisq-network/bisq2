@@ -28,6 +28,8 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.time.Duration;
 import java.util.List;
 import java.util.function.Predicate;
@@ -74,16 +76,19 @@ class AlertAcrossVersionsTest {
     private static final String REQUIRED_VERSION = "2.1.14";
     private static final String DESKTOP = "DESKTOP";
     private static final String MOBILE_NODE = "MOBILE_NODE";
-    // The lines which nodes in dev mode log when their store of alerts added or removed an entry
+    // The line which nodes in dev mode log when their store of alerts added an entry
     private static final String ALERT_ADDED = "Method: add success; map entry: AuthorizedAlertData";
-    private static final String ALERT_REMOVED = "Method: remove success; map entry: AuthorizedAlertData";
+    // Each line of a change of the store of alerts states how many alerts the store holds
+    private static final String ALERT_STORE = "map entry: AuthorizedAlertData; num AddRequests: ";
     // A node logs the change of its store before it notifies the service of alerts
     private static final Duration ALERT_APPLIED = Duration.ofSeconds(3);
 
     private MixedVersionNetwork network;
     private ApiClient securityManager;
-    // The app types of the alerts which the last publishAlert published, as the publisher removes all of them
+    // The app types of the last publishAlert and how many alerts the old node held before it, kept until removeAlert
+    // succeeds
     private List<String> publishedAppTypes = List.of();
+    private long alertsHeldBeforePublish;
 
     @BeforeAll
     void startNetwork() throws Exception {
@@ -281,8 +286,10 @@ class AlertAcrossVersionsTest {
     private void publishAlert(String command, List<String> appTypes, Predicate<JsonNode> isReportedAlert)
             throws Exception {
         long storedBefore = network.countLogLines(network.oldNode.getName(), ALERT_ADDED);
-        network.runPublisherCommand(SECURITY_MANAGER, command + " " + String.join(" ", appTypes));
+        // Set before the command, so that cleanup also removes the alerts of a publish which fails part way
+        alertsHeldBeforePublish = alertsHeldByOldNode();
         publishedAppTypes = List.copyOf(appTypes);
+        network.runPublisherCommand(SECURITY_MANAGER, command + " " + String.join(" ", appTypes));
         MixedVersionNetwork.await("the old node stores the alerts", Trades.STEP_TIMEOUT,
                 () -> network.countLogLines(network.oldNode.getName(), ALERT_ADDED) >= storedBefore + appTypes.size());
         for (String appType : appTypes) {
@@ -295,16 +302,35 @@ class AlertAcrossVersionsTest {
     // Removes the last alerts and waits until the old node removes them and the new node no longer reports them
     private void removeAlert() throws Exception {
         List<String> appTypes = publishedAppTypes;
-        publishedAppTypes = List.of();
-        long removedBefore = network.countLogLines(network.oldNode.getName(), ALERT_REMOVED);
         network.runPublisherCommand(SECURITY_MANAGER, "remove");
+        // Back to the count before the publish, also after a partial publish. A removal which arrives before its
+        // alert keeps the alert out.
         MixedVersionNetwork.await("the old node removes the alerts", Trades.STEP_TIMEOUT,
-                () -> network.countLogLines(network.oldNode.getName(), ALERT_REMOVED)
-                        >= removedBefore + appTypes.size());
+                () -> alertsHeldByOldNode() == alertsHeldBeforePublish);
         for (String appType : appTypes) {
             MixedVersionNetwork.await("the new node removes the alert for " + appType, Trades.STEP_TIMEOUT,
                     () -> network.newApi.tradeRestrictingAlert(appType).isNull());
         }
         Thread.sleep(ALERT_APPLIED.toMillis());
+        // Cleared only now, so that cleanup retries a removal which failed
+        publishedAppTypes = List.of();
+    }
+
+    // As the last change of the store of alerts in the log of the old node states, 0 before any change
+    private long alertsHeldByOldNode() {
+        List<String> log;
+        try {
+            log = network.logOfLastSession(network.oldNode.getName());
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        for (int i = log.size() - 1; i >= 0; i--) {
+            int start = log.get(i).indexOf(ALERT_STORE);
+            if (start >= 0) {
+                String count = log.get(i).substring(start + ALERT_STORE.length()).split(";")[0];
+                return Long.parseLong(count.trim());
+            }
+        }
+        return 0;
     }
 }
