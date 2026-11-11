@@ -28,7 +28,7 @@ Forwarded messages can share an ID, for example when the peer sent a message und
 
 ## Case identity and retained requests
 
-A case is identified by the trade ID and the contract. A request from the other trader for the same contract joins the existing case; a request with a different contract for the same trade and the same two traders opens a second case, so that the mediator sees a conflict about the terms of the contract rather than the first submitter winning. A request which names other traders is rejected (see Accepted requests and Not covered). Request identity includes the requester, so the network layer delivers both traders' requests.
+A case is identified by the trade ID and the contract (see [identity of a contract](../contract/identity.md)). A request from the other trader for the same contract joins the existing case; a request with a different contract for the same trade and the same two traders opens a second case, so that the mediator sees a conflict about the terms of the contract rather than the first submitter winning. A request which names other traders is rejected (see Accepted requests and Not covered). Request identity includes the requester, so the network layer delivers both traders' requests.
 
 All cases of a trade share the mediator's channel for that trade. The channel's offer is a display copy from the first accepted request, and each case shows its own contract. The mediator UI lists each case of a trade as its own row and acts on the selected row.
 
