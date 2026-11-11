@@ -75,7 +75,8 @@ process runs. A shutdown which runs already keeps its exit status. The node moni
 ### Torrc overrides and files of the Tor of the node
 
 The configuration of the Tor transport can add entries to the torrc of the Tor which the node starts
-(`torrcOverrides`). The node ignores an override of a key which it sets for its own Tor: `ControlPort`,
+(`torrcOverrides`). A `bisq.conf` which cannot be read stops the start, so the node never starts Tor without the
+overrides and bridges of an existing `bisq.conf` (see `docs/specifications/application/configuration-file.md`). The node ignores an override of a key which it sets for its own Tor: `ControlPort`,
 `ControlPortWriteToFile`, `SocksPort`, `DataDirectory`, `HashedControlPassword` and `DisableNetwork`, in any letter
 case, also as an abbreviation of the option name, which Tor accepts, and in the hidden forms which Tor accepts for the
 listeners, such as `__SocksPort` and `__ControlPort`, with which an override would add a second listener. In the same

@@ -141,7 +141,7 @@ public abstract class ApplicationService implements Service {
         }
 
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
             String rendered = config.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
@@ -152,13 +152,22 @@ public abstract class ApplicationService implements Service {
         }
 
         public void removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config newConfig = customConfig.withoutPath(nodePathToRemove);
             String rendered = newConfig.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
             FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
+        }
+
+        // A rewrite of a bisq.conf which cannot be read would replace the settings of the user with the new ones only
+        private com.typesafe.config.Config readCustomConfigForRewrite() throws IOException {
+            try {
+                return TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            } catch (CustomConfigException e) {
+                throw new IOException(e.getMessage(), e);
+            }
         }
     }
 
@@ -205,6 +214,14 @@ public abstract class ApplicationService implements Service {
             throw new RuntimeException(e);
         }
 
+        // The language does not depend on the configuration. It is set up before bisq.conf is read, so that a
+        // message about the configuration can be localized.
+        Locale locale = LocaleRepository.getDefaultLocale();
+        CountryRepository.applyDefaultLocale(locale);
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
+        FiatCurrencyRepository.setLocale(locale);
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
+
         customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
 
         // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
@@ -223,11 +240,6 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
 
-        Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
-        FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
         ResolverConfig.config();
 
         // We check the instance lock after Res is set up, so that the user facing message can be
