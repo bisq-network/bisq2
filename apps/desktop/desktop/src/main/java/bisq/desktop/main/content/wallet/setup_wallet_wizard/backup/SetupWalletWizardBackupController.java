@@ -41,6 +41,7 @@ public class SetupWalletWizardBackupController implements Controller {
     private final Runnable onBackHandler;
     private final Supplier<String> walletPassword;
     private final WalletService walletService;
+    private boolean activated;
 
     public SetupWalletWizardBackupController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
@@ -56,12 +57,13 @@ public class SetupWalletWizardBackupController implements Controller {
 
     @Override
     public void onActivate() {
+        activated = true;
         loadSeedWordsAsync(walletService);
     }
 
     @Override
     public void onDeactivate() {
-
+        activated = false;
     }
 
     public void onRetrySeed() {
@@ -82,13 +84,17 @@ public class SetupWalletWizardBackupController implements Controller {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
                     log.error("Failed to load seed words", cause);
-                    UIThread.run(() -> model.getSeedState().set(SeedState.ERROR));
-
-                    new Popup().error(Res.get("wallet.backupSeeds.error.failedToLoad"))
-                            .owner(getPopupOwner())
-                            .onAction(onBackHandler)
-                            .onClose(onBackHandler)
-                            .show();
+                    UIThread.run(() -> {
+                        model.getSeedState().set(SeedState.ERROR);
+                        if (!activated) {
+                            return;
+                        }
+                        new Popup().error(Res.get("wallet.backupSeeds.error.failedToLoad"))
+                                .owner(getPopupOwner())
+                                .onAction(onBackHandler)
+                                .onClose(onBackHandler)
+                                .show();
+                    });
 
                     return null;
                 });
