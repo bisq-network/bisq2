@@ -144,6 +144,9 @@ public class PeerGroupManager implements Node.Listener {
     public final Observable<PeerGroupManager.State> state = new Observable<>(PeerGroupManager.State.NEW);
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
+    // A shutdown can come while initialize() waits for the initial peer exchange. The state changes and the start and
+    // stop of the periodic tasks hold this lock, so that no task starts after the shutdown.
+    private final Object lifecycleLock = new Object();
 
     public PeerGroupManager(Node node,
                             PeerGroupService peerGroupService,
@@ -170,17 +173,19 @@ public class PeerGroupManager implements Node.Listener {
     }
 
     public void shutdown() {
-        setState(STOPPING);
-        node.removeListener(this);
-        peerExchangeService.shutdown();
-        keepAliveService.shutdown();
-        networkLoadExchangeService.shutdown();
-        scheduler.ifPresent(Scheduler::stop);
-        scheduler = Optional.empty();
-        maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
-        maybeCreateConnectionsScheduler = Optional.empty();
-        listeners.clear();
-        setState(TERMINATED);
+        synchronized (lifecycleLock) {
+            setState(STOPPING);
+            node.removeListener(this);
+            peerExchangeService.shutdown();
+            keepAliveService.shutdown();
+            networkLoadExchangeService.shutdown();
+            scheduler.ifPresent(Scheduler::stop);
+            scheduler = Optional.empty();
+            maybeCreateConnectionsScheduler.ifPresent(Scheduler::stop);
+            maybeCreateConnectionsScheduler = Optional.empty();
+            listeners.clear();
+            setState(TERMINATED);
+        }
     }
 
 
@@ -207,40 +212,43 @@ public class PeerGroupManager implements Node.Listener {
 
     private void doInitialize() {
         log.info("{} called initialize", node);
-        String nodeInfo = node.getNodeInfo();
-        State state = getState().get();
-        switch (state) {
-            case NEW:
-                setState(PeerGroupManager.State.INITIALIZING);
-                // blocking
-                peerExchangeService.initialize();
-                int timeout = 180;
-                Boolean result = peerExchangeService.startInitialPeerExchange()
-                        .orTimeout(timeout, SECONDS)
-                        .exceptionally(e -> {
-                            String errorMessage = e instanceof TimeoutException ?
-                                    "TimeoutException. Initial peer exchange did not complete after " + timeout + " sec." :
-                                    e.getClass().getSimpleName() + ": Initial peer exchange failed.";
-                            log.warn(errorMessage);
-                            throw new IllegalStateException(errorMessage, e);
-                        })
-                        .join();
-                log.info("Completed startInitialPeerExchange with result {}. Start periodic tasks with interval: {} sec",
-                        result, config.getHouseKeepingInterval() / 1000);
-                scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
-                        .host(this)
-                        .runnableName("doHouseKeeping")
-                        .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS));
-                keepAliveService.initialize();
-                networkLoadExchangeService.initialize();
-                setState(State.INITIALIZED);
-                break;
-            case INITIALIZING:
-            case INITIALIZED:
-            case STOPPING:
-            case TERMINATED:
+        synchronized (lifecycleLock) {
+            State state = getState().get();
+            if (state != State.NEW) {
                 log.warn("Got called at an invalid state. We ignore that call. State={}", state);
-                break;
+                return;
+            }
+            setState(PeerGroupManager.State.INITIALIZING);
+            peerExchangeService.initialize();
+        }
+
+        // Blocking, without the lock, so that a shutdown can end the initial peer exchange
+        int timeout = 180;
+        Boolean result = peerExchangeService.startInitialPeerExchange()
+                .orTimeout(timeout, SECONDS)
+                .exceptionally(e -> {
+                    String errorMessage = e instanceof TimeoutException ?
+                            "TimeoutException. Initial peer exchange did not complete after " + timeout + " sec." :
+                            e.getClass().getSimpleName() + ": Initial peer exchange failed.";
+                    log.warn(errorMessage);
+                    throw new IllegalStateException(errorMessage, e);
+                })
+                .join();
+
+        synchronized (lifecycleLock) {
+            if (getState().get() != State.INITIALIZING) {
+                log.info("The peer group was shut down during the initial peer exchange. We do not start the periodic tasks.");
+                return;
+            }
+            log.info("Completed startInitialPeerExchange with result {}. Start periodic tasks with interval: {} sec",
+                    result, config.getHouseKeepingInterval() / 1000);
+            scheduler = Optional.of(Scheduler.run(this::doHouseKeeping)
+                    .host(this)
+                    .runnableName("doHouseKeeping")
+                    .periodically(config.getHouseKeepingInterval() / 4, config.getHouseKeepingInterval(), MILLISECONDS));
+            keepAliveService.initialize();
+            networkLoadExchangeService.initialize();
+            setState(State.INITIALIZED);
         }
     }
 
