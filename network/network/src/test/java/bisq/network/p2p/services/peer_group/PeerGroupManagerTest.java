@@ -17,7 +17,9 @@
 
 package bisq.network.p2p.services.peer_group;
 
+import bisq.common.network.Address;
 import bisq.common.network.TransportType;
+import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
@@ -25,11 +27,15 @@ import bisq.persistence.DbSubDirectory;
 import bisq.persistence.PersistableStore;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
+import bisq.security.keys.TorKeyGeneration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 
+import java.io.IOException;
+import java.time.Duration;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -38,6 +44,8 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,12 +59,37 @@ class PeerGroupManagerTest {
         Node node = mock(Node.class);
         IllegalStateException failure = new IllegalStateException("The peer exchange could not register at the node");
         doThrow(failure).when(node).addListener(argThat(listener -> listener instanceof PeerExchangeService));
-        PeerGroupManager peerGroupManager = new PeerGroupManager(node, peerGroupService(), new BanList(), config());
+        PeerGroupManager peerGroupManager = new PeerGroupManager(node, peerGroupService(Set.of()), new BanList(),
+                config());
 
         assertThatThrownBy(peerGroupManager::initialize).isSameAs(failure);
 
         verify(node, times(1)).addListener(argThat(listener -> listener instanceof PeerExchangeService));
         assertThat(peerGroupManager.getState().get()).isEqualTo(PeerGroupManager.State.INITIALIZING);
+    }
+
+    // The shutdown of the node ends the open connection attempts, so the initial peer exchange completes after the
+    // shutdown of the peer group. The periodic tasks must not start then, and the state must stay TERMINATED.
+    @Test
+    @Timeout(10)
+    void aShutdownDuringTheInitialPeerExchangeStartsNoPeriodicTasks() {
+        Address seedAddress = Address.from(TorKeyGeneration.generateKeyPair().getOnionAddress(), 1000);
+        Node node = mock(Node.class);
+        when(node.notMyself(any(Address.class))).thenReturn(true);
+        when(node.getAllActiveConnections()).thenAnswer(invocation -> Stream.empty());
+        CompletableFuture<Connection> connectionToSeed = new CompletableFuture<>();
+        when(node.getOrCreateConnectionAsync(seedAddress)).thenReturn(connectionToSeed);
+        PeerGroupManager peerGroupManager = new PeerGroupManager(node, peerGroupService(Set.of(seedAddress)),
+                new BanList(), config());
+
+        CompletableFuture<Void> initialization = CompletableFuture.runAsync(peerGroupManager::initialize);
+        verify(node, timeout(5_000)).getOrCreateConnectionAsync(seedAddress);
+        peerGroupManager.shutdown();
+        connectionToSeed.completeExceptionally(new IOException("The node was shut down"));
+
+        assertThat(initialization).succeedsWithin(Duration.ofSeconds(5));
+        assertThat(peerGroupManager.getState().get()).isEqualTo(PeerGroupManager.State.TERMINATED);
+        verify(node, never()).addListener(argThat(listener -> listener instanceof KeepAliveService));
     }
 
     private static PeerGroupManager.Config config() {
@@ -73,7 +106,7 @@ class PeerGroupManagerTest {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    private static PeerGroupService peerGroupService() {
+    private static PeerGroupService peerGroupService(Set<Address> seedAddresses) {
         PersistenceService persistenceService = mock(PersistenceService.class);
         Persistence persistence = mock(Persistence.class);
         when(persistenceService.getOrCreatePersistence(any(), any(DbSubDirectory.class), anyString(), any(PersistableStore.class)))
@@ -82,7 +115,7 @@ class PeerGroupManagerTest {
         return new PeerGroupService(persistenceService,
                 TransportType.TOR,
                 new PeerGroupService.Config(),
-                Set.of(),
+                seedAddresses,
                 new BanList(),
                 500,
                 100);
