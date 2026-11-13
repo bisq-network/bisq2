@@ -18,6 +18,7 @@
 package bisq.wallet;
 
 import bisq.common.monetary.Coin;
+import bisq.persistence.PersistableStoreFileManager;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.protobuf.GetBalanceRequest;
 import bisq.wallet.protobuf.GetBalanceResponse;
@@ -55,6 +56,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -329,6 +332,50 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void aFailedWriteOfTheWalletRecordIsRepeatedAtTheNextOpen() throws Exception {
+        Path block = blockWritesOfTheWalletRecord();
+        openWallet();
+        assertEquals(WalletService.State.OPEN, walletService.getState().get());
+        assertFalse(persistenceService.persistAllClients().join());
+        assertFalse(isWalletRecordStored());
+        Files.delete(block);
+
+        walletService.openOrCreateWallet("Wallet-Pa55!").get();
+
+        awaitStoredWalletRecord();
+        PersistenceService restartedPersistenceService = new PersistenceService(tempDirPath);
+        WalletService restarted = new WalletService(new WalletService.Config(true, "localhost", 0, false),
+                restartedPersistenceService, client);
+        restartedPersistenceService.readAllPersisted().join();
+        restarted.refreshState().get();
+        assertEquals(WalletService.State.OPEN, restarted.getState().get());
+    }
+
+    @Test
+    void aFailedWriteOfTheWalletRecordIsRepeatedAtShutdown() throws Exception {
+        Path block = blockWritesOfTheWalletRecord();
+        openWallet();
+        assertFalse(persistenceService.persistAllClients().join());
+        assertFalse(isWalletRecordStored());
+        Files.delete(block);
+
+        walletService.shutdown().get();
+
+        assertTrue(isWalletRecordStored());
+    }
+
+    @Test
+    void shutdownCompletesWhenTheWalletRecordCannotBeWritten() throws Exception {
+        blockWritesOfTheWalletRecord();
+        openWallet();
+        assertFalse(persistenceService.persistAllClients().join());
+
+        assertTrue(walletService.shutdown().get());
+
+        assertFalse(isWalletRecordStored());
+    }
+
+    @Test
     void openingTheWalletFetchesTheBalance() throws ExecutionException, InterruptedException {
         walletService.initialize().get();
 
@@ -488,11 +535,23 @@ class WalletServiceGrpcTest {
     // The record is written asynchronously by the persistence service; a restart reads it from disk.
     private void awaitStoredWalletRecord() throws InterruptedException {
         long deadline = System.currentTimeMillis() + 5_000;
-        while (!new WalletStoreService(new PersistenceService(tempDirPath)).readPersisted()
-                .map(WalletStore::isWalletExists).orElse(false)
-                && System.currentTimeMillis() < deadline) {
+        while (!isWalletRecordStored() && System.currentTimeMillis() < deadline) {
             Thread.sleep(20);
         }
+    }
+
+    private boolean isWalletRecordStored() {
+        return new WalletStoreService(new PersistenceService(tempDirPath)).readPersisted()
+                .map(WalletStore::isWalletExists).orElse(false);
+    }
+
+    // The writer creates a temporary file next to the store file first; a directory at that path makes every write
+    // of the wallet record fail until it is deleted.
+    private Path blockWritesOfTheWalletRecord() throws IOException {
+        Path storePath = new WalletStoreService(new PersistenceService(tempDirPath)).getPersistence().getStorePath();
+        Files.createDirectories(storePath.getParent());
+        return Files.createDirectory(storePath.resolveSibling(PersistableStoreFileManager.TEMP_FILE_PREFIX
+                + storePath.getFileName()));
     }
 
     private void awaitBalance() throws InterruptedException {

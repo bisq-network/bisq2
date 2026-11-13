@@ -135,7 +135,7 @@ public class WalletService implements Service {
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
-        return client.shutdown();
+        return walletStoreService.persistIfUnsaved().thenCompose(saved -> client.shutdown());
     }
 
     public ReadOnlyObservable<State> getState() {

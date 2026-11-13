@@ -23,12 +23,15 @@ import bisq.persistence.PersistenceClient;
 import bisq.persistence.PersistenceService;
 import lombok.Getter;
 
+import java.util.concurrent.CompletableFuture;
+
 // Records whether this install created or opened a wallet on the daemon; the daemon itself cannot tell.
 class WalletStoreService implements PersistenceClient<WalletStore> {
     @Getter
     private final WalletStore persistableStore = new WalletStore();
     @Getter
     private final Persistence<WalletStore> persistence;
+    private volatile boolean unsaved;
 
     WalletStoreService(PersistenceService persistenceService) {
         persistence = persistenceService.getOrCreatePersistence(this, DbSubDirectory.PRIVATE, persistableStore);
@@ -39,8 +42,23 @@ class WalletStoreService implements PersistenceClient<WalletStore> {
     }
 
     void setWalletExists() {
-        if (persistableStore.setWalletExists()) {
-            persist();
+        if (persistableStore.setWalletExists() || unsaved) {
+            persistWalletRecord();
         }
+    }
+
+    // Nothing else writes this store, so a failed write is repeated at the next open and at shutdown
+    CompletableFuture<Boolean> persistIfUnsaved() {
+        return unsaved ? persistWalletRecord() : CompletableFuture.completedFuture(true);
+    }
+
+    private CompletableFuture<Boolean> persistWalletRecord() {
+        unsaved = true;
+        return persist().thenApply(saved -> {
+            if (saved) {
+                unsaved = false;
+            }
+            return saved;
+        });
     }
 }
