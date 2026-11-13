@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
 import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedState;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedWords;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
 import javafx.scene.layout.Region;
@@ -29,8 +30,8 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
-import java.util.List;
 
 @Slf4j
 public class SetupWalletWizardBackupController implements Controller {
@@ -38,12 +39,16 @@ public class SetupWalletWizardBackupController implements Controller {
     @Getter
     private final SetupWalletWizardBackupView view;
     private final Runnable onBackHandler;
+    private final Supplier<String> walletPassword;
     private final WalletService walletService;
+    private boolean activated;
 
     public SetupWalletWizardBackupController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
-                                             Runnable onBackHandler) {
+                                             Runnable onBackHandler,
+                                             Supplier<String> walletPassword) {
         this.onBackHandler = onBackHandler;
+        this.walletPassword = walletPassword;
         model = new SetupWalletWizardBackupModel();
         view = new SetupWalletWizardBackupView(model, this, navigationButtonsVisibleHandler);
 
@@ -52,48 +57,44 @@ public class SetupWalletWizardBackupController implements Controller {
 
     @Override
     public void onActivate() {
+        activated = true;
         loadSeedWordsAsync(walletService);
     }
 
     @Override
     public void onDeactivate() {
-
+        activated = false;
     }
 
     public void onRetrySeed() {
         loadSeedWordsAsync(walletService);
     }
 
-    private void setSeedWords(List<String> seedWords) {
-        if (seedWords.size() != model.getSEED_WORD_COUNT()) {
-            throw new IllegalArgumentException(
-                    "Expected " + model.getSEED_WORD_COUNT() + " seed words, but got " + seedWords.size()
-            );
-        }
-        for (int i = 0; i < model.getSEED_WORD_COUNT(); i++) {
-            model.getSeedWords()[i].set(seedWords.get(i));
-        }
-    }
-
     private void loadSeedWordsAsync(WalletService walletService) {
         model.getSeedState().set(SeedState.LOADING);
-        walletService.getSeedWords()
-                .thenAccept(seedWords ->
-                        UIThread.run(() -> {
-                            setSeedWords(seedWords);
-                            model.getSeedState().set(SeedState.SUCCESS);
-                        }))
+        walletService.getSeedWords(walletPassword.get())
+                .thenAccept(seedWords -> {
+                    SeedWords.requireValidCount(seedWords);
+                    UIThread.run(() -> {
+                        model.getSeedWords().setAll(seedWords);
+                        model.getSeedState().set(SeedState.SUCCESS);
+                    });
+                })
                 .exceptionally(ex -> {
                     Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
                     log.error("Failed to load seed words", cause);
-                    UIThread.run(() -> model.getSeedState().set(SeedState.ERROR));
-
-                    new Popup().error(Res.get("wallet.backupSeeds.error.failedToLoad"))
-                            .owner(getPopupOwner())
-                            .onAction(onBackHandler)
-                            .onClose(onBackHandler)
-                            .show();
+                    UIThread.run(() -> {
+                        model.getSeedState().set(SeedState.ERROR);
+                        if (!activated) {
+                            return;
+                        }
+                        new Popup().error(Res.get("wallet.backupSeeds.error.failedToLoad"))
+                                .owner(getPopupOwner())
+                                .onAction(onBackHandler)
+                                .onClose(onBackHandler)
+                                .show();
+                    });
 
                     return null;
                 });

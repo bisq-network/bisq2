@@ -22,30 +22,30 @@ import bisq.common.monetary.Coin;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
+import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.TransactionInput;
 import bisq.wallet.vo.TransactionOutput;
 import bisq.wallet.vo.Utxo;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
 public class MockWalletService extends WalletService {
+    // The mock keeps its wallet in memory and never touches the persisted flag of the real service.
+    private boolean walletExists;
+
     public MockWalletService(Config config, PersistenceService persistenceService) {
         super(config, persistenceService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (DevMode.isDevMode() && DevMode.isDevModeWalletSetup()) {
-            setWalletInitialized();
-            log.info("Wallet initialized");
-        }
-        return CompletableFuture.completedFuture(true);
+        walletExists = DevMode.isDevMode() && DevMode.isDevModeWalletSetup();
+        return refreshState().thenApply(nothing -> true);
     }
 
     @Override
@@ -53,23 +53,33 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public void encryptWallet(String password) {
-        log.info("encryptWallet");
+    @Override
+    public void startPolling() {
     }
 
-    public void decryptWallet(String password) {
-        log.info("decryptWallet");
+    @Override
+    public void stopPolling() {
     }
 
-    public CompletableFuture<List<String>> getSeedWords() {
+    @Override
+    public CompletableFuture<Void> refreshState() {
+        applyState(walletExists ? State.OPEN : State.NOT_SET_UP);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> openOrCreateWallet(String password) {
+        walletExists = true;
+        applyState(State.OPEN);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getSeedWords(String password) {
         return CompletableFuture.completedFuture(List.of("car", "van", "lion",
                 "water", "bero", "cycle",
                 "love", "key", "system",
                 "wife", "husband", "trade"));
-    }
-
-    public CompletableFuture<Boolean> isWalletReady() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
@@ -109,16 +119,31 @@ public class MockWalletService extends WalletService {
                 .thenApply(this::addReceiveAddress);
     }
 
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+    private ReceiveAddressEntry addReceiveAddress(String address) {
+        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(address);
+        receiveAddressService.addReceiveAddressEntry(receiveAddressEntry);
+        return receiveAddressEntry;
+    }
+
+    @Override
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase,
+                                                   String address,
+                                                   long amount,
+                                                   OptionalLong feeRatePerKwu) {
         return CompletableFuture.completedFuture("69111c8de670d7a12b8c4db85c67485889b30335cdd3fd7f18924104e88e9fc3");
     }
 
+    @Override
     public CompletableFuture<Boolean> isWalletEncrypted() {
-        return CompletableFuture.completedFuture(false);
+        return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Coin> requestBalance() {
-        return CompletableFuture.completedFuture(Coin.asBtcFromValue(2501234));
+        Coin total = Coin.asBtcFromValue(2501234);
+        balance.set(total);
+        balanceBreakdown.set(new BalanceBreakdown(2501234, 2000000, 501234, 0, 0));
+        return CompletableFuture.completedFuture(total);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
