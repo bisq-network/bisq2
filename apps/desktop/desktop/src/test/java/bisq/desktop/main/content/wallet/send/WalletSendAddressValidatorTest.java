@@ -54,6 +54,22 @@ class WalletSendAddressValidatorTest {
         assertEquals(MAINNET_BASE58, WalletSendAddressValidator.canonical("BITCOIN:" + MAINNET_BASE58, false).orElseThrow());
     }
 
+    // BIP 21: a client must not act on a URI with a req- parameter which it does not support
+    @Test
+    void aPaymentUriWithARequiredParameterIsInvalid() {
+        for (String query : new String[]{"?req-pop=abc", "?amount=0.5&req-future=1", "?REQ-pop=abc", "?req-flag"}) {
+            assertTrue(WalletSendAddressValidator.canonical("bitcoin:" + MAINNET_BECH32 + query, false).isEmpty(), query);
+        }
+    }
+
+    @Test
+    void otherUriParametersAreDropped() {
+        for (String query : new String[]{"?amount=0.5&label=shop", "?label=req-1", "?prereq-x=1"}) {
+            assertEquals(MAINNET_BECH32,
+                    WalletSendAddressValidator.canonical("bitcoin:" + MAINNET_BECH32 + query, false).orElseThrow(), query);
+        }
+    }
+
     @Test
     void emptyAndMalformedInputIsInvalid() {
         for (boolean devMode : new boolean[]{false, true}) {

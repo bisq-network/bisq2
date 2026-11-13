@@ -24,6 +24,7 @@ import bisq.desktop.components.controls.validator.ValidatorBase;
 import bisq.i18n.Res;
 import javafx.scene.control.TextInputControl;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -45,7 +46,7 @@ public class WalletSendAddressValidator extends ValidatorBase {
 
     // The address as the daemon gets it: surrounding whitespace and a bitcoin: URI prefix removed, bech32 in lower case.
     static Optional<String> canonical(String address, boolean devMode) {
-        if (StringUtils.isEmpty(address)) {
+        if (StringUtils.isEmpty(address) || hasRequiredUriParameter(address)) {
             return Optional.empty();
         }
         String canonical = BitcoinAddressValidation.canonicalize(address.trim());
@@ -59,5 +60,12 @@ public class WalletSendAddressValidator extends ValidatorBase {
             return Optional.of(canonical);
         }
         return Optional.empty();
+    }
+
+    // BIP 21: a URI with a req- parameter which the client does not support is invalid, and this form supports none
+    private static boolean hasRequiredUriParameter(String uri) {
+        int query = uri.indexOf('?');
+        return query >= 0 && Arrays.stream(uri.substring(query + 1).split("&"))
+                .anyMatch(parameter -> parameter.toLowerCase(Locale.ROOT).startsWith("req-"));
     }
 }
