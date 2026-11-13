@@ -1,6 +1,7 @@
 # Peer exchange
 
-This specification defines which peers a node keeps from the peer exchange, and how many.
+This specification defines which peers a node keeps from the peer exchange, and how many, and how the first peer
+exchange at the start of the node ends.
 
 A node runs one peer group for each transport (Tor, I2P, clearnet). In the peer exchange, two connected nodes send
 each other a list of peers. Each peer has an address, the capability and the network load of the peer, and a date.
@@ -46,6 +47,18 @@ peers: any connected node can send any list.
   2.1.13 accept. If one such peer failed the whole message, a modified client could stop the peer exchange between
   nodes of version 2.1.13 and nodes of this version, in both directions, with one peer. The peers are not part of the
   hash of the message, so a skipped peer does not change its proof of work payload.
+
+## Initial peer exchange
+
+At the start, the node sends a peer exchange request to the seed nodes and to the reported and persisted peers. The
+start waits until one exchange succeeds, or at most 90 seconds. If no exchange succeeded within 90 seconds, the start
+continues without connected peers. The requests which are still open continue, and the node retries the peer exchange
+in the background with an increasing delay. A response which arrives later still adds its peers.
+
+Reason: over Tor, and in particular through bridges, the first connection to a seed node can take longer than 90
+seconds. From version 2.1.8 up to version 2.1.15, the timeout failed the start of the application with a bare
+`TimeoutException`, although the retry, or a request of the timed-out batch, often succeeded a few seconds later. The
+start also continues when all requests fail before the timeout, so a timeout must not be treated differently.
 
 ## Compatibility
 
