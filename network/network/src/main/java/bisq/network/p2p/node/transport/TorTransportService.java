@@ -217,11 +217,12 @@ public class TorTransportService implements TransportService {
     }
 
     /**
-     * @return the log of the embedded Tor of the application with this data directory: Tor logs to its standard
-     * output, which the Tor library writes to this file. The Tor library names it.
+     * @return the log of the embedded Tor of the application with this data directory: the Tor library writes the
+     * standard output, to which Tor logs, and the standard error of Tor or of sandy to this file. The Tor library names
+     * it.
      */
     public static Path getTorLogPath(Path appDataDirPath) {
-        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getStdoutLogPath();
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getLogPath();
     }
 
     /**
@@ -229,7 +230,7 @@ public class TorTransportService implements TransportService {
      * moves aside when the log exceeds its size limit. The Tor library names it.
      */
     public static Path getRotatedTorLogPath(Path appDataDirPath) {
-        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedStdoutLogPath();
+        return new TorDirectories(appDataDirPath.resolve(TOR_DIR_NAME)).getRotatedLogPath();
     }
 
     /**
