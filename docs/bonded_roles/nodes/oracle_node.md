@@ -29,7 +29,7 @@ sudo apt-get install openjdk-11-jdk
 
 ### Check out and build Bisq 2
 
-See: `https://github.com/bisq-network/bisq2/blob/main/apps/oracle-node/oracle-node-app/service-scripts/README.md`
+See: `https://github.com/bisq-network/bisq2/blob/main/apps/oracle-node-app/service-scripts/README.md`
 
 For running a localhost dev oracle node use following JVM arguments:
 
