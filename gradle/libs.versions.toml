@@ -19,7 +19,6 @@ bouncycastle-lib = { strictly = '1.84' }
 
 commons-codec = { strictly = '1.22.0' }
 
-failsafe-lib = { strictly = '3.3.2' }
 
 fontawesomefx-lib = { strictly = '8.0.0' }
 fontawesomefx-commons-lib = { strictly = '9.1.2' }
@@ -89,7 +88,6 @@ bouncycastle-pkix = { module = 'org.bouncycastle:bcpkix-jdk18on', version.ref = 
 
 commons-codec = { module = "commons-codec:commons-codec", version.ref = "commons-codec" }
 
-failsafe = { module = 'dev.failsafe:failsafe', version.ref = 'failsafe-lib' }
 
 fontawesomefx = { module = 'de.jensd:fontawesomefx', version.ref = 'fontawesomefx-lib' }
 fontawesomefx-commons = { module = 'de.jensd:fontawesomefx-commons', version.ref = 'fontawesomefx-commons-lib' }

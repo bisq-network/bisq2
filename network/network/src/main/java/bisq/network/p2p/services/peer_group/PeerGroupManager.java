@@ -30,13 +30,10 @@ import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.exchange.PeerExchangeService;
 import bisq.network.p2p.services.peer_group.keep_alive.KeepAliveService;
 import bisq.network.p2p.services.peer_group.network_load.NetworkLoadExchangeService;
-import dev.failsafe.Failsafe;
-import dev.failsafe.RetryPolicy;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
 import java.util.Comparator;
 import java.util.Locale;
 import java.util.Optional;
@@ -148,8 +145,6 @@ public class PeerGroupManager implements Node.Listener {
 
     private final Set<Listener> listeners = new CopyOnWriteArraySet<>();
 
-    private final RetryPolicy<Boolean> retryPolicy;
-
     public PeerGroupManager(Node node,
                             PeerGroupService peerGroupService,
                             BanList banList,
@@ -162,24 +157,16 @@ public class PeerGroupManager implements Node.Listener {
         peerExchangeService = new PeerExchangeService(node, peerGroupService, config.getPeerExchangeConfig(), config.getPeerGroupConfig());
         keepAliveService = new KeepAliveService(node, config.getKeepAliveServiceConfig());
         networkLoadExchangeService = new NetworkLoadExchangeService(node);
-
-        retryPolicy = RetryPolicy.<Boolean>builder()
-                .handle(IllegalStateException.class)
-                .handleResultIf(result -> state.get() == State.INITIALIZING)
-                .withBackoff(Duration.ofSeconds(1), Duration.ofSeconds(20))
-                .withJitter(0.25)
-                .withMaxDuration(Duration.ofMinutes(5))
-                .withMaxRetries(10)
-                .onRetry(e -> log.info("Retry called. AttemptCount={}.", e.getAttemptCount()))
-                .onRetriesExceeded(e -> log.warn("Failed. Max retries exceeded."))
-                .onSuccess(e -> log.debug("Succeeded."))
-                .build();
     }
 
+    /**
+     * Blocks until the initial peer exchange completed. It runs once: a second call finds the state INITIALIZING and
+     * does nothing, so a failure of a step fails the initialization and is not retried. The peer exchange retries
+     * itself in the background.
+     */
     public void initialize() {
-        // blocking
         node.addListener(this);
-        Failsafe.with(retryPolicy).run(this::doInitialize);
+        doInitialize();
     }
 
     public void shutdown() {
