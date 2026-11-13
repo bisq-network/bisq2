@@ -156,7 +156,7 @@ public class WalletService implements Service {
     @Override
     public CompletableFuture<Boolean> shutdown() {
         stopPolling();
-        return client.shutdown();
+        return walletStoreService.persistIfUnsaved().thenCompose(saved -> client.shutdown());
     }
 
     // The periodic poll runs only while started; the desktop starts it with the MuSig setting, as the wallet UI exists
