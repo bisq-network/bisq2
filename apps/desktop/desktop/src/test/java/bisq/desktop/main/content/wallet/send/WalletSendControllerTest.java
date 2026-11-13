@@ -196,6 +196,9 @@ class WalletSendControllerTest {
         fillForm(ADDRESS, "0", "Wallet-Pa55!");
         onFx(() -> controller.onSend());
 
+        fillForm("bitcoin:" + ADDRESS + "?req-pop=abc", "0.5", "Wallet-Pa55!");
+        onFx(() -> controller.onSend());
+
         verify(walletService, never()).sendToAddress(any(), any(), anyLong());
         assertThat(controller.getModel().getSendInProgress().get()).isFalse();
     }
