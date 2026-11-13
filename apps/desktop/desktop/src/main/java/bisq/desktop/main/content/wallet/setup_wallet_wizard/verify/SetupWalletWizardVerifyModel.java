@@ -62,7 +62,9 @@ public class SetupWalletWizardVerifyModel implements Model {
         answerChoices.clear();
         correctAnswerIndices.clear();
         List<Integer> positions = new ArrayList<>();
-        for (int i = 0; i < allSeedWords.size(); i++) positions.add(i);
+        for (int i = 0; i < allSeedWords.size(); i++) {
+            positions.add(i);
+        }
         Collections.shuffle(positions, random);
         questionPositions.addAll(positions.subList(0, QUESTIONS_COUNT));
         for (int q = 0; q < QUESTIONS_COUNT; q++) {
