@@ -45,6 +45,7 @@ public class SetupWalletWizardVerifyController implements Controller {
     private final Runnable onBackHandler;
     private final Supplier<String> walletPassword;
     private final WalletService walletService;
+    private boolean activated;
 
     public SetupWalletWizardVerifyController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
@@ -64,6 +65,7 @@ public class SetupWalletWizardVerifyController implements Controller {
 
     @Override
     public void onActivate() {
+        activated = true;
         navigationButtonsVisibleHandler.accept(false);
         model.reset();
         loadSeedWordsAsync(walletService);
@@ -71,6 +73,7 @@ public class SetupWalletWizardVerifyController implements Controller {
 
     @Override
     public void onDeactivate() {
+        activated = false;
         navigationButtonsVisibleHandler.accept(true);
     }
 
@@ -129,10 +132,14 @@ public class SetupWalletWizardVerifyController implements Controller {
             Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
             log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
-
-            new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
-                    .owner(getPopupOwner())
-                    .show();
+            UIThread.run(() -> {
+                if (!activated) {
+                    return;
+                }
+                new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
+                        .owner(getPopupOwner())
+                        .show();
+            });
 
             return null;
         });
