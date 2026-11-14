@@ -20,6 +20,8 @@ package bisq.desktop.common;
 import bisq.common.observable.Observable;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
+import javafx.collections.ObservableMap;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -32,6 +34,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 import org.testfx.util.WaitForAsyncUtils;
+
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static bisq.desktop.testutil.JavaFxToolkitExtension.runOnFxThread;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -51,6 +56,7 @@ class TransitionsTransitOutTest {
     // Longer than the slide-in (150 ms delay + 600 ms) and the slide-out (150 ms)
     private static final long ANIMATIONS_DONE_MS = 1000;
 
+    private final Observable<Boolean> useAnimations = new Observable<>(true);
     private VBox content;
     private Region firstStep;
     private Region secondStep;
@@ -59,7 +65,7 @@ class TransitionsTransitOutTest {
     @BeforeEach
     void setUp() {
         SettingsService settingsService = mock(SettingsService.class, RETURNS_DEEP_STUBS);
-        when(settingsService.getUseAnimations()).thenReturn(new Observable<>(true));
+        when(settingsService.getUseAnimations()).thenReturn(useAnimations);
         Transitions.setSettingsService(settingsService);
 
         runOnFxThread(() -> {
@@ -143,6 +149,38 @@ class TransitionsTransitOutTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(content.getChildren()).containsExactly(secondStep);
+    }
+
+    @Test
+    void stepIsRemovedImmediatelyAfterSlideOutToTheLeftWithoutAnimations() {
+        assertStepIsRemovedImmediatelyWithoutAnimations(false);
+    }
+
+    @Test
+    void stepIsRemovedImmediatelyAfterSlideOutToTheRightWithoutAnimations() {
+        assertStepIsRemovedImmediatelyWithoutAnimations(true);
+    }
+
+    private void assertStepIsRemovedImmediatelyWithoutAnimations(boolean slideOutRight) {
+        useAnimations.set(false);
+        AtomicReference<List<Node>> childrenAfterTransition = new AtomicReference<>();
+        AtomicReference<ObservableMap<Object, Object>> propertiesOfStepOut = new AtomicReference<>();
+        runOnFxThread(() -> {
+            // Like OnboardingView and TacView, keep the old step in the pane while it slides out
+            content.getChildren().add(secondStep);
+            if (slideOutRight) {
+                Transitions.transitRightOut(secondStep, firstStep);
+            } else {
+                Transitions.transitLeftOut(secondStep, firstStep);
+            }
+            // Read in the same FX task, so that no later FX event can have removed the step
+            childrenAfterTransition.set(List.copyOf(content.getChildren()));
+            propertiesOfStepOut.set(firstStep.getProperties());
+        });
+
+        assertThat(childrenAfterTransition.get()).containsExactly(secondStep);
+        // No slide-out timeline is stored, so a later transition of the step has nothing to stop
+        assertThat(propertiesOfStepOut.get()).isEmpty();
     }
 
     // Same as the view change listener of TradeWizardView
