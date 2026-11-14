@@ -29,8 +29,10 @@ node does not use it.
 
 The Tor directory has the parts `bin/` (the installed bundle), `data/` (the data directory of Tor) and `sandy/` (the
 sandbox program). The torrc, the logs and `external_tor.config` lie in the Tor directory itself, outside the directory
-which Tor writes. Tor writes its log to its standard output, which the node writes to `tor-stdout.log`; above 10 MiB
-it moves the log to `tor-stdout.log.1` before the next start. The resources page opens this log, and the log zip
+which Tor writes. Tor writes its log to its standard output. The node writes the standard output and the standard
+error of Tor, or of sandy, in the order in which they were written to `tor.log`; above 10 MiB it moves the log to
+`tor.log.1` before the next start. At every start it deletes `tor-stdout.log`, `tor-stdout.log.1` and
+`tor-stderr.log`, which versions up to 2.1.15 wrote. The resources page opens this log, and the log zip
 contains a copy without the home directory. Before a start of its own Tor, the node moves the state of Tor of the
 layout before into `data/`, deletes only the files of the old layout which it knows, and keeps everything else. A file
 or a link at the path `data`, or at the path `data.migration` of the temporary directory of the move, belongs to no
@@ -290,10 +292,11 @@ node never starts Tor without the sandbox instead, when:
 Whether sandy ended the run before Tor ran, the node decides by the status record which sandy writes into
 `sandy/run-status` of the Tor directory, which Tor can neither write nor remove, and not by the exit status, which Tor
 can choose as well. Every other end of a sandboxed Tor before it answers on its control port fails the start without
-the advice to turn the sandbox off. The error of a failed start quotes the end of `tor-stderr.log`, the standard error
-of Tor, and in the sandbox also of sandy. There Tor can rewrite that file, so the error first names what the node knows,
-the exit status and the status record, and then the quote, labeled as written by sandy and by Tor in its sandbox and
-not verified by Bisq. A start without the sandbox quotes the file without the label.
+the advice to turn the sandbox off. The error of a failed start names `tor.log` and quotes the part of it which this
+start wrote, so it contains the reason which Tor logs to its standard output and the reason which sandy writes to its
+standard error. In the sandbox Tor can rewrite that file, so the error first names what the node knows, the exit status
+and the status record, and then the quote, labeled as written by sandy and by Tor in its sandbox and not verified by
+Bisq. A start without the sandbox quotes the log without the label.
 
 Two failed starts of Tor get the popup of a failed start which a change of `bisq.conf` fixes
 (`docs/specifications/desktop/startup-failure-popup.md`), instead of the error popup with the bug report. The node
