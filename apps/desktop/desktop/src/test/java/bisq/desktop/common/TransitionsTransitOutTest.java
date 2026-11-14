@@ -139,6 +139,25 @@ class TransitionsTransitOutTest {
     }
 
     @Test
+    void stepFadedInAgainDuringItsSlideOutIsMovedBackToItsPosition() throws InterruptedException {
+        AtomicReference<Double> translateXAfterFadeIn = new AtomicReference<>();
+        runOnFxThread(() -> {
+            showStep(secondStep, firstStep, false);
+            // As if the slide-out had already moved the first step part of the way
+            firstStep.setTranslateX(-firstStep.getWidth() / 2);
+            content.getChildren().setAll(firstStep);
+            Transitions.fadeIn(firstStep);
+            translateXAfterFadeIn.set(firstStep.getTranslateX());
+        });
+        Thread.sleep(ANIMATIONS_DONE_MS);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(translateXAfterFadeIn.get()).isEqualTo(0);
+        assertThat(firstStep.getTranslateX()).isEqualTo(0);
+        assertThat(firstStep.getProperties()).isEmpty();
+    }
+
+    @Test
     void stepWhichIsNotShownAgainIsRemovedAfterItsSlideOut() throws InterruptedException {
         runOnFxThread(() -> {
             // Like OnboardingView and TacView, keep the old step in the pane while it slides out
