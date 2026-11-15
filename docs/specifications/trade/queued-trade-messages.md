@@ -41,7 +41,9 @@ service keeps them. Queued trade messages belong to a trade which has a protocol
    state of the trade, as it does after a change of the state. The other events stay in the event queue.
 4. During a halt of trading, or when the version of the node is below the minimum version for trading, the trade
    service does not apply the queued events at startup. They stay in the event queue. When the restriction ends, the
-   trade service applies the queued events of each trade once, as in rule 3.
+   trade service applies the queued events of each trade once, as in rule 3. It checks the restrictions again under the
+   lock of the protocol, right before the protocol applies them, so a restriction which began in the meantime keeps
+   them in the event queue until it ends.
 5. A queued event whose handler fails at startup makes the trade fail, and the protocol reports the failure to the
    trade peer, as for a new message. When the queued events of one trade fail at startup in another way, the node logs
    the failure and continues with the next trade. The start of the trade service does not fail, as for the items of

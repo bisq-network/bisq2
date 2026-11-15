@@ -518,7 +518,21 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
         StartupReplay.forEach(tradeProtocolById.values().stream()
                         .filter(protocol -> !protocol.getTrade().getEventQueue().isEmpty()),
-                protocol -> submitTradeTask(protocol.getTrade().getId(), protocol::handleQueuedEvents));
+                protocol -> submitTradeTask(protocol.getTrade().getId(),
+                        () -> handleQueuedEventsUnlessTradingIsRestricted(protocol)));
+    }
+
+    // The task runs later on the executor, and a restriction can begin before it runs. The check under the lock of the
+    // protocol keeps the queued events in the event queue then, and the end of that restriction applies them.
+    private void handleQueuedEventsUnlessTradingIsRestricted(MuSigProtocol protocol) {
+        synchronized (protocol) {
+            if (isTradingRestricted()) {
+                log.warn("We do not apply the queued events of trade {} as trading is currently not allowed",
+                        protocol.getTrade().getId());
+                return;
+            }
+            protocol.handleQueuedEvents();
+        }
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {

@@ -185,6 +185,39 @@ class BisqEasyTradeServiceQueuedTradeMessagesTest {
         assertEquals(1, storedTrade.getEventQueue().size());
     }
 
+    // The step at the end of a restriction can wait for the lock of the protocol. A halt which began in that time keeps
+    // the queued events in the event queue, so the step checks the restrictions again under that lock.
+    @Test
+    void queuedTradeMessageIsNotProcessedWhenAHaltBeginsWhileTheStepWaitsForTheProtocol() throws Exception {
+        BisqEasyTrade storedTrade = storedTradeWithQueuedConfirmFiatSent();
+        AuthorizedAlertData haltOfTrading = haltOfTrading();
+        alerts.add(haltOfTrading);
+        BisqEasyTradeService service = startServiceWith(storedTrade);
+        BisqEasyProtocol protocol = service.findProtocol(storedTrade.getId()).orElseThrow();
+
+        Thread endOfHalt = new Thread(() -> alerts.remove(haltOfTrading), "end-of-halt");
+        synchronized (protocol) {
+            endOfHalt.start();
+            awaitBlocked(endOfHalt);
+            alerts.add(haltOfTrading);
+        }
+        endOfHalt.join(5_000);
+
+        assertEquals(MAKER_SENT_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_RECEIVED_BTC_ADDRESS,
+                storedTrade.getState());
+        assertEquals(1, storedTrade.getEventQueue().size());
+    }
+
+    private static void awaitBlocked(Thread thread) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (thread.getState() != Thread.State.BLOCKED) {
+            if (System.currentTimeMillis() > deadline) {
+                throw new AssertionError("The step at the end of the halt did not wait for the protocol");
+            }
+            Thread.sleep(10);
+        }
+    }
+
     // A store whose write contains the state after the Bitcoin address, but still the queued confirmation which the
     // protocol processes in the next step
     private BisqEasyTrade storedTradeWithQueuedConfirmFiatSent() throws UnresolvableProtobufException {

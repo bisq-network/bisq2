@@ -313,7 +313,20 @@ public class BisqEasyTradeService extends RateLimitedPersistenceClient<BisqEasyT
                     e.getMessage());
             return;
         }
-        StartupReplay.forEach(protocolRegistry.getProtocols().stream(), BisqEasyProtocol::handleQueuedEvents);
+        StartupReplay.forEach(protocolRegistry.getProtocols().stream(), this::handleQueuedEventsUnlessTradingIsRestricted);
+    }
+
+    // The step can wait for the lock of the protocol, and a restriction can begin in that time. The check under the lock
+    // keeps the queued events in the event queue then, and the end of that restriction applies them.
+    private void handleQueuedEventsUnlessTradingIsRestricted(BisqEasyProtocol protocol) {
+        synchronized (protocol) {
+            if (isTradingRestricted()) {
+                log.warn("We do not apply the queued events of trade {} as trading is currently not allowed",
+                        protocol.getTrade().getId());
+                return;
+            }
+            protocol.handleQueuedEvents();
+        }
     }
 
     private void handleBisqEasyTradeMessage(BisqEasyTradeMessage message, BisqEasyProtocol protocol) {
