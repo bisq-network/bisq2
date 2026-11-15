@@ -22,30 +22,30 @@ import bisq.common.monetary.Coin;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.persistence.PersistenceService;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
+import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.vo.Transaction;
 import bisq.wallet.vo.TransactionInput;
 import bisq.wallet.vo.TransactionOutput;
 import bisq.wallet.vo.Utxo;
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
-@Slf4j
 public class MockWalletService extends WalletService {
+    // The mock keeps its wallet in memory and never touches the persisted flag of the real service.
+    private boolean walletExists;
+
     public MockWalletService(Config config, PersistenceService persistenceService) {
         super(config, persistenceService);
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
-        if (DevMode.isDevMode() && DevMode.isDevModeWalletSetup()) {
-            setWalletInitialized();
-            log.info("Wallet initialized");
-        }
-        return CompletableFuture.completedFuture(true);
+        walletExists = DevMode.isDevMode() && DevMode.isDevModeWalletSetup();
+        return refreshState().thenApply(nothing -> true);
     }
 
     @Override
@@ -53,23 +53,33 @@ public class MockWalletService extends WalletService {
         return CompletableFuture.completedFuture(true);
     }
 
-    public void encryptWallet(String password) {
-        log.info("encryptWallet");
+    @Override
+    public void startPolling() {
     }
 
-    public void decryptWallet(String password) {
-        log.info("decryptWallet");
+    @Override
+    public void stopPolling() {
     }
 
-    public CompletableFuture<List<String>> getSeedWords() {
+    @Override
+    public CompletableFuture<Void> refreshState() {
+        applyState(walletExists ? State.OPEN : State.NOT_SET_UP);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<Void> openOrCreateWallet(String password) {
+        walletExists = true;
+        applyState(State.OPEN);
+        return CompletableFuture.completedFuture(null);
+    }
+
+    @Override
+    public CompletableFuture<List<String>> getSeedWords(String password) {
         return CompletableFuture.completedFuture(List.of("car", "van", "lion",
                 "water", "bero", "cycle",
                 "love", "key", "system",
                 "wife", "husband", "trade"));
-    }
-
-    public CompletableFuture<Boolean> isWalletReady() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<ReceiveAddressEntry> getUnusedAddress() {
@@ -109,16 +119,31 @@ public class MockWalletService extends WalletService {
                 .thenApply(this::addReceiveAddress);
     }
 
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+    private ReceiveAddressEntry addReceiveAddress(String address) {
+        ReceiveAddressEntry receiveAddressEntry = new ReceiveAddressEntry(address);
+        receiveAddressService.addReceiveAddressEntry(receiveAddressEntry);
+        return receiveAddressEntry;
+    }
+
+    @Override
+    public CompletableFuture<String> sendToAddress(Optional<String> passphrase,
+                                                   String address,
+                                                   long amount,
+                                                   OptionalLong feeRatePerKwu) {
         return CompletableFuture.completedFuture("69111c8de670d7a12b8c4db85c67485889b30335cdd3fd7f18924104e88e9fc3");
     }
 
+    @Override
     public CompletableFuture<Boolean> isWalletEncrypted() {
-        return CompletableFuture.completedFuture(false);
+        return CompletableFuture.completedFuture(true);
     }
 
+    @Override
     public CompletableFuture<Coin> requestBalance() {
-        return CompletableFuture.completedFuture(Coin.asBtcFromValue(2501234));
+        Coin total = Coin.asBtcFromValue(2501234);
+        balance.set(total);
+        balanceBreakdown.set(new BalanceBreakdown(2501234, 2000000, 501234, 0, 0));
+        return CompletableFuture.completedFuture(total);
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
@@ -132,7 +157,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output1 = new TransactionOutput(
                 100000L,
                 "bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                true
         );
         Transaction tx1 = new Transaction(
                 "69111c8de670d7a12b8c4db85c67485889b30335cdd3fd7f18924104e88e9fc3",
@@ -156,7 +182,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output2 = new TransactionOutput(
                 2000000L,
                 "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                false
         );
         Transaction tx2 = new Transaction(
                 "b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6a7b8c9d0e1f2a1",
@@ -180,7 +207,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output3 = new TransactionOutput(
                 50000L,
                 "3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                false
         );
         Transaction tx3 = new Transaction(
                 "c3d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4",
@@ -204,7 +232,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output4 = new TransactionOutput(
                 750000L,
                 "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kygt080",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                true
         );
         Transaction tx4 = new Transaction(
                 "d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5",
@@ -228,7 +257,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output5 = new TransactionOutput(
                 150000L,
                 "1BoatSLRHtKNngkdXEeobR76b53LETtpyT",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                true
         );
         Transaction tx5 = new Transaction(
                 "e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6",
@@ -252,7 +282,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output6 = new TransactionOutput(
                 300000L,
                 "3P1oKqQ1oQf2t1Zb1p7b6g9a4n5v8x7y6z",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                false
         );
         Transaction tx6 = new Transaction(
                 "f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7",
@@ -276,7 +307,8 @@ public class MockWalletService extends WalletService {
         TransactionOutput output7 = new TransactionOutput(
                 125000L,
                 "1Ez69SnzzmePmZX3WpEzMKTrcBF2gpNQ55",
-                new byte[]{(byte)0x76, (byte)0xa9}
+                new byte[]{(byte)0x76, (byte)0xa9},
+                true
         );
         Transaction tx7 = new Transaction(
                 "a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8",

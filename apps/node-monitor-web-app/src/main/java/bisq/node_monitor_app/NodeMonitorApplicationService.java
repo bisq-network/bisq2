@@ -232,7 +232,12 @@ public class NodeMonitorApplicationService extends JavaSeApplicationService {
                 .thenCompose(result -> walletService
                         .map(walletService -> {
                             setState(State.INITIALIZE_WALLET);
-                            return walletService.initialize();
+                            return walletService.initialize().thenApply(initialized -> {
+                                if (initialized) {
+                                    walletService.startPolling();
+                                }
+                                return initialized;
+                            });
                         })
                         .orElseGet(() -> CompletableFuture.completedFuture(true)))
                 .thenCompose(result -> {

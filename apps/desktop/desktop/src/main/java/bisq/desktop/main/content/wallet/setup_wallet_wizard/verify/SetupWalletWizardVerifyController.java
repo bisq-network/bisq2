@@ -22,6 +22,7 @@ import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.desktop.components.overlay.Popup;
+import bisq.desktop.main.content.wallet.setup_wallet_wizard.SeedWords;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
@@ -30,8 +31,8 @@ import javafx.scene.layout.Region;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Slf4j
 public class SetupWalletWizardVerifyController implements Controller {
@@ -42,15 +43,19 @@ public class SetupWalletWizardVerifyController implements Controller {
     private final Consumer<Boolean> navigationButtonsVisibleHandler;
     private final Consumer<NavigationTarget> closeAndNavigateToHandler;
     private final Runnable onBackHandler;
+    private final Supplier<String> walletPassword;
     private final WalletService walletService;
+    private boolean activated;
 
     public SetupWalletWizardVerifyController(ServiceProvider serviceProvider,
                                              Consumer<Boolean> navigationButtonsVisibleHandler,
                                              Consumer<NavigationTarget> closeAndNavigateToHandler,
-                                             Runnable onBackHandler) {
+                                             Runnable onBackHandler,
+                                             Supplier<String> walletPassword) {
         this.navigationButtonsVisibleHandler = navigationButtonsVisibleHandler;
         this.closeAndNavigateToHandler = closeAndNavigateToHandler;
         this.onBackHandler = onBackHandler;
+        this.walletPassword = walletPassword;
 
         model = new SetupWalletWizardVerifyModel();
         view = new SetupWalletWizardVerifyView(model, this);
@@ -60,6 +65,7 @@ public class SetupWalletWizardVerifyController implements Controller {
 
     @Override
     public void onActivate() {
+        activated = true;
         navigationButtonsVisibleHandler.accept(false);
         model.reset();
         loadSeedWordsAsync(walletService);
@@ -67,6 +73,7 @@ public class SetupWalletWizardVerifyController implements Controller {
 
     @Override
     public void onDeactivate() {
+        activated = false;
         navigationButtonsVisibleHandler.accept(true);
     }
 
@@ -108,7 +115,6 @@ public class SetupWalletWizardVerifyController implements Controller {
     }
 
     void onCreateWallet() {
-        walletService.setWalletInitialized();
         closeAndNavigateToHandler.accept(NavigationTarget.WALLET);
     }
 
@@ -119,29 +125,24 @@ public class SetupWalletWizardVerifyController implements Controller {
     }
 
     private void loadSeedWordsAsync(WalletService walletService) {
-        walletService.getSeedWords().thenAccept(seedWords -> UIThread.run(() -> {
-            setSeedWords(seedWords);
-        })).exceptionally(ex -> {
+        walletService.getSeedWords(walletPassword.get()).thenAccept(seedWords -> {
+            SeedWords.requireValidCount(seedWords);
+            UIThread.run(() -> model.setupQuestions(seedWords));
+        }).exceptionally(ex -> {
             Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
 
             log.error("loadSeedWordsAsync :: Failed to load seed words", cause);
-
-            new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
-                    .owner(getPopupOwner())
-                    .show();
+            UIThread.run(() -> {
+                if (!activated) {
+                    return;
+                }
+                new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
+                        .owner(getPopupOwner())
+                        .show();
+            });
 
             return null;
         });
-    }
-
-    private void setSeedWords(List<String> seedWords) {
-        if (seedWords.size() != 12) {
-            throw new IllegalArgumentException("Expected 12 seed words, got " + seedWords.size());
-        }
-        for (int i = 0; i < 12; i++) {
-            model.getSeedWords()[i].set(seedWords.get(i));
-        }
-        model.setupQuestions(seedWords);
     }
 
     private Region getPopupOwner() {

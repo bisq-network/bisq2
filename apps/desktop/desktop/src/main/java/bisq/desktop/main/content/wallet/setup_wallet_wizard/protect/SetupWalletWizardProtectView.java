@@ -42,7 +42,7 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
     private final VBox content;
     private final WizardOverlay skipProtectStepOverlay;
     private final Button skipProtectStepOverlayBackButton, skipProtectStepOverlayNextButton;
-    private Subscription shouldShowSkipProtectStepOverlayPin;
+    private Subscription shouldShowSkipProtectStepOverlayPin, inputLockedPin;
 
     public SetupWalletWizardProtectView(SetupWalletWizardProtectModel model,
                                         SetupWalletWizardProtectController controller) {
@@ -63,7 +63,7 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         VBox.setMargin(descriptionLabel, new Insets(0, 0, 10, 0));
 
         passwordField = addField(Res.get("wallet.protectWallet.password.setPassword"), Res.get("wallet.protectWallet.password.setPassword.placeholder"));
-        passwordField.setValidators(model.getPasswordValidator());
+        passwordField.setValidators(model.getPasswordValidator(), model.getPasswordRulesValidator());
         VBox.setMargin(passwordField, new Insets(0, 0, -5, 0));
 
         confirmPasswordField = addField(Res.get("wallet.protectWallet.password.confirmPassword"), Res.get("wallet.protectWallet.password.confirmPassword.placeholder"));
@@ -96,6 +96,11 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
 
         skipProtectStepOverlayBackButton.setOnAction(e -> controller.onConfirmSkipProtectStep());
         skipProtectStepOverlayNextButton.setOnAction(e -> controller.onCancelSkipProtectStep());
+
+        inputLockedPin = EasyBind.subscribe(model.getInputLocked(), locked -> {
+            passwordField.setDisable(locked);
+            confirmPasswordField.setDisable(locked);
+        });
     }
 
     @Override
@@ -107,6 +112,7 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         confirmPasswordField.textProperty().unbindBidirectional(model.getConfirmPassword());
 
         shouldShowSkipProtectStepOverlayPin.unsubscribe();
+        inputLockedPin.unsubscribe();
 
         skipProtectStepOverlayBackButton.setOnAction(null);
         skipProtectStepOverlayNextButton.setOnAction(null);

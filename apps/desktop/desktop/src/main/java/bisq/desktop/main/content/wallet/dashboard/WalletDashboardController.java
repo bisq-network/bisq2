@@ -56,7 +56,7 @@ public class WalletDashboardController implements Controller {
     private final WalletService walletService;
     private final MarketPriceService marketPriceService;
     private final SettingsService settingsService;
-    private Pin balancePin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin,
+    private Pin balanceBreakdownPin, transactionsPin, marketPriceByCurrencyMapPin, selectedMarketPin,
             addressBalancesPin, shouldShowLatestTxsPin;
     private Subscription balanceAsCoinPin, selectedMarketItemPin;
 
@@ -73,8 +73,11 @@ public class WalletDashboardController implements Controller {
     public void onActivate() {
         addCurrencyConverterListItems();
 
-        balancePin = FxBindings.bind(model.getBalanceAsCoinProperty())
-                .to(walletService.getBalance());
+        balanceBreakdownPin = walletService.getBalanceBreakdown().addObserver(balanceBreakdown ->
+                UIThread.run(() -> {
+                    model.getBalanceAsCoinProperty().set(WalletDashboardModel.totalOf(balanceBreakdown));
+                    model.getAvailableBalanceAsCoinProperty().set(WalletDashboardModel.availableOf(balanceBreakdown));
+                }));
 
         transactionsPin = FxBindings.<Transaction, WalletTxListItem>bind(model.getWalletTxListItems())
                 .map(WalletTxListItem::new)
@@ -116,11 +119,7 @@ public class WalletDashboardController implements Controller {
         shouldShowLatestTxsPin = FxBindings.bindBiDir(model.getShouldShowLatestTxs())
                 .to(settingsService.getShowLatestTxs(), settingsService::setShowLatestTxs);
 
-        walletService.requestBalance().whenComplete((balance, throwable) -> {
-                    if (throwable == null) {
-                        UIThread.run(() -> model.getBalanceAsCoinProperty().set(balance));
-                    }
-                });
+        walletService.requestBalance();
         walletService.requestTransactions();
         walletService.requestAddressBalances();
 
@@ -129,7 +128,7 @@ public class WalletDashboardController implements Controller {
 
     @Override
     public void onDeactivate() {
-        balancePin.unbind();
+        balanceBreakdownPin.unbind();
         transactionsPin.unbind();
         addressBalancesPin.unbind();
         balanceAsCoinPin.unsubscribe();

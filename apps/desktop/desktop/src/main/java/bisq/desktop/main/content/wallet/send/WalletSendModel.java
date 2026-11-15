@@ -32,6 +32,11 @@ public class WalletSendModel implements Model {
     private final StringProperty amount = new SimpleStringProperty();
     private final StringProperty password = new SimpleStringProperty();
     private final BooleanProperty isPasswordVisible = new SimpleBooleanProperty();
+    private final BooleanProperty sendInProgress = new SimpleBooleanProperty();
+    // Set once the daemon accepted the transaction; the view then shows the result instead of the form.
+    private final StringProperty sentTxId = new SimpleStringProperty();
+    private final WalletSendAddressValidator addressValidator = new WalletSendAddressValidator();
+    private final WalletSendAmountValidator amountValidator = new WalletSendAmountValidator();
 
     public WalletSendModel() {
     }
