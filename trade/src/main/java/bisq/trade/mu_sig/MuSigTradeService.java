@@ -471,9 +471,10 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         requestRollbackWrite();
     }
 
-    // The rate-limited persist could drop the rollback write right after the creation write, and
-    // a restart would then resurrect the rolled back trade. Rollbacks under a saturated executor
-    // can repeat quickly, so their writes are coalesced. Called under tradeCreationLock.
+    // The rate-limited persist would not write the rollback right after the creation write, only
+    // at the next write of the store or at shutdown, and a node which is killed before that would
+    // resurrect the rolled back trade. Rollbacks under a saturated executor can repeat quickly,
+    // so their writes are coalesced. Called under tradeCreationLock.
     private void requestRollbackWrite() {
         if (rollbackWriteInFlight) {
             rollbackWriteRequested = true;
@@ -481,7 +482,15 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
         rollbackWriteInFlight = true;
         getPersistence().persistAsync(persistableStore.getClone())
-                .whenComplete((result, throwable) -> onRollbackWriteCompleted());
+                .whenComplete((result, throwable) -> {
+                    onRollbackWriteCompleted();
+                    if (throwable != null) {
+                        // The state without the trade is not on disk. The ordinary write keeps a
+                        // state which it cannot write as unsaved, so the next write of the store
+                        // or the write at shutdown repeats it.
+                        persist();
+                    }
+                });
     }
 
     private void onRollbackWriteCompleted() {

@@ -36,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockedStatic;
 
+import java.io.IOException;
 import java.security.KeyPair;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -52,6 +53,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.atLeast;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mockStatic;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -375,6 +377,35 @@ class MuSigTradeServiceAdmissionTest {
 
         assertThat(service.getTrades()).isEmpty();
         assertThat(fixtures.persistedSnapshots.get(fixtures.persistedSnapshots.size() - 1).getTrades()).isEmpty();
+    }
+
+    @Test
+    void failedRollbackWriteLeavesTheStateUnsavedForTheStore() throws Exception {
+        SetupTradeMessage_A first = fixtures.createRequest(fixtures.offer.getDate());
+        List<MuSigTradeStore> snapshots = new CopyOnWriteArrayList<>();
+        List<CompletableFuture<Void>> writes = new CopyOnWriteArrayList<>();
+        doAnswer(invocation -> {
+            snapshots.add(invocation.getArgument(0));
+            CompletableFuture<Void> write = new CompletableFuture<>();
+            writes.add(write);
+            return write;
+        }).when(fixtures.persistence).persistAsync(any());
+        fixtures.executor.rejectSubmissionsFrom(1);
+
+        service.onMessage(first);
+        // The creation write, which stays in progress, and the rollback write.
+        assertThat(writes).hasSize(2);
+        assertThat(service.isDropped()).isFalse();
+        writes.get(1).completeExceptionally(new IOException("No space left on device"));
+
+        // The store keeps the state without the trade as unsaved, so its next write or its write
+        // at shutdown repeats the failed write.
+        assertThat(service.isDropped()).isTrue();
+
+        // The failed write does not hold back the write of a later rollback.
+        service.onMessage(fixtures.createRequest(fixtures.offer.getDate() + 1_000));
+        assertThat(writes).hasSize(3);
+        assertThat(snapshots.get(2).getTrades()).isEmpty();
     }
 
     @Test

@@ -35,7 +35,8 @@ MuSig trade.
    step, and after that the maker creates no trade from a request.
 6. Before the maker reports a rejection, it checks rule 3 again, in one step with rule 5.
 7. If the request cannot be passed to the protocol, the maker removes the new trade and its protocol and writes the
-   store without the trade. It sends no report.
+   store without the trade. If this write fails, the state stays unsaved and the store writes it again (see
+   [Store write results](../persistence/store-write-results.md)). The maker sends no report.
 
 ## Reasons
 
@@ -106,12 +107,11 @@ MuSig trade.
   - What would remove it: the sending of the report inside the step, or a stored record of the accepted trade IDs
     which the sending checks.
   - Who decides: the developers.
-- **After rule 7 the taker gets no answer, and the write is not safe against every failure.** The trade of the taker
-  stays in its first state. A write which another trade started before the removal can reach the disk after the write
-  of rule 7, and the maker does not repeat the write of rule 7 if it fails. In both cases the stored state contains
-  the removed trade until the next write of the store, and a node which stops before that has the trade in `INIT`
-  after the restart (first limitation).
+- **After rule 7 the taker gets no answer, and the write is not ordered against other writes of the trade store.**
+  The trade of the taker stays in its first state. A write which another trade started before the removal can reach
+  the disk after the write of rule 7. The stored state then contains the removed trade until the next write of the
+  store, and a node which stops before that has the trade in `INIT` after the restart (first limitation). The same
+  holds after a failed write of rule 7 until the store is written again, at its next write or at shutdown.
   - What would remove it: a report with a failure which tells the taker to take the offer again, and writes of the
-    trade store which always contain the newest state and are repeated after a failure (see
-    [Store write results](../persistence/store-write-results.md)).
+    trade store which always contain the newest state.
   - Who decides: the developers.
