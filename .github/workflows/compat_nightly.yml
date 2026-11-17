@@ -53,6 +53,13 @@ jobs:
             exit 1
           fi
           git fetch --no-tags --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+          # baseline.sh exports the submodules of the tag, such as tor, so their commits must be in the shallow
+          # checkouts of the submodules
+          git ls-tree -r "refs/tags/$tag" | while read -r _ object_type commit path; do
+            if [ "$object_type" = commit ]; then
+              git -C "$path" fetch --no-tags --depth=1 origin "$commit"
+            fi
+          done
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Setup Java JDK
@@ -134,6 +141,13 @@ jobs:
             exit 1
           fi
           git fetch --no-tags --depth=1 origin "refs/tags/$tag:refs/tags/$tag"
+          # baseline.sh exports the submodules of the tag, such as tor, so their commits must be in the shallow
+          # checkouts of the submodules
+          git ls-tree -r "refs/tags/$tag" | while read -r _ object_type commit path; do
+            if [ "$object_type" = commit ]; then
+              git -C "$path" fetch --no-tags --depth=1 origin "$commit"
+            fi
+          done
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Setup Java JDK
