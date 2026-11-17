@@ -1159,6 +1159,7 @@ public class DtoMappings {
                 case OFFER_NOT_AVAILABLE -> TradeProtocolFailure.OFFER_NOT_AVAILABLE;
                 case CHANNEL_DATA_MISMATCH -> TradeProtocolFailure.CHANNEL_DATA_MISMATCH;
                 case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW;
+                case SETUP_ALREADY_PENDING -> TradeProtocolFailure.SETUP_ALREADY_PENDING;
             };
         }
 
@@ -1174,6 +1175,7 @@ public class DtoMappings {
                 case OFFER_NOT_AVAILABLE -> TradeProtocolFailureDto.OFFER_NOT_AVAILABLE;
                 case CHANNEL_DATA_MISMATCH -> TradeProtocolFailureDto.CHANNEL_DATA_MISMATCH;
                 case SELLER_REPUTATION_TOO_LOW -> TradeProtocolFailureDto.SELLER_REPUTATION_TOO_LOW;
+                case SETUP_ALREADY_PENDING -> TradeProtocolFailureDto.SETUP_ALREADY_PENDING;
             };
         }
     }
