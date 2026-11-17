@@ -133,9 +133,16 @@ class UpgradeKeepsUserDataTest {
         });
 
         // Payment accounts, as a Bisq Connect user creates them, and the selected one
-        upgradedNode.addUserDefinedAccountWithOldApi(LONG_ACCOUNT_NAME, LONG_ACCOUNT_DATA);
-        upgradedNode.addUserDefinedAccountWithOldApi(SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA);
-        upgradedNode.selectUserDefinedAccountWithOldApi(SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA);
+        // The API of v2.1.14 changed the routes of payment accounts
+        if (E2eSettings.isOldVersionBelow("2.1.14")) {
+            upgradedNode.addUserDefinedAccountWithOldApi(LONG_ACCOUNT_NAME, LONG_ACCOUNT_DATA);
+            upgradedNode.addUserDefinedAccountWithOldApi(SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA);
+            upgradedNode.selectUserDefinedAccountWithOldApi(SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA);
+        } else {
+            upgradedNode.addUserDefinedAccount(LONG_ACCOUNT_NAME, LONG_ACCOUNT_DATA);
+            upgradedNode.addUserDefinedAccount(SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA);
+            upgradedNode.selectUserDefinedAccount(SHORT_ACCOUNT_NAME);
+        }
         Map<String, String> accountsBefore = upgradedNode.userDefinedAccounts();
         assertEquals(Map.of(LONG_ACCOUNT_NAME, LONG_ACCOUNT_DATA, SHORT_ACCOUNT_NAME, SHORT_ACCOUNT_DATA),
                 accountsBefore, "The old node must have the accounts");
@@ -149,8 +156,8 @@ class UpgradeKeepsUserDataTest {
         List<String> ignoredBefore = upgradedNode.ignoredUserProfileIds();
         assertTrue(ignoredBefore.contains(strangerProfileId), "The old node must ignore the stranger");
 
-        // The user quits v2.1.13 and starts the new version on the same data directory. The new version asks for the
-        // acceptance of its current terms (TacVersion).
+        // The user quits the released version and starts the new version on the same data directory. The new version
+        // asks for the acceptance of its current terms (TacVersion).
         network.stopOldNode();
         network.startOldNodeWithNewVersion();
         upgradedNode.acceptTermsAndConditions();

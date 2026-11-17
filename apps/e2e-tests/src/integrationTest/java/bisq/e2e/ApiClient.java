@@ -240,6 +240,20 @@ final class ApiClient {
         patch("/payment-accounts/selected", request);
     }
 
+    /** Adds a user-defined payment account with the route of v2.1.14 and later, as the payment rail CUSTOM. */
+    void addUserDefinedAccount(String accountName, String accountData) {
+        ObjectNode request = JSON.createObjectNode()
+                .put("accountName", accountName)
+                .put("paymentRail", "CUSTOM");
+        request.putObject("accountPayload").put("accountData", accountData);
+        post("/payment-accounts", request);
+    }
+
+    /** Selects a user-defined payment account with the route of v2.1.14 and later. */
+    void selectUserDefinedAccount(String accountName) {
+        patch("/payment-accounts/fiat/selected", JSON.createObjectNode().put("accountName", accountName));
+    }
+
     /**
      * The data of each user-defined payment account by its name. Both versions list them with this route. v2.1.13 lists
      * only user-defined accounts, without a payment rail. This checkout lists all accounts with their payment rail.

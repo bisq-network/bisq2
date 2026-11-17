@@ -74,8 +74,8 @@ class MediationAcrossVersionsTest {
     // A node logs the change of its store before it notifies the service of the roles
     private static final Duration ROLE_APPLIED = Duration.ofSeconds(3);
     // The texts of the messages which a trader adds to the chat when the answer of the mediator arrives. The API of
-    // v2.1.13 does not put the channel in mediation when it sends the request, unlike its desktop and this version, so
-    // a requester of v2.1.13 shows the text for the peer.
+    // releases before v2.1.14 does not put the channel in mediation when it sends the request, unlike their desktop and
+    // later versions, so a requester of such a release shows the text for the peer.
     private static final String ANSWER_TO_REQUESTER = "authorizedRole.mediator.message.toRequester";
     private static final String ANSWER_TO_PEER = "authorizedRole.mediator.message.toNonRequester";
 
@@ -121,7 +121,8 @@ class MediationAcrossVersionsTest {
         // A requester of the released version and the mediator of this version
         String firstTrade = takeAndCompareMediators(network.oldApi, network.newApi, "SELL");
         assertEquals(mediatorNewId, mediatorOf(network.oldApi, firstTrade), "mediator of the first trade");
-        mediate(network.oldApi, ANSWER_TO_PEER, network.newApi, firstTrade, mediatorNew, "the new mediator",
+        mediate(network.oldApi, answerToRequesterOfReleasedVersion(), network.newApi, firstTrade, mediatorNew,
+                "the new mediator",
                 List.of("A message of the old trader before the request"));
 
         // With both mediators, both versions select the same one for each take
@@ -168,7 +169,8 @@ class MediationAcrossVersionsTest {
         // The upgraded mediator still has its role and mediates a new case
         String trade = takeAndCompareMediators(network.oldApi, network.newApi, "SELL");
         assertEquals(mediatorOldId, mediatorOf(network.oldApi, trade), "mediator of a trade after the upgrade");
-        mediate(network.oldApi, ANSWER_TO_PEER, network.newApi, trade, mediatorOld, "the upgraded mediator",
+        mediate(network.oldApi, answerToRequesterOfReleasedVersion(), network.newApi, trade, mediatorOld,
+                "the upgraded mediator",
                 List.of("A message of the old trader to the upgraded mediator"));
     }
 
@@ -262,6 +264,10 @@ class MediationAcrossVersionsTest {
 
     private static String mediatorOf(ApiClient api, String tradeId) {
         return Mediators.mediatorOf(api, tradeId);
+    }
+
+    private static String answerToRequesterOfReleasedVersion() {
+        return E2eSettings.isOldVersionBelow("2.1.14") ? ANSWER_TO_PEER : ANSWER_TO_REQUESTER;
     }
 
     // The requester sends the messages, then requests mediation. The mediator answers both traders, gets the messages,

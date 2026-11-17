@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs the verification code of the in-app updater of a released version (default v2.1.13) against the keys and the
+# Runs the verification code of the in-app updater of a released version (the baseline) against the keys and the
 # release assets of a new release. Users of that version update with this code.
 #
 # Usage:
@@ -16,12 +16,14 @@
 #       assets and the web page keys in the subdirectory pubkey, so the release can be checked before the upload.
 #       Extensions default to .dmg,.exe,.deb,.rpm. The installers are large, so the download takes a while.
 #
-# The baseline tag can be set with COMPAT_BASELINE (default v2.1.13).
+# The baseline tag can be set with COMPAT_BASELINE. It defaults to the newest baseline in tools/compat/baselines.
+# Users of an older release update with the updater of their release, so check older baselines too, for example
+# COMPAT_BASELINE=v2.1.13.
 set -euo pipefail
 
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 repo_root=$(cd "$script_dir/../.." && pwd)
-tag=${COMPAT_BASELINE:-v2.1.13}
+tag=${COMPAT_BASELINE:-$(ls "$script_dir/baselines" | sort -t. -k1,1 -k2,2n -k3,3n | tail -n 1)}
 baseline_dir=${BISQ_BASELINE_ROOT:-$HOME/.cache/bisq2/baselines}/$tag
 
 run() {
