@@ -38,7 +38,7 @@ If `baselines/<tag>/init.gradle` exists, Gradle runs with this init script. It a
 `baselines/<tag>/<project>/src/test/java` to the project of the same name in the baseline build. The exported tree
 stays unchanged. Gradle properties named `bisq.compat.*` reach these tests as system properties.
 
-The tag must exist locally: `git fetch origin tag v2.1.13 --no-tags`.
+The tag must exist locally: `git fetch origin tag v2.1.15 --no-tags`.
 
 ### `run-chain.sh`
 
@@ -86,6 +86,23 @@ The expected results come from the specifications in `docs/specifications/networ
 `storage-request-signatures.md`, `storage-refresh-requests.md`, `storage-ownership.md` and `message-cost.md`. The
 tests do not check the open points of these specifications.
 
+The steps above describe a baseline up to v2.1.13, which signs only with signature V1. From v2.1.14 on, a release
+signs every request with signature V2 and publishes its authorized data with the authorized key of the oracle node.
+With such a baseline (package `v2_1_15`):
+
+- A new node accepts the requests of the baseline before and from the cutoff date on, and loads the stores of the
+  baseline without losing an entry on both sides of the date.
+- The refresh request of the baseline applies. The refreshed add request is then already stored.
+- The publisher migration of an upgraded oracle node finds nothing to migrate. The upgraded oracle publishes its role
+  again instead.
+- A node of the baseline applies the refresh request of this checkout and keeps signature V2 when it relays a request.
+  So the relayed copies are valid from the cutoff date on.
+- A node of the baseline requires at most the cost factor which this checkout pays. The sender can pay more than the
+  baseline requires, for receivers of v2.1.13 and earlier (`message-cost.md`).
+
+Releases from v2.1.14 on exclude the package `bisq.application.compat` from their task `test` and run it with the task
+`compatTest`. `run-chain.sh` reads the build file of the tag and runs steps 1 and 3 with that task.
+
 The chain runs in dev mode, as a local test network does. The authorized key of the oracle node is the first dev key
 of `AuthorizedPubKeys`, because nodes of this version accept authorized data only from the static oracle keys.
 
@@ -95,7 +112,9 @@ baseline, which takes a few minutes.
 ### `old-updater-replay.sh`
 
 Users of the last release update with its in-app updater. The script runs the verification code of that updater
-(`DownloadItem`, `UpdaterService.download` and `DownloadedFilesVerification` of v2.1.13):
+(`DownloadItem`, `UpdaterService.download` and `DownloadedFilesVerification` of the baseline). The default is the newest
+baseline. Set `COMPAT_BASELINE=v2.1.13` to check the updater of an older release, which users who skipped versions
+still run:
 
 - `tools/compat/old-updater-replay.sh keys [<key dir>]` checks that the old code reads the key files of this checkout,
   for example after a key renewal.
@@ -120,14 +139,19 @@ of the baseline and of this checkout, and runs the tests of `apps/e2e-tests`. Ea
 - a seed node of each version and an api-app node of each version, which know both seed nodes;
 - a fake price node in the test JVM, which all nodes use instead of the real price nodes;
 - dev mode on all nodes, without authentication of the API, except the nodes of `ConnectPairingAcrossUpgradeTest`,
-  and with a reputation score of 50000 for every profile, except in `ReputationAcrossVersionsTest`.
+  and with a reputation score of 50000 for every profile, except in `ReputationAcrossVersionsTest`;
+- the locale `en_US` on all nodes, so that the result does not depend on the locale of the host. With a locale
+  without a country, such as `C.UTF-8` on the CI runners, v2.1.13 logs an error at every start, which the log scan
+  reports.
 
 The baseline can also be an older release, for users who skipped versions (upgrade-from-older-release of the release
 test plan). With `v2.1.10` as the baseline, `UpgradeInPlaceTest`, `UpgradeKeepsUserDataTest`, `TradeAcrossVersionsTest`,
 `OffersAcrossVersionsTest`, `InventoryAcrossVersionsTest`, `TradeChatAcrossVersionsTest` and
 `OfflineMakerAcrossVersionsTest` passed on 2026-10-07. The api-app exists from v2.1.9 on. With `v2.1.9`, the upgrade
 works as well, but its seed node logs an error about the fake price node at its start, which the log scan reports.
-Other tests check behavior of v2.1.13 itself, for example its API, which builds a fixed price without a check.
+Some tests check behavior which only releases before a version have, for example the API of v2.1.13, which builds a
+fixed price without a check. They check the baseline version with `E2eSettings.isOldVersionBelow`, so that they run
+with every baseline.
 
 The tests use only the REST and WebSocket API of the nodes, with the routes which both versions have. No API publishes
 the authorized data of a security manager, such as an alert, so some tests start the authorized data publisher of the
@@ -181,15 +205,15 @@ which uses the code of Bisq. The tests cover:
   node promotes the permissions of the client once. It refuses a session for an empty client secret. With a session
   time to live of one minute, an expired session gets HTTP 401, and the client gets a new one. A second client pairs
   with a node of this checkout, which promotes nothing, and trades with the baseline as maker and as taker.
-- `AlertAcrossVersionsTest`: a security manager publishes emergency alerts for `DESKTOP` (the app type of the api-app
-  of the baseline) and `MOBILE_NODE` (the app type of the api-app of this checkout) which require version 2.1.14 for
-  trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A taker of this checkout refuses
-  the offer of a maker of the baseline with `MAKER_VERSION_BELOW_MIN_REQUIRED`, because that maker would drop the take
-  offer request without an answer. Nodes of this checkout know the alert and trade with each other. After the security
-  manager removes the alert, the baseline trades again. An alert which halts trading stops the takes and the steps of
-  an open trade on both versions. After its removal, the open trade completes, and both
-  versions take offers again. An alert which halts trading only for `DESKTOP` stops the baseline, while nodes of this
-  checkout trade with each other to the end. With an alert which requires 2.1.14 only for `DESKTOP`, no alert
+- `AlertAcrossVersionsTest`: a security manager publishes emergency alerts for `DESKTOP` (the app type of the api-app of
+  the baseline) and `MOBILE_NODE` (the app type of the api-app of this checkout) which require the version of this
+  checkout for trading, signed with a dev key. The baseline refuses to take an offer (HTTP 400). A taker of this
+  checkout refuses the offer of a maker of the baseline with `MAKER_VERSION_BELOW_MIN_REQUIRED`, because that maker
+  would drop the take offer request without an answer. Nodes of this checkout know the alert and trade with each other.
+  After the security manager removes the alert, the baseline trades again. An alert which halts trading stops the takes
+  and the steps of an open trade on both versions. After its removal, the open trade completes, and both versions take
+  offers again. An alert which halts trading only for `DESKTOP` stops the baseline, while nodes of this checkout trade
+  with each other to the end. With an alert which requires the version of this checkout only for `DESKTOP`, no alert
   restricts a node of this checkout, but it still refuses the offer of the baseline, which stands for a desktop maker
   that the alert restricts, and nodes of this checkout trade with each other to the end.
 - `MediationAcrossVersionsTest`: the authorized data publisher acts as a root oracle node with a dev key. It publishes
@@ -252,6 +276,9 @@ Limits of the first version:
 
 #### Fake clock
 
+`CutoffAcrossVersionsTest` runs only with a baseline before v2.1.14. Later releases sign with signature V2, so the
+cutoff date does not change how nodes of this checkout treat their data. Gradle then reports the test as skipped.
+
 `CutoffAcrossVersionsTest` moves the clocks of the nodes to a few minutes before the cutoff date. The nodes get the fake
 clock from libfaketime. The fake price node adds the same offset to its timestamps. The test JVM keeps the real time.
 The harness takes the first library which it finds:
@@ -264,6 +291,12 @@ The harness takes the first library which it finds:
 
 The nodes load the library with `LD_PRELOAD`, so the test runs only on Linux. The nightly workflow installs the
 package.
+
+Known problem: with libfaketime 0.9.10 of Ubuntu, timed waits of the JVM do not wait. `Object.wait(10)` and
+`LockSupport.parkNanos` return at once, and `System.currentTimeMillis()` takes about 200 times longer (measured on
+Linux ARM64 with Zulu 21). Waiting threads then spin, and the nodes start about ten times slower. On the CI runners,
+the start of the network took more than the 2 minutes which the clock offset of the test leaves before the cutoff date,
+and the test failed in every nightly run in which it ran.
 
 ## Layout
 
@@ -284,7 +317,11 @@ them. Both sides compile with the normal build of their version, so a change of 
 After a release, the chain should run against that release:
 
 1. Copy `baselines/<last tag>` to `baselines/<new tag>` and adapt the sources to the API of the new tag. The old code
-   then compiles against that tag.
+   then compiles against that tag. The nightly workflow and the scripts take the newest directory in `baselines` as
+   the default baseline.
 2. Copy `application/src/test/java/bisq/application/compat/<last package>` to the new package. Adapt the expected
    results to what the new baseline does, for example to requests with signature V2.
-3. Keep the old baseline while nodes of that version can still take part in the network.
+3. Run `run-mixed-network.sh` with the new tag. A test which expects a behavior of an older baseline gets a check of
+   the baseline version (`E2eSettings.isOldVersionBelow`), so that it keeps working with older baselines. A different
+   behavior of the new baseline and this checkout is a finding, not a reason to change the test.
+4. Keep the old baseline while nodes of that version can still take part in the network.
