@@ -324,4 +324,6 @@ After a release, the chain should run against that release:
 3. Run `run-mixed-network.sh` with the new tag. A test which expects a behavior of an older baseline gets a check of
    the baseline version (`E2eSettings.isOldVersionBelow`), so that it keeps working with older baselines. A different
    behavior of the new baseline and this checkout is a finding, not a reason to change the test.
+   `AlertAcrossVersionsTest` requires the version of the checkout, so the checkout must declare a higher version than
+   the new baseline in `gradle.properties`. Add the baseline after the version of the checkout was raised.
 4. Keep the old baseline while nodes of that version can still take part in the network.
