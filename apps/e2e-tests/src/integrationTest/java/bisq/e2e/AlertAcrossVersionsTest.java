@@ -73,7 +73,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
 class AlertAcrossVersionsTest {
     private static final String SECURITY_MANAGER = "security-manager";
-    private static final String REQUIRED_VERSION = "2.1.14";
+    // The version of this checkout: the lowest version which the nodes of this checkout have and the released version
+    // lacks
+    private final String REQUIRED_VERSION = E2eSettings.newVersionNumber();
     private static final String DESKTOP = "DESKTOP";
     private static final String MOBILE_NODE = "MOBILE_NODE";
     // The line which nodes in dev mode log when their store of alerts added an entry

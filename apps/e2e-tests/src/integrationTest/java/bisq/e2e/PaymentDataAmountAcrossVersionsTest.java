@@ -37,8 +37,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The Bitcoin payment data of the buyer requests no amount or the trade amount
  * (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md). A buyer of the released version can still send data
- * which requests another amount. A seller of this checkout then fails the trade and reports the failure to the buyer
- * (rule 3). A buyer of this checkout does not send such data, and its API answers with 400 (rule 4).
+ * which requests another amount, if it is older than v2.1.14. A seller of this checkout then fails the trade and
+ * reports the failure to the buyer (rule 3). From v2.1.14 on, the buyer of the released version refuses to send it.
+ * A buyer of this checkout does not send such data, and its API answers with 400 (rule 4).
  * <p>
  * The test does not send a bitcoin URI with the trade amount, which rule 1 allows: the sellers of both versions fail a
  * main chain trade whose payment data is longer than 62 characters. Such a URI with a bech32 address of 42 characters
@@ -77,21 +78,33 @@ class PaymentDataAmountAcrossVersionsTest {
     @Test
     @Order(1)
     void newSellerFailsTheTradeWhenTheInvoiceOfAnOldBuyerRequestsAnotherAmount() throws Exception {
-        expectRejectionLogOfTheNewSeller();
-        String tradeId = oldBuyerTakesOfferOfNewSeller("LN");
-        network.newApi.tradeEvent(tradeId, "SELLER_SENDS_PAYMENT_ACCOUNT", "e2e payment account of the seller");
-        network.oldApi.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", LN_INVOICE_FOR_ANOTHER_AMOUNT);
-        assertFailedAtSellerAndBuyer(tradeId);
+        oldBuyerSendsDataForAnotherAmount("LN", LN_INVOICE_FOR_ANOTHER_AMOUNT);
     }
 
     @Test
     @Order(2)
     void newSellerFailsTheTradeWhenTheBitcoinUriOfAnOldBuyerRequestsAnotherAmount() throws Exception {
-        expectRejectionLogOfTheNewSeller();
-        String tradeId = oldBuyerTakesOfferOfNewSeller("MAIN_CHAIN");
+        oldBuyerSendsDataForAnotherAmount("MAIN_CHAIN", BITCOIN_URI_FOR_ANOTHER_AMOUNT);
+    }
+
+    // A buyer of a release before v2.1.14 sends the data, and the seller of this checkout fails the trade (rule 3).
+    // From v2.1.14 on, the buyer's node refuses to send it, and its API answers with 400 (rule 4).
+    private void oldBuyerSendsDataForAnotherAmount(String bitcoinPaymentMethod, String paymentData) throws Exception {
+        boolean oldBuyerSendsTheData = E2eSettings.isOldVersionBelow("2.1.14");
+        if (oldBuyerSendsTheData) {
+            expectRejectionLogOfTheNewSeller();
+        }
+        String tradeId = oldBuyerTakesOfferOfNewSeller(bitcoinPaymentMethod);
         network.newApi.tradeEvent(tradeId, "SELLER_SENDS_PAYMENT_ACCOUNT", "e2e payment account of the seller");
-        network.oldApi.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", BITCOIN_URI_FOR_ANOTHER_AMOUNT);
-        assertFailedAtSellerAndBuyer(tradeId);
+        if (oldBuyerSendsTheData) {
+            network.oldApi.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", paymentData);
+            assertFailedAtSellerAndBuyer(tradeId);
+        } else {
+            ApiClient.ApiException refusal = assertThrows(ApiClient.ApiException.class,
+                    () -> network.oldApi.tradeEvent(tradeId, "BUYER_SEND_BITCOIN_PAYMENT_DATA", paymentData),
+                    "The buyer of " + network.oldVersion + " must not send data which requests another amount");
+            assertEquals(400, refusal.status, refusal.getMessage());
+        }
     }
 
     @Test
