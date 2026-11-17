@@ -180,7 +180,11 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     private final Object pendingMessagesLock = new Object();
     // Serializes trade creation on both sides and the maker's rejection decisions, so concurrent
     // take requests cannot race a second trade or protocol into the registries and the
-    // one-pending-setup-per-offer-and-taker bound sees every trade created before it.
+    // one-pending-setup-per-offer-and-taker bound sees every trade created before it. The copy
+    // and the submission of each store write take it as well (see persist). Never wait for a
+    // protocol monitor while holding this lock, and never run a trade task in the submitting
+    // thread: the protocols write the store under their monitor.
+    @Getter(AccessLevel.PACKAGE)
     private final Object tradeCreationLock = new Object();
     @Getter(AccessLevel.NONE)
     private final Supplier<ExecutorService> executorFactory;
@@ -251,6 +255,16 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     /* --------------------------------------------------------------------- */
     // Service
     /* --------------------------------------------------------------------- */
+
+    // A write captures its snapshot and submits it in one step under the creation lock, like the
+    // rollback write. A snapshot captured before a rollback could otherwise be submitted after
+    // the rollback write and bring the removed trade back.
+    @Override
+    public CompletableFuture<Boolean> persist() {
+        synchronized (tradeCreationLock) {
+            return super.persist();
+        }
+    }
 
     public CompletableFuture<Boolean> initialize() {
         log.info("initialize");

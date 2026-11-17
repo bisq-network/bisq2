@@ -34,9 +34,13 @@ MuSig trade.
    creation of a trade by the taker is such a step as well. The shutdown of the trade service waits for a running
    step, and after that the maker creates no trade from a request.
 6. Before the maker reports a rejection, it checks rule 3 again, in one step with rule 5.
-7. If the request cannot be passed to the protocol, the maker removes the new trade and its protocol and writes the
-   store without the trade. If this write fails, the state stays unsaved and the store writes it again (see
-   [Store write results](../persistence/store-write-results.md)). The maker sends no report.
+7. If the request cannot be passed to the protocol, the maker removes the new trade and its protocol in the same step
+   and writes the store without the trade. If this write fails, the state stays unsaved and the store writes it again
+   (see [Store write results](../persistence/store-write-results.md)). The maker sends no report.
+8. Every write of the trade store which the trade service starts takes its copy of the store and submits it in one
+   step with rule 5. So no write with the state before the removal of rule 7 is submitted after the write of rule 7.
+   The write at the stop of the node (see [Store write results](../persistence/store-write-results.md)) is not part
+   of this step.
 
 ## Reasons
 
@@ -60,6 +64,9 @@ MuSig trade.
   deliveries of one request could both create its trade, and a copy which fails the verification could be reported
   while the original request is accepted.
 - Rule 7: a trade which stays in `INIT` is a pending setup which never ends (see the first limitation).
+- Rule 8: the protocol of another trade can write the store at the same time. Without rule 8 it could take its copy
+  while the new trade is in the store and submit it after the write of rule 7, and the stored state would contain the
+  removed trade again.
 
 ## Compatibility
 
@@ -107,11 +114,10 @@ MuSig trade.
   - What would remove it: the sending of the report inside the step, or a stored record of the accepted trade IDs
     which the sending checks.
   - Who decides: the developers.
-- **After rule 7 the taker gets no answer, and the write is not ordered against other writes of the trade store.**
-  The trade of the taker stays in its first state. A write which another trade started before the removal can reach
-  the disk after the write of rule 7. The stored state then contains the removed trade until the next write of the
-  store, and a node which stops before that has the trade in `INIT` after the restart (first limitation). The same
-  holds after a failed write of rule 7 until the store is written again, at its next write or at shutdown.
-  - What would remove it: a report with a failure which tells the taker to take the offer again, and writes of the
-    trade store which always contain the newest state.
+- **After rule 7 the taker gets no answer, and a failed write of rule 7 can stay unrepeated for a while.** The trade
+  of the taker stays in its first state. After a failed write of rule 7 the store repeats the write at once if its
+  rate limit allows, otherwise at its next write or at shutdown. Until then the stored state can contain the removed
+  trade, and a node which stops before that has the trade in `INIT` after the restart (first limitation).
+  - What would remove it: a report with a failure which tells the taker to take the offer again, and a repeat of the
+    failed write which does not wait for the next write of the store.
   - Who decides: the developers.

@@ -409,6 +409,35 @@ class MuSigTradeServiceAdmissionTest {
     }
 
     @Test
+    void ordinaryStoreWriteTakesItsCopyAndSubmitsItUnderTheCreationLock() throws Exception {
+        SetupTradeMessage_A request = fixtures.createRequest(fixtures.offer.getDate());
+        MuSigTrade addedDuringTheStep = new MuSigTrade(request.getContract(), false, false, fixtures.makerIdentity,
+                fixtures.offer, fixtures.takerNetworkId, fixtures.makerNetworkId);
+        CountDownLatch started = new CountDownLatch(1);
+        Thread[] writerThread = new Thread[1];
+        Future<Boolean> write;
+
+        synchronized (service.getTradeCreationLock()) {
+            write = worker.submit(() -> {
+                writerThread[0] = Thread.currentThread();
+                started.countDown();
+                return service.persist().join();
+            });
+            assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
+            // A copy taken during a creation step could be submitted after the rollback write of
+            // that step and bring the removed trade back. So a write waits for the step before
+            // it takes its copy.
+            awaitBlocked(writerThread[0]);
+            assertThat(fixtures.persistedSnapshots).isEmpty();
+            service.getPersistableStore().addTrade(addedDuringTheStep);
+        }
+
+        assertThat(write.get(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(fixtures.persistedSnapshots).hasSize(1);
+        assertThat(fixtures.persistedSnapshots.get(0).findOpenTrade(addedDuringTheStep.getId())).isPresent();
+    }
+
+    @Test
     void queuedSetupIsKeptAtShutdown() throws Exception {
         SetupTradeMessage_A first = fixtures.createRequest(fixtures.offer.getDate());
 
