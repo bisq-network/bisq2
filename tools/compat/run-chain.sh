@@ -37,9 +37,20 @@ read -r -a extra_args <<< "${COMPAT_GRADLE_ARGS:-}"
 # The steps of this checkout for a baseline are in a package of its own, for example v2_1_13 for v2.1.13
 new_side_package=bisq.application.compat.$(echo "$tag" | tr '.' '_')
 
+# Releases from v2.1.14 on exclude the package bisq.application.compat from the task test and run it with the task
+# compatTest. The steps of the overlay are in that package.
+old_side_test_task() {
+    if git -C "$repo_root" show "refs/tags/$tag:application/build.gradle.kts" 2> /dev/null |
+        grep -q 'register<Test>("compatTest")'; then
+        echo :application:compatTest
+    else
+        echo :application:test
+    fi
+}
+
 run_old() {
     echo "=== Step $1 with $tag"
-    "$script_dir/baseline.sh" "$tag" :application:test --tests "bisq.application.compat.Step$1*" \
+    "$script_dir/baseline.sh" "$tag" "$(old_side_test_task)" --tests "bisq.application.compat.Step$1*" \
         "-Pbisq.compat.exchangeDir=$exchange_dir" --console=plain ${extra_args[@]+"${extra_args[@]}"}
 }
 
