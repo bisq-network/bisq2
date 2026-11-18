@@ -1,6 +1,6 @@
 # Bisq 2.1.16 Notable Changes
 
-Based on the net changes from `v2.1.15` to `release-candidate-2.1.16` at `ada74cf324dab72f4ab68e0987433919683f729f`. See the [full release notes](full-release-notes.md) for upgrade requirements and source references.
+Based on the net changes from `v2.1.15` to `release-candidate-2.1.16` at `ada74cf324dab72f4ab68e0987433919683f729f`, plus the subsequent Corretto security update. See the [full release notes](full-release-notes.md) for upgrade requirements and source references.
 
 ## Trades
 
@@ -37,7 +37,7 @@ Based on the net changes from `v2.1.15` to `release-candidate-2.1.16` at `ada74c
 
 ## Build and Verification
 
-- The build requires Azul Zulu 21 at or above `21.0.13.0.3`, which removes the emSign root certificates, instead of one exact JDK build.
+- The build and bundled runtime use Amazon Corretto 21 at or above `21.0.13.1`, fixing CVE-2026-114938 (Java4Shell) and retaining the removal of the compromised emSign root certificates.
 - CodeQL analysis, a 7-day delay for Dependabot updates of GitHub Actions, and a Transifex token limited to `main` were added.
 
 ## Upgrade Requirements
@@ -46,6 +46,6 @@ Based on the net changes from `v2.1.15` to `release-candidate-2.1.16` at `ada74c
 - Read `tor/tor.log` instead of `tor-stdout.log` and `tor-stderr.log`, which Bisq now deletes.
 - Security managers: publish a trading halt for `DESKTOP` and for `MOBILE_NODE` when it must stop every node.
 - A downgrade to 2.1.15 loses the stored queued trade messages.
-- Builders need an Azul Zulu JDK 21 at or above `21.0.13.0.3`, and JDK 21 as the Gradle JVM in IntelliJ.
+- Builders need an Amazon Corretto JDK 21 at or above `21.0.13.1`, and JDK 21 as the Gradle JVM in IntelliJ.
 
 See [full release notes](full-release-notes.md) for configuration and compatibility details.
