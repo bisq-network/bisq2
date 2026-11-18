@@ -20,6 +20,10 @@ A slow first connection to the network, for example through bridges, no longer f
 
 Bisq bundles Tor 0.4.9.16 from Tor Browser 16.0.1 and runs it in the sandbox of sandy 1.2.0.
 
+## Updated Java Runtime
+
+The bundled Java runtime switches to Amazon Corretto 21.0.13.1.2, which fixes Java4Shell (CVE-2026-114938).
+
 ## Before Updating
 
 Check a hand-edited `bisq.conf`; a file that cannot be parsed now stops the start. The Tor log is now `tor/tor.log`. Security managers must publish a trading halt for both desktop and mobile node app types to stop every node.
