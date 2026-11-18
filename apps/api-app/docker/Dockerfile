@@ -13,18 +13,16 @@
 # Self-contained: the image build runs the Gradle build itself, so no host build
 # step is required and the result is reproducible from the repo alone.
 #
-# Must be an Azul Zulu JDK 21: bisq2's Gradle toolchain pins vendor=AZUL
-# (e.g. :apps:desktop:bi2p), so a non-Azul JDK makes Gradle try to auto-download
-# Zulu — which fails (and picks the wrong arch) inside the container. This mirrors
-# the host's sdkman toolchain (.sdkmanrc -> java=21.x.fx-zulu).
+# The build and packaging toolchains require Amazon Corretto 21. Use the same
+# vendor here so Gradle can use the installed JDK without provisioning another one.
 # TODO(build-speed): revisit this build strategy near the finish line — once a
 # release pipeline produces the distribution, this can switch to copying a
 # pre-built `installDist` artifact instead of rebuilding from source each time.
 #
 # Pinned by MULTI-ARCH INDEX digest so the build is reproducible AND buildx can resolve both
-# amd64 and arm64 from it (Azul rebuilds the tags). The tag is the Java feature version of releaseBuild.javaVersion,
-# and Dependabot proposes the digest of its newest build.
-FROM azul/zulu-openjdk:21@sha256:98ff9b5e207ea56c6dd1044a7d28b646c27f21b53993356de2f8c39111dc5d88 AS build
+# amd64 and arm64 from it. The tag keeps Java 21 on Amazon Linux 2023,
+# and Dependabot proposes the digest of its newest build. This index contains Corretto 21.0.13.1.2.
+FROM amazoncorretto:21-al2023@sha256:3284a05cb82e9bceb4857f9d70788a6f72681d9070b550ae5f477b5e3dc81a5c AS build
 WORKDIR /src
 COPY . .
 # The commit this image is built from, e.g. --build-arg BUILD_COMMIT=$(git rev-parse HEAD). .dockerignore leaves out
@@ -33,7 +31,7 @@ ARG BUILD_COMMIT=""
 # installDist builds the api-app launcher plus every sibling module it depends on.
 # We deliberately do NOT run the full `build` task — packaging the daemon does not
 # need the whole repository's test suite.
-# auto-download=false forces Gradle to use the image's Azul JDK (auto-detected via
+# auto-download=false forces Gradle to use the image's Corretto JDK (auto-detected via
 # JAVA_HOME) rather than attempting to provision a toolchain (which fails in-container).
 # The --mount cache keeps the Gradle home (downloaded deps + compiled module output)
 # across builds, so a source change recompiles incrementally instead of from scratch.
@@ -41,12 +39,16 @@ RUN --mount=type=cache,target=/root/.gradle \
     ./gradlew --no-daemon \
     -Dorg.gradle.java.installations.auto-download=false \
     -PbuildCommit="$BUILD_COMMIT" \
+    verifyBuildEnvironment \
     :apps:api-app:installDist
 
 # ── Runtime stage: minimal JRE + the built distribution ───────────
-# Azul Zulu JRE to match the build JDK vendor (and bisq1's runtime), pinned by MULTI-ARCH
-# INDEX digest for reproducibility + arm64. Keep the tag and the digest in step with the build stage JDK.
-FROM azul/zulu-openjdk:21-jre@sha256:278cbb0d64129dc9a1af7552f2a207e8d743bff85c6b9dad8f48491642fa93c0
+# Corretto headless runtime, pinned to the same release as the build JDK on amd64 and arm64.
+FROM amazoncorretto:21-al2023-headless@sha256:71b005271e4df1a2fb44f6d261bad4318e66aff82ea7541b4d2968a9a31357d7
+
+# The entrypoint needs useradd and setpriv to create the service user and drop privileges.
+RUN dnf install -y shadow-utils util-linux \
+    && dnf clean all
 
 LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
       org.opencontainers.image.description="Headless Bisq2 node exposing the api-app REST/WebSocket API, e.g. for mobile clients" \

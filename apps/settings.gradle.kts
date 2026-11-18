@@ -12,7 +12,7 @@ plugins {
 toolchainManagement {
     jvm {
         javaRepositories {
-            repository("bisq_zulu") {
+            repository("bisq_corretto") {
                 resolverClass.set(bisq.gradle.toolchain_resolver.BisqToolchainResolver::class.java)
             }
         }
