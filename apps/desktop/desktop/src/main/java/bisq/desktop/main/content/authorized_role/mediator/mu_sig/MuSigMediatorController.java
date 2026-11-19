@@ -78,7 +78,7 @@ public class MuSigMediatorController implements Controller {
 
         chatMessageContainerController = new ChatMessageContainerController(serviceProvider, MU_SIG_OPEN_TRADES, e -> {
         });
-        muSigMediationCaseHeader = new MuSigMediationCaseHeader(serviceProvider, this::closeCaseHandler, this::reOpenCaseHandler);
+        muSigMediationCaseHeader = new MuSigMediationCaseHeader(serviceProvider, this::closeCaseHandler);
 
         model = new MuSigMediatorModel();
         view = new MuSigMediatorView(model, this, muSigMediationCaseHeader.getRoot(), chatMessageContainerController.getView().getRoot());
@@ -166,10 +166,6 @@ public class MuSigMediatorController implements Controller {
     }
 
     private void closeCaseHandler() {
-        applyShowClosedCasesChange();
-    }
-
-    private void reOpenCaseHandler() {
         applyShowClosedCasesChange();
     }
 

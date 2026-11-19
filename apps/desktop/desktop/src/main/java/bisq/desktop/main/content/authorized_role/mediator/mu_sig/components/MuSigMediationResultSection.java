@@ -445,8 +445,6 @@ public class MuSigMediationResultSection {
                         getPayoutAdjustmentPercentageValue(),
                         summaryNotes.isEmpty() ? Optional.empty() : Optional.of(summaryNotes));
                 muSigMediatorService.closeMediationCase(muSigMediationCase, muSigMediationResult);
-            } else {
-                muSigMediatorService.closeReOpenedMediationCase(muSigMediationCase);
             }
         }
     }

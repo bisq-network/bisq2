@@ -56,10 +56,8 @@ import static bisq.settings.DontShowAgainKey.MEDIATOR_REMOVE_CASE_WARNING;
 public class MuSigMediationCaseHeader {
     private final Controller controller;
 
-    public MuSigMediationCaseHeader(ServiceProvider serviceProvider,
-                                    Runnable onCloseHandler,
-                                    Runnable onReOpenHandler) {
-        controller = new Controller(serviceProvider, onCloseHandler, onReOpenHandler);
+    public MuSigMediationCaseHeader(ServiceProvider serviceProvider, Runnable onCloseHandler) {
+        controller = new Controller(serviceProvider, onCloseHandler);
     }
 
     public HBox getRoot() {
@@ -77,15 +75,13 @@ public class MuSigMediationCaseHeader {
         private final Model model;
         private final MuSigMediatorService muSigMediatorService;
         private final Runnable onCloseHandler;
-        private final Runnable onReOpenHandler;
         private final DontShowAgainService dontShowAgainService;
         private Subscription mediationCaseListItemPin;
         private Pin mediationCaseStatePin;
         private Pin mediatorHasLeftChatPin;
 
-        private Controller(ServiceProvider serviceProvider, Runnable onCloseHandler, Runnable onReOpenHandler) {
+        private Controller(ServiceProvider serviceProvider, Runnable onCloseHandler) {
             this.onCloseHandler = onCloseHandler;
-            this.onReOpenHandler = onReOpenHandler;
             muSigMediatorService = serviceProvider.getSupportService().getMuSigMediatorService();
             dontShowAgainService = serviceProvider.getDontShowAgainService();
 
@@ -139,10 +135,8 @@ public class MuSigMediationCaseHeader {
             }
         }
 
-        void onToggleOpenClose() {
-            if (model.getIsClosedCase().get()) {
-                doReOpen();
-            } else {
+        void onCloseCase() {
+            if (!model.getIsClosedCase().get()) {
                 doClose();
                 // TODO: move this eventually to Close Controller
 //                if (dontShowAgainService.showAgain(MEDIATOR_CLOSE_WARNING)) {
@@ -214,14 +208,6 @@ public class MuSigMediationCaseHeader {
                         new MuSigMediationCaseCloseController.InitData(listItem, onCloseHandler));
             }
         }
-
-        private void doReOpen() {
-            MuSigMediationCaseListItem listItem = model.getMediationCaseListItem().get();
-            if (listItem != null) {
-                muSigMediatorService.reOpenMediationCase(listItem.getMuSigMediationCase());
-                onReOpenHandler.run();
-            }
-        }
     }
 
     @Slf4j
@@ -239,7 +225,7 @@ public class MuSigMediationCaseHeader {
         private final Triple<Text, Text, VBox> tradeId;
         private final UserProfileDisplay makerProfileDisplay, takerProfileDisplay;
         private final Label directionalTitle;
-        private final Button openCloseButton, leaveButton, removeButton, detailsButton;
+        private final Button closeButton, leaveButton, removeButton, detailsButton;
         private Subscription mediationCaseListItemPin, isClosedCasePin, showLeaveButtonPin;
 
         private View(Model model, Controller controller) {
@@ -264,10 +250,10 @@ public class MuSigMediationCaseHeader {
             directionalTitle.setMinWidth(80);
             tradeId.getThird().setMinWidth(80);
 
-            openCloseButton = new Button();
-            openCloseButton.setDefaultButton(true);
-            openCloseButton.setMinWidth(120);
-            openCloseButton.setStyle("-fx-padding: 5 16 5 16");
+            closeButton = new Button(Res.get("authorizedRole.disputeActor.close"));
+            closeButton.setDefaultButton(true);
+            closeButton.setMinWidth(120);
+            closeButton.setStyle("-fx-padding: 5 16 5 16");
 
             leaveButton = new Button(Res.get("authorizedRole.disputeActor.leave"));
             leaveButton.getStyleClass().add("outlined-button");
@@ -288,9 +274,9 @@ public class MuSigMediationCaseHeader {
             HBox.setMargin(leaveButton, new Insets(0, -20, 0, 0));
             HBox.setMargin(removeButton, new Insets(0, -20, 0, 0));
             HBox.setMargin(detailsButton, new Insets(0, -20, 0, 0));
-            HBox.setMargin(openCloseButton, new Insets(0, -20, 0, 0));
+            HBox.setMargin(closeButton, new Insets(0, -20, 0, 0));
             root.getChildren().addAll(maker.getThird(), directionalTitle, taker.getThird(), tradeId.getThird(), spacer,
-                    detailsButton, removeButton, leaveButton, openCloseButton);
+                    detailsButton, removeButton, leaveButton, closeButton);
         }
 
         @Override
@@ -341,18 +327,16 @@ public class MuSigMediationCaseHeader {
                     isClosedCase -> {
                         removeButton.setVisible(isClosedCase);
                         removeButton.setManaged(isClosedCase);
-
-                        openCloseButton.setText(isClosedCase ?
-                                Res.get("authorizedRole.mediator.reOpen") :
-                                Res.get("authorizedRole.disputeActor.close"))
-                        ;
+                        // A closed MuSig case cannot be re-opened, so it has no such button.
+                        closeButton.setVisible(!isClosedCase);
+                        closeButton.setManaged(!isClosedCase);
                     });
             showLeaveButtonPin = EasyBind.subscribe(model.getShowLeaveButton(),
                     showLeaveButton -> {
                         leaveButton.setVisible(showLeaveButton);
                         leaveButton.setManaged(showLeaveButton);
                     });
-            openCloseButton.setOnAction(e -> controller.onToggleOpenClose());
+            closeButton.setOnAction(e -> controller.onCloseCase());
             leaveButton.setOnAction(e -> controller.onLeaveChannel());
             removeButton.setOnAction(e -> controller.onRemoveCase());
             detailsButton.setOnAction(e -> controller.onShowDetails());
@@ -363,7 +347,7 @@ public class MuSigMediationCaseHeader {
             mediationCaseListItemPin.unsubscribe();
             isClosedCasePin.unsubscribe();
             showLeaveButtonPin.unsubscribe();
-            openCloseButton.setOnAction(null);
+            closeButton.setOnAction(null);
             leaveButton.setOnAction(null);
             removeButton.setOnAction(null);
             detailsButton.setOnAction(null);

@@ -191,7 +191,7 @@ class MuSigCustomPayoutPsbtMessageHandlerTest {
     @Test
     void givenMediationIsNotClosed_whenMessageReceived_thenIgnoresMessage() {
         TradeFixture fixture = createTradeFixture(createMediationResult());
-        fixture.tradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_RE_OPENED);
+        fixture.tradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_OPEN);
 
         handle(fixture, createMessage(fixture));
 

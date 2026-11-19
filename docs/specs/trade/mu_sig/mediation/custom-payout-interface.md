@@ -194,8 +194,8 @@ payout finalization is safe for production.
 
 Java stores the successful response before constructing the P2P message.
 
-The mediation result and its mediator signature are write-once for the lifetime of the trade. Reopening mediation through
-`MEDIATION_RE_OPENED` changes the dispute state but does not permit replacing either value. The local signing
+The mediation result and its mediator signature are write-once for the lifetime of the trade, and a closed mediation
+case cannot be reopened. The local signing
 response is therefore associated with the trade's single stored result. Before local signing and construction of the
 outgoing P2P message, Java validates the stored result and mediator signature and computes `mediationResultHash` from
 that result. The finalization handler requires the same result and signature to remain present. Java does not persist a
