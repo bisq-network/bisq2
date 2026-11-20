@@ -23,8 +23,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 
 public enum MediationCaseState implements ProtoEnum {
     OPEN,
-    CLOSED,
-    RE_OPENED;
+    CLOSED;
 
     @Override
     public bisq.support.protobuf.MediationCaseState toProtoEnum() {

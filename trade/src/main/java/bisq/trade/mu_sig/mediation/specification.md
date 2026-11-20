@@ -60,15 +60,15 @@ A trader-side MuSig dispute can be in one of these mediation states:
 * `MEDIATION_REQUESTED`
 * `MEDIATION_OPEN`
 * `MEDIATION_CLOSED`
-* `MEDIATION_RE_OPENED`
 
 Rules:
 
 * A trader can request mediation only from `NO_DISPUTE`.
 * Requesting mediation sets the local state to `MEDIATION_REQUESTED`.
 * A mediator `OPEN` state change moves the trade to `MEDIATION_OPEN`.
-* A mediator `CLOSED` state change moves the trade to `MEDIATION_CLOSED` only from `MEDIATION_OPEN` or `MEDIATION_RE_OPENED`.
-* A mediator `RE_OPENED` state change moves the trade to `MEDIATION_RE_OPENED` only from `MEDIATION_CLOSED`.
+* A mediator `CLOSED` state change moves the trade to `MEDIATION_CLOSED` only from `MEDIATION_OPEN`.
+* A closed case stays closed: a mediator `OPEN` state change does not reopen it. Its result cannot change, and the
+  chat stays available after the case is closed, so reopening is not needed to continue the discussion.
 * Mediation messages that arrive before the trade and channel are available are kept pending and processed later.
 * Mediation messages that arrive before the trade is in the required local state are kept pending and processed later.
 * Mediation state changes are ignored once the trade is in arbitration.
@@ -195,7 +195,7 @@ The mediator closes mediation by sending a `CLOSED` state change message.
 
 Rules:
 
-* The current dispute state must be `MEDIATION_OPEN` or `MEDIATION_RE_OPENED`.
+* The current dispute state must be `MEDIATION_OPEN`.
 * The message must contain a mediation result.
 * The message must contain a mediation result signature.
 * The mediation result contract hash must match the trade contract.
@@ -284,21 +284,6 @@ A thrown `SignCustomPayoutTx` error follows normal FSM error handling and moves 
 RPC never returns, the handler remains blocked. There is no automatic retry, requested-or-unknown checkpoint, or restart
 reconciliation. Because the start of the call is not persisted, a restart before its response can permit another
 acceptance attempt without Java knowing whether the first call changed service-side state.
-
----
-
-### Reopened mediation
-
-The mediator can reopen a closed mediation case.
-
-Rules:
-
-* A `RE_OPENED` state change is applied only from `MEDIATION_CLOSED`.
-* If the trade is not yet closed, the message is kept pending.
-* Duplicate `RE_OPENED` messages are ignored.
-* The dispute state is set to `MEDIATION_RE_OPENED`.
-* The trade is persisted when the dispute state changes.
-* The trade channel is updated to use the mediator as dispute agent.
 
 ---
 

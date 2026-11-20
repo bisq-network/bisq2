@@ -10,7 +10,7 @@ In scope:
 * opening and storing mediation cases
 * receiving dispute case data
 * requesting and verifying payment details
-* creating, validating, signing, reopening, and closing mediation cases
+* creating, validating, signing, and closing mediation cases
 * calculating and validating mediation payout proposals
 
 Out of scope:
@@ -50,7 +50,6 @@ The two role pairs must not be treated as equivalent.
 A mediation case can be in one of these states:
 
 * `OPEN`
-* `RE_OPENED`
 * `CLOSED`
 
 Rules:
@@ -59,8 +58,8 @@ Rules:
 * A mediation case is identified by its `tradeId`.
 * A duplicate mediation request for an existing `tradeId` is ignored.
 * An open case can be closed with a mediation result.
-* A closed case can be reopened.
-* A reopened case can be closed again only if a mediation result already exists.
+* A closed case cannot be reopened. Its result cannot change, and the chat stays available after the case is
+  closed, so reopening is not needed to continue the discussion.
 * A mediation result cannot be changed once set.
 * A mediation result signature cannot be changed once set.
 
@@ -343,27 +342,6 @@ Examples:
 * `BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION` with 10% adjustment: transfer is `48,000`, buyer gets `648,000`, seller gets `72,000`.
 * `BUYER_GETS_TRADE_AMOUNT_PLUS_COMPENSATION` with 50% adjustment: requested transfer is `240,000`, capped to `96,000`, buyer gets `696,000`, seller gets `24,000`.
 * `CUSTOM_PAYOUT`: buyer gets `100,000`, seller gets `620,000`.
-
----
-
-### Reopening and re-closing
-
-Rules:
-
-* The case state is set to `RE_OPENED`.
-* If the state changed, the case is persisted.
-* A state change message is sent to requester and peer.
-* A trade log message is sent to the trade channel.
-
-A reopened case can be closed again.
-
-Rules:
-
-* An existing mediation result must be present.
-* The mediation result is not changed.
-* The mediation result signature is not changed.
-* The case state is set to `CLOSED`.
-* If the state changed, the case is persisted and traders are notified.
 
 ---
 

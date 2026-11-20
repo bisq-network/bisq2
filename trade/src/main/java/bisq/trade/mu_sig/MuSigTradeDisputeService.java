@@ -193,17 +193,8 @@ final class MuSigTradeDisputeService {
             } else if (current == MuSigDisputeState.MEDIATION_OPEN) {
                 return;
             }
-        } else if (mediationCaseState == MediationCaseState.RE_OPENED) {
-            if (current == MuSigDisputeState.MEDIATION_CLOSED) {
-                next = MuSigDisputeState.MEDIATION_RE_OPENED;
-            } else if (current == MuSigDisputeState.MEDIATION_RE_OPENED) {
-                return;
-            } else {
-                addPendingDisputeMessage(trade.getId(), message);
-                return;
-            }
         } else if (mediationCaseState == MediationCaseState.CLOSED) {
-            if (current == MuSigDisputeState.MEDIATION_OPEN || current == MuSigDisputeState.MEDIATION_RE_OPENED) {
+            if (current == MuSigDisputeState.MEDIATION_OPEN) {
                 next = MuSigDisputeState.MEDIATION_CLOSED;
                 Optional<MuSigMediationResult> incomingResult = message.getMuSigMediationResult();
                 Optional<byte[]> incomingResultSignature = message.getMediationResultSignature();

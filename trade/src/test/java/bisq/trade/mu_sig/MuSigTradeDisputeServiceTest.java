@@ -214,6 +214,28 @@ class MuSigTradeDisputeServiceTest {
     }
 
     @Test
+    void givenClosedMediation_whenOpenMessageArrives_thenStaysClosedAndDoesNotPersist() {
+        TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_CLOSED, true, false);
+        tradeById.put(fixture.tradeId(), fixture.trade());
+        stubOpenTradeChannel(fixture);
+
+        MuSigMediationStateChangeMessage message = new MuSigMediationStateChangeMessage(
+                "msg-after-close",
+                fixture.tradeId(),
+                fixture.mediator().orElseThrow().getNetworkId(),
+                MediationCaseState.OPEN,
+                Optional.empty(),
+                Optional.empty()
+        );
+
+        service.onDisputeMessage(message);
+
+        assertThat(fixture.tradeDispute().getDisputeState()).isEqualTo(MuSigDisputeState.MEDIATION_CLOSED);
+        assertThat(persistCalls.get()).isZero();
+        verifyNoInteractions(muSigTraderMediationService);
+    }
+
+    @Test
     void givenQueuedPaymentDetailsRequestWithoutChannel_whenMaybeProcessPendingDisputeMessages_thenReplaysAndSendsResponse() {
         TradeFixture fixture = createTradeFixture(MuSigDisputeState.MEDIATION_OPEN, true, false);
         fixture.taker().setAccountPayload(createNationalBankPayload("taker-9", "DE901"));
