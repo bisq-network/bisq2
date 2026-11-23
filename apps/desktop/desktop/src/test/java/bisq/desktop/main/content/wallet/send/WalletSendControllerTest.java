@@ -185,7 +185,24 @@ class WalletSendControllerTest {
         assertThat(model.getSendInProgress().get()).isFalse();
         assertThat(model.getSentTxId().get()).isNull();
         assertThat(model.getAddress().get()).isEqualTo(ADDRESS);
+        assertThat(model.getAmount().get()).isEqualTo("0.5");
         assertThat(model.getPassword().get()).isEqualTo("Wallet-Pa55!");
+    }
+
+    @Test
+    void aSendWithAnUnknownOutcomeClearsTheAmount() {
+        fillForm(ADDRESS, "0.5", "Wallet-Pa55!");
+        onFx(() -> controller.onSend());
+        int windowsBefore = Window.getWindows().size();
+
+        onFx(() -> sendResult.completeExceptionally(
+                new WalletException(WalletException.Reason.DAEMON_UNAVAILABLE, "down", Optional.empty(), null)));
+
+        assertThat(Window.getWindows()).hasSize(windowsBefore + 1);
+        WalletSendModel model = controller.getModel();
+        assertThat(model.getSendInProgress().get()).isFalse();
+        assertThat(model.getAmount().get()).isEmpty();
+        assertThat(model.getAddress().get()).isEqualTo(ADDRESS);
     }
 
     @Test

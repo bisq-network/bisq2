@@ -26,6 +26,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletionException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class WalletSendErrorsTest {
     @BeforeAll
@@ -57,7 +59,8 @@ class WalletSendErrorsTest {
         WalletException insufficientFunds = new WalletException(WalletException.Reason.DAEMON_ERROR, "internal",
                 Optional.of("Insufficient funds: 49.24999430 BTC available of 100.00000199 BTC needed"), null);
 
-        assertEquals(Res.get("wallet.send.error.failed", "Insufficient funds: 49.24999430 BTC available of 100.00000199 BTC needed"),
+        assertEquals(Res.get("wallet.send.error.failed", "Insufficient funds: 49.24999430 BTC available of 100.00000199 BTC needed")
+                        + "\n\n" + Res.get("wallet.send.error.outcomeUnknown"),
                 WalletSendErrors.toMessage(insufficientFunds));
     }
 
@@ -65,9 +68,31 @@ class WalletSendErrorsTest {
     void otherFailuresFallBackToTheDaemonError() {
         WalletException daemonError = new WalletException(WalletException.Reason.DAEMON_ERROR, "boom", Optional.empty(), null);
 
-        assertEquals(Res.get("wallet.protectWallet.error.daemonError"), WalletSendErrors.toMessage(daemonError));
-        assertEquals(Res.get("wallet.protectWallet.error.daemonError"), WalletSendErrors.toMessage(new RuntimeException("boom")));
-        assertEquals(Res.get("wallet.protectWallet.error.daemonUnavailable"), WalletSendErrors.toMessage(
+        String unknown = "\n\n" + Res.get("wallet.send.error.outcomeUnknown");
+        assertEquals(Res.get("wallet.protectWallet.error.daemonError") + unknown, WalletSendErrors.toMessage(daemonError));
+        assertEquals(Res.get("wallet.protectWallet.error.daemonError") + unknown, WalletSendErrors.toMessage(new RuntimeException("boom")));
+        assertEquals(Res.get("wallet.protectWallet.error.daemonUnavailable") + unknown, WalletSendErrors.toMessage(
                 new WalletException(WalletException.Reason.DAEMON_UNAVAILABLE, "down", Optional.empty(), null)));
+        assertEquals(Res.get("wallet.protectWallet.error.daemonUnavailable"), WalletSendErrors.toMessage(
+                new WalletException(WalletException.Reason.CLIENT_NOT_READY, "not ready", Optional.empty(), null)));
+    }
+
+    @Test
+    void onlyFailuresAfterWhichThePaymentMayHaveLeftHaveAnUnknownOutcome() {
+        assertTrue(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.DAEMON_UNAVAILABLE)));
+        assertTrue(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.DAEMON_ERROR)));
+        assertTrue(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.CALL_TIMED_OUT)));
+        assertTrue(WalletSendErrors.isOutcomeUnknown(new CompletionException(reason(WalletException.Reason.DAEMON_UNAVAILABLE))));
+        assertTrue(WalletSendErrors.isOutcomeUnknown(new RuntimeException("boom")));
+
+        assertFalse(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.WRONG_PASSWORD)));
+        assertFalse(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.WALLET_NOT_OPEN)));
+        assertFalse(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.INVALID_REQUEST)));
+        assertFalse(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.CLIENT_NOT_READY)));
+        assertFalse(WalletSendErrors.isOutcomeUnknown(reason(WalletException.Reason.UNSUPPORTED_CALL)));
+    }
+
+    private static WalletException reason(WalletException.Reason reason) {
+        return new WalletException(reason, reason.name(), Optional.empty(), null);
     }
 }

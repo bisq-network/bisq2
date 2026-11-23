@@ -24,7 +24,7 @@ public class WalletSendErrors {
     }
 
     public static String toMessage(Throwable throwable) {
-        return WalletOpenErrors.findWalletException(throwable)
+        String message = WalletOpenErrors.findWalletException(throwable)
                 .map(walletException -> switch (walletException.getReason()) {
                     case WRONG_PASSWORD -> Res.get("wallet.send.error.wrongPassword");
                     case WALLET_NOT_OPEN -> Res.get("wallet.send.error.walletNotOpen");
@@ -38,5 +38,20 @@ public class WalletSendErrors {
                             .orElse(Res.get("wallet.protectWallet.error.daemonError"));
                 })
                 .orElse(Res.get("wallet.protectWallet.error.daemonError"));
+        return isOutcomeUnknown(throwable)
+                ? message + "\n\n" + Res.get("wallet.send.error.outcomeUnknown")
+                : message;
+    }
+
+    // The daemon may have broadcast the payment before the failure reached us: the connection can break after the
+    // broadcast, and an internal error does not say at which step it happened. Only a refusal before the payment
+    // was built, or a call which never left the client, is known to have sent nothing.
+    public static boolean isOutcomeUnknown(Throwable throwable) {
+        return WalletOpenErrors.findWalletException(throwable)
+                .map(walletException -> switch (walletException.getReason()) {
+                    case WRONG_PASSWORD, WALLET_NOT_OPEN, INVALID_REQUEST, CLIENT_NOT_READY, UNSUPPORTED_CALL -> false;
+                    default -> true;
+                })
+                .orElse(true);
     }
 }

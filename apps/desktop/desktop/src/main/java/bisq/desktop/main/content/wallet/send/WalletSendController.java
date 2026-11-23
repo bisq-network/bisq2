@@ -93,6 +93,10 @@ public class WalletSendController implements Controller {
     private void handleSendResult(String txId, Throwable throwable) {
         model.getSendInProgress().set(false);
         if (throwable != null) {
+            // A repeated click must not pay a second time when the first payment may have left
+            if (WalletSendErrors.isOutcomeUnknown(throwable)) {
+                model.getAmount().set("");
+            }
             show(new Popup().warning(WalletSendErrors.toMessage(throwable)));
         } else if (activated) {
             model.getAddress().set("");
