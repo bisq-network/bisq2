@@ -21,6 +21,7 @@ import bisq.api.dto.alert.AuthorizedAlertDataDto;
 import bisq.api.dto.mappings.alert.AuthorizedAlertDataDtoMapping;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.util.AppTypeParser;
+import bisq.api.util.TradeRestrictingAppType;
 import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertService;
 import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
@@ -37,21 +38,25 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Objects;
+
 @Slf4j
 @Path("/trade-restricting-alert")
 @Produces(MediaType.APPLICATION_JSON)
 @Tag(name = "Trade Restricting Alert API", description = "API for retrieving the active trade restricting alert")
 public class TradeRestrictingAlertRestApi extends RestApiBase {
     private final AlertService alertService;
+    private final AppType nodeAppType;
 
-    public TradeRestrictingAlertRestApi(AlertService alertService) {
+    public TradeRestrictingAlertRestApi(AlertService alertService, AppType nodeAppType) {
         this.alertService = alertService;
+        this.nodeAppType = Objects.requireNonNull(nodeAppType, "nodeAppType");
     }
 
     @GET
     @Operation(
             summary = "Get the active trade restricting alert",
-            description = "Returns the single highest-priority active alert that halts trading or requires a mandatory update for the requested app type. A halt-trading alert takes precedence over a require-version alert even if older.",
+            description = "Returns the single highest-priority active alert that halts trading or requires a mandatory update for the requested app type. A mobile client trades through this node, so for MOBILE_CLIENT it returns the alert of the app type this node enforces. A halt-trading alert takes precedence over a require-version alert even if older.",
             responses = {
                     @ApiResponse(responseCode = "200", description = "Trade restricting alert retrieved successfully",
                             content = @Content(schema = @Schema(implementation = AuthorizedAlertDataDto.class))),
@@ -62,7 +67,7 @@ public class TradeRestrictingAlertRestApi extends RestApiBase {
     )
     public Response getTradeRestrictingAlert(@QueryParam("appType") String appTypeParam) {
         try {
-            AppType appType = AppTypeParser.parse(appTypeParam);
+            AppType appType = TradeRestrictingAppType.toEnforcedAppType(AppTypeParser.parse(appTypeParam), nodeAppType);
             return AuthorizedAlertDataUtils
                     .findMostRecentTradeRestrictingAlert(alertService.getAuthorizedAlertDataSet().stream(), appType)
                     .map(AuthorizedAlertDataDtoMapping::fromBisq2Model)

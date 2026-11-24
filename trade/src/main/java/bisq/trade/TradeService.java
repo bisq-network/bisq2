@@ -70,6 +70,8 @@ public class TradeService implements Service, ServiceProvider {
     private final MuSigTradeService muSigTradeService;
     private final DelayedPayoutTxReceiverService delayedPayoutTxReceiverService;
     private final BurningmanService burningmanService;
+    // The app type whose trade restricting alerts this node enforces
+    private final AppType appType;
 
     public TradeService(Config config,
                         NetworkService networkService,
@@ -97,6 +99,7 @@ public class TradeService implements Service, ServiceProvider {
         this.settingsService = settingsService;
         this.accountService = accountService;
         this.burningmanService = burningmanService;
+        this.appType = appType;
 
         delayedPayoutTxReceiverService = new DelayedPayoutTxReceiverService(burningmanService);
 

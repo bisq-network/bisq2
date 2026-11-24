@@ -20,6 +20,7 @@ package bisq.api.web_socket.domain.trade_restricting_alert;
 import bisq.api.dto.alert.AuthorizedAlertDataDto;
 import bisq.api.dto.mappings.alert.AuthorizedAlertDataDtoMapping;
 import bisq.api.util.AppTypeParser;
+import bisq.api.util.TradeRestrictingAppType;
 import bisq.api.web_socket.domain.SimpleObservableWebSocketService;
 import bisq.api.web_socket.subscription.SubscriberRepository;
 import bisq.api.web_socket.subscription.SubscriptionRequest;
@@ -30,17 +31,21 @@ import bisq.bonded_roles.security_manager.alert.AuthorizedAlertDataUtils;
 import bisq.common.observable.Pin;
 import bisq.common.observable.collection.ObservableSet;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import static bisq.api.web_socket.subscription.Topic.TRADE_RESTRICTING_ALERT;
 
 public class TradeRestrictingAlertWebSocketService extends SimpleObservableWebSocketService<ObservableSet<AuthorizedAlertData>, Optional<AuthorizedAlertDataDto>> {
     private final AlertService alertService;
+    private final AppType nodeAppType;
 
     public TradeRestrictingAlertWebSocketService(SubscriberRepository subscriberRepository,
-                                                 AlertService alertService) {
+                                                 AlertService alertService,
+                                                 AppType nodeAppType) {
         super(subscriberRepository, TRADE_RESTRICTING_ALERT);
         this.alertService = alertService;
+        this.nodeAppType = Objects.requireNonNull(nodeAppType, "nodeAppType");
     }
 
     @Override
@@ -65,7 +70,8 @@ public class TradeRestrictingAlertWebSocketService extends SimpleObservableWebSo
 
     @Override
     public Optional<String> getJsonPayload(Optional<String> parameter) {
-        AuthorizedAlertDataDto dto = getPayload(AppTypeParser.parse(parameter)).orElse(null);
+        AppType appType = TradeRestrictingAppType.toEnforcedAppType(AppTypeParser.parse(parameter), nodeAppType);
+        AuthorizedAlertDataDto dto = getPayload(appType).orElse(null);
         return toJson(dto);
     }
 

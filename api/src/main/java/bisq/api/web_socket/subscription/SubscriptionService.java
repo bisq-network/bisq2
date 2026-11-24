@@ -120,7 +120,7 @@ public class SubscriptionService implements Service {
                 chatService.getBisqEasyOpenTradeChannelService());
         reputationWebSocketService = new ReputationWebSocketService(subscriberRepository, userService.getReputationService());
         numUserProfilesWebSocketService = new NumUserProfilesWebSocketService(subscriberRepository, userService);
-        tradeRestrictingAlertWebSocketService = new TradeRestrictingAlertWebSocketService(subscriberRepository, bondedRolesService.getAlertService());
+        tradeRestrictingAlertWebSocketService = new TradeRestrictingAlertWebSocketService(subscriberRepository, bondedRolesService.getAlertService(), tradeService.getAppType());
         alertNotificationsWebSocketService = new AlertNotificationsWebSocketService(subscriberRepository, alertNotificationsService);
         networkInfoWebSocketService = new NetworkInfoWebSocketService(subscriberRepository,
                 networkService,

@@ -26,6 +26,7 @@ import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.common.json.JsonMapperProvider;
@@ -150,7 +151,7 @@ class WebSocketConnectionHandlerLoggingTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -158,5 +159,11 @@ class WebSocketConnectionHandlerLoggingTest {
                 mock(PermissionService.class),
                 false,
                 new RecordedOfferItems(mock(UserService.class, RETURNS_DEEP_STUBS), mock(BondedRolesService.class, RETURNS_DEEP_STUBS)));
+    }
+
+    private static TradeService tradeServiceOfMobileNode() {
+        TradeService tradeService = mock(TradeService.class, RETURNS_DEEP_STUBS);
+        when(tradeService.getAppType()).thenReturn(AppType.MOBILE_NODE);
+        return tradeService;
     }
 }
