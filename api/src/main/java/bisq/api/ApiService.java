@@ -234,7 +234,7 @@ public class ApiService implements Service {
         MarketPriceRestApi marketPriceRestApi = new MarketPriceRestApi(bondedRolesService.getMarketPriceService());
         SettingsRestApi settingsRestApi = new SettingsRestApi(settingsService);
         AlertNotificationsRestApi alertNotificationsRestApi = new AlertNotificationsRestApi(alertNotificationsService);
-        TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi = new TradeRestrictingAlertRestApi(bondedRolesService.getAlertService());
+        TradeRestrictingAlertRestApi tradeRestrictingAlertRestApi = new TradeRestrictingAlertRestApi(bondedRolesService.getAlertService(), tradeService.getAppType());
         PaymentAccountsRestApi paymentAccountsRestApi = new PaymentAccountsRestApi(accountService);
         UserDefinedPaymentAccountsRestApi userDefinedPaymentAccountsRestApi = new UserDefinedPaymentAccountsRestApi(accountService);
         UserProfileRestApi userProfileRestApi = new UserProfileRestApi(

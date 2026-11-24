@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -39,12 +40,12 @@ class TradeRestrictingAlertRestApiTest {
     void getTradeRestrictingAlertReturnsNoContentWhenNoActiveAlert() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
-        alerts.add(createAlert("mobile-info", AppType.MOBILE_CLIENT, 10L, AlertType.INFO, false, false));
+        alerts.add(createAlert("node-info", AppType.MOBILE_NODE, 10L, AlertType.INFO, false, false));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
 
-        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_NODE");
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
     }
@@ -54,13 +55,13 @@ class TradeRestrictingAlertRestApiTest {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
         // halt-old is older but halt-trading takes precedence over require-version
-        alerts.add(createAlert("halt-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
-        alerts.add(createAlert("require-new", AppType.MOBILE_CLIENT, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
+        alerts.add(createAlert("halt-old", AppType.MOBILE_NODE, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("require-new", AppType.MOBILE_NODE, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
 
-        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_NODE");
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
@@ -72,14 +73,14 @@ class TradeRestrictingAlertRestApiTest {
     void getTradeRestrictingAlertReturnsOnlyMostRecentHaltWhenMultiplePresent() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
-        alerts.add(createAlert("halt-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
-        alerts.add(createAlert("halt-new", AppType.MOBILE_CLIENT, 50L, AlertType.EMERGENCY, true, false));
-        alerts.add(createAlert("require-latest", AppType.MOBILE_CLIENT, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
+        alerts.add(createAlert("halt-old", AppType.MOBILE_NODE, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("halt-new", AppType.MOBILE_NODE, 50L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("require-latest", AppType.MOBILE_NODE, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
 
-        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_NODE");
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
@@ -90,13 +91,13 @@ class TradeRestrictingAlertRestApiTest {
     void getTradeRestrictingAlertReturnsRequireVersionWhenNoHaltPresent() {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
-        alerts.add(createAlert("require-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, false, true, Optional.of("2.1.0")));
-        alerts.add(createAlert("require-new", AppType.MOBILE_CLIENT, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
+        alerts.add(createAlert("require-old", AppType.MOBILE_NODE, 10L, AlertType.EMERGENCY, false, true, Optional.of("2.1.0")));
+        alerts.add(createAlert("require-new", AppType.MOBILE_NODE, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
 
-        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_NODE");
 
         assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
         AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
@@ -105,9 +106,80 @@ class TradeRestrictingAlertRestApiTest {
     }
 
     @Test
+    void getTradeRestrictingAlertReturnsAlertOfNodeAppTypeForMobileClient() {
+        AlertService alertService = mock(AlertService.class);
+        ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
+        alerts.add(createAlert("client-halt", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("node-require", AppType.MOBILE_NODE, 20L, AlertType.EMERGENCY, false, true, Optional.of("2.1.16")));
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
+
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
+
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
+        assertThat(alert.id()).isEqualTo("node-require");
+    }
+
+    @Test
+    void getTradeRestrictingAlertReturnsNoContentForMobileClientWhenOnlyAMobileClientAlertExists() {
+        AlertService alertService = mock(AlertService.class);
+        ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
+        alerts.add(createAlert("client-halt", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
+
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
+
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
+    }
+
+    @Test
+    void getTradeRestrictingAlertReturnsDesktopAlertForMobileClientOfDesktopNode() {
+        AlertService alertService = mock(AlertService.class);
+        ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
+        alerts.add(createAlert("desktop-halt", AppType.DESKTOP, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("node-halt", AppType.MOBILE_NODE, 20L, AlertType.EMERGENCY, true, false));
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
+
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.DESKTOP);
+
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
+        assertThat(alert.id()).isEqualTo("desktop-halt");
+    }
+
+    @Test
+    void getTradeRestrictingAlertReturnsUnspecifiedAlertForMobileClient() {
+        AlertService alertService = mock(AlertService.class);
+        ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
+        alerts.add(createAlert("network-halt", AppType.UNSPECIFIED, 10L, AlertType.EMERGENCY, true, false));
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
+
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
+
+        Response response = restApi.getTradeRestrictingAlert("MOBILE_CLIENT");
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
+        AuthorizedAlertDataDto alert = (AuthorizedAlertDataDto) response.getEntity();
+        assertThat(alert.id()).isEqualTo("network-halt");
+    }
+
+    @Test
+    void constructorRejectsMissingNodeAppType() {
+        AlertService alertService = mock(AlertService.class);
+
+        assertThrows(NullPointerException.class, () -> new TradeRestrictingAlertRestApi(alertService, null));
+    }
+
+    @Test
     void getTradeRestrictingAlertReturnsBadRequestForInvalidAppType() {
         AlertService alertService = mock(AlertService.class);
-        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService);
+        TradeRestrictingAlertRestApi restApi = new TradeRestrictingAlertRestApi(alertService, AppType.MOBILE_NODE);
 
         Response response = restApi.getTradeRestrictingAlert("invalid");
 

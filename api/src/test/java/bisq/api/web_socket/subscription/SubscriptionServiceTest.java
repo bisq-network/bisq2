@@ -83,7 +83,7 @@ class SubscriptionServiceTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 alertNotificationsService,
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -114,7 +114,7 @@ class SubscriptionServiceTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -161,7 +161,7 @@ class SubscriptionServiceTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 chatService,
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -193,7 +193,7 @@ class SubscriptionServiceTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -473,7 +473,7 @@ class SubscriptionServiceTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -553,5 +553,11 @@ class SubscriptionServiceTest {
             send(Optional.of("\"live-event\""), topic, ModificationType.REPLACE);
             return getJsonPayload();
         }
+    }
+
+    private static TradeService tradeServiceOfMobileNode() {
+        TradeService tradeService = mock(TradeService.class, RETURNS_DEEP_STUBS);
+        when(tradeService.getAppType()).thenReturn(AppType.MOBILE_NODE);
+        return tradeService;
     }
 }

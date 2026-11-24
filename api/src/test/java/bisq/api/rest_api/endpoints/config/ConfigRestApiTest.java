@@ -34,6 +34,7 @@ import bisq.api.web_socket.subscription.SubscriptionService;
 import bisq.api.web_socket.subscription.Topic;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.BondedRolesService;
+import bisq.bonded_roles.release.AppType;
 import bisq.bonded_roles.security_manager.alert.AlertNotificationsService;
 import bisq.chat.ChatService;
 import bisq.network.NetworkService;
@@ -56,6 +57,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 class ConfigRestApiTest {
 
@@ -232,7 +234,7 @@ class ConfigRestApiTest {
                 mock(BondedRolesService.class, RETURNS_DEEP_STUBS),
                 mock(AlertNotificationsService.class, RETURNS_DEEP_STUBS),
                 mock(ChatService.class, RETURNS_DEEP_STUBS),
-                mock(TradeService.class, RETURNS_DEEP_STUBS),
+                tradeServiceOfMobileNode(),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(BisqEasyService.class, RETURNS_DEEP_STUBS),
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
@@ -279,5 +281,11 @@ class ConfigRestApiTest {
     private static boolean isPath(Method method, String path) {
         Path annotation = method.getAnnotation(Path.class);
         return annotation != null && annotation.value().equals(path);
+    }
+
+    private static TradeService tradeServiceOfMobileNode() {
+        TradeService tradeService = mock(TradeService.class, RETURNS_DEEP_STUBS);
+        when(tradeService.getAppType()).thenReturn(AppType.MOBILE_NODE);
+        return tradeService;
     }
 }

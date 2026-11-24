@@ -44,7 +44,7 @@ class TradeRestrictingAlertWebSocketServiceTest {
         alerts.add(createAlert("desktop-halt", AppType.DESKTOP, 20L, AlertType.EMERGENCY, true, false));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
 
         String json = service.getJsonPayload(Optional.of("desktop")).orElseThrow();
 
@@ -55,11 +55,28 @@ class TradeRestrictingAlertWebSocketServiceTest {
     }
 
     @Test
+    void getJsonPayloadReturnsAlertOfNodeAppTypeForMobileClient() throws Exception {
+        AlertService alertService = mock(AlertService.class);
+        ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
+        alerts.add(createAlert("client-halt", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("node-halt", AppType.MOBILE_NODE, 20L, AlertType.EMERGENCY, true, false));
+        when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
+
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
+
+        String json = service.getJsonPayload(Optional.of("MOBILE_CLIENT")).orElseThrow();
+
+        AuthorizedAlertDataDto payload = JsonMapperProvider.get().readValue(json, AuthorizedAlertDataDto.class);
+        assertThat(payload.id()).isEqualTo("node-halt");
+        assertThat(payload.appType()).isEqualTo(AppType.MOBILE_NODE);
+    }
+
+    @Test
     void getJsonPayloadThrowsWhenRequestParameterMissing() {
         AlertService alertService = mock(AlertService.class);
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(new ObservableSet<>());
 
-        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
 
         assertThrows(IllegalArgumentException.class, () -> service.getJsonPayload(Optional.empty()));
     }
@@ -68,13 +85,13 @@ class TradeRestrictingAlertWebSocketServiceTest {
     void getJsonPayloadPrefersHaltTradingOverRequireVersionEvenWhenOlder() throws Exception {
         AlertService alertService = mock(AlertService.class);
         ObservableSet<AuthorizedAlertData> alerts = new ObservableSet<>();
-        alerts.add(createAlert("halt-old", AppType.MOBILE_CLIENT, 10L, AlertType.EMERGENCY, true, false));
-        alerts.add(createAlert("require-latest", AppType.MOBILE_CLIENT, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
+        alerts.add(createAlert("halt-old", AppType.MOBILE_NODE, 10L, AlertType.EMERGENCY, true, false));
+        alerts.add(createAlert("require-latest", AppType.MOBILE_NODE, 60L, AlertType.EMERGENCY, false, true, Optional.of("2.1.5")));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
 
-        String json = service.getJsonPayload(Optional.of("MOBILE_CLIENT")).orElseThrow();
+        String json = service.getJsonPayload(Optional.of("MOBILE_NODE")).orElseThrow();
 
         AuthorizedAlertDataDto payload = JsonMapperProvider.get().readValue(json, AuthorizedAlertDataDto.class);
         assertThat(payload.id()).isEqualTo("halt-old");
@@ -88,7 +105,7 @@ class TradeRestrictingAlertWebSocketServiceTest {
         alerts.add(createAlert("desktop-info", AppType.DESKTOP, 10L, AlertType.INFO, false, false));
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(alerts);
 
-        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
 
         Optional<String> json = service.getJsonPayload(Optional.of("desktop"));
 
@@ -100,7 +117,7 @@ class TradeRestrictingAlertWebSocketServiceTest {
     void getJsonPayloadRejectsInvalidAppType() {
         AlertService alertService = mock(AlertService.class);
         when(alertService.getAuthorizedAlertDataSet()).thenReturn(new ObservableSet<>());
-        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService);
+        TradeRestrictingAlertWebSocketService service = new TradeRestrictingAlertWebSocketService(new SubscriberRepository(), alertService, AppType.MOBILE_NODE);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class,
                 () -> service.getJsonPayload(Optional.of("invalid")));

@@ -13,7 +13,10 @@ a node does while such an alert exists.
   clients and ships after the desktop app, so an alert for the desktop app does not stop it. A mobile client trades
   through its trusted node, so the alert of the app type of that node applies to its trades: `MOBILE_NODE` for the
   api-app, `DESKTOP` for a desktop app which serves mobile clients. Releases of the api-app up to 2.1.15 use
-  `DESKTOP`.
+  `DESKTOP`. Asked for the trade restricting alert of `MOBILE_CLIENT`, the API answers with the alert of the app
+  type of its node, so a mobile client shows the alert which restricts its trades. Earlier releases answer with the
+  alert of `MOBILE_CLIENT`, which no node enforces. An alert only for `MOBILE_CLIENT` restricts no trade, so the API no
+  longer reports it as a trade restriction.
 - The version of a node is the version of Bisq 2 which it runs. A mobile node contains Bisq 2, and a mobile release
   can contain an earlier version than the current desktop release.
 
