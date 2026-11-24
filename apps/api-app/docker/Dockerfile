@@ -23,6 +23,9 @@
 # amd64 and arm64 from it. The tag keeps Java 21 on Amazon Linux 2023,
 # and Dependabot proposes the digest of its newest build. This index contains Corretto 21.0.13.1.2.
 FROM amazoncorretto:21-al2023@sha256:3284a05cb82e9bceb4857f9d70788a6f72681d9070b550ae5f477b5e3dc81a5c AS build
+# gradlew needs xargs, which the image lacks.
+RUN dnf install -y findutils \
+    && dnf clean all
 WORKDIR /src
 COPY . .
 # The commit this image is built from, e.g. --build-arg BUILD_COMMIT=$(git rev-parse HEAD). .dockerignore leaves out
@@ -46,8 +49,9 @@ RUN --mount=type=cache,target=/root/.gradle \
 # Corretto headless runtime, pinned to the same release as the build JDK on amd64 and arm64.
 FROM amazoncorretto:21-al2023-headless@sha256:71b005271e4df1a2fb44f6d261bad4318e66aff82ea7541b4d2968a9a31357d7
 
-# The entrypoint needs useradd and setpriv to create the service user and drop privileges.
-RUN dnf install -y shadow-utils util-linux \
+# The entrypoint needs useradd and setpriv to create the service user and drop privileges. The api-app launcher
+# needs xargs.
+RUN dnf install -y shadow-utils util-linux findutils \
     && dnf clean all
 
 LABEL org.opencontainers.image.title="Bisq2 trusted node (api-app)" \
