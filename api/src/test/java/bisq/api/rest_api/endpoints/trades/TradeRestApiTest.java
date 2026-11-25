@@ -20,6 +20,7 @@ package bisq.api.rest_api.endpoints.trades;
 import bisq.account.payment_method.BitcoinPaymentMethod;
 import bisq.account.payment_method.BitcoinPaymentMethodSpec;
 import bisq.account.payment_method.BitcoinPaymentRail;
+import bisq.api.dto.DtoMappings;
 import bisq.api.web_socket.domain.ClosedTradeItemsService;
 import bisq.bisq_easy.BisqEasyService;
 import bisq.bonded_roles.market_price.MarketPrice;
@@ -44,6 +45,7 @@ import bisq.trade.TradeRestrictedException;
 import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
+import bisq.trade.bisq_easy.validation.MarketPriceNotCurrentException;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.trade.exceptions.TradeProtocolFailure;
 import bisq.user.UserService;
@@ -366,47 +368,158 @@ class TradeRestApiTest {
     }
 
     @Test
-    void takeOfferReturns400WhenTheSellersReputationDoesNotCoverTheAmount() {
-        BisqEasyOfferbookChannelService offerbookChannelService = mock(BisqEasyOfferbookChannelService.class);
-        UserIdentityService userIdentityService = mock(UserIdentityService.class);
-        MarketPriceService marketPriceService = mock(MarketPriceService.class);
-        BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
-        TradeRestApi restApi = newTradeRestApi(mock(BisqEasyOpenTradeChannelService.class),
+    @SuppressWarnings("unchecked")
+    void takeOfferReturnsStructured400WhenTheSellersReputationDoesNotCoverTheAmount() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+        fixture.givenMarketPrice();
+        // The buyer's node refuses the take because the seller's reputation does not cover the amount
+        String refusal = "The seller's reputation score of 0 is too low for the trade amount.";
+        fixture.givenTakeRefusedWith(new TradeProtocolException(refusal, TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW));
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        // Released mobile clients match on the "error" text; it must not change
+        assertThat(entity.get("error")).isEqualTo("Invalid input: " + refusal);
+        assertThat(entity.get("errorCode")).isEqualTo("SELLER_REPUTATION_TOO_LOW");
+        verify(fixture.bisqEasyTradeService, never()).takeOffer(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void takeOfferReturnsStructured400WhenTheMarketPriceIsNotCurrent() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+        fixture.givenMarketPrice();
+        String refusal = "Market price is outdated. marketPrice=...";
+        fixture.givenTakeRefusedWith(new MarketPriceNotCurrentException(refusal));
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertThat(entity.get("error")).isEqualTo("Invalid input: " + refusal);
+        assertThat(entity.get("errorCode")).isEqualTo("MARKET_PRICE_NOT_CURRENT");
+        verify(fixture.bisqEasyTradeService, never()).takeOffer(any());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void takeOfferReturnsStructured400WhenNoMarketPriceIsAvailable() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertThat(entity.get("error")).startsWith("Invalid input: No market price available.");
+        assertThat(entity.get("errorCode")).isEqualTo("MARKET_PRICE_NOT_CURRENT");
+        verify(fixture.bisqEasyTradeService, never()).takerCreatesProtocol(any(), any(), any(), any(), any(), any(), any(), anyLong());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void takeOfferReportsUnknownWhenTheRefusalHasNoFailure() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+        fixture.givenMarketPrice();
+        fixture.givenTakeRefusedWith(new TradeProtocolException("Refused", null));
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertThat(entity.get("error")).isEqualTo("Invalid input: Refused");
+        assertThat(entity.get("errorCode")).isEqualTo("UNKNOWN");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void takeOfferReportsTheApiFailureCodeForEveryTradeProtocolFailure() {
+        for (TradeProtocolFailure failure : TradeProtocolFailure.values()) {
+            TakeOfferFixture fixture = new TakeOfferFixture();
+            fixture.givenMarketPrice();
+            fixture.givenTakeRefusedWith(new TradeProtocolException("Refused", failure));
+
+            Response response = fixture.takeOffer();
+
+            Map<String, String> entity = (Map<String, String>) response.getEntity();
+            assertThat(entity.get("errorCode"))
+                    .as("errorCode for %s", failure)
+                    .isEqualTo(DtoMappings.TradeProtocolFailureMapping.fromBisq2Model(failure).name());
+        }
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void takeOfferKeepsTheTradeRestrictionErrorCode() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+        fixture.givenMarketPrice();
+        // A TradeRestrictedException is also an IllegalArgumentException; it must not fall into the plain-text branch
+        fixture.givenTakeRefusedWith(TradeRestrictedException.haltTrading());
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        Map<String, String> entity = (Map<String, String>) response.getEntity();
+        assertThat(entity.get("errorCode")).isEqualTo("HALT_TRADING");
+    }
+
+    @Test
+    void takeOfferKeepsThePlainTextBodyForOtherInvalidInput() {
+        TakeOfferFixture fixture = new TakeOfferFixture();
+        fixture.givenMarketPrice();
+        fixture.givenTakeRefusedWith(new IllegalArgumentException("Some other refusal"));
+
+        Response response = fixture.takeOffer();
+
+        assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
+        assertThat(response.getEntity()).isEqualTo("Invalid input: Some other refusal");
+    }
+
+    private final class TakeOfferFixture {
+        private final BisqEasyOfferbookChannelService offerbookChannelService = mock(BisqEasyOfferbookChannelService.class);
+        private final UserIdentityService userIdentityService = mock(UserIdentityService.class);
+        private final MarketPriceService marketPriceService = mock(MarketPriceService.class);
+        private final BisqEasyTradeService bisqEasyTradeService = mock(BisqEasyTradeService.class);
+        private final BisqEasyOffer offer = mock(BisqEasyOffer.class);
+        private final TradeRestApi restApi = newTradeRestApi(mock(BisqEasyOpenTradeChannelService.class),
                 bisqEasyTradeService,
                 offerbookChannelService,
                 userIdentityService,
                 marketPriceService);
 
-        BisqEasyOffer offer = mock(BisqEasyOffer.class);
-        when(offer.getId()).thenReturn("offer-1");
-        when(offer.getMarket()).thenReturn(MarketRepository.getUSDBitcoinMarket());
-        BisqEasyOfferbookMessage message = mock(BisqEasyOfferbookMessage.class);
-        when(message.hasBisqEasyOffer()).thenReturn(true);
-        when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
-        BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
-        when(channel.getChatMessages()).thenReturn(new ObservableSet<>(List.of(message)));
-        when(offerbookChannelService.getChannels()).thenReturn(new ObservableSet<>(List.of(channel)));
-        when(userIdentityService.getSelectedUserIdentity()).thenReturn(mock(UserIdentity.class, RETURNS_DEEP_STUBS));
-        MarketPrice marketPrice = mock(MarketPrice.class, RETURNS_DEEP_STUBS);
-        when(marketPrice.getPriceQuote().getValue()).thenReturn(100_000_0000L);
-        when(marketPriceService.findMarketPrice(offer.getMarket())).thenReturn(Optional.of(marketPrice));
+        private TakeOfferFixture() {
+            when(offer.getId()).thenReturn("offer-1");
+            when(offer.getMarket()).thenReturn(MarketRepository.getUSDBitcoinMarket());
+            BisqEasyOfferbookMessage message = mock(BisqEasyOfferbookMessage.class);
+            when(message.hasBisqEasyOffer()).thenReturn(true);
+            when(message.getBisqEasyOffer()).thenReturn(Optional.of(offer));
+            BisqEasyOfferbookChannel channel = mock(BisqEasyOfferbookChannel.class);
+            when(channel.getChatMessages()).thenReturn(new ObservableSet<>(List.of(message)));
+            when(offerbookChannelService.getChannels()).thenReturn(new ObservableSet<>(List.of(channel)));
+            when(userIdentityService.getSelectedUserIdentity()).thenReturn(mock(UserIdentity.class, RETURNS_DEEP_STUBS));
+            when(marketPriceService.findMarketPrice(offer.getMarket())).thenReturn(Optional.empty());
+        }
 
-        // The buyer's node refuses the take because the seller's reputation does not cover the amount
-        String refusal = "The seller's reputation score of 0 is too low for the trade amount.";
-        doThrow(new TradeProtocolException(refusal, TradeProtocolFailure.SELLER_REPUTATION_TOO_LOW))
-                .when(bisqEasyTradeService).takerCreatesProtocol(any(), any(), any(), any(), any(), any(), any(), anyLong());
+        private void givenMarketPrice() {
+            MarketPrice marketPrice = mock(MarketPrice.class, RETURNS_DEEP_STUBS);
+            when(marketPrice.getPriceQuote().getValue()).thenReturn(100_000_0000L);
+            when(marketPriceService.findMarketPrice(offer.getMarket())).thenReturn(Optional.of(marketPrice));
+        }
 
-        AsyncResponse asyncResponse = mock(AsyncResponse.class);
-        TakeOfferRequest request = new TakeOfferRequest("offer-1", 100_000, 1_000_0000, "MAIN_CHAIN", "SEPA");
+        private void givenTakeRefusedWith(RuntimeException refusal) {
+            doThrow(refusal)
+                    .when(bisqEasyTradeService).takerCreatesProtocol(any(), any(), any(), any(), any(), any(), any(), anyLong());
+        }
 
-        restApi.takeOffer(request, asyncResponse);
-
-        // The refusal surfaces as invalid input (not a generic 500)
-        ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
-        verify(asyncResponse).resume(captor.capture());
-        assertThat(captor.getValue().getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-        assertThat(captor.getValue().getEntity()).isEqualTo("Invalid input: " + refusal);
-        verify(bisqEasyTradeService, never()).takeOffer(any());
+        private Response takeOffer() {
+            AsyncResponse asyncResponse = mock(AsyncResponse.class);
+            TakeOfferRequest request = new TakeOfferRequest("offer-1", 100_000, 1_000_0000, "MAIN_CHAIN", "SEPA");
+            restApi.takeOffer(request, asyncResponse);
+            ArgumentCaptor<Response> captor = ArgumentCaptor.forClass(Response.class);
+            verify(asyncResponse).resume(captor.capture());
+            return captor.getValue();
+        }
     }
 
     private TradeRestApi newTradeRestApi(BisqEasyOpenTradeChannelService openTradeChannelService,
