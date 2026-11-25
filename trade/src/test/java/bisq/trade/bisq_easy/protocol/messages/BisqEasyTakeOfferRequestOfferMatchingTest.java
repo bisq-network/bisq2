@@ -61,6 +61,7 @@ class BisqEasyTakeOfferRequestOfferMatchingTest {
         NetworkId myNetworkId = mock(NetworkId.class);
         when(myNetworkId.getId()).thenReturn(MY_PROFILE_ID);
         takersOffer = mock(BisqEasyOffer.class);
+        when(takersOffer.toProto(true)).thenReturn(bisq.offer.protobuf.Offer.getDefaultInstance());
         when(takersOffer.getMakerNetworkId()).thenReturn(myNetworkId);
         when(takersOffer.getMakersUserProfileId()).thenReturn(MY_PROFILE_ID);
         takersContract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);

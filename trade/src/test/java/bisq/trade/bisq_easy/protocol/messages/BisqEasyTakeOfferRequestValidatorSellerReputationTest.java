@@ -95,6 +95,7 @@ class BisqEasyTakeOfferRequestValidatorSellerReputationTest {
         when(serviceProvider.getUserService().getReputationService()).thenReturn(reputationService);
 
         offer = mock(BisqEasyOffer.class);
+        when(offer.toProto(true)).thenReturn(bisq.offer.protobuf.Offer.getDefaultInstance());
         when(offer.getMarket()).thenReturn(USD_MARKET);
         when(offer.getMakersDirection()).thenReturn(Direction.BUY);
         when(offer.getTakersDirection()).thenReturn(Direction.SELL);

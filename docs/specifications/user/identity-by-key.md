@@ -48,6 +48,8 @@ of a trade message also applies to MuSig.
      contract and the trade chat channel hold the copy of the mediator's profile which the taker sent. The maker sends
      its mediation request to the addresses of the contract's copy, and its chat messages for the mediator to the
      addresses of the channel's copy.
+     The maker also compares the nickname, the proof of work and the avatar version of the two profiles. A user
+     cannot change them, so they do not reject an honest copy. The terms and the statement are not compared (rule 1).
    - The trade chat channel's copy of the mediator and the contract's copy are compared by the whole network ID (see
      [trade chat channel binding](../trade/chat-channel-binding.md)). Honest clients create both copies from one
      profile.

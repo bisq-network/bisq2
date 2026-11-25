@@ -94,6 +94,15 @@ public final class BisqEasyTakeOfferRequestValidator {
             log.error(errorMessage);
             throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
         }
+        // Offer.equals ignores fields which the contract hash covers (the names of the currencies of the market). We
+        // sign the taker's copy of the offer, so we also compare the form which is hashed, as the MuSig validator does.
+        if (!matchingOfferInChannel.get().toProto(true).equals(takersOffer.toProto(true))) {
+            String errorMessage = String.format("Could not find matching offer in BisqEasyOfferbookChannel.\n" +
+                    "The offer of the taker differs from our offer in a field which the contract hash covers; " +
+                    "takersOffer=%s", takersOffer);
+            log.error(errorMessage);
+            throw new TradeProtocolException(errorMessage, TradeProtocolFailure.NO_MATCHING_OFFER_FOUND);
+        }
 
         // After the check above the offer is our own offer, so this binds the contract price to our offer
         BisqEasyPriceSpecValidator.validatePriceSpec(takersOffer, takersContract.getPriceSpec());
@@ -122,7 +131,10 @@ public final class BisqEasyTakeOfferRequestValidator {
         // The whole network ID, including the addresses: we send our mediation request and our chat messages for the
         // mediator to the addresses of the copies which the taker supplies. This check binds them to the profile which
         // the mediator published (docs/specifications/user/identity-by-key.md, rule 4).
-        if (!mediator.map(UserProfile::getNetworkId).equals(takersContract.getMediator().map(UserProfile::getNetworkId))) {
+        // We sign the copy and show its user name and avatar for the mediator. So we also compare the nickname, the proof
+        // of work and the avatar version, which a user cannot change. The terms and the statement can differ from our
+        // copy (rule 1).
+        if (!isSameMediator(mediator, takersContract.getMediator())) {
             String errorMessage = String.format("Mediators do not match.\n" +
                     "Maker's mediator: %s\n" +
                     "Taker's mediator: %s", mediator, takersContract.getMediator());
@@ -145,6 +157,13 @@ public final class BisqEasyTakeOfferRequestValidator {
         }
 
         validateTakersReputation(serviceProvider, takersOffer, takersContract);
+    }
+
+    private static boolean isSameMediator(Optional<UserProfile> mine, Optional<UserProfile> theirs) {
+        return mine.map(UserProfile::getNetworkId).equals(theirs.map(UserProfile::getNetworkId))
+                && mine.map(UserProfile::getNickName).equals(theirs.map(UserProfile::getNickName))
+                && mine.map(UserProfile::getProofOfWork).equals(theirs.map(UserProfile::getProofOfWork))
+                && mine.map(UserProfile::getAvatarVersion).equals(theirs.map(UserProfile::getAvatarVersion));
     }
 
     // As buyer we send the fiat first, so the seller's reputation is our only security. The taker's client
