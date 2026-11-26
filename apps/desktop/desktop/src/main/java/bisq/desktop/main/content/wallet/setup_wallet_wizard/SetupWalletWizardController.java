@@ -59,6 +59,8 @@ public class SetupWalletWizardController extends NavigationController {
     private final EventHandler<KeyEvent> onKeyPressedHandler = this::onKeyPressed;
     private boolean activated;
     private boolean walletOpenInProgress;
+    // The password the daemon accepted. The later steps use it instead of the password field, which can change again.
+    private String acceptedPassword = "";
 
     public SetupWalletWizardController(ServiceProvider serviceProvider) {
         super(NavigationTarget.SETUP_WALLET);
@@ -75,13 +77,13 @@ public class SetupWalletWizardController extends NavigationController {
         setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::onBack,
-                setupWalletWizardProtectController::getPassword);
+                () -> acceptedPassword);
         setupWalletWizardVerifyController = new SetupWalletWizardVerifyController(
                 serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::closeAndNavigateTo,
                 this::onBack,
-                setupWalletWizardProtectController::getPassword);
+                () -> acceptedPassword);
 
         this.walletService = serviceProvider.getWalletService().orElseThrow();
     }
@@ -111,6 +113,7 @@ public class SetupWalletWizardController extends NavigationController {
     @Override
     public void onDeactivate() {
         activated = false;
+        acceptedPassword = "";
         overlayController.setUseEscapeKeyHandler(true);
         overlayController.getApplicationRoot().removeEventHandler(KeyEvent.KEY_PRESSED, onKeyPressedHandler);
     }
@@ -192,6 +195,7 @@ public class SetupWalletWizardController extends NavigationController {
                 return;
             }
             if (throwable == null) {
+                acceptedPassword = password;
                 navigateTo(nextIndex);
             } else {
                 Throwable cause = throwable instanceof CompletionException && throwable.getCause() != null
