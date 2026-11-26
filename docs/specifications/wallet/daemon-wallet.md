@@ -61,9 +61,13 @@ A send names an address and an amount in satoshis. Bisq sends no fee rate, so th
 Reason: the daemon accepts a fee rate of 0 and records the transaction before it broadcasts it, although nodes do not
 relay it.
 
-Bisq refuses a negative amount before it sends the request, with the error of a request which the daemon refuses.
+Bisq refuses a send without a password and a send of a negative amount before it sends the request, with the error of
+a request which the daemon refuses.
 
-Reason: the amount is unsigned in the wire contract. A negative number would reach the daemon as a very large one.
+Reason: the amount is unsigned in the wire contract. A negative number would reach the daemon as a very large one. A
+send without a password can only fail.
+
+The rules of the send form are in [Sending from the wallet](sending.md).
 
 ## Receive addresses
 
@@ -78,3 +82,14 @@ address". The label of the address says that it is unused, never that it is new.
 
 Reason: the daemon does not say whether it hands out an address for the first time. An address shown as new with an
 empty note invites the user to save a second note, which would replace the first.
+
+## Transactions
+
+Bisq marks the outputs of a transaction which pay to an address of the wallet. It asks the daemon for the addresses
+of the wallet after the transactions.
+
+Reason: the daemon reports the outputs without their owner. Asked in this order, the addresses include every address
+which a listed transaction pays to.
+
+The daemon reports the date 0 for a transaction without a confirmation. Bisq treats it as a transaction without a
+date.
