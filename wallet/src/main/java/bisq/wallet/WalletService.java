@@ -37,6 +37,7 @@ import bisq.wallet.vo.Utxo;
 import bisq.wallet.vo.AddressBalance;
 import bisq.wallet.vo.BalanceBreakdown;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -85,6 +86,7 @@ public class WalletService implements Service {
         this(config, persistenceService, new WalletGrpcClient(config.host, config.port));
     }
 
+    @VisibleForTesting
     WalletService(Config config,
                   PersistenceService persistenceService,
                   WalletGrpcClient client) {
