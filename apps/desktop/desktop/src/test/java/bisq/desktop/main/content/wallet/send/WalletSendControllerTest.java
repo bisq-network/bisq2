@@ -22,6 +22,7 @@ import bisq.common.observable.Observable;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.components.controls.MaterialPasswordField;
+import bisq.desktop.components.controls.MaterialTextField;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
@@ -232,6 +233,21 @@ class WalletSendControllerTest {
         assertThat(passwordFields.get(0).isManaged()).isTrue();
     }
 
+    // A field which only refuses typing still takes Undo, so the screen could show another address than the one sent
+    @Test
+    void theFieldsAreDisabledWhileASendRuns() {
+        fillForm(ADDRESS, "0.5", "Wallet-Pa55!");
+
+        onFx(() -> controller.onSend());
+
+        assertThat(formFields()).hasSize(3).allMatch(Node::isDisabled);
+
+        onFx(() -> sendResult.complete(TX_ID));
+        onFx(() -> controller.getModel().getSentTxId().set(null));
+
+        assertThat(formFields()).noneMatch(Node::isDisabled);
+    }
+
     @Test
     void aSendWithoutThePasswordNeverReachesTheDaemon() {
         fillForm(ADDRESS, "0.5", "");
@@ -242,6 +258,12 @@ class WalletSendControllerTest {
 
         verify(walletService, never()).sendToAddress(any(), any(), anyLong());
         assertThat(controller.getModel().getSendInProgress().get()).isFalse();
+    }
+
+    private List<Node> formFields() {
+        return controller.getView().getRoot().lookupAll("*").stream()
+                .filter(MaterialTextField.class::isInstance)
+                .toList();
     }
 
     private void fillForm(String address, String amount, String password) {

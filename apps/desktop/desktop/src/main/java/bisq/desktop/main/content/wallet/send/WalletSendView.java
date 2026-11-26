@@ -103,9 +103,10 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
 
         sendInProgressPin = EasyBind.subscribe(model.getSendInProgress(), inProgress -> {
             sendButton.setText(Res.get(inProgress ? "wallet.send.sending" : "wallet.send.sendBtc"));
-            address.setEditable(!inProgress);
-            amount.setEditable(!inProgress);
-            password.setEditable(!inProgress);
+            // Disabled, not only read-only: a read-only field still takes Undo
+            address.setDisable(inProgress);
+            amount.setDisable(inProgress);
+            password.setDisable(inProgress);
         });
         sentTxIdPin = EasyBind.subscribe(model.getSentTxId(), txId -> {
             boolean sent = txId != null;
