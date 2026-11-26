@@ -163,6 +163,9 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
     // Written from the alert-set observer thread, read from trade calls on other threads
     private volatile boolean haltTrading;
     private volatile Optional<String> minRequiredVersionForTrading = Optional.empty();
+    // Two changes of the alerts can run at the same time. The lock lets each change compare the restrictions before and
+    // after its own update, so that no change misses the end of a restriction.
+    private final Object tradeRestrictionsLock = new Object();
 
     private Pin authorizedAlertDataSetPin, numDaysAfterRedactingTradeDataPin;
     private Pin tradeByIdPin, muSigOpenTradeChannelPin;
@@ -515,7 +518,21 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         }
         StartupReplay.forEach(tradeProtocolById.values().stream()
                         .filter(protocol -> !protocol.getTrade().getEventQueue().isEmpty()),
-                protocol -> submitTradeTask(protocol.getTrade().getId(), protocol::handleQueuedEvents));
+                protocol -> submitTradeTask(protocol.getTrade().getId(),
+                        () -> handleQueuedEventsUnlessTradingIsRestricted(protocol)));
+    }
+
+    // The task runs later on the executor, and a restriction can begin before it runs. The check under the lock of the
+    // protocol keeps the queued events in the event queue then, and the end of that restriction applies them.
+    private void handleQueuedEventsUnlessTradingIsRestricted(MuSigProtocol protocol) {
+        synchronized (protocol) {
+            if (isTradingRestricted()) {
+                log.warn("We do not apply the queued events of trade {} as trading is currently not allowed",
+                        protocol.getTrade().getId());
+                return;
+            }
+            protocol.handleQueuedEvents();
+        }
     }
 
     private void handleMuSigTradeMessage(MuSigTradeMessage message, MuSigProtocol protocol) {
@@ -922,11 +939,31 @@ public final class MuSigTradeService extends RateLimitedPersistenceClient<MuSigT
         return tradeProtocol;
     }
 
+    // When a restriction of trading ends, we apply the queued events of the stored trades, which we did not apply at
+    // startup during the restriction (rule 4 of docs/specifications/trade/queued-trade-messages.md)
     private void updateTradeRestrictions() {
-        haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
-                alertService.getAuthorizedAlertDataSet().stream(), appType);
-        minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
-                alertService.getAuthorizedAlertDataSet().stream(), appType);
+        boolean hasRestrictionEnded;
+        synchronized (tradeRestrictionsLock) {
+            boolean wasTradingRestricted = isTradingRestricted();
+            haltTrading = AuthorizedAlertDataUtils.isTradingHalted(
+                    alertService.getAuthorizedAlertDataSet().stream(), appType);
+            minRequiredVersionForTrading = AuthorizedAlertDataUtils.findMinRequiredVersionForTrading(
+                    alertService.getAuthorizedAlertDataSet().stream(), appType);
+            hasRestrictionEnded = wasTradingRestricted && !isTradingRestricted();
+        }
+        if (hasRestrictionEnded) {
+            handleQueuedEventsOfStoredTrades();
+        }
+    }
+
+    private boolean isTradingRestricted() {
+        try {
+            verifyTradingNotOnHalt();
+            verifyMinVersionForTrading();
+            return false;
+        } catch (TradeRestrictedException e) {
+            return true;
+        }
     }
 
     private void handleDisputeMessage(String tradeId, EnvelopePayloadMessage message) {

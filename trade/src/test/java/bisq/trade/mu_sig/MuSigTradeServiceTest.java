@@ -389,6 +389,95 @@ class MuSigTradeServiceTest {
         }
     }
 
+    // When the restriction ends, the trade service applies the queued events, as at a start without the restriction
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsAppliedWhenAStoredHaltOfTradingEnds() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            AuthorizedAlertData haltOfTrading = haltOfTrading();
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading);
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().remove(haltOfTrading);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.FAILED_AT_PEER);
+            assertThat(storedTrade.getEventQueue()).isEmpty();
+        }
+    }
+
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsNotAppliedWhileAnotherRestrictionRemains() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            AuthorizedAlertData haltOfTrading = haltOfTrading();
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading);
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(minimumVersionForTrading());
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().remove(haltOfTrading);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.DEPOSIT_TX_CONFIRMED);
+            assertThat(storedTrade.getEventQueue()).hasSize(1);
+        }
+    }
+
+    // The replay task runs later on the executor. A halt which began after the end of the restriction keeps the queued
+    // events in the event queue, so the task checks the restrictions again when it runs.
+    @Test
+    void queuedTradeMessageOfAStoredTradeIsNotAppliedWhenAHaltBeginsBeforeTheReplayRuns() throws Exception {
+        MuSigTrade storedTrade = withQueuedErrorReportOfPeer(createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED));
+        try (MediationFixture fixture = new MediationFixture(storedTrade, false)) {
+            AuthorizedAlertData haltOfTrading = haltOfTrading();
+            fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading);
+            fixture.service.initialize().get(5, SECONDS);
+            fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
+            MuSigProtocol protocol = fixture.service.findProtocol(storedTrade.getId()).orElseThrow();
+
+            Thread replayThread;
+            synchronized (protocol) {
+                fixture.service.getAlertService().getAuthorizedAlertDataSet().remove(haltOfTrading);
+                replayThread = awaitThreadBlockedOn(protocol);
+                fixture.service.getAlertService().getAuthorizedAlertDataSet().add(haltOfTrading());
+            }
+            awaitIdle(replayThread);
+
+            assertThat(storedTrade.getTradeState()).isEqualTo(MuSigTradeState.DEPOSIT_TX_CONFIRMED);
+            assertThat(storedTrade.getEventQueue()).hasSize(1);
+        }
+    }
+
+    private static Thread awaitThreadBlockedOn(Object lock) throws InterruptedException {
+        String lockName = lock.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(lock));
+        long deadline = System.nanoTime() + SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                java.lang.management.ThreadInfo info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.threadId());
+                if (thread.getState() == Thread.State.BLOCKED && info != null &&
+                        String.valueOf(info.getLockInfo()).equals(lockName)) {
+                    return thread;
+                }
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("No thread waited for the lock of the protocol");
+    }
+
+    private static void awaitIdle(Thread thread) throws InterruptedException {
+        long deadline = System.nanoTime() + SECONDS.toNanos(5);
+        while (System.nanoTime() < deadline) {
+            Thread.State state = thread.getState();
+            if (state == Thread.State.WAITING || state == Thread.State.TIMED_WAITING || state == Thread.State.TERMINATED) {
+                return;
+            }
+            Thread.sleep(10);
+        }
+        throw new AssertionError("The replay task did not end");
+    }
+
     private static MuSigTrade withQueuedErrorReportOfPeer(MuSigTrade trade) throws Exception {
         MuSigReportErrorMessage report = new MuSigReportErrorMessage("peer-error", trade.getId(),
                 MuSigProtocol.VERSION, trade.getPeer().getNetworkId(), trade.getMyself().getNetworkId(),
