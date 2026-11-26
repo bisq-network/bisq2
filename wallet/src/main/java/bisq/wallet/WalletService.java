@@ -43,7 +43,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
@@ -202,24 +201,15 @@ public class WalletService implements Service {
         return receiveAddressService.updateReceiveAddressEntry(receiveAddressEntry, note);
     }
 
+    // The daemon applies its default fee rate.
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
-        return sendToAddress(passphrase, address, amount, OptionalLong.empty());
-    }
-
-    // Without a fee rate the daemon applies its default rate.
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase,
-                                                   String address,
-                                                   long amount,
-                                                   OptionalLong feeRatePerKwu) {
-        // Both fields are unsigned in the request, so a negative value would reach the daemon as a very large one
+        // The amount is unsigned in the request, so a negative value would reach the daemon as a very large one
         checkArgument(amount >= 0, "amount must not be negative");
-        checkArgument(feeRatePerKwu.isEmpty() || feeRatePerKwu.getAsLong() >= 0, "feeRatePerKwu must not be negative");
         // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
         var request = SendToAddressRequest.newBuilder()
                 .setPassphrase(passphrase.orElse(""))
                 .setAddress(PubAddressInfo.newBuilder().setAddress(address))
                 .setAmount(amount);
-        feeRatePerKwu.ifPresent(request::setFeeRatePerKwu);
 
         return client.sendToAddress(request.build())
                 .thenApply(SendToAddressResponse::getTxId);

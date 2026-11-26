@@ -55,7 +55,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -130,32 +129,10 @@ class WalletServiceGrpcTest {
     }
 
     @Test
-    void aFeeRateGoesOutOnlyWhenGiven() throws ExecutionException, InterruptedException {
-        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(750L)).get();
+    void aSendCarriesNoFeeRate() throws ExecutionException, InterruptedException {
         walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
 
-        SendToAddressRequest withFeeRate = (SendToAddressRequest) requests.get(0);
-        SendToAddressRequest withoutFeeRate = (SendToAddressRequest) requests.get(1);
-        assertTrue(withFeeRate.hasFeeRatePerKwu());
-        assertEquals(750L, withFeeRate.getFeeRatePerKwu());
-        assertFalse(withoutFeeRate.hasFeeRatePerKwu());
-    }
-
-    @Test
-    void aNegativeFeeRateIsRejectedBeforeTheDaemonIsAsked() {
-        assertThrows(IllegalArgumentException.class, () ->
-                walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(-1L)));
-
-        assertTrue(requests.isEmpty());
-    }
-
-    @Test
-    void aFeeRateOfZeroIsSentAsZero() throws ExecutionException, InterruptedException {
-        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(0L)).get();
-
-        SendToAddressRequest request = (SendToAddressRequest) requests.get(0);
-        assertTrue(request.hasFeeRatePerKwu());
-        assertEquals(0L, request.getFeeRatePerKwu());
+        assertFalse(((SendToAddressRequest) requests.get(0)).hasFeeRatePerKwu());
     }
 
     @Test
