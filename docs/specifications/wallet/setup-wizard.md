@@ -31,4 +31,12 @@ closes.
 Reason: the wallet keeps the password it was opened with, so the steps after the password step rely only on that
 password, whatever the fields show.
 
-The verification step shows its questions only after the seed words arrived.
+The daemon decides the length of the phrase. The wizard takes every length which BIP39 allows: 12, 15, 18, 21 or 24
+words. Another number of words counts as a failed request.
+
+When the seed words cannot be loaded, the step says so and shows no words. From the backup step the wizard then goes
+back to the password step, from the verification step back to the backup step. While the backup step waits for the
+words, it shows no Next button, and Enter does not move on either.
+
+The verification step shows its questions only after the seed words arrived. It asks for six words of the phrase, each
+with two wrong choices which are other words of the same phrase.
