@@ -21,11 +21,13 @@ import bisq.common.observable.Observable;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
+import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -119,6 +121,28 @@ class SetupWalletWizardProtectViewTest {
         type(confirmPasswordInput, "c");
         assertThat(controller.getPassword()).isEqualTo("abc");
         assertThat(controller.getModel().getConfirmPassword().get()).isEqualTo("abc");
+    }
+
+    @Test
+    void aPasswordLongerThanAHundredCharactersIsValid() {
+        String password = "Wallet-Pa55!" + "x".repeat(100);
+        onFx(() -> {
+            controller.getModel().getPassword().set(password);
+            controller.getModel().getConfirmPassword().set(password);
+        });
+        boolean[] valid = new boolean[1];
+
+        onFx(() -> valid[0] = controller.isValid());
+
+        assertThat(valid[0]).isTrue();
+    }
+
+    @Test
+    void thePasswordRulesAreShownBeforeTheUserTypes() {
+        Label help = (Label) controller.getView().getRoot().lookup(".material-text-field-help");
+
+        assertThat(help.getText()).isEqualTo(Res.get("wallet.protectWallet.password.rules"));
+        assertThat(help.isVisible()).isTrue();
     }
 
     @Test

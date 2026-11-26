@@ -63,11 +63,11 @@ public class SetupWalletWizardProtectView extends View<StackPane, SetupWalletWiz
         VBox.setMargin(descriptionLabel, new Insets(0, 0, 10, 0));
 
         passwordField = addField(Res.get("wallet.protectWallet.password.setPassword"), Res.get("wallet.protectWallet.password.setPassword.placeholder"));
-        passwordField.setValidators(model.getPasswordValidator(), model.getPasswordRulesValidator());
+        passwordField.setHelpText(Res.get("wallet.protectWallet.password.rules"));
+        passwordField.setValidators(model.getPasswordRulesValidator());
         VBox.setMargin(passwordField, new Insets(0, 0, -5, 0));
 
         confirmPasswordField = addField(Res.get("wallet.protectWallet.password.confirmPassword"), Res.get("wallet.protectWallet.password.confirmPassword.placeholder"));
-        confirmPasswordField.setValidators(model.getConfirmPasswordValidator());
 
         skipProtectStepOverlayBackButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.backButton"));
         skipProtectStepOverlayNextButton = new Button(Res.get("wallet.protectWallet.skipStepOverlay.nextButton"));

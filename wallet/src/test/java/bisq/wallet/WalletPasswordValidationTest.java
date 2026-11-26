@@ -32,6 +32,8 @@ class WalletPasswordValidationTest {
         assertTrue(validation.isValid("a1!bcdefG"));
         // A script without case counts as both lowercase and uppercase
         assertTrue(validation.isValid("密码密码密码1!"));
+        // The rule has no upper limit
+        assertTrue(validation.isValid("Wallet-Pa55!" + "x".repeat(200)));
     }
 
     @Test

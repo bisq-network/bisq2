@@ -64,9 +64,7 @@ public class SetupWalletWizardProtectController implements Controller {
     public boolean isValid() {
         String password = model.getPassword().get();
         String confirmPassword = model.getConfirmPassword().get();
-        boolean passwordValid = model.getPasswordValidator().validateAndGet() && model.getPasswordRulesValidator().validateAndGet();
-        boolean confirmPasswordValid = model.getConfirmPasswordValidator().validateAndGet();
-        boolean isPasswordSetupCorrectly = passwordValid && confirmPasswordValid && password.equals(confirmPassword);
+        boolean isPasswordSetupCorrectly = model.getPasswordRulesValidator().validateAndGet() && password.equals(confirmPassword);
         boolean shouldSkipThisStep = model.isSkipProtectStep();
         return isPasswordSetupCorrectly || shouldSkipThisStep;
     }
@@ -75,14 +73,10 @@ public class SetupWalletWizardProtectController implements Controller {
         String password = model.getPassword().get();
         String confirmPassword = model.getConfirmPassword().get();
 
-        if (model.getPasswordValidator().validateAndGet()
-                && model.getPasswordRulesValidator().validateAndGet()
-                && model.getConfirmPasswordValidator().validateAndGet()) {
-            if (!password.equals(confirmPassword)) {
-                new Popup().invalid(Res.get("wallet.protectWallet.error.passwordsDontMatch"))
-                        .owner(getPopupOwner())
-                        .show();
-            }
+        if (model.getPasswordRulesValidator().validateAndGet() && !password.equals(confirmPassword)) {
+            new Popup().invalid(Res.get("wallet.protectWallet.error.passwordsDontMatch"))
+                    .owner(getPopupOwner())
+                    .show();
         }
     }
 
