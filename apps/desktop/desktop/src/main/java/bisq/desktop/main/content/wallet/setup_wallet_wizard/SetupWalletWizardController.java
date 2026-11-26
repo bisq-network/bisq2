@@ -251,6 +251,9 @@ public class SetupWalletWizardController extends NavigationController {
     }
 
     void onClose() {
+        // The overlay hides with an animation and deactivates the wizard only at its end. An open request answered
+        // in between must not navigate, as the overlay would then create a second wizard.
+        activated = false;
         Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
     }
