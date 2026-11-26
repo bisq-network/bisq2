@@ -21,11 +21,13 @@ import bisq.common.application.DevMode;
 import bisq.common.observable.Observable;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
+import bisq.desktop.components.controls.MaterialPasswordField;
 import bisq.desktop.components.overlay.Overlay;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletException;
 import bisq.wallet.WalletService;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -73,7 +75,6 @@ class WalletSendControllerTest {
         Transitions.setSettingsService(settingsService);
         Overlay.settingsService = settingsService;
         walletService = mock(WalletService.class);
-        when(walletService.isWalletEncrypted()).thenReturn(CompletableFuture.completedFuture(true));
         sendResult = new CompletableFuture<>();
         when(walletService.sendToAddress(any(), any(), anyLong())).thenReturn(sendResult);
         ServiceProvider serviceProvider = mock(ServiceProvider.class);
@@ -112,7 +113,7 @@ class WalletSendControllerTest {
         onFx(() -> controller.onSend());
         onFx(() -> controller.onSend());
 
-        verify(walletService, times(1)).sendToAddress(eq(Optional.of("Wallet-Pa55!")), eq(ADDRESS), eq(50_000_000L));
+        verify(walletService, times(1)).sendToAddress(eq("Wallet-Pa55!"), eq(ADDRESS), eq(50_000_000L));
         assertThat(controller.getModel().getSendInProgress().get()).isTrue();
     }
 
@@ -214,6 +215,29 @@ class WalletSendControllerTest {
         onFx(() -> controller.onSend());
 
         fillForm("bitcoin:" + ADDRESS + "?req-pop=abc", "0.5", "Wallet-Pa55!");
+        onFx(() -> controller.onSend());
+
+        verify(walletService, never()).sendToAddress(any(), any(), anyLong());
+        assertThat(controller.getModel().getSendInProgress().get()).isFalse();
+    }
+
+    @Test
+    void thePasswordFieldIsShown() {
+        List<Node> passwordFields = controller.getView().getRoot().lookupAll("*").stream()
+                .filter(MaterialPasswordField.class::isInstance)
+                .toList();
+
+        assertThat(passwordFields).hasSize(1);
+        assertThat(passwordFields.get(0).isVisible()).isTrue();
+        assertThat(passwordFields.get(0).isManaged()).isTrue();
+    }
+
+    @Test
+    void aSendWithoutThePasswordNeverReachesTheDaemon() {
+        fillForm(ADDRESS, "0.5", "");
+        onFx(() -> controller.onSend());
+
+        fillForm(ADDRESS, "0.5", null);
         onFx(() -> controller.onSend());
 
         verify(walletService, never()).sendToAddress(any(), any(), anyLong());

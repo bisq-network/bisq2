@@ -29,7 +29,6 @@ import bisq.wallet.vo.TransactionOutput;
 import bisq.wallet.vo.Utxo;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -125,13 +124,8 @@ public class MockWalletService extends WalletService {
     }
 
     @Override
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+    public CompletableFuture<String> sendToAddress(String password, String address, long amount) {
         return CompletableFuture.completedFuture("69111c8de670d7a12b8c4db85c67485889b30335cdd3fd7f18924104e88e9fc3");
-    }
-
-    @Override
-    public CompletableFuture<Boolean> isWalletEncrypted() {
-        return CompletableFuture.completedFuture(true);
     }
 
     @Override

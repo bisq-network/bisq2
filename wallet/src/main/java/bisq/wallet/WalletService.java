@@ -346,14 +346,17 @@ public class WalletService implements Service {
     }
 
     // The daemon applies its default fee rate.
-    public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
+    public CompletableFuture<String> sendToAddress(String password, String address, long amount) {
+        // The wallet of the daemon always has a password
+        if (password.isEmpty()) {
+            return CompletableFuture.failedFuture(invalidRequest("password must not be empty"));
+        }
         // The amount is unsigned in the request, so a negative value would reach the daemon as a very large one
         if (amount < 0) {
             return CompletableFuture.failedFuture(invalidRequest("amount must not be negative"));
         }
-        // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
         var request = SendToAddressRequest.newBuilder()
-                .setPassphrase(passphrase.orElse(""))
+                .setPassphrase(password)
                 .setAddress(PubAddressInfo.newBuilder().setAddress(address))
                 .setAmount(amount);
 
@@ -370,11 +373,6 @@ public class WalletService implements Service {
     // Input which the request cannot carry fails like a request which the daemon refuses, through the future.
     private static WalletException invalidRequest(String detail) {
         return new WalletException(WalletException.Reason.INVALID_REQUEST, detail, Optional.of(detail), null);
-    }
-
-    // The daemon's wallet always has a password.
-    public CompletableFuture<Boolean> isWalletEncrypted() {
-        return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Coin> requestBalance() {

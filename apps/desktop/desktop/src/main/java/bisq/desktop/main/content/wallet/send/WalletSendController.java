@@ -31,8 +31,6 @@ import bisq.wallet.WalletService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.Optional;
-
 @Slf4j
 public class WalletSendController implements Controller {
     @Getter
@@ -51,8 +49,6 @@ public class WalletSendController implements Controller {
     @Override
     public void onActivate() {
         activated = true;
-        walletService.isWalletEncrypted()
-                .thenAccept(isWalletEncrypted -> UIThread.run(() -> model.getIsPasswordVisible().set(isWalletEncrypted)));
     }
 
     // The overlay keeps the controller, so a reopened screen starts empty and no password stays in memory.
@@ -71,13 +67,14 @@ public class WalletSendController implements Controller {
         }
         boolean addressValid = model.getAddressValidator().validateAndGet();
         boolean amountValid = model.getAmountValidator().validateAndGet();
-        if (!addressValid || !amountValid) {
+        boolean passwordValid = model.getPasswordValidator().validateAndGet();
+        if (!addressValid || !amountValid || !passwordValid) {
             return;
         }
         Coin amount = WalletSendAmountValidator.parse(model.getAmount().get()).orElseThrow();
         String address = WalletSendAddressValidator.canonical(model.getAddress().get(), DevMode.isDevMode()).orElseThrow();
         model.getSendInProgress().set(true);
-        walletService.sendToAddress(Optional.ofNullable(model.getPassword().get()), address, amount.getValue())
+        walletService.sendToAddress(model.getPassword().get(), address, amount.getValue())
                 .whenComplete((txId, throwable) -> UIThread.run(() -> handleSendResult(txId, throwable)));
     }
 

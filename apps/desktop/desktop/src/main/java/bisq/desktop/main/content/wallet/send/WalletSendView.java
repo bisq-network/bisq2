@@ -65,6 +65,7 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         amount = new MaterialTextField(Res.get("wallet.send.amount"), null, null);
         amount.setValidator(model.getAmountValidator());
         password = new MaterialPasswordField(Res.get("wallet.send.password"), null, null);
+        password.setValidator(model.getPasswordValidator());
 
         formBox = new VBox(20);
         formBox.setPadding(new Insets(0, 70, 0, 70));
@@ -97,8 +98,6 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         address.textProperty().bindBidirectional(model.getAddress());
         amount.textProperty().bindBidirectional(model.getAmount());
         password.textProperty().bindBidirectional(model.getPassword());
-        password.visibleProperty().bind(model.getIsPasswordVisible());
-        password.managedProperty().bind(model.getIsPasswordVisible());
         sendButton.disableProperty().bind(model.getSendInProgress());
         txIdLabel.textProperty().bind(model.getSentTxId());
 
@@ -121,6 +120,7 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         sendButton.setOnAction(e -> {
             address.validate();
             amount.validate();
+            password.validate();
             controller.onSend();
         });
         copyTxIdButton.setOnAction(e -> controller.onCopyTxId());
@@ -133,8 +133,6 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
         address.textProperty().unbindBidirectional(model.getAddress());
         amount.textProperty().unbindBidirectional(model.getAmount());
         password.textProperty().unbindBidirectional(model.getPassword());
-        password.visibleProperty().unbind();
-        password.managedProperty().unbind();
         sendButton.disableProperty().unbind();
         txIdLabel.textProperty().unbind();
 
@@ -148,5 +146,6 @@ public class WalletSendView extends View<VBox, WalletSendModel, WalletSendContro
 
         address.resetValidation();
         amount.resetValidation();
+        password.resetValidation();
     }
 }

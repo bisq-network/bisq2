@@ -144,7 +144,7 @@ class WalletServiceGrpcTest {
 
     @Test
     void sendToAddressWrapsTheAddressAndSendsThePassphrase() throws ExecutionException, InterruptedException {
-        String txId = walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
+        String txId = walletService.sendToAddress("Wallet-Pa55!", "bcrt1qreceiver", 1234L).get();
 
         SendToAddressRequest request = (SendToAddressRequest) requests.get(0);
         assertEquals("Wallet-Pa55!", request.getPassphrase());
@@ -155,7 +155,7 @@ class WalletServiceGrpcTest {
 
     @Test
     void aSendCarriesNoFeeRate() throws ExecutionException, InterruptedException {
-        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
+        walletService.sendToAddress("Wallet-Pa55!", "bcrt1qreceiver", 1234L).get();
 
         assertTrue(requests.stream()
                 .filter(SendToAddressRequest.class::isInstance)
@@ -198,7 +198,7 @@ class WalletServiceGrpcTest {
 
     @Test
     void aNegativeAmountIsRefusedThroughTheFutureBeforeTheDaemonIsAsked() {
-        CompletableFuture<String> result = walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", -1L);
+        CompletableFuture<String> result = walletService.sendToAddress("Wallet-Pa55!", "bcrt1qreceiver", -1L);
 
         ExecutionException exception = assertThrows(ExecutionException.class, result::get);
         assertEquals(WalletException.Reason.INVALID_REQUEST, ((WalletException) exception.getCause()).getReason());
@@ -249,10 +249,12 @@ class WalletServiceGrpcTest {
     }
 
     @Test
-    void anAbsentPassphraseIsSentEmpty() throws ExecutionException, InterruptedException {
-        walletService.sendToAddress(Optional.empty(), "bcrt1qreceiver", 1234L).get();
+    void aSendWithoutAPasswordIsRefusedThroughTheFutureBeforeTheDaemonIsAsked() {
+        CompletableFuture<String> result = walletService.sendToAddress("", "bcrt1qreceiver", 1234L);
 
-        assertEquals("", ((SendToAddressRequest) requests.get(0)).getPassphrase());
+        ExecutionException exception = assertThrows(ExecutionException.class, result::get);
+        assertEquals(WalletException.Reason.INVALID_REQUEST, ((WalletException) exception.getCause()).getReason());
+        assertTrue(requests.isEmpty());
     }
 
     @Test
@@ -886,7 +888,7 @@ class WalletServiceGrpcTest {
         awaitBalance();
         requests.clear();
 
-        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qsomeone", 1000).get();
+        walletService.sendToAddress("Wallet-Pa55!", "bcrt1qsomeone", 1000).get();
 
         awaitRequest(GetBalanceRequest.class);
         awaitRequest(ListTransactionsRequest.class);
