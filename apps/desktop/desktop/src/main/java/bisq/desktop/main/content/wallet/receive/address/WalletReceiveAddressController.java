@@ -24,6 +24,7 @@ import bisq.desktop.common.utils.KeyHandlerUtil;
 import bisq.desktop.common.view.Controller;
 import bisq.i18n.Res;
 import bisq.wallet.WalletService;
+import bisq.wallet.receive_address.ReceiveAddressEntry;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.scene.input.KeyEvent;
 import lombok.Getter;
@@ -51,15 +52,8 @@ public class WalletReceiveAddressController implements Controller {
         view = new WalletReceiveAddressView(model, this);
         walletService = serviceProvider.getWalletService().orElseThrow();
 
-        walletService.getUnusedAddress().
-                thenAccept(receiveAddressEntry -> {
-                    UIThread.run(() -> {
-                        model.getReceiveAddressEntry().set(receiveAddressEntry);
-                        model.getReceiveAddress().set(receiveAddressEntry.getAddress());
-                        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
-                        updateIsNewAddress(false);
-                    });
-                });
+        walletService.getUnusedAddress()
+                .thenAccept(receiveAddressEntry -> UIThread.run(() -> showReceiveAddress(receiveAddressEntry)));
     }
 
     public ReadOnlyStringProperty getReceiveAddress() {
@@ -103,14 +97,7 @@ public class WalletReceiveAddressController implements Controller {
 
     void onCreateNewReceiveAddress() {
         walletService.createReceiveAddress()
-                .thenAccept(receiveAddressEntry -> {
-                    UIThread.run(() -> {
-                        model.getReceiveAddressEntry().set(receiveAddressEntry);
-                        model.getReceiveAddress().set(receiveAddressEntry.getAddress());
-                        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
-                        updateIsNewAddress(true);
-                    });
-                });
+                .thenAccept(receiveAddressEntry -> UIThread.run(() -> showReceiveAddress(receiveAddressEntry)));
     }
 
     void onSaveAddressNote() {
@@ -164,13 +151,17 @@ public class WalletReceiveAddressController implements Controller {
         KeyHandlerUtil.handleEscapeKeyEvent(keyEvent, this::onCloseOverlay);
     }
 
-    private void updateIsNewAddress(boolean isNewAddress) {
-        model.getIsNewAddress().set(isNewAddress);
-        // The daemon hands out an address again once enough addresses are unused and does not say so, hence the
-        // label never calls an address new
+    // The address at opening and one from "create new address" come from the same daemon call: an unused address,
+    // possibly one handed out before. The daemon does not say which, hence the label never calls an address new, and
+    // every address without a note can get one.
+    private void showReceiveAddress(ReceiveAddressEntry receiveAddressEntry) {
+        model.getReceiveAddressEntry().set(receiveAddressEntry);
+        model.getReceiveAddress().set(receiveAddressEntry.getAddress());
+        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
+        model.getIsNewAddress().set(true);
         model.getAddressTextFieldDescription().set(Res.get("wallet.receive.unusedAddress"));
         boolean hasNote = model.getReceiveAddressNote().get() != null;
-        model.getIsAddressNoteEditable().set(isNewAddress && !hasNote);
+        model.getIsAddressNoteEditable().set(!hasNote);
         model.getShouldShowAddressNote().set(hasNote);
     }
 }

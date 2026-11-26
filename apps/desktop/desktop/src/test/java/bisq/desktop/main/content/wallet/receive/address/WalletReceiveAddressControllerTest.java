@@ -71,6 +71,25 @@ class WalletReceiveAddressControllerTest {
     }
 
     @Test
+    void theAddressShownAtOpeningCanGetANote() {
+        show();
+
+        assertThat(addressLabel().getText()).isEqualTo("bcrt1qfirst");
+        assertThat(noteInput().isEditable()).isTrue();
+    }
+
+    @Test
+    void theAddressShownAtOpeningKeepsItsNote() {
+        when(walletService.getUnusedAddress()).thenReturn(CompletableFuture.completedFuture(
+                new ReceiveAddressEntry("bcrt1qfirst", 1L, Optional.of("rent"))));
+
+        show();
+
+        assertThat(noteInput().getText()).isEqualTo("rent");
+        assertThat(noteInput().isEditable()).isFalse();
+    }
+
+    @Test
     void anAddressHandedOutAgainIsShownWithItsNote() {
         when(walletService.createReceiveAddress()).thenReturn(CompletableFuture.completedFuture(
                 new ReceiveAddressEntry("bcrt1qcycled", 1L, Optional.of("rent"))));
