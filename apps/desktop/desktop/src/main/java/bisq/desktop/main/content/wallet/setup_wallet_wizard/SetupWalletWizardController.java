@@ -71,9 +71,7 @@ public class SetupWalletWizardController extends NavigationController {
         view = new SetupWalletWizardView(model, this);
 
         setupWalletWizardSetupOrRestoreController = new SetupWalletWizardSetupOrRestoreController(serviceProvider);
-        setupWalletWizardProtectController = new SetupWalletWizardProtectController(serviceProvider,
-                this::onNext,
-                this::setMainButtonsVisibleState);
+        setupWalletWizardProtectController = new SetupWalletWizardProtectController();
         setupWalletWizardBackupController = new SetupWalletWizardBackupController(serviceProvider,
                 this::setMainButtonsVisibleState,
                 this::onBack,
@@ -140,9 +138,6 @@ public class SetupWalletWizardController extends NavigationController {
 
         boolean shouldShowHeader = navigationTarget != NavigationTarget.SETUP_OR_RESTORE_WALLET;
         model.getShouldShowHeader().set(shouldShowHeader);
-
-        // A wallet without a password cannot be created on the daemon, so the password step cannot be skipped.
-        model.getSkipThisStepHyperLinkVisible().set(false);
     }
 
     @Override
@@ -178,10 +173,8 @@ public class SetupWalletWizardController extends NavigationController {
                     return;
                 }
 
-                if (!setupWalletWizardProtectController.getModel().isSkipProtectStep()) {
-                    openWalletThenNavigateTo(nextIndex);
-                    return;
-                }
+                openWalletThenNavigateTo(nextIndex);
+                return;
             }
             navigateTo(nextIndex);
         }
@@ -237,12 +230,6 @@ public class SetupWalletWizardController extends NavigationController {
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);
             model.getSelectedChildTarget().set(nextTarget);
             Navigation.navigateTo(nextTarget);
-        }
-    }
-
-    void onSkipThisStep() {
-        if (model.getNavigationTarget() == NavigationTarget.SETUP_WALLET_PROTECT) {
-            setupWalletWizardProtectController.handleSkipProtectStep();
         }
     }
 

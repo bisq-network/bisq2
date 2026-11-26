@@ -18,7 +18,6 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
 import bisq.common.observable.Observable;
-import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.Transitions;
 import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.i18n.Res;
@@ -64,9 +63,7 @@ class SetupWalletWizardProtectViewTest {
         when(settingsService.getUseAnimations()).thenReturn(new Observable<>(false));
         Transitions.setSettingsService(settingsService);
         WaitForAsyncUtils.asyncFx(() -> {
-            controller = new SetupWalletWizardProtectController(mock(ServiceProvider.class), () -> {
-            }, visible -> {
-            });
+            controller = new SetupWalletWizardProtectController();
             container = new StackPane(controller.getView().getRoot());
             stage = new Stage();
             stage.setScene(new Scene(container, 800, 600));

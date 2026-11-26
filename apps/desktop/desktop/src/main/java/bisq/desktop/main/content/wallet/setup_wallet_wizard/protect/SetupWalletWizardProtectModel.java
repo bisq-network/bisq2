@@ -25,18 +25,13 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class SetupWalletWizardProtectModel implements Model {
-    @Setter
-    private boolean skipProtectStep = false;
-
     private final StringProperty password = new SimpleStringProperty("");
     private final RegexValidator passwordRulesValidator = new RegexValidator(new WalletPasswordValidation());
     private final StringProperty confirmPassword = new SimpleStringProperty("");
-    private final BooleanProperty shouldShowSkipProtectStepOverlay = new SimpleBooleanProperty(false);
     private final BooleanProperty inputLocked = new SimpleBooleanProperty(false);
 }
