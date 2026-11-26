@@ -26,6 +26,7 @@ import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.persistence.PersistenceService;
+import bisq.wallet.protobuf.GetBalanceResponse;
 import bisq.wallet.protobuf.GetSeedWordsResponse;
 import bisq.wallet.protobuf.IsWalletReadyResponse;
 import bisq.wallet.protobuf.PubAddressInfo;
@@ -228,13 +229,19 @@ public class WalletService implements Service {
     public CompletableFuture<Coin> requestBalance() {
         return client.requestBalance()
                 .thenApply(response -> {
-                    balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
-                            response.getConfirmed(),
-                            response.getTrustedPending(),
-                            response.getUntrustedPending(),
-                            response.getImmature()));
+                    publishBalance(response);
                     return Coin.asBtcFromValue(response.getBalance());
                 });
+    }
+
+    // Answers arrive on gRPC threads. One at a time, so an observer of the balance reads the breakdown of its answer.
+    @VisibleForTesting
+    synchronized void publishBalance(GetBalanceResponse response) {
+        balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
+                response.getConfirmed(),
+                response.getTrustedPending(),
+                response.getUntrustedPending(),
+                response.getImmature()));
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {

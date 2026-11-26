@@ -56,8 +56,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -134,6 +140,39 @@ class WalletServiceGrpcTest {
         walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L).get();
 
         assertFalse(((SendToAddressRequest) requests.get(0)).hasFeeRatePerKwu());
+    }
+
+    // Answers of overlapping requests arrive on different gRPC threads
+    @Test
+    void answersPublishedFromTwoThreadsReachEachBalanceObserverWithTheirOwnBreakdown() throws Exception {
+        AtomicLong mismatches = new AtomicLong();
+        walletService.getBalance().addObserver(balance -> {
+            if (balance != null && walletService.getBalanceBreakdown().get().getSpendable() != balance.getValue()) {
+                mismatches.incrementAndGet();
+            }
+        });
+        CountDownLatch start = new CountDownLatch(1);
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        try {
+            List<Future<?>> publishers = new ArrayList<>();
+            for (long base : new long[]{1_000, 2_000_000}) {
+                publishers.add(threads.submit(() -> {
+                    start.await();
+                    for (int i = 0; i < 50_000; i++) {
+                        walletService.publishBalance(GetBalanceResponse.newBuilder().setBalance(base + i).build());
+                    }
+                    return null;
+                }));
+            }
+            start.countDown();
+            for (Future<?> publisher : publishers) {
+                publisher.get(30, TimeUnit.SECONDS);
+            }
+        } finally {
+            threads.shutdownNow();
+        }
+
+        assertEquals(0, mismatches.get());
     }
 
     @Test

@@ -27,9 +27,9 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
-// The spendable balance as a view on the published breakdown. It holds no value of its own, so an observer which
-// reads the balance and the breakdown in one notification sees one answer of the daemon. An observer is called with
-// every new breakdown, also when only a part other than the spendable one changed.
+// The spendable balance as a view on the published breakdown. It holds no value of its own, so while the breakdown is
+// published one answer at a time, an observer which reads the balance and the breakdown in one notification sees one
+// answer of the daemon. An observer is called with every new breakdown, also when only another part changed.
 final class SpendableBalance implements ReadOnlyObservable<Coin> {
     private final ReadOnlyObservable<BalanceBreakdown> breakdown;
     private final Map<Consumer<Coin>, Consumer<BalanceBreakdown>> breakdownObservers = new ConcurrentHashMap<>();
