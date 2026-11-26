@@ -15,6 +15,19 @@ Reason: the password of the wallet is the one which the daemon received. If the 
 runs or afterwards, the text on the screen could differ from the password of the wallet, and the daemon would refuse
 any other password for the wallet which exists now.
 
+The user enters the password twice, and both entries must be equal. The step cannot be skipped.
+
+Reason: the daemon creates no wallet without a password.
+
+Before it sends the request, the wizard checks the password against the rule of the daemon: at least 8 characters,
+among them a lowercase letter, an uppercase letter, a digit and a character which is neither a letter nor a digit. A
+letter of a script without upper and lower case counts as both. The wizard shows the rule below the password field
+from the start. Apart from the cleaning which every text field applies ([Wallet of the daemon](daemon-wallet.md)),
+it adds no rule of its own, in particular no upper limit for the length.
+
+Reason: the daemon decides which passwords are valid. A wizard with a looser rule tells the user about the rule only
+after the request. A wizard with a stricter rule refuses the password of an existing wallet.
+
 ## Closing
 
 Closing the wizard does not cancel a request. The first way the wizard is closed decides where the user lands: the
