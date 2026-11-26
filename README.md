@@ -123,13 +123,16 @@ restores the published URL from `.gitmodules` in both places, replacing the loca
 
 Bisq is an open source project and a [Decentralized Autonomous Organization (DAO)](https://bisq.network/dao/).
 
-If you want to contribute to Bisq get in touch on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto).
+Before starting development work, read the [contribution and compensation guidelines](docs/dev/contributing.md)
+and discuss priorities and review capacity with the maintainers on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto).
+
+Report suspected security issues privately using **Report a vulnerability** on the
+[Bisq 2 Security Advisories page](https://github.com/bisq-network/bisq2/security/advisories). Keep security reports and proposed fixes out of public channels.
 
 If you are a developer check out the [dev guide](./docs/dev/dev-guide.md).
 
 **Why work on Bisq 2?**
 
-- Compensated Contributions: Unique in open-source, contributors are rewarded for their work.
 - Technological Edge: [P2P network](./docs/dev/network.md), Bitcoin, Cryptography,...
 - Complex, Rewarding Challenges: Dive into a sophisticated architecture that rewards ingenuity.
 
