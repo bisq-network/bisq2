@@ -126,10 +126,8 @@ public class UserIdentityRestApi extends RestApiBase {
     )
     public void createUserIdentity(CreateUserIdentityRequest request,
                                    @Suspended AsyncResponse asyncResponse) {
-        asyncResponse.setTimeout(10, TimeUnit.SECONDS);
-        asyncResponse.setTimeoutHandler(response -> {
-            response.resume(buildResponse(Response.Status.SERVICE_UNAVAILABLE, "Request timed out"));
-        });
+        // Waits for the new identity's onion service, which can take well over 10 seconds on Tor
+        applyTimeout(asyncResponse);
 
         try {
             KeyMaterialResponse keyMaterialResponse = request.getKeyMaterialResponse();
