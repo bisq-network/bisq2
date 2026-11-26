@@ -55,6 +55,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -136,10 +137,11 @@ class WalletServiceGrpcTest {
     }
 
     @Test
-    void aNegativeAmountIsRejectedBeforeTheDaemonIsAsked() {
-        assertThrows(IllegalArgumentException.class, () ->
-                walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", -1L));
+    void aNegativeAmountIsRefusedThroughTheFutureBeforeTheDaemonIsAsked() {
+        CompletableFuture<String> result = walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", -1L);
 
+        ExecutionException exception = assertThrows(ExecutionException.class, result::get);
+        assertEquals(WalletException.Reason.INVALID_REQUEST, ((WalletException) exception.getCause()).getReason());
         assertTrue(requests.isEmpty());
     }
 

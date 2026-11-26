@@ -47,8 +47,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 @Slf4j
 public class WalletService implements Service {
     private final WalletGrpcClient client;
@@ -204,7 +202,9 @@ public class WalletService implements Service {
     // The daemon applies its default fee rate.
     public CompletableFuture<String> sendToAddress(Optional<String> passphrase, String address, long amount) {
         // The amount is unsigned in the request, so a negative value would reach the daemon as a very large one
-        checkArgument(amount >= 0, "amount must not be negative");
+        if (amount < 0) {
+            return CompletableFuture.failedFuture(invalidRequest("amount must not be negative"));
+        }
         // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
         var request = SendToAddressRequest.newBuilder()
                 .setPassphrase(passphrase.orElse(""))
@@ -213,6 +213,11 @@ public class WalletService implements Service {
 
         return client.sendToAddress(request.build())
                 .thenApply(SendToAddressResponse::getTxId);
+    }
+
+    // Input which the request cannot carry fails like a request which the daemon refuses, through the future.
+    private static WalletException invalidRequest(String detail) {
+        return new WalletException(WalletException.Reason.INVALID_REQUEST, detail, Optional.of(detail), null);
     }
 
     // The daemon's wallet always has a password.
