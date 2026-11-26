@@ -23,7 +23,9 @@ import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.account.payment_method.PaymentMethodSpecUtil;
 import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
+import bisq.api.dto.DtoMappings;
 import bisq.api.dto.presentation.closed_trades.ClosedTradeIndexedItem;
+import bisq.api.dto.trade.TradeProtocolFailureDto;
 import bisq.api.dto.trade.bisq_easy.protocol.BisqEasyTradeStateDto;
 import bisq.api.rest_api.endpoints.RestApiBase;
 import bisq.api.rest_api.endpoints.offers.CreateOfferRequest;
@@ -55,6 +57,7 @@ import bisq.trade.TradeService;
 import bisq.trade.bisq_easy.BisqEasyTrade;
 import bisq.trade.bisq_easy.BisqEasyTradeService;
 import bisq.trade.bisq_easy.protocol.BisqEasyProtocol;
+import bisq.trade.bisq_easy.validation.MarketPriceNotCurrentException;
 import bisq.trade.exceptions.TradeProtocolException;
 import bisq.user.UserService;
 import bisq.user.banned.BannedUserService;
@@ -98,6 +101,8 @@ import static com.google.common.base.Preconditions.checkNotNull;
 @Consumes(MediaType.APPLICATION_JSON)
 @Tag(name = "Bisq Easy Trade API")
 public class TradeRestApi extends RestApiBase {
+    static final String MARKET_PRICE_NOT_CURRENT_ERROR_CODE = "MARKET_PRICE_NOT_CURRENT";
+
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     private final MarketPriceService marketPriceService;
     private final UserIdentityService userIdentityService;
@@ -233,9 +238,11 @@ public class TradeRestApi extends RestApiBase {
             responses = {
                     @ApiResponse(responseCode = "201", description = "",
                             content = @Content(schema = @Schema(example = ""))),
-                    @ApiResponse(responseCode = "400", description = "Invalid input, or trading restricted by a security manager alert " +
+                    @ApiResponse(responseCode = "400", description = "Invalid input, trading restricted by a security manager alert " +
                             "(body carries errorCode and, for MIN_VERSION_REQUIRED and MAKER_VERSION_BELOW_MIN_REQUIRED, " +
-                            "minRequiredVersion)"),
+                            "minRequiredVersion), a trade protocol refusal (errorCode is a TradeProtocolFailureDto value, " +
+                            "e.g. SELLER_REPUTATION_TOO_LOW when the seller's reputation does not cover the amount, " +
+                            "or UNKNOWN), or a market price which is not current (errorCode MARKET_PRICE_NOT_CURRENT)"),
                     @ApiResponse(responseCode = "500", description = "Internal server error")
             }
     )
@@ -267,7 +274,7 @@ public class TradeRestApi extends RestApiBase {
                     bisqEasyOffer.getId());
             long marketPrice = marketPriceService.findMarketPrice(bisqEasyOffer.getMarket())
                     .map(e -> e.getPriceQuote().getValue())
-                    .orElseThrow();
+                    .orElseThrow(() -> new MarketPriceNotCurrentException("No market price available. market=" + bisqEasyOffer.getMarket()));
             BisqEasyProtocol bisqEasyProtocol = bisqEasyTradeService.takerCreatesProtocol(takerIdentity.getIdentity(),
                     bisqEasyOffer,
                     baseSideAmount,
@@ -318,14 +325,28 @@ public class TradeRestApi extends RestApiBase {
             asyncResponse.resume(buildErrorResponse("Thread was interrupted."));
         } catch (TradeRestrictedException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, toTradeRestrictedErrorEntity(e)));
+        } catch (MarketPriceNotCurrentException e) {
+            log.warn("Take offer refused: {}", e.getMessage());
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
+                    toErrorEntity(e.getMessage(), MARKET_PRICE_NOT_CURRENT_ERROR_CODE)));
         } catch (IllegalArgumentException e) {
             asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
         } catch (TradeProtocolException e) {
-            // The seller's reputation does not cover the amount (docs/specifications/trade/bisq-easy-seller-reputation-limit.md)
-            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST, "Invalid input: " + e.getMessage()));
+            // E.g. the seller's reputation does not cover the amount (docs/specifications/trade/bisq-easy-seller-reputation-limit.md)
+            asyncResponse.resume(buildResponse(Response.Status.BAD_REQUEST,
+                    toErrorEntity(e.getMessage(), Optional.ofNullable(e.getTradeProtocolFailure())
+                            .map(DtoMappings.TradeProtocolFailureMapping::fromBisq2Model)
+                            .orElse(TradeProtocolFailureDto.UNKNOWN)
+                            .name())));
         } catch (Exception e) {
             asyncResponse.resume(buildErrorResponse("An unexpected error occurred: " + e.getMessage()));
         }
+    }
+
+    static Map<String, String> toTradeRestrictedErrorEntity(TradeRestrictedException exception) {
+        Map<String, String> entity = toErrorEntity(exception.getMessage(), exception.getRestriction().name());
+        exception.findMinRequiredVersion().ifPresent(minVersion -> entity.put("minRequiredVersion", minVersion));
+        return entity;
     }
 
     /**
@@ -333,11 +354,10 @@ public class TradeRestApi extends RestApiBase {
      * working; the "error" text preserves the pre-structured wire format ("Invalid input: ..."),
      * which released mobile clients match on.
      */
-    static Map<String, String> toTradeRestrictedErrorEntity(TradeRestrictedException exception) {
+    static Map<String, String> toErrorEntity(String message, String errorCode) {
         Map<String, String> entity = new LinkedHashMap<>();
-        entity.put("error", "Invalid input: " + exception.getMessage());
-        entity.put("errorCode", exception.getRestriction().name());
-        exception.findMinRequiredVersion().ifPresent(minVersion -> entity.put("minRequiredVersion", minVersion));
+        entity.put("error", "Invalid input: " + message);
+        entity.put("errorCode", errorCode);
         return entity;
     }
 
