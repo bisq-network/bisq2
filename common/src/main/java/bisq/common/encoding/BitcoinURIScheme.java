@@ -40,9 +40,10 @@ public class BitcoinURIScheme {
         return input.toLowerCase(Locale.ROOT).startsWith("bitcoin:");
     }
 
+    // The scheme of a URI is case-insensitive (RFC 3986), so any letter case of the prefix becomes "bitcoin:"
     public static String normalizePrefix(String input) {
-        if (input.startsWith("BITCOIN:")) {
-            input = input.replace("BITCOIN:", "bitcoin:");
+        if (isBitcoinUriScheme(input)) {
+            return "bitcoin:" + input.substring("bitcoin:".length());
         }
         return input;
     }

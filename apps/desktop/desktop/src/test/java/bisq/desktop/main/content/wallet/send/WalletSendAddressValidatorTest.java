@@ -52,6 +52,7 @@ class WalletSendAddressValidatorTest {
         assertEquals(MAINNET_BECH32, WalletSendAddressValidator.canonical(MAINNET_BECH32.toUpperCase(), false).orElseThrow());
         assertEquals(REGTEST_BECH32, WalletSendAddressValidator.canonical(REGTEST_BECH32.toUpperCase(), true).orElseThrow());
         assertEquals(MAINNET_BASE58, WalletSendAddressValidator.canonical("BITCOIN:" + MAINNET_BASE58, false).orElseThrow());
+        assertEquals(MAINNET_BECH32, WalletSendAddressValidator.canonical("Bitcoin:" + MAINNET_BECH32 + "?amount=0.5", false).orElseThrow());
     }
 
     // BIP 21: a client must not act on a URI with a req- parameter which it does not support
