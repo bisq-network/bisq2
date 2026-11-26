@@ -48,6 +48,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 @Slf4j
 public class WalletService implements Service {
     private final WalletGrpcClient client;
@@ -209,6 +211,9 @@ public class WalletService implements Service {
                                                    String address,
                                                    long amount,
                                                    OptionalLong feeRatePerKwu) {
+        // Both fields are unsigned in the request, so a negative value would reach the daemon as a very large one
+        checkArgument(amount >= 0, "amount must not be negative");
+        checkArgument(feeRatePerKwu.isEmpty() || feeRatePerKwu.getAsLong() >= 0, "feeRatePerKwu must not be negative");
         // The daemon requires the passphrase; an absent one is sent empty and refused as a wrong password.
         var request = SendToAddressRequest.newBuilder()
                 .setPassphrase(passphrase.orElse(""))

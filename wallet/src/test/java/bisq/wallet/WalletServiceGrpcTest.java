@@ -62,6 +62,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The real WalletService against an in-process daemon stand-in: what goes into the requests, what comes out of
@@ -138,6 +139,31 @@ class WalletServiceGrpcTest {
         assertTrue(withFeeRate.hasFeeRatePerKwu());
         assertEquals(750L, withFeeRate.getFeeRatePerKwu());
         assertFalse(withoutFeeRate.hasFeeRatePerKwu());
+    }
+
+    @Test
+    void aNegativeFeeRateIsRejectedBeforeTheDaemonIsAsked() {
+        assertThrows(IllegalArgumentException.class, () ->
+                walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(-1L)));
+
+        assertTrue(requests.isEmpty());
+    }
+
+    @Test
+    void aFeeRateOfZeroIsSentAsZero() throws ExecutionException, InterruptedException {
+        walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", 1234L, OptionalLong.of(0L)).get();
+
+        SendToAddressRequest request = (SendToAddressRequest) requests.get(0);
+        assertTrue(request.hasFeeRatePerKwu());
+        assertEquals(0L, request.getFeeRatePerKwu());
+    }
+
+    @Test
+    void aNegativeAmountIsRejectedBeforeTheDaemonIsAsked() {
+        assertThrows(IllegalArgumentException.class, () ->
+                walletService.sendToAddress(Optional.of("Wallet-Pa55!"), "bcrt1qreceiver", -1L));
+
+        assertTrue(requests.isEmpty());
     }
 
     @Test
