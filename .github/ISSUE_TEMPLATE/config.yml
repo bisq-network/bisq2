@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security issue privately
+    url: https://github.com/bisq-network/bisq2/security/advisories
+    about: Select "Report a vulnerability" to contact the maintainers privately.
