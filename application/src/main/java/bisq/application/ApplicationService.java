@@ -61,9 +61,11 @@ public abstract class ApplicationService implements Service {
     @EqualsAndHashCode
     public static final class Config {
         private static Config from(com.typesafe.config.Config rootConfig,
+                                   com.typesafe.config.Config commandLineConfig,
                                    com.typesafe.config.Config config,
                                    Path appDataDirPath) {
             return new Config(rootConfig,
+                    commandLineConfig,
                     appDataDirPath,
                     config.getString("appName"),
                     config.getBoolean("devMode"),
@@ -78,6 +80,8 @@ public abstract class ApplicationService implements Service {
         }
 
         private final com.typesafe.config.Config rootConfig;
+        // The program arguments and JVM options, which win over bisq.conf
+        private final com.typesafe.config.Config commandLineConfig;
         private final Path appDataDirPath;
         private final String appName;
         private final boolean devMode;
@@ -91,6 +95,7 @@ public abstract class ApplicationService implements Service {
         private final boolean checkInstanceLock;
 
         public Config(com.typesafe.config.Config rootConfig,
+                      com.typesafe.config.Config commandLineConfig,
                       Path appDataDirPath,
                       String appName,
                       boolean devMode,
@@ -103,6 +108,7 @@ public abstract class ApplicationService implements Service {
                       boolean includeThreadListInMemoryReport,
                       boolean checkInstanceLock) {
             this.rootConfig = rootConfig;
+            this.commandLineConfig = commandLineConfig;
             this.appDataDirPath = appDataDirPath;
             this.appName = appName;
             this.devMode = devMode;
@@ -122,27 +128,46 @@ public abstract class ApplicationService implements Service {
             this.checkInstanceLock = checkInstanceLock;
         }
 
+        /**
+         * @return whether a program argument or a JVM option sets the path, which then overrides what the application
+         * writes into bisq.conf
+         */
+        public boolean isSetOnCommandLine(String path) {
+            return commandLineConfig.hasPath(path);
+        }
+
+        public Path getCustomConfigFilePath() {
+            return appDataDirPath.resolve(CUSTOM_CONFIG_FILE_NAME);
+        }
+
         public boolean writeCustomConfig(com.typesafe.config.Config newConfig) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config config = newConfig.withFallback(customConfig).resolve();
             String rendered = config.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
             return true;
         }
 
         public void removeNodeFromCustomConfig(String nodePathToRemove) throws IOException {
-            com.typesafe.config.Config customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            com.typesafe.config.Config customConfig = readCustomConfigForRewrite();
             com.typesafe.config.Config newConfig = customConfig.withoutPath(nodePathToRemove);
             String rendered = newConfig.root().render(ConfigRenderOptions.defaults()
                     .setOriginComments(false)
                     .setJson(false)
                     .setFormatted(true));
-            Path customConfigFilePath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
-            FileMutatorUtils.writeToPath(rendered, customConfigFilePath);
+            FileMutatorUtils.writeToPath(rendered, getCustomConfigFilePath());
+        }
+
+        // A rewrite of a bisq.conf which cannot be read would replace the settings of the user with the new ones only
+        private com.typesafe.config.Config readCustomConfigForRewrite() throws IOException {
+            try {
+                return TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
+            } catch (CustomConfigException e) {
+                throw new IOException(e.getMessage(), e);
+            }
         }
     }
 
@@ -189,6 +214,14 @@ public abstract class ApplicationService implements Service {
             throw new RuntimeException(e);
         }
 
+        // The language does not depend on the configuration. It is set up before bisq.conf is read, so that a
+        // message about the configuration can be localized.
+        Locale locale = LocaleRepository.getDefaultLocale();
+        CountryRepository.applyDefaultLocale(locale);
+        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
+        FiatCurrencyRepository.setLocale(locale);
+        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
+
         customConfig = TypesafeConfigUtils.resolveCustomConfig(appDataDirPath).orElse(ConfigFactory.empty());
 
         // Precedence Order: Program Arguments > JVM options > Custom config > Resource config
@@ -199,7 +232,7 @@ public abstract class ApplicationService implements Service {
                 .resolve();
 
         applicationConfig = rootConfig.getConfig("application");
-        config = Config.from(rootConfig, applicationConfig, appDataDirPath);
+        config = Config.from(rootConfig, getCommandLineConfig(), applicationConfig, appDataDirPath);
 
         DevMode.setDevMode(config.isDevMode());
         if (config.isDevMode()) {
@@ -207,11 +240,6 @@ public abstract class ApplicationService implements Service {
             DevMode.setDevModeWalletSetup(config.isDevModeWalletSetup());
         }
 
-        Locale locale = LocaleRepository.getDefaultLocale();
-        CountryRepository.applyDefaultLocale(locale);
-        LanguageRepository.setDefaultLanguageTag(locale.toLanguageTag());
-        FiatCurrencyRepository.setLocale(locale);
-        Res.setAndApplyLanguageTag(LanguageRepository.getDefaultLanguageTag());
         ResolverConfig.config();
 
         // We check the instance lock after Res is set up, so that the user facing message can be

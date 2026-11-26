@@ -18,14 +18,24 @@
 package bisq.bonded_roles.security_manager.alert;
 
 import bisq.bonded_roles.release.AppType;
+import bisq.common.platform.Version;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+@Slf4j
 public final class AuthorizedAlertDataUtils {
+    /**
+     * The app types of the nodes which make offers. A new app type which makes offers must be added here.
+     */
+    public static final Set<AppType> MAKER_APP_TYPES = Set.of(AppType.DESKTOP, AppType.MOBILE_NODE);
+
     public static final Comparator<AuthorizedAlertData> RELEVANCE_COMPARATOR =
             Comparator.comparing(AuthorizedAlertData::getAlertType)
                     .thenComparing(AuthorizedAlertData::getDate);
@@ -67,6 +77,39 @@ public final class AuthorizedAlertDataUtils {
                 .filter(alert -> alert.getMinVersion().isPresent())
                 .max(Comparator.comparingLong(AuthorizedAlertData::getDate))
                 .flatMap(AuthorizedAlertData::getMinVersion);
+    }
+
+    /**
+     * The highest min. version required for trading over all {@link #MAKER_APP_TYPES}. The taker does not know the
+     * app type of the maker, so it checks the maker with the strictest restriction. A min. version which cannot be
+     * compared, for example with a part which does not fit into an int, wins, so that the taker refuses every maker
+     * instead of skipping the check.
+     */
+    public static Optional<String> findMinRequiredVersionForTradingOfAnyMaker(Collection<AuthorizedAlertData> alerts) {
+        List<String> minVersions = MAKER_APP_TYPES.stream()
+                .map(appType -> findMinRequiredVersionForTrading(alerts.stream(), appType))
+                .flatMap(Optional::stream)
+                .toList();
+        Optional<String> notComparable = minVersions.stream()
+                .filter(minVersion -> !isComparable(minVersion))
+                .findFirst();
+        if (notComparable.isPresent()) {
+            log.warn("Min. version required for trading cannot be compared. minVersion={}", notComparable.get());
+            return notComparable;
+        }
+        return minVersions.stream()
+                .map(Version::new)
+                .max(Comparator.naturalOrder())
+                .map(Version::getVersionAsString);
+    }
+
+    private static boolean isComparable(String version) {
+        try {
+            new Version(version).compareTo(new Version("0"));
+            return true;
+        } catch (RuntimeException e) {
+            return false;
+        }
     }
 
     /**

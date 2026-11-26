@@ -16,5 +16,5 @@ updates:
       default-days: 7
     ignore:
       # The tag is the Java feature version of the build. A new feature version is a change of the build.
-      - dependency-name: "azul/zulu-openjdk"
+      - dependency-name: "amazoncorretto"
         update-types: ["version-update:semver-major"]

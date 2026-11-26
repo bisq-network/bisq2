@@ -28,6 +28,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedConstruction;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.net.Socket;
 import java.util.List;
@@ -101,6 +102,21 @@ class TorTransportServiceTest {
         Throwable startFailure = new CompletionException(new SandboxUnavailableException("reason", "hint"));
 
         assertThat(TorTransportService.findPluggableTransportsNotAllowed(startFailure)).isEmpty();
+    }
+
+    // The desktop application offers to turn the sandbox off only for these failures
+    @Test
+    void aSandboxWhichCannotRunTorIsTheOnlyFailureWhichTurningTheSandboxOffFixes() {
+        Throwable sandboxUnavailable = new CompletionException(new RuntimeException("node failed",
+                new SandboxUnavailableException("reason", "hint")));
+        Throwable pluggableTransportsNotAllowed = new CompletionException(new PluggableTransportsNotAllowedException(
+                "reason", "hint", List.of("obfs4")));
+        Throwable torExited = new CompletionException(new IOException("Embedded Tor exited before it answered on its " +
+                "control port."));
+
+        assertThat(TorTransportService.isSandboxUnavailable(sandboxUnavailable)).isTrue();
+        assertThat(TorTransportService.isSandboxUnavailable(pluggableTransportsNotAllowed)).isFalse();
+        assertThat(TorTransportService.isSandboxUnavailable(torExited)).isFalse();
     }
 
     // A user who turned the sandbox off, or who uses an external Tor, gets no notice about weaknesses of the sandbox

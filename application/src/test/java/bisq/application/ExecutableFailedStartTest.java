@@ -20,12 +20,15 @@ package bisq.application;
 import bisq.common.platform.PlatformUtils;
 import org.junit.jupiter.api.Test;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
@@ -89,6 +92,30 @@ class ExecutableFailedStartTest {
         assertTrue(Executable.hasStartFailed(false, null));
         assertTrue(Executable.hasStartFailed(null, null));
         assertTrue(Executable.hasStartFailed(null, new IllegalStateException("Tor did not start")));
+    }
+
+    // The start must not continue with the defaults instead of the settings of bisq.conf
+    @Test
+    void aCustomConfigWhichCannotBeReadStopsTheStart() {
+        List<CustomConfigException> handled = new CopyOnWriteArrayList<>();
+        CustomConfigException failure = new CustomConfigException(Path.of("bisq.conf"),
+                new IllegalArgumentException("syntax error"));
+
+        CustomConfigException thrown = assertThrows(CustomConfigException.class,
+                () -> new TestExecutable() {
+                    @Override
+                    protected ApplicationService createApplicationService(String[] args) {
+                        throw failure;
+                    }
+
+                    @Override
+                    protected void handleCustomConfigFailure(CustomConfigException exception) {
+                        handled.add(exception);
+                    }
+                });
+
+        assertSame(failure, thrown);
+        assertEquals(List.of(failure), handled);
     }
 
     private static class TestExecutable extends Executable<ApplicationService> {

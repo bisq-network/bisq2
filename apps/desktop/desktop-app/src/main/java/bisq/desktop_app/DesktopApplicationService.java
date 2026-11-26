@@ -38,13 +38,11 @@ import bisq.contract.ContractService;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.evolution.updater.UpdaterService;
-import bisq.i18n.Res;
 import bisq.identity.IdentityService;
 import bisq.java_se.application.JavaSeApplicationService;
 import bisq.mu_sig.MuSigService;
 import bisq.network.NetworkService;
 import bisq.network.NetworkServiceConfig;
-import bisq.network.p2p.node.transport.TorTransportService;
 import bisq.notifications.NotificationService;
 import bisq.notifications.system.OsSpecificNotificationService;
 import bisq.offer.OfferService;
@@ -63,7 +61,6 @@ import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -90,6 +87,8 @@ public class DesktopApplicationService extends JavaSeApplicationService {
     private final Observable<String> shutDownErrorMessage = new Observable<>();
     @Getter
     private final Observable<String> startupErrorMessage = new Observable<>();
+    // Set before startupErrorMessage, so that its popup can offer a change of bisq.conf which fixes the failure
+    private volatile Optional<Throwable> startupFailure = Optional.empty();
 
     private final SecurityService securityService;
     private final Optional<WalletService> walletService;
@@ -326,6 +325,7 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                         }
                     } else {
                         log.error("Initializing applicationService failed", throwable);
+                        startupFailure = Optional.of(throwable);
                         startupErrorMessage.set(getStartupErrorMessage(throwable));
                     }
                     setState(State.FAILED);
@@ -386,6 +386,11 @@ public class DesktopApplicationService extends JavaSeApplicationService {
                 .thenCompose(Function.identity()); // unwrap CompletableFuture
     }
 
+    // The exception of a failed start. A start which completed without success has none.
+    Optional<Throwable> findStartupFailure() {
+        return startupFailure;
+    }
+
     private Optional<OsSpecificNotificationService> findSystemNotificationDelegate() {
         try {
             switch (OS.getOS()) {
@@ -410,14 +415,9 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         return false;
     }
 
-    // The refusal of the Tor sandbox for the pluggable transports of the bridges names the configuration of the Tor
-    // library. The settings switch for the transports is out of reach after a failed start, so the message names the
-    // entries of bisq.conf.
     @VisibleForTesting
     static String getStartupErrorMessage(Throwable throwable) {
-        return toPopupMessage(TorTransportService.findPluggableTransportsNotAllowed(throwable)
-                .map(transportNames -> getPluggableTransportsNotAllowedMessage(transportNames, OS.isWindows()))
-                .orElseGet(() -> ExceptionUtil.getRootCauseMessage(throwable)));
+        return toPopupMessage(ExceptionUtil.getRootCauseMessage(throwable));
     }
 
     // The popups of the startup and shutdown errors add a period after the message, in every language. Their report
@@ -427,13 +427,5 @@ public class DesktopApplicationService extends JavaSeApplicationService {
         return maskedMessage.endsWith(".") ?
                 maskedMessage.substring(0, maskedMessage.length() - 1) :
                 maskedMessage;
-    }
-
-    @VisibleForTesting
-    static String getPluggableTransportsNotAllowedMessage(List<String> transportNames, boolean isWindows) {
-        String key = isWindows ?
-                "popup.startup.error.torPluggableTransportsNotAllowed.windows" :
-                "popup.startup.error.torPluggableTransportsNotAllowed";
-        return Res.get(key, String.join(", ", transportNames));
     }
 }

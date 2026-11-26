@@ -25,7 +25,6 @@ dependencies {
     implementation("tor:tor:$torBuildVersion")
 
     implementation(libs.bouncycastle)
-    implementation(libs.failsafe)
     implementation(libs.typesafe.config)
 
     implementation(libs.apache.httpcomponents.core)

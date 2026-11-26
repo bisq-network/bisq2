@@ -17,6 +17,8 @@
 
 package bisq.e2e;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -53,6 +55,41 @@ final class E2eSettings {
 
     static String oldVersion() {
         return System.getProperty("bisq.e2e.oldVersion", "old");
+    }
+
+    /** The version of this checkout, from the property version of its gradle.properties, for example 2.1.16. */
+    static String newVersionNumber() {
+        try {
+            return Files.readAllLines(newTree().resolve("gradle.properties")).stream()
+                    .map(String::trim)
+                    .filter(line -> line.startsWith("version="))
+                    .map(line -> line.substring("version=".length()).trim())
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("gradle.properties of the checkout has no version"));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Whether the released version is lower than the given version, for example "2.1.14". Tests use it for behavior
+     * which only releases before a version have. The tag of the released version has the form v2.1.13.
+     */
+    static boolean isOldVersionBelow(String version) {
+        return compareVersions(oldVersion().replaceFirst("^v", ""), version) < 0;
+    }
+
+    static int compareVersions(String first, String second) {
+        String[] firstParts = first.split("\\.");
+        String[] secondParts = second.split("\\.");
+        for (int i = 0; i < Math.max(firstParts.length, secondParts.length); i++) {
+            int firstPart = i < firstParts.length ? Integer.parseInt(firstParts[i]) : 0;
+            int secondPart = i < secondParts.length ? Integer.parseInt(secondParts[i]) : 0;
+            if (firstPart != secondPart) {
+                return Integer.compare(firstPart, secondPart);
+            }
+        }
+        return 0;
     }
 
     /**

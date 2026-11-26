@@ -77,13 +77,14 @@ class BisqEasyTradeServiceMakerVersionTest {
             "failed at your peer");
 
     private ObservableSet<AuthorizedAlertData> alerts;
+    private ServiceProvider serviceProvider;
     private UserProfileService userProfileService;
     private BisqEasyTradeService service;
     private BisqEasyOffer offer;
 
     @BeforeEach
     void setUp() {
-        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         alerts = new ObservableSet<>();
         when(serviceProvider.getBondedRolesService().getAlertService().getAuthorizedAlertDataSet()).thenReturn(alerts);
         BisqEasyOpenTradeChannelService channelService = mock(BisqEasyOpenTradeChannelService.class);
@@ -100,8 +101,7 @@ class BisqEasyTradeServiceMakerVersionTest {
                 .thenReturn(Optional.of(usdMarketPrice));
         when(serviceProvider.getUserService().getReputationService().getReputationScore(any(String.class)))
                 .thenReturn(new ReputationScore(1_000_000, 5, 1));
-        service = new BisqEasyTradeService(serviceProvider, AppType.DESKTOP);
-        service.initialize();
+        startService(AppType.DESKTOP);
         offer = offer("offer-id", identity("maker").getNetworkId(), QUOTE_AMOUNT);
     }
 
@@ -170,11 +170,111 @@ class BisqEasyTradeServiceMakerVersionTest {
         assertThrows(TradeRestrictedException.class, this::take);
     }
 
+    // The api-app is not restricted by an alert for DESKTOP, but its maker may be a desktop node which is
+    @Test
+    void apiAppRefusesAMakerWhichAnAlertForDesktopRestricts() {
+        startService(AppType.MOBILE_NODE);
+        alerts.add(minVersionForTrading(REQUIRED_VERSION, AppType.DESKTOP));
+        makerProfileHasVersion("2.1.13");
+
+        TradeRestrictedException exception = assertThrows(TradeRestrictedException.class, this::take);
+
+        assertEquals(TradeRestrictedException.Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED, exception.getRestriction());
+        assertTrue(service.getTrades().isEmpty());
+    }
+
+    @Test
+    void desktopRefusesAMakerWhichAnAlertForMobileNodeRestricts() {
+        alerts.add(minVersionForTrading(REQUIRED_VERSION, AppType.MOBILE_NODE));
+        makerProfileHasVersion("2.1.13");
+
+        TradeRestrictedException exception = assertThrows(TradeRestrictedException.class, this::take);
+
+        assertEquals(TradeRestrictedException.Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED, exception.getRestriction());
+    }
+
+    @Test
+    void apiAppRefusesAMakerWhichAnAlertForAllAppTypesRestricts() {
+        startService(AppType.MOBILE_NODE);
+        alerts.add(minVersionForTrading(REQUIRED_VERSION, AppType.UNSPECIFIED));
+        makerProfileHasVersion("2.1.13");
+
+        TradeRestrictedException exception = assertThrows(TradeRestrictedException.class, this::take);
+
+        assertEquals(TradeRestrictedException.Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED, exception.getRestriction());
+    }
+
+    @Test
+    void afterTheRemovalOfTheAlertTheMakerIsTakenAgain() {
+        startService(AppType.MOBILE_NODE);
+        AuthorizedAlertData alert = minVersionForTrading(REQUIRED_VERSION, AppType.DESKTOP);
+        alerts.add(alert);
+        makerProfileHasVersion("2.1.13");
+        assertThrows(TradeRestrictedException.class, this::take);
+
+        alerts.remove(alert);
+
+        assertDoesNotThrow(this::take);
+    }
+
+    // A min. version which cannot be compared must not switch the check of the maker off
+    @Test
+    void aMinVersionWhichCannotBeComparedRefusesEveryMaker() {
+        startService(AppType.MOBILE_NODE);
+        // Added last, so that the comparison with the min. version of the other app type is needed
+        alerts.add(minVersionForTrading(REQUIRED_VERSION, AppType.MOBILE_NODE));
+        alerts.add(minVersionForTrading("9999999999", AppType.DESKTOP));
+        makerProfileHasVersion(REQUIRED_VERSION);
+
+        TradeRestrictedException exception = assertThrows(TradeRestrictedException.class, this::take);
+
+        assertEquals(TradeRestrictedException.Restriction.MAKER_VERSION_BELOW_MIN_REQUIRED, exception.getRestriction());
+    }
+
+    // Known limitation: the check of the maker does not cover a halt. A halted desktop maker drops the take offer
+    // request of the api-app (see docs/specifications/trade/trade-restrictions.md).
+    @Test
+    void haltOnlyForDesktopDoesNotStopTheTakeOfTheApiApp() {
+        startService(AppType.MOBILE_NODE);
+        alerts.add(haltTrading(AppType.DESKTOP));
+        makerProfileHasVersion("2.1.13");
+
+        assertDoesNotThrow(this::take);
+    }
+
+    @Test
+    void makerIsCheckedWithTheHighestMinVersionOfAllAppTypes() {
+        alerts.add(minVersionForTrading("2.1.13", AppType.DESKTOP));
+        alerts.add(minVersionForTrading(REQUIRED_VERSION, AppType.MOBILE_NODE));
+        makerProfileHasVersion("2.1.13");
+
+        TradeRestrictedException exception = assertThrows(TradeRestrictedException.class, this::take);
+
+        assertEquals(Optional.of(REQUIRED_VERSION), exception.findMinRequiredVersion());
+    }
+
+    @Test
+    void apiAppTakesAMakerOfTheRequiredVersionWhileAnAlertForDesktopExists() {
+        startService(AppType.MOBILE_NODE);
+        alerts.add(minVersionForTrading("99.0.0", AppType.DESKTOP));
+        makerProfileHasVersion("99.0.0");
+
+        assertDoesNotThrow(this::take);
+    }
+
     @Test
     void withoutAlertTheVersionOfTheMakerIsNotChecked() {
         makerProfileHasVersion("2.1.13");
 
         assertDoesNotThrow(this::take);
+    }
+
+    private void startService(AppType appType) {
+        if (service != null) {
+            service.shutdown();
+        }
+        service = new BisqEasyTradeService(serviceProvider, appType);
+        service.initialize();
     }
 
     private void take() {
@@ -203,7 +303,27 @@ class BisqEasyTradeServiceMakerVersionTest {
     }
 
     private static AuthorizedAlertData minVersionForTrading(String minVersion) {
-        return new AuthorizedAlertData("alertId",
+        return minVersionForTrading(minVersion, AppType.DESKTOP);
+    }
+
+    private static AuthorizedAlertData haltTrading(AppType appType) {
+        return new AuthorizedAlertData("haltId-" + appType,
+                System.currentTimeMillis(),
+                AlertType.EMERGENCY,
+                Optional.empty(),
+                Optional.of("Trading is halted"),
+                true,
+                false,
+                Optional.empty(),
+                Optional.empty(),
+                "1".repeat(40),
+                false,
+                Optional.empty(),
+                appType);
+    }
+
+    private static AuthorizedAlertData minVersionForTrading(String minVersion, AppType appType) {
+        return new AuthorizedAlertData("alertId-" + appType + "-" + minVersion,
                 System.currentTimeMillis(),
                 AlertType.EMERGENCY,
                 Optional.empty(),
@@ -215,6 +335,6 @@ class BisqEasyTradeServiceMakerVersionTest {
                 "1".repeat(40),
                 false,
                 Optional.empty(),
-                AppType.DESKTOP);
+                appType);
     }
 }

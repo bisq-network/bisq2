@@ -2,22 +2,25 @@
 
 ## Build JDK
 
-`gradle.properties` holds the minimum Java version (`releaseBuild.javaVersion`) and the vendor
+`gradle.properties` holds the minimum Java version (`releaseBuild.javaVersion`) and vendor
 (`releaseBuild.javaVendor`) of the JDK which runs Gradle, the same for every operating system.
-`verifyBuildEnvironment` (part of `check` of the root build and of the `apps`, `apps/desktop` and `network` builds)
-accepts every build of the vendor with the same feature version at or above the minimum: for `21.0.13.0.3`,
-`21.0.13.0.3+1` and `21.0.14+7` pass, while `21.0.13+9` and `25.0.1` fail. The build number is not compared.
-`verifyReleaseEnvironment` runs the same check. The task logs the runtime version and the Zulu build of the JDK.
+The build requires Amazon Corretto 21 at or above `21.0.13.1`. Corretto `21.0.13.1.2` reports the Java runtime version
+`21.0.13.1+2-LTS` and vendor `Amazon.com Inc.`. This release fixes CVE-2026-114938 (Java4Shell) and retains the removal
+of the compromised emSign roots. See the [vendor release notes](https://github.com/corretto/corretto-21/blob/21.0.13.1.2/CHANGELOG.md).
 
-Azul builds an update more than once and not for every platform at the same time: Zulu `21.54.107` (`21.0.13+9`) and
-`21.54.109` (`21.0.13.0.3+1`) are both builds of 21.0.13, and Azul lists only the latest. So the build does not pin one
-exact build. The installers bundle the JDK of the build as their runtime: build releases with the newest Zulu build of
-the feature version, and raise the minimum when a release must not ship without a fix of a newer build. The minimum is
-`21.0.13.0.3` because `21.54.109` removes the emSign roots from `cacerts`.
+`verifyBuildEnvironment` (part of `check` of the root, `apps`, `apps/desktop` and `network` builds) accepts the same
+vendor and feature version at or above the minimum: `21.0.13.1+2` and `21.0.14+7` pass, while `21.0.13.0.3+1`,
+`21.0.13+9` and `25.0.5.1` fail. The build number is not compared. `verifyReleaseEnvironment` runs the same check.
+The task logs the Java runtime version and the Corretto distribution version.
 
-CI requests the feature version (`java-version: '21'`) with `check-latest: true`, so each runner installs the newest
-Zulu build for its platform. `verifyGithubActionsSecurity` requires this in every `actions/setup-java` step. The
-toolchain URLs select Zulu `21.54.109` (`21.0.13.0.3`); update them when the minimum is raised.
+The installers bundle the build JDK as their runtime. Build releases with the newest Corretto build of Java 21 and
+raise the minimum when a release must not ship without a newer security fix. The compiler and packaging toolchains
+also require Corretto. The Tor submodule uses the same vendor and minimum.
+
+CI requests `java-version: '21'`, `distribution: 'corretto'` and `check-latest: true`, so every runner installs the
+newest Corretto build for its platform. `verifyGithubActionsSecurity` requires the feature version and
+`check-latest: true` in every Java setup step. The toolchain URLs select Corretto `21.0.13.1.2` on Linux x64 and ARM64,
+macOS x64 and ARM64, and Windows x64; update them when the minimum is raised.
 
 See [the release build environment specification](../docs/specifications/development/release-build-environment.md).
 
@@ -47,11 +50,12 @@ See [the specification](../docs/specifications/development/gradle-wrapper-verifi
 
 ## Docker Base Image Java Version
 
-`verifyDockerJavaVersion` (part of the root `check`) requires every `azul/zulu-openjdk` base image in a Dockerfile
-under `apps/` to use the tag of the feature version of `releaseBuild.javaVersion` (`<feature>` or `<feature>-jre`)
-together with the image index digest. The digest selects the image.
+`verifyDockerJavaVersion` (part of the root `check`) requires every `amazoncorretto` base image in a Dockerfile
+under `apps/` to use the tag of the feature version of `releaseBuild.javaVersion` (`<feature>-al2023` or
+`<feature>-al2023-headless`) together with the image index digest. The digest selects the image. Both architectures of
+the build and runtime images must meet the minimum Java version. The current indices contain Corretto `21.0.13.1.2`.
 
-Azul rebuilds the tags, so the digest of a tag changes over time. Dependabot proposes the digest of the newest build.
+Amazon rebuilds the tags, so the digest of a tag changes over time. Dependabot proposes the digest of the newest build.
 The index digest of a tag is the `Docker-Content-Digest` header of the registry manifest request for that tag.
 
 ## Dependency Verification

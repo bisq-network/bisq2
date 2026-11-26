@@ -149,9 +149,11 @@ public class ApiApplicationService extends JavaSeApplicationService {
                 persistenceService, networkService, chatService, userService, bondedRolesService);
 
         TradeService.Config tradeConfig = TradeService.Config.from(getConfig("trade"));
+        // A trusted node serves mobile clients and ships after the desktop app. It follows the trade restricting
+        // alerts for mobile nodes, so that an alert for the desktop app does not stop it.
         tradeService = new TradeService(tradeConfig, networkService, identityService, persistenceService, offerService,
                 contractService, supportService, chatService, bondedRolesService, userService, settingsService,
-                accountService, burningmanService, AppType.DESKTOP);
+                accountService, burningmanService, AppType.MOBILE_NODE);
 
         bisqEasyService = new BisqEasyService(persistenceService,
                 securityService,

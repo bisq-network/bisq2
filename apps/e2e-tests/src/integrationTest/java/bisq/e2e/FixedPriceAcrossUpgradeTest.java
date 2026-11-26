@@ -31,6 +31,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
  * Fixed prices which a client of the API of the released version creates, and the upgrade in place of its node to this
@@ -44,7 +46,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * Nodes of this checkout show only offers with a canonical fixed price (rule 5 of
  * docs/specifications/offer/fixed-price.md), so they drop the offers with the price of Bisq Connect. After the upgrade,
  * the node keeps its open trades with both prices, and all trades complete. It skips only its own offer with the price
- * of Bisq Connect, and no trade data.
+ * of Bisq Connect, and no trade data. Only releases before v2.1.14 publish such offers.
+ * <p>
+ * From v2.1.14 on, the API publishes the fixed price of Bisq Connect in the canonical form (rule 6), so nodes of this
+ * checkout show these offers.
  */
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @EnabledIfSystemProperty(named = "bisq.e2e.newTree", matches = ".+")
@@ -74,6 +79,9 @@ class FixedPriceAcrossUpgradeTest {
 
     @Test
     void fixedPricesOfTheApiOfTheOldVersionAcrossTheUpgrade() throws Exception {
+        assumeTrue(E2eSettings.isOldVersionBelow("2.1.14"),
+                "The API of " + network.oldVersion + " publishes the fixed price of Bisq Connect in the " +
+                        "canonical form");
         ApiClient upgradedNode = network.oldApi;
         ApiClient newPeer = network.newApi;
         ApiClient oldPeer = network.startExtraApiNode("old-peer", false,
@@ -116,7 +124,7 @@ class FixedPriceAcrossUpgradeTest {
         Trades.awaitTradeState(upgradedNode, canonicalTrade, "the old node has the trade with the new peer",
                 state -> true);
 
-        // The user quits v2.1.13 and starts the new version on the same data directory
+        // The user quits the released version and starts the new version on the same data directory
         network.stopOldNode();
         network.startOldNodeWithNewVersion();
         upgradedNode.acceptTermsAndConditions();
@@ -153,6 +161,17 @@ class FixedPriceAcrossUpgradeTest {
             assertFalse(entry.contains("We keep an entry"), "A store kept an entry which it cannot parse: " + entry);
             assertTrue(entry.contains("verifyCanonical"), "cause of a skipped entry: " + entry);
         }
+    }
+
+    @Test
+    void offersWithTheFixedPriceOfBisqConnectReachTheNodesOfThisVersion() throws Exception {
+        assumeFalse(E2eSettings.isOldVersionBelow("2.1.14"),
+                "The API of " + network.oldVersion + " publishes the fixed price of Bisq Connect unchanged");
+        // Rule 6 of fixed-price.md: the API of the released version publishes the price in the canonical form, so the
+        // nodes of this checkout accept the offer (rule 5)
+        String offerId = createOffer(network.oldApi, mobileFixedPrice());
+        OffersAcrossVersionsTest.awaitOffers(network.newApi, List.of(offerId),
+                "the node of this version sees the offer with the fixed price of Bisq Connect");
     }
 
     // The price spec of a fixed price as Bisq Connect posts it to the API (bisq-mobile 7f9cddce7b)

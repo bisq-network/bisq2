@@ -26,6 +26,7 @@ import bisq.network.p2p.node.Connection;
 import bisq.network.p2p.node.Node;
 import bisq.network.p2p.services.peer_group.Peer;
 import bisq.network.p2p.services.peer_group.PeerGroupService;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,11 +37,13 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 @Slf4j
 public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequest, PeerExchangeResponse> {
     private static final long TIMEOUT = SECONDS.toMillis(30);
+    private static final long BATCH_TIMEOUT = SECONDS.toMillis(90);
 
     @Getter
     public static class Config {
@@ -71,6 +74,7 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
     private ExecutorService executor;
     private final PeerGroupService peerGroupService;
     private final PeerExchangePolicy policy;
+    private final long batchTimeout;
     private final AtomicInteger numRetryAttempts = new AtomicInteger();
     private volatile boolean isShutdownInProgress;
 
@@ -78,9 +82,19 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                                PeerGroupService peerGroupService,
                                Config config,
                                PeerGroupService.Config peerGroupConfig) {
+        this(node, peerGroupService, config, peerGroupConfig, BATCH_TIMEOUT);
+    }
+
+    @VisibleForTesting
+    PeerExchangeService(Node node,
+                        PeerGroupService peerGroupService,
+                        Config config,
+                        PeerGroupService.Config peerGroupConfig,
+                        long batchTimeout) {
         super(node, TIMEOUT);
 
         this.peerGroupService = peerGroupService;
+        this.batchTimeout = batchTimeout;
 
         policy = new PeerExchangePolicy(peerGroupService, node, config, peerGroupConfig);
     }
@@ -172,29 +186,20 @@ public class PeerExchangeService extends RequestResponseHandler<PeerExchangeRequ
                             });
                 });
 
-        int timeout = 90;
+        // failureTolerantAllOf does not fail, so the only failure is the timeout. A timeout only means that the batch
+        // did not reach min success in time. The retry and the requests of this batch continue in the background, and
+        // late responses still add their peers. So the caller, for example the start of the node, must not fail.
         CompletableFutureUtils.failureTolerantAllOf(futures)
-                .orTimeout(timeout, SECONDS)
+                .orTimeout(batchTimeout, MILLISECONDS)
                 .whenComplete((result, throwable) -> {
-                    if (doRetryIfNeeded) {
-                        if (batchedPeerExchangePolicy.requiresRetry(throwable)) {
-                            retryPeerExchangeWithDelay();
-                        }
+                    if (throwable instanceof TimeoutException && !resultFuture.isDone()) {
+                        log.warn("TimeoutException. doBatchedPeerExchange did not reach min success after {} sec.",
+                                MILLISECONDS.toSeconds(batchTimeout));
                     }
-                    if (throwable != null && !resultFuture.isDone()) {
-                        String errorMessage = throwable instanceof TimeoutException ?
-                                "TimeoutException. doBatchedPeerExchange did not complete after " + timeout + " sec." :
-                                throwable.getClass().getSimpleName() + ": doBatchedPeerExchange failed.";
-                        log.warn(errorMessage);
-                        if (!isShutdownInProgress) {
-                            resultFuture.completeExceptionally(throwable);
-                        } else {
-                            // During shutdown, suppress exceptions but still complete to avoid hanging callers
-                            resultFuture.complete(false);
-                        }
-                    } else if (!resultFuture.isDone()) {
-                        resultFuture.complete(false);
+                    if (doRetryIfNeeded && batchedPeerExchangePolicy.requiresRetry(throwable)) {
+                        retryPeerExchangeWithDelay();
                     }
+                    resultFuture.complete(false);
                 });
         return resultFuture;
     }

@@ -208,9 +208,11 @@ final class MixedVersionNetwork implements AutoCloseable {
      */
     void runPublisherCommand(String publisherName, String command) throws Exception {
         long doneBefore = countLogLines(publisherName, "E2E done: " + command);
+        // Counted like the done lines, so that an earlier failure of the same command does not fail a retry
+        long failedBefore = countLogLines(publisherName, "E2E failed: " + command);
         sendCommand(publisherName, command);
         await("the publisher runs: " + command, PUBLISHER_COMMAND_TIMEOUT, () -> {
-            if (countLogLines(publisherName, "E2E failed: " + command) > 0) {
+            if (countLogLines(publisherName, "E2E failed: " + command) > failedBefore) {
                 throw new IllegalStateException("The publisher failed to run: " + command + ". See its log.");
             }
             return countLogLines(publisherName, "E2E done: " + command) > doneBefore;
