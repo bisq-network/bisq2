@@ -43,7 +43,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  *     <li>The authorized data publisher acts as a root oracle node of v2.1.13. It publishes its data and the roles of
  *     two mediators, one of each version, with the key of its network ID. Nodes of v2.1.13 use the roles, and nodes of
  *     this checkout do not: a trade between two nodes of v2.1.13 has a mediator, a trade between two nodes of this
- *     checkout has none. Takes between the versions would fail, because maker and taker select different mediators.</li>
+ *     checkout has none. Takes between the versions would fail, because maker and taker select different mediators.
+ *     Nodes of releases from v2.1.14 on use only the roles of the authorized key, as nodes of this checkout do.</li>
  *     <li>The oracle node runs the migration of this checkout. Then makers and takers of both versions select the same
  *     mediators, also nodes which start after the migration.</li>
  *     <li>The oracle node removes the role of one mediator with its authorized key. Both versions then select only the
@@ -96,10 +97,15 @@ class OracleMigrationAcrossVersionsTest {
         awaitRolesOnNodes(List.of(network.oldNode.getName(), network.newNode.getName(), MEDIATOR_OLD, MEDIATOR_NEW),
                 ROLES);
 
-        // Nodes of v2.1.13 use these roles, nodes of this version do not. A mediator does not mediate its own trade.
+        // Nodes of releases before v2.1.14 use these roles. Nodes of later releases and of this version do not (rule 11
+        // of storage-ownership.md). A mediator does not mediate its own trade.
         String tradeOfOldNodes = Mediators.takeAndCompareMediators(network, network.oldApi, mediatorOld, "SELL");
-        assertEquals(mediatorNewId, Mediators.mediatorOf(network.oldApi, tradeOfOldNodes),
-                "Nodes of v2.1.13 must use the roles which the oracle node of v2.1.13 published");
+        boolean oldNodesUseLegacyRoles = E2eSettings.isOldVersionBelow("2.1.14");
+        String message = oldNodesUseLegacyRoles
+                ? "must use the roles which the oracle node of v2.1.13 published"
+                : "must not use roles which the authorized key did not publish";
+        assertEquals(oldNodesUseLegacyRoles ? mediatorNewId : "", Mediators.mediatorOf(network.oldApi, tradeOfOldNodes),
+                "Nodes of " + network.oldVersion + " " + message);
         String tradeOfNewNodes = Mediators.takeAndCompareMediators(network, network.newApi, mediatorNew, "SELL");
         assertEquals("", Mediators.mediatorOf(network.newApi, tradeOfNewNodes),
                 "Nodes of this version must not use roles which the authorized key did not publish");

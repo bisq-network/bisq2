@@ -41,6 +41,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
@@ -52,14 +53,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * The switch which allows pluggable transports in the Tor sandbox. Tor reads its sandbox configuration when it starts,
- * so the switch writes only its own entry into bisq.conf and shuts Bisq down.
+ * The switch which allows pluggable transports in the Tor sandbox, and the transport and I2P fields. Tor reads its
+ * sandbox configuration when it starts, so the switch writes only its own entry into bisq.conf and shuts Bisq down.
+ * The other fields write only the entries which the user changed.
  */
 @ExtendWith(JavaFxToolkitExtension.class)
 @ResourceLock(value = "Transitions.settingsService", mode = ResourceAccessMode.READ_WRITE)
 class NetworkSettingsControllerTest {
     private static final String SANDBOX_PATH = "application.network.configByTransportType.tor.sandbox";
     private static final String ALLOW_PLUGGABLE_TRANSPORTS = SANDBOX_PATH + ".allowPluggableTransports";
+    private static final String I2P_PATH = "application.network.configByTransportType.i2p";
+    private static final String I2CP_PORT = I2P_PATH + ".i2cpPort";
 
     @TempDir
     Path appDataDirPath;
@@ -152,6 +156,85 @@ class NetworkSettingsControllerTest {
                 .isEqualTo(Res.get("settings.network.tor.allowPluggableTransports.windows"));
     }
 
+    // A program argument or JVM option overrides bisq.conf, which the switch writes, so the switch could not change it
+    @Test
+    void switchIsUnavailableWhileTheCommandLineSetsIt() throws IOException {
+        Files.writeString(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME),
+                ALLOW_PLUGGABLE_TRANSPORTS + "=false\n");
+        NetworkSettingsController controller = createController(true, true,
+                ConfigFactory.parseMap(Map.of(ALLOW_PLUGGABLE_TRANSPORTS, true)));
+
+        activateController(controller, false);
+
+        NetworkSettingsModel model = controller.getModel();
+        assertThat(model.getAllowPluggableTransports().get()).isTrue();
+        assertThat(model.getAllowPluggableTransportsUnavailableText().get())
+                .isEqualTo(Res.get("settings.network.tor.allowPluggableTransports.commandLine",
+                        ALLOW_PLUGGABLE_TRANSPORTS, true));
+    }
+
+    // The page shows what the next start uses, and there the command line wins over bisq.conf
+    @Test
+    void theCommandLineWinsOverBisqConf() throws IOException {
+        Files.writeString(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME),
+                SANDBOX_PATH + ".enabled=false\n");
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(SANDBOX_PATH + ".enabled", true)));
+
+        activateController(controller, false);
+
+        assertThat(controller.getModel().getAllowPluggableTransportsUnavailableText().get()).isEmpty();
+    }
+
+    // A value of the command line must not end up in bisq.conf, where it would stay after the option is gone
+    @Test
+    void applyingTheNetworkSettingsKeepsTheValuesOfBisqConfOverTheCommandLine() throws IOException {
+        Path bisqConfPath = appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+        Files.writeString(bisqConfPath, I2CP_PORT + "=7655\n");
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
+        activateController(controller, false);
+
+        assertThat(controller.getModel().getI2cpAddress().get().getPort()).isEqualTo(9000);
+
+        JavaFxToolkitExtension.runOnFxThread(controller::onApplyAndShutdown);
+
+        assertThat(ConfigFactory.parseFile(bisqConfPath.toFile()).getInt(I2CP_PORT)).isEqualTo(7655);
+    }
+
+    // An unchanged value can come from the command line or from the defaults of the release. Neither belongs into
+    // bisq.conf.
+    @Test
+    void applyingTheNetworkSettingsWritesOnlyTheChangedEntries() throws IOException {
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
+        activateController(controller, false);
+
+        JavaFxToolkitExtension.runOnFxThread(() -> {
+            controller.onToggleUseEmbedded(false);
+            controller.onApplyAndShutdown();
+        });
+
+        Config bisqConf = ConfigFactory.parseFile(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME).toFile());
+        assertThat(bisqConf.getBoolean(I2P_PATH + ".embeddedRouter")).isFalse();
+        assertThat(bisqConf.hasPath(I2CP_PORT)).isFalse();
+        assertThat(bisqConf.hasPath(I2P_PATH + ".i2cpHost")).isFalse();
+        assertThat(bisqConf.hasPath("application.network.supportedTransportTypes")).isFalse();
+        verify(shutDownHandler).shutdown();
+    }
+
+    @Test
+    void applyingUnchangedNetworkSettingsCreatesNoBisqConf() {
+        NetworkSettingsController controller = createController(true, false,
+                ConfigFactory.parseMap(Map.of(I2CP_PORT, 9000)));
+        activateController(controller, false);
+
+        JavaFxToolkitExtension.runOnFxThread(controller::onApplyAndShutdown);
+
+        assertThat(appDataDirPath.resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME)).doesNotExist();
+        verify(shutDownHandler).shutdown();
+    }
+
     private void activateController(NetworkSettingsController controller, boolean windows) {
         JavaFxToolkitExtension.runOnFxThread(() -> {
             // Static mocks are thread-local, so install the platform input where activation runs.
@@ -163,6 +246,12 @@ class NetworkSettingsControllerTest {
     }
 
     private NetworkSettingsController createController(boolean sandboxEnabled, boolean allowPluggableTransports) {
+        return createController(sandboxEnabled, allowPluggableTransports, ConfigFactory.empty());
+    }
+
+    private NetworkSettingsController createController(boolean sandboxEnabled,
+                                                       boolean allowPluggableTransports,
+                                                       Config commandLineConfig) {
         Config rootConfig = ConfigFactory.parseString("""
                 application.network {
                     supportedTransportTypes = ["TOR"]
@@ -181,8 +270,8 @@ class NetworkSettingsControllerTest {
                     }
                 }
                 """.formatted(sandboxEnabled, allowPluggableTransports));
-        ApplicationService.Config config = new ApplicationService.Config(rootConfig, appDataDirPath, "Bisq2",
-                false, 0, false, "", false, false, 0, false, false);
+        ApplicationService.Config config = new ApplicationService.Config(rootConfig, commandLineConfig,
+                appDataDirPath, "Bisq2", false, 0, false, "", false, false, 0, false, false);
         ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
         when(serviceProvider.getConfig()).thenReturn(config);
         when(serviceProvider.getShutDownHandler()).thenReturn(shutDownHandler);

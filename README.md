@@ -80,12 +80,11 @@ To let `git pull` and `git switch` update `tor/` automatically, run once: `git c
 1. Fetch the new commits into `tor/` and check out the new commit there:
    ```bash
    git -C tor fetch origin
-   ```
-   ```bash
    git -C tor checkout <commit>
    ```
 To use the main branch:
    ```bash
+git -C tor fetch origin
    git -C tor checkout origin/main
    ```
    `git submodule update --remote tor` does both for the newest commit of the `main` branch.

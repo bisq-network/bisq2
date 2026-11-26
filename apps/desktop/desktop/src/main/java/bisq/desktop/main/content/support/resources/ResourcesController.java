@@ -224,7 +224,7 @@ public class ResourcesController implements Controller {
      * Copies the data directory for a backup.
      * <p>
      * Files with .log extension are not necessary to include in the backup, so we exclude them from the copy.
-     * The rotated log of Tor (tor-stdout.log.1) has another extension, so it is excluded by the name which the Tor
+     * The rotated log of Tor (tor.log.1) has another extension, so it is excluded by the name which the Tor
      * library gives it.
      * We must not copy the instance lock file. On POSIX systems record locks belong to the process, not to
      * the file descriptor, thus reading the file for the copy would release our own lock and disable the

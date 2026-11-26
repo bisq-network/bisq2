@@ -12,7 +12,9 @@
    `tor/` follows the commit which Bisq 2 records. See [Tor Submodule](../../README.md#tor-submodule).
 
 2. **Install Dependencies:**
-   Bisq requires JDK 21. You do not need to install Tor: on every operating system, also on Linux, Bisq runs the Tor
+   Bisq requires Amazon Corretto JDK 21 at or above `21.0.13.1` (Corretto `21.0.13.1.2`). Set `JAVA_HOME` and the
+   IntelliJ Gradle JVM to that JDK. See [the build JDK requirements](../../gradle/README.md#build-jdk).
+   You do not need to install Tor: on every operating system, also on Linux, Bisq runs the Tor
    of the Tor expert bundle which the build packages (see `docs/specifications/network/tor-startup.md`). On Linux this
    Tor needs `libz.so.1` of the system. Every Debian and Ubuntu system has it in the package `zlib1g`.
 
@@ -255,6 +257,8 @@ https://github.com/bisq-network/bisq2/blob/main/apps/desktop/desktop-app/src/mai
 
 As this file gets frequently updated with new releases, one should only use the entries which one wants to override.
 The structure from the default config must be maintained.
+If the file exists but cannot be read or parsed, the application does not start and names the file and the reason
+(see `docs/specifications/application/configuration-file.md`).
 
 #### Example:
 

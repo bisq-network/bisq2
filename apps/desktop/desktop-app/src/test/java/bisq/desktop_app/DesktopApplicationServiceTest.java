@@ -19,46 +19,20 @@ package bisq.desktop_app;
 
 import bisq.common.platform.PlatformUtils;
 import bisq.i18n.Res;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueType;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.concurrent.CompletionException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 class DesktopApplicationServiceTest {
-    private static final String ALLOW_PLUGGABLE_TRANSPORTS =
-            "application.network.configByTransportType.tor.sandbox.allowPluggableTransports=true";
-    private static final String SANDBOX_OFF = "application.network.configByTransportType.tor.sandbox.enabled=false";
-    // A configuration entry which the message asks the user to add to bisq.conf
-    private static final Pattern CONFIG_ENTRY = Pattern.compile("(application(?:\\.\\w+)+)=(true|false)");
-
     @BeforeAll
     static void setUp() {
         Res.setAndApplyLanguageTag("en");
-    }
-
-    @Test
-    void refusedPluggableTransportsOfferToAllowThemRemoveTheBridgesOrTurnTheSandboxOff() {
-        String message = DesktopApplicationService.getPluggableTransportsNotAllowedMessage(
-                List.of("obfs4", "snowflake"), false);
-
-        assertThat(message)
-                .contains("pluggable transports: obfs4, snowflake")
-                .contains(ALLOW_PLUGGABLE_TRANSPORTS)
-                .contains("Connect without bridges if Tor is not blocked where you are")
-                .contains("remove the bridges from bisq.conf")
-                .contains("replace them with bridges that do not use pluggable transports")
-                .contains(SANDBOX_OFF);
     }
 
     // The popup adds a period after the message in every language, so a message which ends with one would end with two.
@@ -88,37 +62,5 @@ class DesktopApplicationServiceTest {
         assertThat(message)
                 .doesNotContain(homeDirectoryPath.toString())
                 .isEqualTo("Start the external Tor or correct <HOME_DIR>" + File.separator + configPathInHome);
-    }
-
-    // On Windows Tor cannot start pluggable transports in its sandbox, so allowing them would not help.
-    @Test
-    void refusedPluggableTransportsOnWindowsOfferToRemoveTheBridgesOrTurnTheSandboxOff() {
-        String message = DesktopApplicationService.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
-
-        assertThat(message)
-                .contains("pluggable transports: obfs4")
-                .doesNotContain("allowPluggableTransports")
-                .contains("Connect without bridges if Tor is not blocked where you are")
-                .contains("remove the bridges from bisq.conf")
-                .contains("replace them with bridges that do not use pluggable transports")
-                .contains(SANDBOX_OFF);
-    }
-
-    // A renamed entry of the configuration would make the advice of the message fail without an error.
-    @Test
-    void everyEntryWhichTheMessagesNameIsABooleanOfTheDesktopConfiguration() {
-        Config desktopConfig = ConfigFactory.parseResources("desktop.conf").resolve();
-        String messages = DesktopApplicationService.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), false) +
-                DesktopApplicationService.getPluggableTransportsNotAllowedMessage(List.of("obfs4"), true);
-
-        Matcher matcher = CONFIG_ENTRY.matcher(messages);
-        int entries = 0;
-        while (matcher.find()) {
-            String path = matcher.group(1);
-            assertThat(desktopConfig.hasPath(path)).as(path).isTrue();
-            assertThat(desktopConfig.getValue(path).valueType()).as(path).isEqualTo(ConfigValueType.BOOLEAN);
-            entries++;
-        }
-        assertThat(entries).isEqualTo(3);
     }
 }

@@ -240,6 +240,20 @@ final class ApiClient {
         patch("/payment-accounts/selected", request);
     }
 
+    /** Adds a user-defined payment account with the route of v2.1.14 and later, as the payment rail CUSTOM. */
+    void addUserDefinedAccount(String accountName, String accountData) {
+        ObjectNode request = JSON.createObjectNode()
+                .put("accountName", accountName)
+                .put("paymentRail", "CUSTOM");
+        request.putObject("accountPayload").put("accountData", accountData);
+        post("/payment-accounts", request);
+    }
+
+    /** Selects a user-defined payment account with the route of v2.1.14 and later. */
+    void selectUserDefinedAccount(String accountName) {
+        patch("/payment-accounts/fiat/selected", JSON.createObjectNode().put("accountName", accountName));
+    }
+
     /**
      * The data of each user-defined payment account by its name. Both versions list them with this route. v2.1.13 lists
      * only user-defined accounts, without a payment rail. This checkout lists all accounts with their payment rail.
@@ -389,11 +403,11 @@ final class ApiClient {
     }
 
     /**
-     * The alert which restricts trading of the desktop app on the node, or a JSON null without such an alert. The
-     * api-app uses the app type of the desktop app. Only nodes of this checkout have this topic.
+     * The alert which restricts trading of this app type on the node, or a JSON null without such an alert. The
+     * api-app itself follows the alerts for MOBILE_NODE. Only nodes of this checkout have this topic.
      */
-    JsonNode tradeRestrictingAlert() {
-        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of("DESKTOP"));
+    JsonNode tradeRestrictingAlert(String appType) {
+        return subscriptionSnapshot("TRADE_RESTRICTING_ALERT", Optional.of(appType));
     }
 
     private JsonNode subscriptionSnapshot(String topic) {

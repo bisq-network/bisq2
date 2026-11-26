@@ -273,7 +273,7 @@ public class ApiConfigController implements Controller {
             appConfig.writeCustomConfig(newConfig);
             return true;
         } catch (IOException e) {
-            Path customConfigFilePath = appConfig.getAppDataDirPath().resolve(ApplicationService.CUSTOM_CONFIG_FILE_NAME);
+            Path customConfigFilePath = appConfig.getCustomConfigFilePath();
             log.error("Could not write config file {}", customConfigFilePath.toAbsolutePath(), e);
             new Popup().error(e).show();
             return false;

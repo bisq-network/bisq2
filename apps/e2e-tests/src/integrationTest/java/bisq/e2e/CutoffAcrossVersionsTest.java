@@ -70,6 +70,11 @@ class CutoffAcrossVersionsTest {
 
     @BeforeAll
     void startNetwork() throws Exception {
+        // Releases from v2.1.14 on sign with signature V2, so the cutoff date does not change how nodes of this version
+        // treat their data. The test needs a released version which signs only with signature V1.
+        assumeTrue(E2eSettings.isOldVersionBelow("2.1.14"),
+                "The released version " + E2eSettings.oldVersion() + " signs with signature V2. The cutoff date of " +
+                        "signature V1 only concerns released versions before v2.1.14.");
         assumeTrue(E2eSettings.libfaketime().isPresent(),
                 "The test needs libfaketime for a fake clock of the nodes. See tools/compat/README.md.");
         Duration clockOffset = Duration.between(Instant.now(), CUTOFF.minus(LEAD));

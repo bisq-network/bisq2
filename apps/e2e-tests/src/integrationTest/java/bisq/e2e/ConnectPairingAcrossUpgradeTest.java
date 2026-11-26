@@ -34,12 +34,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * A client of Bisq Connect, like the mobile app, which paired with a node of the released version keeps working after
  * the node upgrades in place to this checkout, without pairing again (connect-upgrade-existing-pairing of the release
- * test plan). The node runs with the security settings of its version: v2.1.13 requires a paired client and has no
- * sessions. This checkout also requires a session, which lives only in memory and expires.
+ * test plan). The node runs with the security settings of its version: v2.1.13, for example, requires a paired client
+ * and has no sessions. This checkout also requires a session, which lives only in memory and expires.
  * <ul>
  *     <li>After the upgrade, the node does not know the session of the client any more. The client gets a new session
  *     with the credentials of its pairing, and uses the offerbook, the trade chat and the next trade steps.</li>
- *     <li>The node promotes the full standard permission set of the client once.</li>
+ *     <li>If the released version is older than v2.1.14, the node promotes the full standard permission set of the
+ *     client once. Later releases store that set already.</li>
  *     <li>The node refuses a session for an empty secret (api-app-data-from-mobile-build).</li>
  *     <li>With a time to live of one minute, an expired session gets HTTP 401, and the client gets a new one.</li>
  * </ul>
@@ -93,8 +94,12 @@ class ConnectPairingAcrossUpgradeTest {
         app.renewSession();
         // The new version asks for the acceptance of its current terms (TacVersion), which the user does in the app
         app.acceptTermsAndConditions();
-        assertEquals(1, permissionPromotionsOf(clientId),
-                "The upgraded node must promote the full standard permission set of the client once");
+        // Releases before v2.1.14 store the permission set of their release, which the upgraded node widens once to the
+        // full standard set. Later releases store the full standard set, so nothing is promoted.
+        long expectedPromotions = E2eSettings.isOldVersionBelow("2.1.14") ? 1 : 0;
+        assertEquals(expectedPromotions, permissionPromotionsOf(clientId),
+                "The upgraded node must promote the permission set of a client of a release before v2.1.14 once, " +
+                        "and of a later release never");
 
         // The app works without pairing again: the offerbook, the trade chat, and the next trade steps to the end
         app.offers("USD");

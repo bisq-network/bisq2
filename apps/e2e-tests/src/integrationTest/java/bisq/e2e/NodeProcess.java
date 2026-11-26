@@ -310,6 +310,11 @@ final class NodeProcess implements AutoCloseable {
     private List<String> jvmOptions() {
         List<String> options = new ArrayList<>();
         options.add("-Xmx" + kind.maxHeap);
+        // The nodes get a locale with a country, as on the computer of a user. Otherwise they take the locale of the
+        // host. A locale without a country, such as C.UTF-8 on CI runners, makes v2.1.13 log an error with a stack
+        // trace about the missing country code at every start, which the scan of the logs reports.
+        options.add("-Duser.language=en");
+        options.add("-Duser.country=US");
         options.add("-Dapplication.devMode=true");
         // Sellers need reputation. Without an oracle node, the network has no reputation data, so dev mode provides a
         // score for every profile. This hides the check of the reputation of a seller. A network with real reputation

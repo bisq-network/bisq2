@@ -1452,7 +1452,7 @@ tasks.register("verifyGithubActionsSecurity") {
         val persistCredentialsFalseRegex = Regex("""^\s*persist-credentials:\s*['"]?false['"]?\s*$""", RegexOption.IGNORE_CASE)
         val stepStartRegex = Regex("""^(\s*)-\s+[A-Za-z_][A-Za-z0-9_-]*\s*:.*$""")
 
-        // CI installs the newest Azul build of the feature version on each runner. verifyBuildEnvironment then checks
+        // CI installs the newest Corretto build of the feature version on each runner. verifyBuildEnvironment then checks
         // that it is at or above releaseBuild.javaVersion.
         val expectedJavaFeatureVersion = expectedJavaVersion
             ?.takeIf { it.isNotEmpty() }
@@ -1574,7 +1574,7 @@ tasks.register("verifyGithubActionsSecurity") {
 
 tasks.register("verifyDockerJavaVersion") {
     group = "verification"
-    description = "Verifies Docker images use Azul Zulu of the Java feature version of the build, pinned by digest."
+    description = "Verifies Docker images use Amazon Corretto of the Java feature version of the build, pinned by digest."
 
     val dockerFiles = fileTree("apps") {
         include("**/Dockerfile")
@@ -1592,16 +1592,16 @@ tasks.register("verifyDockerJavaVersion") {
         val violations = mutableListOf<String>()
         // The digest pins the image. The tag is the feature version, so Dependabot proposes the digest of its newest
         // build.
-        val zuluImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*azul/zulu-openjdk(\S*)""", RegexOption.IGNORE_CASE)
-        val pinnedZuluImageRegex = Regex(""":(\d+)(?:-jre)?@sha256:[0-9a-f]{64}""")
+        val correttoImageRegex = Regex("""^\s*FROM\s+(?:--\S+\s+)*amazoncorretto(\S*)""", RegexOption.IGNORE_CASE)
+        val pinnedCorrettoImageRegex = Regex(""":(\d+)-al2023(?:-headless)?@sha256:[0-9a-f]{64}""")
 
         dockerFiles.files.sortedBy { it.path }.forEach { dockerFile ->
             val dockerPath = rootProject.relativePath(dockerFile)
             dockerFile.readLines(StandardCharsets.UTF_8).forEachIndexed { index, line ->
-                val imageMatch = zuluImageRegex.find(line) ?: return@forEachIndexed
-                val pinnedMatch = pinnedZuluImageRegex.matchEntire(imageMatch.groupValues[1])
+                val imageMatch = correttoImageRegex.find(line) ?: return@forEachIndexed
+                val pinnedMatch = pinnedCorrettoImageRegex.matchEntire(imageMatch.groupValues[1])
                 if (pinnedMatch == null) {
-                    violations += "$dockerPath:${index + 1} must use azul/zulu-openjdk:<feature version>[-jre]@sha256:<digest>"
+                    violations += "$dockerPath:${index + 1} must use amazoncorretto:<feature version>-al2023[-headless]@sha256:<digest>"
                 } else if (pinnedMatch.groupValues[1] != expectedJavaFeatureVersion) {
                     violations += "$dockerPath:${index + 1} uses Java ${pinnedMatch.groupValues[1]} " +
                             "but the feature version of releaseBuild.javaVersion is $expectedJavaFeatureVersion"

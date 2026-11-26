@@ -119,7 +119,7 @@ class PackagingPlugin @Inject constructor(private val javaToolchainService: Java
     private fun getJPackageJdkDirectory(project: Project): Provider<Directory> {
         val launcherProvider = javaToolchainService.launcherFor {
             languageVersion.set(getJavaLanguageVersion(project))
-            vendor.set(JvmVendorSpec.AZUL)
+            vendor.set(JvmVendorSpec.AMAZON)
             implementation.set(JvmImplementation.VENDOR_SPECIFIC)
         }
         return launcherProvider.map { it.metadata.installationPath }

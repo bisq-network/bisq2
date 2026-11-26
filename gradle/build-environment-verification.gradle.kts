@@ -13,7 +13,7 @@ fun requiredBuildEnvironmentProperty(propertyName: String, property: Provider<St
 fun minimumJavaVersionNumbers(minimum: String): List<Int> {
     val version = runCatching { Runtime.Version.parse(minimum) }.getOrNull()
     if (version == null || version.pre().isPresent || version.build().isPresent || version.optional().isPresent) {
-        throw GradleException("releaseBuild.javaVersion must be a Java version such as 21.0.13.0.3, but is $minimum")
+        throw GradleException("releaseBuild.javaVersion must be a Java version such as 21.0.13.1, but is $minimum")
     }
     return version.version()
 }
@@ -53,9 +53,8 @@ val verifyBuildEnvironmentTask = tasks.register("verifyBuildEnvironment") {
         val actualJavaVendorVersion = System.getProperty("java.vendor.version")
         val violations = mutableListOf<String>()
 
-        // releaseBuild.javaVersion is a minimum. Azul builds each update more than once and not for every platform at
-        // the same time, so every Azul build of the same feature version at or above the minimum passes. The
-        // installers bundle the JDK as their runtime; raising the minimum keeps a JDK with a known flaw out of them.
+        // The installers bundle the JDK as their runtime. Raising the minimum keeps a JDK with a known flaw out of
+        // them, while allowing later security updates of the same feature version.
         val actualJavaVersionNumbers = actualJavaVersion.version()
         if (actualJavaVersion.feature() != minimumJavaVersionNumbers.first() ||
             !isAtOrAbove(actualJavaVersionNumbers, minimumJavaVersionNumbers)) {
