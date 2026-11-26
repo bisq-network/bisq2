@@ -107,7 +107,7 @@ public class WalletReceiveAddressController implements Controller {
                     UIThread.run(() -> {
                         model.getReceiveAddressEntry().set(receiveAddressEntry);
                         model.getReceiveAddress().set(receiveAddressEntry.getAddress());
-                        model.getReceiveAddressNote().set(null);
+                        model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
                         updateIsNewAddress(true);
                     });
                 });
@@ -166,9 +166,9 @@ public class WalletReceiveAddressController implements Controller {
 
     private void updateIsNewAddress(boolean isNewAddress) {
         model.getIsNewAddress().set(isNewAddress);
-        model.getAddressTextFieldDescription().set(isNewAddress
-                ? Res.get("wallet.receive.newUnusedAddress")
-                : Res.get("wallet.receive.unusedAddress"));
+        // The daemon hands out an address again once enough addresses are unused and does not say so, hence the
+        // label never calls an address new
+        model.getAddressTextFieldDescription().set(Res.get("wallet.receive.unusedAddress"));
         boolean hasNote = model.getReceiveAddressNote().get() != null;
         model.getIsAddressNoteEditable().set(isNewAddress && !hasNote);
         model.getShouldShowAddressNote().set(hasNote);
