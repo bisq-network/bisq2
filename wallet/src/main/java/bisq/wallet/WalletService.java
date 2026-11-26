@@ -51,8 +51,8 @@ import java.util.stream.Collectors;
 public class WalletService implements Service {
     private final WalletGrpcClient client;
     protected final ReceiveAddressService receiveAddressService;
-    protected final Observable<Coin> balance = new Observable<>();
     protected final Observable<BalanceBreakdown> balanceBreakdown = new Observable<>();
+    private final ReadOnlyObservable<Coin> balance = new SpendableBalance(balanceBreakdown);
     protected final ObservableSet<Transaction> transactions = new ObservableSet<>();
     protected final ObservableSet<String> walletAddresses = new ObservableSet<>();
     protected final ObservableSet<AddressBalance> addressBalances = new ObservableSet<>();
@@ -226,14 +226,12 @@ public class WalletService implements Service {
     public CompletableFuture<Coin> requestBalance() {
         return client.requestBalance()
                 .thenApply(response -> {
-                    var newBalance = Coin.asBtcFromValue(response.getBalance());
-                    balance.set(newBalance);
                     balanceBreakdown.set(new BalanceBreakdown(response.getBalance(),
                             response.getConfirmed(),
                             response.getTrustedPending(),
                             response.getUntrustedPending(),
                             response.getImmature()));
-                    return newBalance;
+                    return Coin.asBtcFromValue(response.getBalance());
                 });
     }
 

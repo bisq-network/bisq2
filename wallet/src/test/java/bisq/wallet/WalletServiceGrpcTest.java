@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -71,6 +72,7 @@ class WalletServiceGrpcTest {
 
     private final List<Object> requests = new ArrayList<>();
     private final List<String> unusedAddresses = new ArrayList<>();
+    private final RecordingWallet daemon = new RecordingWallet();
     private Server server;
     private ManagedChannel channel;
     private PersistenceService persistenceService;
@@ -81,7 +83,7 @@ class WalletServiceGrpcTest {
         String serverName = InProcessServerBuilder.generateName();
         server = InProcessServerBuilder.forName(serverName)
                 .directExecutor()
-                .addService(new RecordingWallet())
+                .addService(daemon)
                 .build()
                 .start();
         channel = InProcessChannelBuilder.forName(serverName).directExecutor().build();
@@ -148,6 +150,40 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void aListenerSeesTheBalanceAndTheBreakdownOfTheSameAnswer() throws ExecutionException, InterruptedException {
+        walletService.requestBalance().get();
+        List<String> seen = new ArrayList<>();
+        walletService.getBalance().addObserver(balance ->
+                seen.add(balance.getValue() + " with " + walletService.getBalanceBreakdown().get().getSpendable()));
+        walletService.getBalanceBreakdown().addObserver(breakdown ->
+                seen.add(walletService.getBalance().get().getValue() + " with " + breakdown.getSpendable()));
+        seen.clear();
+        daemon.balance = 5000;
+
+        walletService.requestBalance().get();
+
+        assertEquals(List.of("5000 with 5000", "5000 with 5000"), seen);
+    }
+
+    // The second answer is published while the listeners of the first one still run
+    @Test
+    void overlappingBalanceAnswersLeaveTheBalanceAndTheBreakdownInAgreement() throws ExecutionException, InterruptedException {
+        daemon.balance = 100;
+        AtomicBoolean requestedAgain = new AtomicBoolean();
+        walletService.getBalance().addObserver(balance -> {
+            if (balance != null && requestedAgain.compareAndSet(false, true)) {
+                daemon.balance = 200;
+                walletService.requestBalance();
+            }
+        });
+
+        walletService.requestBalance().get();
+
+        assertEquals(200, walletService.getBalance().get().getValue());
+        assertEquals(200, walletService.getBalanceBreakdown().get().getSpendable());
+    }
+
+    @Test
     void anAbsentPassphraseIsSentEmpty() throws ExecutionException, InterruptedException {
         walletService.sendToAddress(Optional.empty(), "bcrt1qreceiver", 1234L).get();
 
@@ -201,6 +237,8 @@ class WalletServiceGrpcTest {
     }
 
     private class RecordingWallet extends WalletGrpc.WalletImplBase {
+        private volatile long balance = 2000;
+
         @Override
         public void openOrCreateWallet(OpenOrCreateWalletRequest request, StreamObserver<OpenOrCreateWalletResponse> responseObserver) {
             requests.add(request);
@@ -217,7 +255,7 @@ class WalletServiceGrpcTest {
         public void getBalance(GetBalanceRequest request, StreamObserver<GetBalanceResponse> responseObserver) {
             requests.add(request);
             reply(responseObserver, GetBalanceResponse.newBuilder()
-                    .setBalance(2000)
+                    .setBalance(balance)
                     .setConfirmed(1500)
                     .setTrustedPending(500)
                     .setUntrustedPending(7)

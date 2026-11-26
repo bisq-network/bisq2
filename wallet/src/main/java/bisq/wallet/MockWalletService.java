@@ -131,10 +131,8 @@ public class MockWalletService extends WalletService {
 
     @Override
     public CompletableFuture<Coin> requestBalance() {
-        Coin total = Coin.asBtcFromValue(2501234);
-        balance.set(total);
         balanceBreakdown.set(new BalanceBreakdown(2501234, 2000000, 501234, 0, 0));
-        return CompletableFuture.completedFuture(total);
+        return CompletableFuture.completedFuture(Coin.asBtcFromValue(2501234));
     }
 
     public CompletableFuture<ReadOnlyObservableSet<Transaction>> requestTransactions() {
