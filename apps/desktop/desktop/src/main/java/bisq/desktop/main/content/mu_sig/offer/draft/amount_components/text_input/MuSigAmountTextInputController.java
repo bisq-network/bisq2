@@ -47,6 +47,11 @@ public class MuSigAmountTextInputController implements Controller {
     private final Set<Subscription> subscriptions = new HashSet<>();
     @Nullable
     private Consumer<Optional<Monetary>> userEditHandler;
+    @Nullable
+    private Consumer<Monetary> userCommitHandler;
+    // The last parsed typed value of the current edit session; consumed by the commit on focus
+    // loss. Programmatic amounts never populate it.
+    private Optional<Monetary> pendingUserEdit = Optional.empty();
 
     public MuSigAmountTextInputController(boolean isFixedAmount,
                                           boolean isLeftSideRangeAmount) {
@@ -100,6 +105,9 @@ public class MuSigAmountTextInputController implements Controller {
     public void onActivate() {
         subscriptions.add(EasyBind.subscribe(model.getFocusedProperty(), focused -> {
             if (!focused) {
+                // The commit hands the domain the completed edit and reads its answer back through
+                // setAmount before the field is re-rendered from it.
+                commitPendingUserEdit();
                 renderAuthoritativeAmount();
             }
         }));
@@ -110,9 +118,10 @@ public class MuSigAmountTextInputController implements Controller {
 
                 boolean wasEditable = model.getEditable().get();
                 model.getEditable().set(true);
-                // The focus guard protects an in-progress edit; a field that was not editable
-                // has none, and skipping the render there would leave it empty after seeding.
-                if (!model.getFocusedProperty().get() || !wasEditable) {
+                // Only an edit in progress is protected from the render. The focus alone is not
+                // the criterion: a field that just gained the focus already reports it while the
+                // other endpoint's commit is still updating this one, and it must show that value.
+                if (pendingUserEdit.isEmpty() || !wasEditable) {
                     model.getTextFormatter().setValue(amount);
                 }
             } else {
@@ -123,6 +132,7 @@ public class MuSigAmountTextInputController implements Controller {
                 model.getCode().set("");
                 model.getEditable().set(false);
                 model.getTextFormatter().setValue(null);
+                pendingUserEdit = Optional.empty();
             }
         }));
     }
@@ -131,6 +141,7 @@ public class MuSigAmountTextInputController implements Controller {
     public void onDeactivate() {
         subscriptions.forEach(Subscription::unsubscribe);
         subscriptions.clear();
+        pendingUserEdit = Optional.empty();
     }
 
 
@@ -149,6 +160,13 @@ public class MuSigAmountTextInputController implements Controller {
     // even though the amount property does not change, and registering delivers nothing.
     public void setUserEditHandler(@Nullable Consumer<Optional<Monetary>> handler) {
         userEditHandler = handler;
+    }
+
+    // The completed edit: fires once when the focus leaves the field, with the last typed value
+    // that parsed. A field left empty, an edit from before a deactivation, or a value in a
+    // currency the field no longer shows commits nothing.
+    public void setUserCommitHandler(@Nullable Consumer<Monetary> handler) {
+        userCommitHandler = handler;
     }
 
     public void setSumOfNumChars(int value) {
@@ -207,17 +225,30 @@ public class MuSigAmountTextInputController implements Controller {
     }
 
     private void parseAndApplyAmount(String inputText) {
+        // The raw text is recorded whether or not it parses, so the focus-loss render compares
+        // against what the field really shows (an emptied field must be re-rendered too).
+        model.getInputText().set(inputText);
         try {
             Monetary amount = parse(inputText);
-            model.getInputText().set(inputText);
+            pendingUserEdit = Optional.of(amount);
             model.getAmount().set(amount);
             if (userEditHandler != null) {
                 userEditHandler.accept(Optional.of(amount));
             }
         } catch (Exception ignore) {
+            pendingUserEdit = Optional.empty();
             if (userEditHandler != null) {
                 userEditHandler.accept(Optional.empty());
             }
+        }
+    }
+
+    private void commitPendingUserEdit() {
+        Optional<Monetary> userEdit = pendingUserEdit;
+        pendingUserEdit = Optional.empty();
+        if (userCommitHandler != null) {
+            userEdit.filter(amount -> amount.getCode().equals(model.getCode().get()))
+                    .ifPresent(userCommitHandler);
         }
     }
 }
