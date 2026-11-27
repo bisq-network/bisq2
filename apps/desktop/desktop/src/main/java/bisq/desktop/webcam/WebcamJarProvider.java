@@ -26,7 +26,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Path;
 
-import static bisq.desktop.webcam.WebcamJarVerifier.jarMatchesPackagedZip;
+import static bisq.common.archive.ZipEntryVerifier.fileMatchesZipEntry;
 
 @Slf4j
 class WebcamJarProvider {
@@ -46,9 +46,9 @@ class WebcamJarProvider {
         Path jarFilePath = webcamDirPath.resolve(jarFileName);
         String resourcePath = "webcam-app/webcam-app-" + version + ".zip";
 
-        if (DevMode.isDevMode() || !jarMatchesPackagedZip(jarFilePath, openWebcamZipResource(resourcePath), jarFileName)) {
+        if (DevMode.isDevMode() || !fileMatchesZipEntry(jarFilePath, openWebcamZipResource(resourcePath), jarFileName)) {
             extractWebcamZip(resourcePath);
-            if (!jarMatchesPackagedZip(jarFilePath, openWebcamZipResource(resourcePath), jarFileName)) {
+            if (!fileMatchesZipEntry(jarFilePath, openWebcamZipResource(resourcePath), jarFileName)) {
                 throw new IOException("Extracted webcam jar verification failed");
             }
         }

@@ -17,18 +17,13 @@
 
 package bisq.network.p2p.node.transport.i2p;
 
-import bisq.common.application.DevMode;
 import bisq.common.application.Service;
-import bisq.common.archive.ZipFileExtractor;
 import bisq.common.file.FileMutatorUtils;
-import bisq.common.file.FileReaderUtils;
 import bisq.common.locale.LanguageRepository;
 import bisq.common.platform.OS;
 import bisq.common.threading.ExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -73,18 +68,7 @@ public class Bi2pProcessLauncher implements Service {
         executor = ExecutorFactory.newSingleThreadScheduledExecutor("Bi2pProcessLauncher");
         return CompletableFuture.supplyAsync(() -> {
             try {
-                String version = FileReaderUtils.readStringFromResource("bi2p/version.txt").trim();
-                Path jarFilePath = i2pRouterDirPath.resolve("bi2p-" + version + "-all.jar");
-
-                // Extract ZIP if jar missing or dev mode
-                if (!Files.exists(jarFilePath) || DevMode.isDevMode()) {
-                    String resourcePath = "bi2p/bi2p-" + version + ".zip";
-                    try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-                        if (inputStream == null) throw new FileNotFoundException("Resource not found: " + resourcePath);
-                        new ZipFileExtractor(inputStream, i2pRouterDirPath).extractArchive();
-                    }
-                    log.info("Extracted zip {} to {}", resourcePath, i2pRouterDirPath);
-                }
+                Path jarFilePath = new Bi2pJarProvider(i2pRouterDirPath).prepareBi2pJar();
 
                 // JVM & app arguments
                 List<String> command = new ArrayList<>();

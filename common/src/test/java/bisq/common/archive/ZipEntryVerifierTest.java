@@ -15,7 +15,7 @@
  * along with Bisq. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bisq.desktop.webcam;
+package bisq.common.archive;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class WebcamJarVerifierTest {
+public class ZipEntryVerifierTest {
     private static final String JAR_FILE_NAME = "webcam-app-1.0.0-all.jar";
 
     @TempDir
@@ -45,7 +45,18 @@ public class WebcamJarVerifierTest {
         Path jarPath = tempDir.resolve(JAR_FILE_NAME);
         Files.write(jarPath, jarBytes);
 
-        boolean matches = WebcamJarVerifier.jarMatchesPackagedZip(jarPath, zipWithJar(jarBytes), JAR_FILE_NAME);
+        boolean matches = ZipEntryVerifier.fileMatchesZipEntry(jarPath, zipWithJar(jarBytes), JAR_FILE_NAME);
+
+        assertTrue(matches);
+    }
+
+    @Test
+    void returnsTrueWhenPackagedJarIsAtTheRootOfTheZip() throws IOException {
+        byte[] jarBytes = "jar-content".getBytes();
+        Path jarPath = tempDir.resolve(JAR_FILE_NAME);
+        Files.write(jarPath, jarBytes);
+
+        boolean matches = ZipEntryVerifier.fileMatchesZipEntry(jarPath, zipWithEntry(JAR_FILE_NAME, jarBytes), JAR_FILE_NAME);
 
         assertTrue(matches);
     }
@@ -55,7 +66,7 @@ public class WebcamJarVerifierTest {
         Path jarPath = tempDir.resolve(JAR_FILE_NAME);
         Files.write(jarPath, "tampered-content".getBytes());
 
-        boolean matches = WebcamJarVerifier.jarMatchesPackagedZip(jarPath, zipWithJar("jar-content".getBytes()), JAR_FILE_NAME);
+        boolean matches = ZipEntryVerifier.fileMatchesZipEntry(jarPath, zipWithJar("jar-content".getBytes()), JAR_FILE_NAME);
 
         assertFalse(matches);
     }
@@ -64,7 +75,7 @@ public class WebcamJarVerifierTest {
     void returnsFalseWhenExtractedJarIsMissing() throws IOException {
         Path missingJarPath = tempDir.resolve(JAR_FILE_NAME);
 
-        boolean matches = WebcamJarVerifier.jarMatchesPackagedZip(missingJarPath, zipWithJar("jar-content".getBytes()), JAR_FILE_NAME);
+        boolean matches = ZipEntryVerifier.fileMatchesZipEntry(missingJarPath, zipWithJar("jar-content".getBytes()), JAR_FILE_NAME);
 
         assertFalse(matches);
     }
@@ -72,7 +83,7 @@ public class WebcamJarVerifierTest {
     @Test
     void throwsWhenPackagedZipDoesNotContainExpectedJar() {
         assertThrows(IOException.class,
-                () -> WebcamJarVerifier.sha256ZipEntry(zipWithEntry("readme.txt", "content".getBytes()), JAR_FILE_NAME));
+                () -> ZipEntryVerifier.sha256ZipEntry(zipWithEntry("readme.txt", "content".getBytes()), JAR_FILE_NAME));
     }
 
     private InputStream zipWithJar(byte[] jarBytes) throws IOException {
