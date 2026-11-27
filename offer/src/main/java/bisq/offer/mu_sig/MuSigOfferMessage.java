@@ -47,12 +47,15 @@ public final class MuSigOfferMessage implements OwnershipVerifiableData {
     }
 
     // An offer in the offerbook needs a canonical fixed price, so that every client shows the price which the trade
-    // uses (rule 5 of docs/specifications/offer/fixed-price.md)
+    // uses (rule 5 of docs/specifications/offer/fixed-price.md). A taker pays with one of the payment methods of the
+    // offer, so each of them must support the currency of the market (rule 2 of
+    // docs/specifications/offer/payment-methods.md).
     @Override
     public void verify() {
         if (offer.getPriceSpec() instanceof FixPriceSpec fixPriceSpec) {
             fixPriceSpec.verifyCanonical();
         }
+        offer.verifyPaymentMethodsSupportMarket();
     }
 
     @Override

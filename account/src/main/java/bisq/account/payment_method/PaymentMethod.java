@@ -127,6 +127,10 @@ public abstract class PaymentMethod<R extends PaymentRail> implements Comparable
 
     public abstract List<? extends Asset> getSupportedCurrencies();
 
+    public boolean supportsCurrency(String currencyCode) {
+        return getSupportedCurrencies().stream().anyMatch(asset -> asset.getCode().equals(currencyCode));
+    }
+
     public boolean isCustomPaymentMethod() {
         return paymentRail.equals(getCustomPaymentRail());
     }

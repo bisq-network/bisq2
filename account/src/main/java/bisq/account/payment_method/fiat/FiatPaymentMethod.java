@@ -91,6 +91,11 @@ public final class FiatPaymentMethod extends PaymentMethod<FiatPaymentRail> {
     }
 
     @Override
+    public boolean supportsCurrency(String currencyCode) {
+        return paymentRail.supportsAllCurrencies() || paymentRail.supportsCurrency(currencyCode);
+    }
+
+    @Override
     public String getId() {
         return paymentRailName;
     }

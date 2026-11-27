@@ -145,7 +145,7 @@ class BisqEasyTakeOfferRequestPriceSpecTest {
                 priceSpec,
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
-                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),
+                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE))),
                 List.of(),
                 List.of("en"),
                 1,

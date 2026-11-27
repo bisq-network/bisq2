@@ -262,7 +262,7 @@ public class TradeWizardPaymentMethodsController implements Controller {
         if (fiatPaymentMethod != null) {
             if (!model.getAddedCustomFiatPaymentMethods().contains(fiatPaymentMethod)) {
                 String customName = fiatPaymentMethod.getPaymentRailName().toUpperCase().strip();
-                if (isPredefinedPaymentMethodsContainName(customName)) {
+                if (isPaymentRailName(customName)) {
                     new Popup().warning(Res.get("bisqEasy.tradeWizard.paymentMethods.warn.customNameMatchesPredefinedMethod")).show();
                     model.getCustomFiatPaymentMethodName().set("");
                     return false;
@@ -280,6 +280,13 @@ public class TradeWizardPaymentMethodsController implements Controller {
 
     private boolean isPredefinedPaymentMethodsContainName(String name) {
         return new HashSet<>(PaymentMethodUtil.getPaymentMethodNames(model.getFiatPaymentMethods())).contains(name);
+    }
+
+    // Only the name of a payment method is part of the offer. A receiver resolves a custom name which equals the name
+    // of a payment rail to that payment rail, also of a rail of another currency. Nodes then drop the offer (rule 4 of
+    // docs/specifications/offer/payment-methods.md).
+    private static boolean isPaymentRailName(String name) {
+        return FiatPaymentMethodUtil.findPaymentMethod(name).isPresent();
     }
 
     void onRemoveFiatCustomMethod(FiatPaymentMethod fiatPaymentMethod) {

@@ -89,7 +89,7 @@ import static org.mockito.Mockito.when;
  * message thread continue.
  */
 class BisqEasyTradeServicePendingMessageHandoffTest {
-    private static final String ACCOUNT_DATA = "SEPA account of the seller";
+    private static final String ACCOUNT_DATA = "Zelle account of the seller";
     private static final String BTC_ADDRESS = "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq";
     private static final String MESSAGE_THREAD = "taker-message";
     private static final String REQUEST_THREAD = "take-offer-request";
@@ -301,7 +301,7 @@ class BisqEasyTradeServicePendingMessageHandoffTest {
                 new MarketPriceSpec(),
                 List.of(TradeProtocolType.BISQ_EASY),
                 List.of(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN))),
-                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA))),
+                List.of(new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE))),
                 List.of(),
                 List.of("en"),
                 1,

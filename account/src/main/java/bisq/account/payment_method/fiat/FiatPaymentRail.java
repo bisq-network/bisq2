@@ -244,6 +244,8 @@ public enum FiatPaymentRail implements PaymentRail {
     private final List<String> supportedCurrencyCodes;
     @EqualsAndHashCode.Exclude
     private final Set<String> supportedCurrencyCodesAsSet;
+    @EqualsAndHashCode.Exclude
+    private final boolean supportsAllCurrencies;
     @Getter
     private final FiatPaymentMethodChargebackRisk chargebackRisk;
 
@@ -292,6 +294,7 @@ public enum FiatPaymentRail implements PaymentRail {
                 .collect(Collectors.toList());
         checkArgument(!supportedCurrencyCodes.isEmpty(), "supportedCurrencies must not be empty");
         supportedCurrencyCodesAsSet = new HashSet<>(supportedCurrencyCodes);
+        supportsAllCurrencies = supportedCurrencyCodesAsSet.containsAll(FiatCurrencyRepository.getAllFiatCurrencyCodes());
     }
 
     private static List<Country> countriesFromCodes(List<String> countryCodes) {
@@ -310,6 +313,16 @@ public enum FiatPaymentRail implements PaymentRail {
 
     public boolean supportsCurrency(String currencyCode) {
         return supportedCurrencyCodesAsSet.contains(currencyCode);
+    }
+
+    /**
+     * Whether the rail supports every fiat currency, for example a national bank transfer. The list of all fiat
+     * currencies comes from the currency data of the JDK, which differs between JDK versions. Such a rail also
+     * supports a currency which only the currency data of another node contains
+     * (see docs/specifications/offer/payment-methods.md).
+     */
+    public boolean supportsAllCurrencies() {
+        return supportsAllCurrencies;
     }
 
     private static List<Country> allCountries() {

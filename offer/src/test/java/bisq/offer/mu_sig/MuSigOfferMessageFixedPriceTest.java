@@ -68,7 +68,7 @@ class MuSigOfferMessageFixedPriceTest {
                 new Market("BTC", "USD", "Bitcoin", "US Dollar"),
                 new BaseSideFixedAmountSpec(1_000_000),
                 priceSpec,
-                List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
+                List.of(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ZELLE)),
                 List.of(new CollateralOption(MuSigOffer.DEFAULT_BUYER_SECURITY_DEPOSIT,
                         MuSigOffer.DEFAULT_SELLER_SECURITY_DEPOSIT)),
                 "1");
