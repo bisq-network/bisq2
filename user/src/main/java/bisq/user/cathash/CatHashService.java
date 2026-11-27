@@ -52,7 +52,7 @@ public abstract class CatHashService<T> {
     // We limit size to max. 300 px as the png files for the image composition are of that size.
     public static final double MAX_ICON_SIZE = 300;
 
-    // This is a 120*120 image meaning 14400 pixels. At 4 bytes each, that takes 57.6 KB in memory (and on disk as we use raw format).
+    // This is a 120*120 image meaning 14400 pixels. At 4 bytes each, that takes 57.6 KB in memory.
     // With 5000 images we would get about 288 MB.
     private static final int MAX_CACHE_SIZE = 5000;
 

@@ -23,9 +23,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class CatHashImageUtilTest {
 
@@ -55,5 +58,54 @@ class CatHashImageUtilTest {
 
         assertEquals(image.getWidth(), readImage.getWidth());
         assertEquals(image.getHeight(), readImage.getHeight());
+    }
+
+    @Test
+    void testWrittenFileIsCompressedAndKeepsAllPixels(@TempDir Path tempDirPath) throws IOException {
+        Image image = createPatternImage(120, 120);
+        Path tempFilePath = tempDirPath.resolve("test.raw");
+
+        CatHashImageUtil.writeRawImage(image, tempFilePath);
+        byte[] fileData = Files.readAllBytes(tempFilePath);
+        assertTrue(CatHashImageUtil.isCompressedFormat(fileData));
+        assertTrue(fileData.length < CatHashImageUtil.imageToByteArray(image).length);
+
+        assertSamePixels(image, CatHashImageUtil.readRawImage(tempFilePath));
+    }
+
+    @Test
+    void testReadUncompressedFileAndReplaceItWithCompressedFile(@TempDir Path tempDirPath) throws IOException {
+        Image image = createPatternImage(60, 60);
+        byte[] rawData = CatHashImageUtil.imageToByteArray(image);
+        assertFalse(CatHashImageUtil.isCompressedFormat(rawData));
+        Path tempFilePath = tempDirPath.resolve("test.raw");
+        Files.write(tempFilePath, rawData);
+
+        assertSamePixels(image, CatHashImageUtil.readRawImage(tempFilePath));
+
+        byte[] fileData = Files.readAllBytes(tempFilePath);
+        assertTrue(CatHashImageUtil.isCompressedFormat(fileData));
+        assertSamePixels(image, CatHashImageUtil.readRawImage(tempFilePath));
+    }
+
+    private Image createPatternImage(int width, int height) {
+        WritableImage image = new WritableImage(width, height);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                int alpha = (x + y) % 3 == 0 ? 0 : 0xFF;
+                image.getPixelWriter().setArgb(x, y, alpha << 24 | (x * 2) << 16 | (y * 2) << 8 | (x + y) % 256);
+            }
+        }
+        return image;
+    }
+
+    private void assertSamePixels(Image expected, Image actual) {
+        assertEquals(expected.getWidth(), actual.getWidth());
+        assertEquals(expected.getHeight(), actual.getHeight());
+        for (int x = 0; x < (int) expected.getWidth(); x++) {
+            for (int y = 0; y < (int) expected.getHeight(); y++) {
+                assertEquals(expected.getPixelReader().getArgb(x, y), actual.getPixelReader().getArgb(x, y));
+            }
+        }
     }
 }
