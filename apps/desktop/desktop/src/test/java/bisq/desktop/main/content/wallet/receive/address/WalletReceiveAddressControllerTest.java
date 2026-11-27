@@ -27,8 +27,10 @@ import bisq.wallet.WalletService;
 import bisq.wallet.receive_address.ReceiveAddressService;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextInputControl;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,11 +39,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.parallel.ResourceAccessMode;
 import org.junit.jupiter.api.parallel.ResourceLock;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 // The daemon hands out an address again once enough addresses are unused, so "create new address" can return an
@@ -142,6 +151,54 @@ class WalletReceiveAddressControllerTest {
         assertThat(noteInputBox().isValidProperty().get()).isTrue();
     }
 
+    @Test
+    void aNoteIsSavedThroughTheSaveButton() {
+        when(walletService.updateReceiveAddress(any(), any())).thenReturn(true);
+        show();
+
+        onFx(() -> noteInput().setText("rent"));
+        assertThat(saveButton().isVisible()).isTrue();
+        onFx(() -> saveButton().fire());
+
+        verify(walletService).updateReceiveAddress(argThat(entry -> entry.getAddress().equals("bcrt1qfirst")),
+                eq(Optional.of("rent")));
+        assertThat(noteInput().isEditable()).isFalse();
+    }
+
+    // The daemon can hand out the opening address again. Its reply can wait for the JavaFX thread while the user saves a
+    // note, and still carries the entry without that note.
+    @Test
+    void aNoteSavedWhileAReplyWaitsStaysAfterTheReplyIsShown() {
+        Map<String, ReceiveAddressEntry> store = new HashMap<>();
+        store.put("bcrt1qfirst", new ReceiveAddressEntry("bcrt1qfirst"));
+        when(walletService.findReceiveAddressEntry(anyString()))
+                .thenAnswer(invocation -> Optional.ofNullable(store.get(invocation.<String>getArgument(0))));
+        when(walletService.updateReceiveAddress(any(), any())).thenAnswer(invocation -> {
+            ReceiveAddressEntry entry = invocation.getArgument(0);
+            Optional<String> note = invocation.getArgument(1);
+            ReceiveAddressEntry stored = store.get(entry.getAddress());
+            if (stored.getNote().isPresent()) {
+                return false;
+            }
+            store.put(entry.getAddress(), new ReceiveAddressEntry(entry.getAddress(), stored.getCreatedAt(), note));
+            return true;
+        });
+        CompletableFuture<ReceiveAddressEntry> waitingReply = new CompletableFuture<>();
+        when(walletService.createReceiveAddress()).thenReturn(waitingReply);
+        show();
+        onFx(controller::onCreateNewReceiveAddress);
+
+        onFx(() -> noteInput().setText("rent"));
+        onFx(() -> saveButton().fire());
+        waitingReply.complete(new ReceiveAddressEntry("bcrt1qfirst"));
+        onFx(() -> {
+        });
+
+        assertThat(addressLabel().getText()).isEqualTo("bcrt1qfirst");
+        assertThat(noteInput().getText()).isEqualTo("rent");
+        assertThat(noteInput().isEditable()).isFalse();
+    }
+
     private void enterInvalidNote() {
         onFx(() -> {
             noteInput().setText("x".repeat(ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH + 1));
@@ -169,6 +226,11 @@ class WalletReceiveAddressControllerTest {
             stage.setScene(new Scene(controller.getView().getRoot(), 800, 600));
             stage.show();
         });
+    }
+
+    private Button saveButton() {
+        HBox noteRow = (HBox) noteInputBox().getParent();
+        return (Button) noteRow.getChildren().get(1);
     }
 
     private Label addressLabel() {

@@ -260,6 +260,18 @@ class WalletServiceGrpcTest {
         assertEquals(Optional.of("rent"), again.getNote());
     }
 
+    // A screen can still show the entry it got before the note was saved and save a second note through it
+    @Test
+    void aSavedNoteIsNotReplacedThroughAnOlderCopyOfTheEntry() throws ExecutionException, InterruptedException {
+        unusedAddresses.add("bcrt1qcycled");
+        ReceiveAddressEntry shownBeforeTheSave = walletService.createReceiveAddress().get();
+
+        assertTrue(walletService.updateReceiveAddress(shownBeforeTheSave, Optional.of("rent")));
+        assertFalse(walletService.updateReceiveAddress(shownBeforeTheSave, Optional.of("replacement")));
+
+        assertEquals(Optional.of("rent"), walletService.findReceiveAddressEntry("bcrt1qcycled").orElseThrow().getNote());
+    }
+
     @Test
     void requestWalletAddressesUnwrapsTheAddresses() throws ExecutionException, InterruptedException {
         var addresses = walletService.requestWalletAddresses().get();

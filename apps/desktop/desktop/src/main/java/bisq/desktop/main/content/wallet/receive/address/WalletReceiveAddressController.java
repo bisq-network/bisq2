@@ -108,10 +108,13 @@ public class WalletReceiveAddressController implements Controller {
                 if (addressNote.isEmpty()) {
                     return;
                 }
-                boolean wasUpdated = walletService.updateReceiveAddress(
-                        model.getReceiveAddressEntry().get(), Optional.of(addressNote));
+                ReceiveAddressEntry shownEntry = model.getReceiveAddressEntry().get();
+                boolean wasUpdated = walletService.updateReceiveAddress(shownEntry, Optional.of(addressNote));
                 if (wasUpdated) {
                     model.getIsAddressNoteEditable().set(false);
+                } else {
+                    // The address got a note in the meantime; show that one
+                    showReceiveAddress(shownEntry);
                 }
             }
         });
@@ -154,7 +157,10 @@ public class WalletReceiveAddressController implements Controller {
     // The address at opening and one from "create new address" come from the same daemon call: an unused address,
     // possibly one handed out before. The daemon does not say which, hence the label never calls an address new, and
     // every address without a note can get one.
-    private void showReceiveAddress(ReceiveAddressEntry receiveAddressEntry) {
+    // A reply can wait for the JavaFX thread while a note is saved, so the stored entry is read when it is shown.
+    private void showReceiveAddress(ReceiveAddressEntry answeredEntry) {
+        ReceiveAddressEntry receiveAddressEntry = walletService.findReceiveAddressEntry(answeredEntry.getAddress())
+                .orElse(answeredEntry);
         model.getReceiveAddressEntry().set(receiveAddressEntry);
         model.getReceiveAddress().set(receiveAddressEntry.getAddress());
         model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
