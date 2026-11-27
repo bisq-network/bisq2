@@ -24,26 +24,31 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.TabController;
+import bisq.mu_sig.MusigNotificationService;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public abstract class ContentTabController<M extends ContentTabModel> extends TabController<M> {
     protected final ServiceProvider serviceProvider;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
+    private final MusigNotificationService musigNotificationService;
     private final AlertNotificationsService alertNotificationsService;
-    private Pin isNotificationPanelVisiblePin, isAlertBannerVisiblePin;
+    private Pin isBisqEasyNotificationPanelVisiblePin, isMusigNotificationPanelVisiblePin, isAlertBannerVisiblePin;
 
     public ContentTabController(M model, NavigationTarget host, ServiceProvider serviceProvider) {
         super(model, host);
 
         this.serviceProvider = serviceProvider;
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        musigNotificationService = serviceProvider.getMuSigService().getMusigNotificationService();
         alertNotificationsService = serviceProvider.getAlertNotificationsService();
     }
 
     @Override
     public void onActivate() {
-        isNotificationPanelVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(
+        isBisqEasyNotificationPanelVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(
+                isVisible -> updateIsNotificationVisible());
+        isMusigNotificationPanelVisiblePin = musigNotificationService.getIsNotificationPanelVisible().addObserver(
                 isVisible -> updateIsNotificationVisible());
         isAlertBannerVisiblePin = alertNotificationsService.getIsAlertBannerVisible().addObserver(
                 isVisible -> updateIsNotificationVisible());
@@ -51,7 +56,8 @@ public abstract class ContentTabController<M extends ContentTabModel> extends Ta
 
     @Override
     public void onDeactivate() {
-        isNotificationPanelVisiblePin.unbind();
+        isBisqEasyNotificationPanelVisiblePin.unbind();
+        isMusigNotificationPanelVisiblePin.unbind();
         isAlertBannerVisiblePin.unbind();
 
         resetResolvedTarget();
@@ -61,6 +67,9 @@ public abstract class ContentTabController<M extends ContentTabModel> extends Ta
         UIThread.run(() -> {
             boolean isNotificationPanelVisible = bisqEasyNotificationsService.getIsNotificationPanelVisible() != null
                     && bisqEasyNotificationsService.getIsNotificationPanelVisible().get();
+            isNotificationPanelVisible = isNotificationPanelVisible ||
+                    (musigNotificationService.getIsNotificationPanelVisible() != null &&
+                            musigNotificationService.getIsNotificationPanelVisible().get());
             boolean isAlertBannerVisible = alertNotificationsService.getIsAlertBannerVisible() != null
                     && alertNotificationsService.getIsAlertBannerVisible().get();
             model.getIsNotificationVisible().set(isNotificationPanelVisible || isAlertBannerVisible);

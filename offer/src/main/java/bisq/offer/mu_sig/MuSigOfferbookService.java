@@ -19,6 +19,7 @@ package bisq.offer.mu_sig;
 
 import bisq.common.application.Service;
 import bisq.common.market.Market;
+import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.observable.collection.ReadOnlyObservableSet;
 import bisq.common.util.CompletableFutureUtils;
@@ -31,6 +32,7 @@ import bisq.network.p2p.services.data.DataService;
 import bisq.network.p2p.services.data.storage.DistributedData;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedData;
 import bisq.offer.Offer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
@@ -43,6 +45,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class MuSigOfferbookService implements Service, DataService.Listener {
     private final ObservableSet<MuSigOffer> offers = new ObservableSet<>();
+    @Getter
+    private final Observable<Boolean> initialized = new Observable<>(false);
     private final NetworkService networkService;
     private final IdentityService identityService;
 
@@ -60,10 +64,12 @@ public class MuSigOfferbookService implements Service, DataService.Listener {
         networkService.getDataService().ifPresent(dataService ->
                 StartupReplay.forEach(dataService.getAuthenticatedData(), this::onAuthenticatedDataAdded));
         networkService.addDataServiceListener(this);
+        initialized.set(true);
         return CompletableFuture.completedFuture(true);
     }
 
     public CompletableFuture<Boolean> shutdown() {
+        initialized.set(false);
         networkService.removeDataServiceListener(this);
         offers.clear();
         return CompletableFuture.completedFuture(true);

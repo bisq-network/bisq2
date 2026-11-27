@@ -37,6 +37,8 @@ import bisq.chat.two_party.TwoPartyPrivateChatChannelService;
 import bisq.common.application.Service;
 import bisq.common.util.CompletableFutureUtils;
 import bisq.network.NetworkService;
+import bisq.offer.OfferService;
+import bisq.offer.mu_sig.MuSigOfferbookService;
 import bisq.persistence.PersistenceService;
 import bisq.notifications.NotificationService;
 import bisq.settings.SettingsService;
@@ -72,6 +74,8 @@ public class ChatService implements Service {
     @Getter
     private final BisqEasyOfferbookChannelService bisqEasyOfferbookChannelService;
     @Getter
+    private final MuSigOfferbookService muSigOfferbookService;
+    @Getter
     private final BisqEasyOpenTradeChannelService bisqEasyOpenTradeChannelService;
     @Getter
     private final MuSigOpenTradeChannelService muSigOpenTradeChannelService;
@@ -88,11 +92,13 @@ public class ChatService implements Service {
                        NetworkService networkService,
                        UserService userService,
                        SettingsService settingsService,
-                       NotificationService notificationService) {
+                       NotificationService notificationService,
+                       OfferService offerService) {
         this.persistenceService = persistenceService;
         this.networkService = networkService;
         this.userService = userService;
         this.userIdentityService = userService.getUserIdentityService();
+        this.muSigOfferbookService = offerService.getMuSigOfferService().getMuSigOfferbookService();
 
         chatNotificationService = new ChatNotificationService(persistenceService,
                 networkService,

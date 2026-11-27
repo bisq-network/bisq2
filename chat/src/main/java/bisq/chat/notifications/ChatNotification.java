@@ -21,10 +21,12 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatMessage;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
+import bisq.chat.mu_sig.open_trades.MuSigOpenTradeChannel;
 import bisq.common.observable.Observable;
 import bisq.common.proto.PersistableProto;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.notifications.Notification;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.user.profile.UserProfile;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -40,6 +42,10 @@ import java.util.Optional;
 public class ChatNotification implements Notification, PersistableProto {
     public static String createId(String channelId, String messageId) {
         return channelId + "." + messageId;
+    }
+
+    public static String createId(MuSigOffer offer) {
+        return "MU_SIG_OFFER." + offer.getId();
     }
 
     @Override
@@ -117,17 +123,17 @@ public class ChatNotification implements Notification, PersistableProto {
                 false);
     }
 
-    private ChatNotification(String id,
-                             String title,
-                             String message,
-                             long date,
-                             String chatChannelId,
-                             ChatChannelDomain chatChannelDomain,
-                             String chatMessageId,
-                             Optional<String> tradeId,
-                             Optional<UserProfile> senderUserProfile,
-                             Optional<UserProfile> mediator,
-                             boolean isConsumed
+    ChatNotification(String id,
+                     String title,
+                     String message,
+                     long date,
+                     String chatChannelId,
+                     ChatChannelDomain chatChannelDomain,
+                     String chatMessageId,
+                     Optional<String> tradeId,
+                     Optional<UserProfile> senderUserProfile,
+                     Optional<UserProfile> mediator,
+                     boolean isConsumed
     ) {
         this.id = id;
         this.title = title;
@@ -186,15 +192,23 @@ public class ChatNotification implements Notification, PersistableProto {
     }
 
     private static Optional<String> findTradeId(ChatChannel<? extends ChatMessage> chatChannel) {
-        return chatChannel instanceof BisqEasyOpenTradeChannel ?
-                Optional.of(((BisqEasyOpenTradeChannel) chatChannel).getTradeId()) :
-                Optional.empty();
+        if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            return Optional.of(bisqEasyOpenTradeChannel.getTradeId());
+        }
+        if (chatChannel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            return Optional.of(muSigOpenTradeChannel.getTradeId());
+        }
+        return Optional.empty();
     }
 
     private static Optional<UserProfile> findMediator(ChatChannel<? extends ChatMessage> chatChannel) {
-        return chatChannel instanceof BisqEasyOpenTradeChannel ?
-                ((BisqEasyOpenTradeChannel) chatChannel).getMediator() :
-                Optional.empty();
+        if (chatChannel instanceof BisqEasyOpenTradeChannel bisqEasyOpenTradeChannel) {
+            return bisqEasyOpenTradeChannel.getMediator();
+        }
+        if (chatChannel instanceof MuSigOpenTradeChannel muSigOpenTradeChannel) {
+            return muSigOpenTradeChannel.getMediator();
+        }
+        return Optional.empty();
     }
 
     public void setConsumed(boolean consumed) {

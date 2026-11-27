@@ -28,6 +28,7 @@ public class NavigationUtil {
     public static Optional<NavigationTarget> fromChatChannelDomain(ChatChannelDomain chatChannelDomain) {
         return switch (chatChannelDomain) {
             case BISQ_EASY_OFFERBOOK, BISQ_EASY_OPEN_TRADES -> Optional.of(NavigationTarget.BISQ_EASY);
+            case MU_SIG_OFFERBOOK, MU_SIG_OPEN_TRADES -> Optional.of(NavigationTarget.MU_SIG);
             case DISCUSSION -> Optional.of(NavigationTarget.CHAT);
             case SUPPORT -> Optional.of(NavigationTarget.SUPPORT);
             default -> Optional.empty();
@@ -38,6 +39,8 @@ public class NavigationUtil {
         return switch (navigationTarget) {
             case BISQ_EASY -> Set.of(ChatChannelDomain.BISQ_EASY_OFFERBOOK,
                     ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
+            case MU_SIG -> Set.of(ChatChannelDomain.MU_SIG_OFFERBOOK,
+                    ChatChannelDomain.MU_SIG_OPEN_TRADES);
             case BISQ_EASY_OFFERBOOK -> Set.of(ChatChannelDomain.BISQ_EASY_OFFERBOOK);
             case BISQ_EASY_OPEN_TRADES -> Set.of(ChatChannelDomain.BISQ_EASY_OPEN_TRADES);
             case CHAT -> Set.of(ChatChannelDomain.DISCUSSION);

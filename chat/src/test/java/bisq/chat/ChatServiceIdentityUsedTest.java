@@ -20,6 +20,7 @@ package bisq.chat;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
 import bisq.network.NetworkService;
 import bisq.notifications.NotificationService;
+import bisq.offer.OfferService;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
@@ -50,7 +51,8 @@ class ChatServiceIdentityUsedTest {
                 mock(NetworkService.class, RETURNS_DEEP_STUBS),
                 mock(UserService.class, RETURNS_DEEP_STUBS),
                 mock(SettingsService.class, RETURNS_DEEP_STUBS),
-                mock(NotificationService.class, RETURNS_DEEP_STUBS));
+                mock(NotificationService.class, RETURNS_DEEP_STUBS),
+                mock(OfferService.class, RETURNS_DEEP_STUBS));
         userIdentity = ChatTestUsers.createUserIdentity("trader");
         UserProfile peer = ChatTestUsers.createUserIdentity("peer").getUserProfile();
         chatService.getBisqEasyOpenTradeChannelService().getChannels().add(BisqEasyOpenTradeChannel.create("trade-id",

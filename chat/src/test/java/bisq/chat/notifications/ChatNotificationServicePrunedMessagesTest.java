@@ -21,14 +21,18 @@ import bisq.chat.ChatChannel;
 import bisq.chat.ChatChannelDomain;
 import bisq.chat.ChatService;
 import bisq.chat.common.CommonPublicChatMessage;
+import bisq.common.observable.Observable;
 import bisq.common.observable.collection.ObservableArray;
+import bisq.common.observable.collection.ObservableSet;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.DataRequest;
 import bisq.network.p2p.services.data.DataService;
+import bisq.network.p2p.services.data.storage.MetaData;
 import bisq.network.p2p.services.data.storage.StorageService;
 import bisq.network.p2p.services.data.storage.auth.AddAuthenticatedDataRequest;
 import bisq.network.p2p.services.data.storage.auth.AuthenticatedDataStorageService;
 import bisq.notifications.NotificationService;
+import bisq.offer.mu_sig.MuSigOffer;
 import bisq.persistence.Persistence;
 import bisq.persistence.PersistenceService;
 import bisq.settings.SettingsService;
@@ -37,7 +41,9 @@ import bisq.user.profile.UserProfileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
@@ -45,6 +51,7 @@ import static bisq.network.p2p.services.data.storage.StoreType.AUTHENTICATED_DAT
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -53,7 +60,11 @@ class ChatNotificationServicePrunedMessagesTest {
     private static final String CHANNEL_ID = "discussion.bisq";
 
     private final ObservableArray<DataRequest> prunedRequests = new ObservableArray<>();
+    private final ObservableSet<MuSigOffer> muSigOffers = new ObservableSet<>();
+    private final Observable<Boolean> muSigOfferbookInitialized = new Observable<>(false);
     private ChatNotificationService chatNotificationService;
+    private UserIdentityService userIdentityService;
+    private UserProfileService userProfileService;
 
     @BeforeEach
     void setUp() {
@@ -73,13 +84,21 @@ class ChatNotificationServicePrunedMessagesTest {
         NetworkService networkService = mock(NetworkService.class);
         when(networkService.getDataService()).thenReturn(Optional.of(dataService));
 
+        ChatService chatService = mock(ChatService.class, RETURNS_DEEP_STUBS);
+        when(chatService.getMuSigOfferbookService().getObservableOffers()).thenReturn(muSigOffers);
+        when(chatService.getMuSigOfferbookService().getInitialized()).thenReturn(muSigOfferbookInitialized);
+        userIdentityService = mock(UserIdentityService.class);
+        when(userIdentityService.getMyUserProfileIds()).thenReturn(Set.of("my-maker"));
+        userProfileService = mock(UserProfileService.class, RETURNS_DEEP_STUBS);
+        when(userProfileService.isChatUserIgnored("ignored-maker")).thenReturn(true);
+
         chatNotificationService = new ChatNotificationService(persistenceService,
                 networkService,
-                mock(ChatService.class, RETURNS_DEEP_STUBS),
+                chatService,
                 mock(NotificationService.class),
                 mock(SettingsService.class),
-                mock(UserIdentityService.class),
-                mock(UserProfileService.class, RETURNS_DEEP_STUBS));
+                userIdentityService,
+                userProfileService);
     }
 
     @Test
@@ -91,6 +110,114 @@ class ChatNotificationServicePrunedMessagesTest {
         }
 
         assertTrue(chatNotificationService.notificationIdsPrunedBeforeInitialize.isEmpty());
+    }
+
+    @Test
+    void prunedMusigOfferDoesNotCreateNotificationWhenOfferbookIsReplayed() {
+        long offerDate = System.currentTimeMillis() - MetaData.TTL_30_DAYS - 1;
+        MuSigOffer oldOffer = mock(MuSigOffer.class);
+        when(oldOffer.getId()).thenReturn("old-offer");
+        when(oldOffer.getDate()).thenReturn(offerDate);
+        muSigOffers.add(oldOffer);
+
+        ChatNotification persistedNotification = new ChatNotification(
+                ChatNotification.createId(oldOffer),
+                "MuSig Offer",
+                "",
+                offerDate,
+                "",
+                ChatChannelDomain.MU_SIG_OFFERBOOK,
+                "",
+                Optional.empty(),
+                Optional.empty(),
+                Optional.empty(),
+                true);
+        chatNotificationService.getPersistableStore().getNotifications().add(persistedNotification);
+
+        ChatNotificationsStore prunedStore = chatNotificationService.prunePersisted(
+                chatNotificationService.getPersistableStore().getClone());
+        chatNotificationService.getPersistableStore().applyPersisted(prunedStore);
+
+        chatNotificationService.initialize();
+
+        assertTrue(chatNotificationService.getPersistableStore().getNotifications().isEmpty());
+    }
+
+    @Test
+    void notificationForMusigOfferRemovedWhileOfflineIsRemovedAfterOfferbookReplay() {
+        MuSigOffer offer = mock(MuSigOffer.class);
+        when(offer.getId()).thenReturn("removed-while-offline");
+        when(offer.getDate()).thenReturn(System.currentTimeMillis());
+        String notificationId = ChatNotification.createId(offer);
+
+        chatNotificationService.initialize();
+        muSigOfferbookInitialized.set(true);
+        muSigOffers.add(offer);
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(notificationId).isPresent());
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(notificationId).get().isNotConsumed());
+
+        chatNotificationService.shutdown();
+        muSigOfferbookInitialized.set(false);
+        muSigOffers.clear();
+
+        chatNotificationService.initialize();
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(notificationId).isPresent());
+
+        muSigOfferbookInitialized.set(true);
+
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(notificationId).isEmpty());
+    }
+
+    @Test
+    void offersPresentBeforeInitializeDoNotCreateNotifications() {
+        muSigOffers.addAll(List.of(
+                musigOffer("startup-offer-1", "maker-1"),
+                musigOffer("startup-offer-2", "maker-2"),
+                musigOffer("startup-offer-3", "maker-3")));
+
+        chatNotificationService.initialize();
+        muSigOfferbookInitialized.set(true);
+
+        assertTrue(chatNotificationService.getPersistableStore().getNotifications().isEmpty());
+    }
+
+    @Test
+    void offersReplayedBeforeOfferbookInitializationDoNotCreateNotifications() {
+        chatNotificationService.initialize();
+        muSigOffers.addAll(List.of(
+                musigOffer("replayed-offer-1", "maker-1"),
+                musigOffer("replayed-offer-2", "maker-2"),
+                musigOffer("replayed-offer-3", "maker-3")));
+
+        muSigOfferbookInitialized.set(true);
+
+        assertTrue(chatNotificationService.getPersistableStore().getNotifications().isEmpty());
+    }
+
+    @Test
+    void newOffersFromMyOrIgnoredMakersDoNotCreateNotifications() {
+        chatNotificationService.initialize();
+        muSigOfferbookInitialized.set(true);
+
+        MuSigOffer ownOffer = musigOffer("own-offer", "my-maker");
+        MuSigOffer ignoredOffer = musigOffer("ignored-offer", "ignored-maker");
+        MuSigOffer otherOffer = musigOffer("other-offer", "other-maker");
+        when(ownOffer.isMyOffer(anySet())).thenReturn(true);
+        muSigOffers.add(ownOffer);
+        muSigOffers.add(ignoredOffer);
+        muSigOffers.add(otherOffer);
+
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(ChatNotification.createId(otherOffer)).isPresent());
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(ChatNotification.createId(ownOffer)).isEmpty());
+        assertTrue(chatNotificationService.getPersistableStore().findNotification(ChatNotification.createId(ignoredOffer)).isEmpty());
+    }
+
+    private MuSigOffer musigOffer(String id, String makersUserProfileId) {
+        MuSigOffer offer = mock(MuSigOffer.class);
+        when(offer.getId()).thenReturn(id);
+        when(offer.getDate()).thenReturn(System.currentTimeMillis());
+        when(offer.getMakersUserProfileId()).thenReturn(makersUserProfileId);
+        return offer;
     }
 
     @Test

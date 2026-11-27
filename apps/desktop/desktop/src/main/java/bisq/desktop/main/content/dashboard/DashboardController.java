@@ -34,6 +34,7 @@ import bisq.desktop.main.content.dashboard.musig.MusigDashboardColumns;
 import bisq.desktop.main.content.dashboard.top_panel.DashboardTopPanel;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.mu_sig.MuSigService;
+import bisq.mu_sig.MusigNotificationService;
 import bisq.presentation.formatters.PriceFormatter;
 import bisq.user.profile.UserProfileService;
 import lombok.Getter;
@@ -55,7 +56,9 @@ public class DashboardController implements Controller {
     private final BisqEasyOfferbookMessageService bisqEasyOfferbookMessageService;
     private final AlertNotificationsService alertNotificationsService;
     private final MuSigService muSigService;
-    private Pin selectedMarketPin, marketPricePin, offerValidityRevisionPin, getNumUserProfilesPin, isNotificationVisiblePin, unconsumedAlertsPin;
+    private final MusigNotificationService musigNotificationService;
+    private Pin selectedMarketPin, marketPricePin, offerValidityRevisionPin, getNumUserProfilesPin,
+            isBisqEasyNotificationVisiblePin, isMusigNotificationVisiblePin, unconsumedAlertsPin;
     private final Set<Pin> channelsPins = new HashSet<>();
     private boolean allowUpdateOffersOnline;
     private Pin muSigActivatedPin;
@@ -68,6 +71,7 @@ public class DashboardController implements Controller {
         bisqEasyOfferbookMessageService = serviceProvider.getBisqEasyService().getBisqEasyOfferbookMessageService();
         alertNotificationsService = serviceProvider.getAlertNotificationsService();
         muSigService = serviceProvider.getMuSigService();
+        musigNotificationService = muSigService.getMusigNotificationService();
 
         DashboardTopPanel dashboardTopPanel = new DashboardTopPanel(serviceProvider);
         BisqEasyDashboardColumns bisqEasyDashBoardColumns = new BisqEasyDashboardColumns(serviceProvider);
@@ -100,7 +104,9 @@ public class DashboardController implements Controller {
         allowUpdateOffersOnline = true;
         updateOffersOnline();
 
-        isNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(value -> handleBannerVisibility());
+        isBisqEasyNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(value -> handleBannerVisibility());
+        isMusigNotificationVisiblePin = musigNotificationService.getIsNotificationPanelVisible()
+                .addObserver(value -> handleBannerVisibility());
         unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(this::handleBannerVisibility);
     }
 
@@ -111,7 +117,8 @@ public class DashboardController implements Controller {
         marketPricePin.unbind();
         offerValidityRevisionPin.unbind();
         getNumUserProfilesPin.unbind();
-        isNotificationVisiblePin.unbind();
+        isBisqEasyNotificationVisiblePin.unbind();
+        isMusigNotificationVisiblePin.unbind();
         unconsumedAlertsPin.unbind();
         channelsPins.forEach(Pin::unbind);
         channelsPins.clear();
@@ -151,7 +158,9 @@ public class DashboardController implements Controller {
     }
 
     private void handleBannerVisibility() {
-        model.getIsBannerVisible().set(bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
-                !alertNotificationsService.getUnconsumedAlerts().isEmpty());
+        UIThread.run(() -> model.getIsBannerVisible().set(
+                bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
+                        musigNotificationService.getIsNotificationPanelVisible().get() ||
+                        !alertNotificationsService.getUnconsumedAlerts().isEmpty()));
     }
 }

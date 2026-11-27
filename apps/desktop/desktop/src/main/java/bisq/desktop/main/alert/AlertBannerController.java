@@ -25,6 +25,7 @@ import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
 import bisq.desktop.common.threading.UIThread;
 import bisq.desktop.common.view.Controller;
+import bisq.mu_sig.MusigNotificationService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,11 +38,13 @@ public class AlertBannerController implements Controller {
     private final AlertBannerView view;
     private final AlertNotificationsService alertNotificationsService;
     private final BisqEasyNotificationsService bisqEasyNotificationsService;
-    private Pin unconsumedAlertsPin, isBisqEasyNotificationVisiblePin;
+    private final MusigNotificationService musigNotificationService;
+    private Pin unconsumedAlertsPin, isBisqEasyNotificationVisiblePin, isMusigNotificationVisiblePin;
 
     public AlertBannerController(ServiceProvider serviceProvider) {
         alertNotificationsService = serviceProvider.getAlertNotificationsService();
         bisqEasyNotificationsService = serviceProvider.getBisqEasyService().getBisqEasyNotificationsService();
+        musigNotificationService = serviceProvider.getMuSigService().getMusigNotificationService();
         model = new AlertBannerModel();
         view = new AlertBannerView(model, this);
     }
@@ -51,7 +54,12 @@ public class AlertBannerController implements Controller {
         unconsumedAlertsPin = alertNotificationsService.getUnconsumedAlerts().addObserver(this::showAlertBanner);
         isBisqEasyNotificationVisiblePin = bisqEasyNotificationsService.getIsNotificationPanelVisible().addObserver(isVisible -> {
             if (isVisible != null) {
-                updateIsBisqEasyNotificationVisible(isVisible);
+                updateIsNotificationPanelVisible();
+            }
+        });
+        isMusigNotificationVisiblePin = musigNotificationService.getIsNotificationPanelVisible().addObserver(isVisible -> {
+            if (isVisible != null) {
+                updateIsNotificationPanelVisible();
             }
         });
     }
@@ -60,6 +68,7 @@ public class AlertBannerController implements Controller {
     public void onDeactivate() {
         unconsumedAlertsPin.unbind();
         isBisqEasyNotificationVisiblePin.unbind();
+        isMusigNotificationVisiblePin.unbind();
     }
 
     void onClose() {
@@ -89,7 +98,9 @@ public class AlertBannerController implements Controller {
         model.getIsAlertVisible().set(true);
     }
 
-    private void updateIsBisqEasyNotificationVisible(boolean isVisible) {
-        model.getIsBisqEasyNotificationVisible().set(isVisible);
+    private void updateIsNotificationPanelVisible() {
+        UIThread.run(() -> model.getIsNotificationPanelVisible().set(
+                bisqEasyNotificationsService.getIsNotificationPanelVisible().get() ||
+                        musigNotificationService.getIsNotificationPanelVisible().get()));
     }
 }
