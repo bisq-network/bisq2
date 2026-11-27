@@ -125,7 +125,10 @@ public class BisqEasyBuyerAsTakerProtocol extends BisqEasyProtocol {
 
 
         // Reject trade
-        fromStates(TAKER_SENT_TAKE_OFFER_REQUEST,
+        // A trade which stayed in INIT, for example as the node stopped before it stored the state after taking the
+        // offer, has no other way out (docs/specifications/trade/bisq-easy/reject-trade.md).
+        fromStates(INIT,
+                TAKER_SENT_TAKE_OFFER_REQUEST,
                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
                 TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__BUYER_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyRejectTradeEvent.class)

@@ -121,7 +121,10 @@ public class BisqEasyBuyerAsMakerProtocol extends BisqEasyProtocol {
                 .to(BTC_CONFIRMED);
 
         // Reject trade
-        fromStates(MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
+        // A trade which stayed in INIT, for example as the node stopped before it stored the state after the take offer
+        // request, has no other way out (docs/specifications/trade/bisq-easy/reject-trade.md).
+        fromStates(INIT,
+                MAKER_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_DID_NOT_RECEIVED_ACCOUNT_DATA,
                 MAKER_DID_NOT_SENT_TAKE_OFFER_RESPONSE__BUYER_DID_NOT_SENT_BTC_ADDRESS__BUYER_RECEIVED_ACCOUNT_DATA)
                 .on(BisqEasyRejectTradeEvent.class)
                 .run(BisqEasyRejectTradeEventHandler.class)
