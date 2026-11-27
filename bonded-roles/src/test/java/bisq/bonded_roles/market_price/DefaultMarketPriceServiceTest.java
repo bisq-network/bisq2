@@ -23,12 +23,10 @@ import bisq.common.market.Market;
 import bisq.common.market.MarketRepository;
 import bisq.common.monetary.PriceQuote;
 import bisq.common.observable.collection.ObservableSet;
-import bisq.i18n.Res;
 import bisq.network.NetworkService;
 import bisq.network.p2p.services.data.storage.auth.authorized.AuthorizedData;
 import bisq.persistence.PersistenceService;
 import com.typesafe.config.ConfigFactory;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -51,12 +49,6 @@ class DefaultMarketPriceServiceTest {
 
     private AuthorizedBondedRolesService authorizedBondedRolesService;
     private DefaultMarketPriceService service;
-
-    @BeforeAll
-    static void setUpResources() {
-        // MarketPriceProvider reads a display name from the resources
-        Res.setAndApplyLanguageTag("en");
-    }
 
     @BeforeEach
     void setUp() {

@@ -22,34 +22,32 @@ import bisq.common.proto.ProtobufUtils;
 import bisq.common.proto.UnresolvableProtobufException;
 import bisq.i18n.Res;
 import com.google.common.base.Enums;
-import lombok.Getter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
 @Slf4j
-@ToString
 public enum MarketPriceProvider implements ProtoEnum {
-    BISQAGGREGATE(Res.get("component.marketPrice.provider.BISQAGGREGATE")),
-    COINGECKO("CoinGecko"),
-    POLO("Poloniex"),
-    BITFINEX("Bitfinex"),
+    BISQAGGREGATE,
+    COINGECKO,
+    POLO,
+    BITFINEX,
     OTHER;
 
     public static MarketPriceProvider fromName(String name) {
         return Enums.getIfPresent(MarketPriceProvider.class, name).or(OTHER);
     }
 
-    @Getter
-    private final transient Optional<String> displayName;
-
-    MarketPriceProvider() {
-        this.displayName = Optional.empty();
-    }
-
-    MarketPriceProvider(String displayName) {
-        this.displayName = Optional.of(displayName);
+    // Res is called here and not at class initialization: the i18n bundles may not be loaded yet when the class is
+    // initialized, and a failed class initialization makes every later use of the class fail.
+    public Optional<String> getDisplayName() {
+        return switch (this) {
+            case BISQAGGREGATE -> Optional.of(Res.get("component.marketPrice.provider.BISQAGGREGATE"));
+            case COINGECKO -> Optional.of("CoinGecko");
+            case POLO -> Optional.of("Poloniex");
+            case BITFINEX -> Optional.of("Bitfinex");
+            case OTHER -> Optional.empty();
+        };
     }
 
     @Override
