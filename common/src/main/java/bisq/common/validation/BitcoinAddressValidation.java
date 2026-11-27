@@ -61,7 +61,7 @@ public class BitcoinAddressValidation {
     }
 
     public static String canonicalize(String address) {
-        String extracted = BitcoinURIScheme.extractBitcoinAddress(address);
+        String extracted = BitcoinURIScheme.extractBitcoinAddress(address.trim());
         // bech32 is case-insensitive and stored lowercase on-chain; base58 is case-sensitive
         return BECH32_PATTERN.matcher(extracted).matches()
                 ? extracted.toLowerCase(Locale.ROOT)

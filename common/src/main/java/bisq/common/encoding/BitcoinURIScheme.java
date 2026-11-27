@@ -27,13 +27,12 @@ import java.util.Optional;
 public class BitcoinURIScheme {
     public static String extractBitcoinAddress(String input) {
         input = normalizePrefix(input);
-        String[] tokens = input.split("bitcoin:");
-        if (tokens.length == 1) {
+        if (!input.startsWith("bitcoin:")) {
             return input;
-        } else {
-            String[] withParams = tokens[1].split("\\?");
-            return withParams[0];
         }
+        String remainder = input.substring("bitcoin:".length());
+        int params = remainder.indexOf('?');
+        return params < 0 ? remainder : remainder.substring(0, params);
     }
 
     public static boolean isBitcoinUriScheme(String input) {
