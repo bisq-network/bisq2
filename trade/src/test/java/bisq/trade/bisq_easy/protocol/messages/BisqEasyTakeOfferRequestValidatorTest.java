@@ -240,6 +240,70 @@ class BisqEasyTakeOfferRequestValidatorTest {
     }
 
     @Test
+    void mediatorCopyWithAnotherNickNameThrowsMediatorsNotMatching() {
+        UserProfile copy = new UserProfile(1, "another-nick", mediator.getProofOfWork(), mediator.getAvatarVersion(),
+                mediator.getNetworkId(), mediator.getTerms(), mediator.getStatement(), "1.0.0");
+
+        assertMediatorsNotMatching(copy);
+    }
+
+    @Test
+    void mediatorCopyWithAnotherProofOfWorkThrowsMediatorsNotMatching() {
+        // The nym and the avatar are derived from the solution of the proof of work
+        byte[] anotherSolution = new byte[72];
+        anotherSolution[0] = 1;
+        ProofOfWork proofOfWork = new ProofOfWork(mediator.getProofOfWork().getPayload(), 0, null, 1.0, anotherSolution, 0);
+        UserProfile copy = new UserProfile(1, mediator.getNickName(), proofOfWork, mediator.getAvatarVersion(),
+                mediator.getNetworkId(), mediator.getTerms(), mediator.getStatement(), "1.0.0");
+
+        assertMediatorsNotMatching(copy);
+    }
+
+    @Test
+    void mediatorCopyWithAnotherAvatarVersionThrowsMediatorsNotMatching() {
+        UserProfile copy = new UserProfile(1, mediator.getNickName(), mediator.getProofOfWork(),
+                mediator.getAvatarVersion() + 1, mediator.getNetworkId(), mediator.getTerms(), mediator.getStatement(),
+                "1.0.0");
+
+        assertMediatorsNotMatching(copy);
+    }
+
+    @Test
+    void mediatorCopyFromBeforeAnEditOfTheProfileIsAccepted() {
+        // The mediator can change the terms and the statement, and a new release changes the application version
+        UserProfile copy = new UserProfile(1, mediator.getNickName(), mediator.getProofOfWork(),
+                mediator.getAvatarVersion(), mediator.getNetworkId(), "old terms", "old statement", "0.9.0");
+        BisqEasyContract contract = createContract(offer, Optional.of(copy));
+        BisqEasyTakeOfferRequest message = createMessage(contract, takerNetworkId);
+
+        assertDoesNotThrow(() -> validate(serviceProvider, makerIdentity, message));
+    }
+
+    @Test
+    void offerCopyWithOtherCurrencyNamesThrowsNoMatchingOfferFound() {
+        // Market.equals ignores the names of the currencies, the contract hash covers them
+        Market market = new Market(MARKET.getBaseCurrencyCode(), MARKET.getQuoteCurrencyCode(), "Bitcoin", "Another name");
+        BisqEasyOffer copy = createOffer(makerNetworkId, offer.getDate(), market);
+        assertEquals(offer, copy);
+        BisqEasyContract contract = createContract(copy, Optional.of(mediator));
+        BisqEasyTakeOfferRequest message = createMessage(contract, takerNetworkId);
+
+        TradeProtocolException ex = assertThrows(TradeProtocolException.class,
+                () -> validate(serviceProvider, makerIdentity, message));
+        assertEquals(TradeProtocolFailure.NO_MATCHING_OFFER_FOUND, ex.getTradeProtocolFailure());
+        assertTrue(ex.getMessage().startsWith("Could not find matching offer"), ex.getMessage());
+    }
+
+    private void assertMediatorsNotMatching(UserProfile mediatorCopy) {
+        BisqEasyContract contract = createContract(offer, Optional.of(mediatorCopy));
+        BisqEasyTakeOfferRequest message = createMessage(contract, takerNetworkId);
+
+        TradeProtocolException ex = assertThrows(TradeProtocolException.class,
+                () -> validate(serviceProvider, makerIdentity, message));
+        assertEquals(TradeProtocolFailure.MEDIATORS_NOT_MATCHING, ex.getTradeProtocolFailure());
+    }
+
+    @Test
     void validTakeOfferRequestPassesAllChecks() {
         BisqEasyContract contract = createContract(CONSISTENT_BASE, CONSISTENT_QUOTE);
         BisqEasyTakeOfferRequest message = createMessage(contract, takerNetworkId);
@@ -289,6 +353,7 @@ class BisqEasyTakeOfferRequestValidatorTest {
         when(takersOffer.getId()).thenReturn("offer-id");
         when(takersOffer.getMarket()).thenReturn(market);
         when(takersOffer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(Long.MAX_VALUE));
+        when(takersOffer.toProto(true)).thenReturn(bisq.offer.protobuf.Offer.getDefaultInstance());
 
         BisqEasyContract takersContract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);
         when(takersContract.getOffer()).thenReturn(takersOffer);
@@ -456,6 +521,7 @@ class BisqEasyTakeOfferRequestValidatorTest {
         when(takersOffer.getMakersDirection()).thenReturn(makersDirection);
         when(takersOffer.getAmountSpec()).thenReturn(new QuoteSideFixedAmountSpec(quoteSideAmount));
         when(takersOffer.getPriceSpec()).thenReturn(priceSpec);
+        when(takersOffer.toProto(true)).thenReturn(bisq.offer.protobuf.Offer.getDefaultInstance());
 
         BisqEasyContract takersContract = mock(BisqEasyContract.class, RETURNS_DEEP_STUBS);
         when(takersContract.getOffer()).thenReturn(takersOffer);
@@ -484,12 +550,23 @@ class BisqEasyTakeOfferRequestValidatorTest {
     }
 
     private BisqEasyContract createContract(long baseSideAmount, long quoteSideAmount) {
+        return createContract(offer, Optional.of(mediator), baseSideAmount, quoteSideAmount);
+    }
+
+    private BisqEasyContract createContract(BisqEasyOffer contractOffer, Optional<UserProfile> contractMediator) {
+        return createContract(contractOffer, contractMediator, CONSISTENT_BASE, CONSISTENT_QUOTE);
+    }
+
+    private BisqEasyContract createContract(BisqEasyOffer contractOffer,
+                                            Optional<UserProfile> contractMediator,
+                                            long baseSideAmount,
+                                            long quoteSideAmount) {
         return new BisqEasyContract(
-                TAKE_OFFER_DATE, offer, takerNetworkId,
+                TAKE_OFFER_DATE, contractOffer, takerNetworkId,
                 baseSideAmount, quoteSideAmount,
                 new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)),
                 new FiatPaymentMethodSpec(FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.SEPA)),
-                Optional.of(mediator), new FixPriceSpec(PRICE_60K), PRICE_60K.getValue());
+                contractMediator, new FixPriceSpec(PRICE_60K), PRICE_60K.getValue());
     }
 
     private BisqEasyTakeOfferRequest createMessage(BisqEasyContract contract, NetworkId sender) {
@@ -507,12 +584,16 @@ class BisqEasyTakeOfferRequestValidatorTest {
     }
 
     private BisqEasyOffer createOffer(NetworkId makerNid) {
+        return createOffer(makerNid, System.currentTimeMillis(), MARKET);
+    }
+
+    private BisqEasyOffer createOffer(NetworkId makerNid, long date, Market market) {
         return new BisqEasyOffer(
                 "offer-validator-test",
-                System.currentTimeMillis(),
+                date,
                 makerNid,
                 Direction.SELL,
-                MARKET,
+                market,
                 new BaseSideFixedAmountSpec(CONSISTENT_BASE),
                 new FixPriceSpec(PRICE_60K),
                 List.of(TradeProtocolType.BISQ_EASY),
