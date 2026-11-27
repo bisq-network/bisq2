@@ -29,6 +29,7 @@ import bisq.settings.SettingsService;
 import bisq.wallet.WalletException;
 import bisq.wallet.WalletService;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -58,6 +60,7 @@ class SetupWalletWizardSeedLoadFailureTest {
     private ServiceProvider serviceProvider;
     private CompletableFuture<List<String>> seedWords;
     private Stage stage;
+    private final AtomicInteger backCalls = new AtomicInteger();
 
     @BeforeEach
     void setUp() {
@@ -128,6 +131,47 @@ class SetupWalletWizardSeedLoadFailureTest {
         assertThat(Window.getWindows()).hasSize(windowsBefore);
     }
 
+    @Test
+    void closingTheVerifyStepPopupGoesBackToTheBackupStep() {
+        activate(this::verifyController);
+        Window popup = failSeedWordRequestAndFindPopup();
+
+        onFx(() -> popup.getScene().getRoot().lookupAll(".button").stream()
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .filter(button -> !button.isDefaultButton())
+                .findFirst()
+                .orElseThrow()
+                .fire());
+
+        assertThat(backCalls).hasValue(1);
+    }
+
+    @Test
+    void confirmingTheVerifyStepPopupGoesBackToTheBackupStep() {
+        activate(this::verifyController);
+        Window popup = failSeedWordRequestAndFindPopup();
+
+        onFx(() -> popup.getScene().getRoot().lookupAll(".button").stream()
+                .filter(Button.class::isInstance)
+                .map(Button.class::cast)
+                .filter(Button::isDefaultButton)
+                .findFirst()
+                .orElseThrow()
+                .fire());
+
+        assertThat(backCalls).hasValue(1);
+    }
+
+    private Window failSeedWordRequestAndFindPopup() {
+        List<Window> windowsBefore = List.copyOf(Window.getWindows());
+        failSeedWordRequest();
+        return Window.getWindows().stream()
+                .filter(window -> !windowsBefore.contains(window))
+                .findFirst()
+                .orElseThrow();
+    }
+
     private void failSeedWordRequest() {
         seedWords.completeExceptionally(
                 new WalletException(WalletException.Reason.DAEMON_UNAVAILABLE, "unavailable", Optional.empty(), null));
@@ -143,8 +187,7 @@ class SetupWalletWizardSeedLoadFailureTest {
     private Controller verifyController() {
         return new SetupWalletWizardVerifyController(serviceProvider, visible -> {
         }, target -> {
-        }, () -> {
-        }, () -> "Wallet-Pa55!");
+        }, backCalls::incrementAndGet, () -> "Wallet-Pa55!");
     }
 
     // The view activates its controller when it gets a scene. The steps look up the owner of their popups two levels

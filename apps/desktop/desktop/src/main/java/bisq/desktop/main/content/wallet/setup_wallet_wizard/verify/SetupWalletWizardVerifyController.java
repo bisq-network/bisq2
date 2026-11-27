@@ -138,6 +138,8 @@ public class SetupWalletWizardVerifyController implements Controller {
                 }
                 new Popup().invalid(Res.get("wallet.backupSeeds.error.failedToLoad"))
                         .owner(getPopupOwner())
+                        .onAction(onBackHandler)
+                        .onClose(onBackHandler)
                         .show();
             });
 
