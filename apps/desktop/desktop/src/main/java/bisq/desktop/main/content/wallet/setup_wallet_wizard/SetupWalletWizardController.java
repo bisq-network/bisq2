@@ -157,7 +157,9 @@ public class SetupWalletWizardController extends NavigationController {
     }
 
     void onNext() {
-        if (!activated || walletOpenInProgress) {
+        // A step hides Next while it is not done, for example the backup step while the seed words load. Enter
+        // must not get past it either.
+        if (!activated || walletOpenInProgress || !model.getNextButtonVisible().get()) {
             return;
         }
         int nextIndex = model.getCurrentIndex().get() + 1;
