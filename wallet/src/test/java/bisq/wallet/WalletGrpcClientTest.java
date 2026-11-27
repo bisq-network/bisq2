@@ -56,6 +56,7 @@ import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Answers;
 import org.mockito.ArgumentCaptor;
@@ -81,6 +82,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.verify;
 
+// The build sets no default time limit; a call which never completes must fail the test instead of hanging it
+@Timeout(30)
 @ExtendWith(MockitoExtension.class)
 class WalletGrpcClientTest {
 

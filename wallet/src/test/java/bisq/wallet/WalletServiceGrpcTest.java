@@ -49,6 +49,7 @@ import io.grpc.stub.StreamObserver;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
@@ -73,6 +74,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 // The real WalletService against an in-process daemon stand-in: what goes into the requests, what comes out of
 // the responses.
+// The build sets no default time limit; a call which never completes must fail the test instead of hanging it
+@Timeout(30)
 class WalletServiceGrpcTest {
     @TempDir
     private Path tempDirPath;
