@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 final class ProfileAgeStore implements PersistableStore<ProfileAgeStore> {
     @Setter(AccessLevel.PACKAGE)
     @Getter(AccessLevel.PACKAGE)
-    private long lastRequested = 0;
+    private volatile long lastRequested = 0;
 
     private ProfileAgeStore(long lastRequested) {
         this.lastRequested = lastRequested;
