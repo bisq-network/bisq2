@@ -54,7 +54,10 @@ import bisq.i18n.Res;
 import bisq.offer.Direction;
 import bisq.offer.amount.OfferAmountUtil;
 import bisq.offer.amount.spec.AmountSpec;
+import bisq.offer.amount.spec.BaseSideFixedAmountSpec;
+import bisq.offer.amount.spec.BaseSideRangeAmountSpec;
 import bisq.offer.amount.spec.FixedAmountSpec;
+import bisq.offer.amount.spec.QuoteSideFixedAmountSpec;
 import bisq.offer.amount.spec.RangeAmountSpec;
 import bisq.offer.bisq_easy.BisqEasyOffer;
 import bisq.offer.price.PriceUtil;
@@ -246,7 +249,7 @@ public class TradeWizardReviewController implements Controller {
 
         AmountSpec amountSpecToUse = bisqEasyOffer.getAmountSpec() instanceof FixedAmountSpec
                 ? bisqEasyOffer.getAmountSpec()
-                : amountSpec;
+                : getAmountSpecWithinOffersRange(bisqEasyOffer, amountSpec);
 
         applyData(direction,
                 market,
@@ -751,5 +754,40 @@ public class TradeWizardReviewController implements Controller {
                 }
             }
         }
+    }
+
+    // The offer list compares the taker's amount with the range of an offer at the low precision of the quote currency
+    // (TradeWizardSelectOfferController), so it also shows an offer whose range the amount misses by less than that
+    // precision. The amount step converts between the Bitcoin and the fiat amount, which can lose such a fraction, for
+    // example 99.9997 USD for 100 USD. The taker's node and the maker accept only an amount within the range of the
+    // offer (BisqEasyOfferAmountValidator), so for such an amount we take the limit of the range. We take it in the
+    // unit of the range, as a limit in Bitcoin converted to fiat and back can end below the minimum. For the same
+    // reason, an amount equal to the minimum in fiat takes the minimum as well.
+    private AmountSpec getAmountSpecWithinOffersRange(BisqEasyOffer bisqEasyOffer, AmountSpec amountSpec) {
+        if (!(amountSpec instanceof QuoteSideFixedAmountSpec quoteSideFixedAmountSpec)
+                || !(bisqEasyOffer.getAmountSpec() instanceof RangeAmountSpec rangeAmountSpec)) {
+            return amountSpec;
+        }
+        Optional<Monetary> minAmount = OfferAmountUtil.findQuoteSideMinOrFixedAmount(marketPriceService, bisqEasyOffer);
+        Optional<Monetary> maxAmount = OfferAmountUtil.findQuoteSideMaxOrFixedAmount(marketPriceService, bisqEasyOffer);
+        if (minAmount.isEmpty() || maxAmount.isEmpty()) {
+            return amountSpec;
+        }
+        Monetary amount = Monetary.from(quoteSideFixedAmountSpec.getAmount(),
+                bisqEasyOffer.getMarket().getQuoteCurrencyCode());
+        int lowPrecision = amount.getLowPrecision();
+        if (!amount.isGreaterThan(minAmount.get()) && !amount.isLessThan(minAmount.get(), lowPrecision)) {
+            return toFixedAmountSpec(rangeAmountSpec, rangeAmountSpec.getMinAmount());
+        }
+        if (amount.isGreaterThan(maxAmount.get()) && !amount.isGreaterThan(maxAmount.get(), lowPrecision)) {
+            return toFixedAmountSpec(rangeAmountSpec, rangeAmountSpec.getMaxAmount());
+        }
+        return amountSpec;
+    }
+
+    private static AmountSpec toFixedAmountSpec(RangeAmountSpec rangeAmountSpec, long amount) {
+        return rangeAmountSpec instanceof BaseSideRangeAmountSpec
+                ? new BaseSideFixedAmountSpec(amount)
+                : new QuoteSideFixedAmountSpec(amount);
     }
 }
