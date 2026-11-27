@@ -70,8 +70,8 @@ prove DepositTx confirmation and must not be used as a substitute for normal tra
 The stored mediation result must be immutable, signed by the contract mediator, valid for the trade contract, and
 allocate the full trade pot between buyer and seller.
 
-The result and its mediator signature are write-once for the lifetime of the trade. Reopening mediation changes the
-dispute state but does not permit replacing either value.
+The result and its mediator signature are write-once for the lifetime of the trade. A closed mediation case cannot be
+reopened.
 
 `NO_PAYOUT` is a valid mediator outcome, but it is not a cooperative custom payout proposal. For `NO_PAYOUT`, the client:
 

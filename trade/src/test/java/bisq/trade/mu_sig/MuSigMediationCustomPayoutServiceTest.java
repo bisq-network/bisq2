@@ -109,7 +109,7 @@ class MuSigMediationCustomPayoutServiceTest {
     void givenMediationIsNotClosed_whenCheckingSigningEligibility_thenRejectsSigning()
             throws GeneralSecurityException, UnresolvableProtobufException {
         SigningFixture fixture = createValidSigningFixture();
-        fixture.tradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_RE_OPENED);
+        fixture.tradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_OPEN);
 
         assertThat(service.canSignCustomPayout(fixture.trade())).isFalse();
     }

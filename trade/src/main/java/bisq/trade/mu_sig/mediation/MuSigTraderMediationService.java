@@ -146,8 +146,6 @@ public class MuSigTraderMediationService {
                 muSigOpenTradeChannelService.setDisputeAgentType(channel, MuSigDisputeAgentType.MEDIATOR);
                 muSigOpenTradeChannelService.addMediationOpenedMessage(channel, Res.encode("authorizedRole.mediator.message.toNonRequester"));
             }
-        } else if (newTradeDispute == MuSigDisputeState.MEDIATION_RE_OPENED) {
-            muSigOpenTradeChannelService.setDisputeAgentType(channel, MuSigDisputeAgentType.MEDIATOR);
         } else if (newTradeDispute == MuSigDisputeState.MEDIATION_CLOSED) {
             // Closed mediation case still keeps mediator chat participation active.
             muSigOpenTradeChannelService.setDisputeAgentType(channel, MuSigDisputeAgentType.MEDIATOR);

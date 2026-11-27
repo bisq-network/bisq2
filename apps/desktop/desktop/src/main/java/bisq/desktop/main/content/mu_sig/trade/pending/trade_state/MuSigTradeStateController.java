@@ -389,10 +389,6 @@ public class MuSigTradeStateController implements Controller {
                 String details = result != null ? getMediationResultDetailsText(trade, result) : Res.get("data.na");
                 model.getMediationBannerText().set(Res.get("muSig.trade.pending.inMediation.closed", details));
                 return;
-            } else if (disputeState == MuSigDisputeState.MEDIATION_RE_OPENED) {
-                String details = result != null ? getMediationResultDetailsText(trade, result) : Res.get("data.na");
-                model.getMediationBannerText().set(Res.get("muSig.trade.pending.inMediation.reOpened", details));
-                return;
             } else if (disputeState == MuSigDisputeState.MEDIATION_OPEN) {
                 model.getMediationBannerText().set(Res.get("muSig.trade.pending.inMediation.info"));
                 return;

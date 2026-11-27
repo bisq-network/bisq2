@@ -26,7 +26,6 @@ public enum MuSigDisputeState implements ProtoEnum {
     MEDIATION_REQUESTED,
     MEDIATION_OPEN,
     MEDIATION_CLOSED,
-    MEDIATION_RE_OPENED,
     ARBITRATION_REQUESTED,
     ARBITRATION_OPEN,
     ARBITRATION_CLOSED;
@@ -44,8 +43,7 @@ public enum MuSigDisputeState implements ProtoEnum {
     public static boolean isMediationState(MuSigDisputeState disputeState) {
         return disputeState == MEDIATION_REQUESTED ||
                 disputeState == MEDIATION_OPEN ||
-                disputeState == MEDIATION_CLOSED ||
-                disputeState == MEDIATION_RE_OPENED;
+                disputeState == MEDIATION_CLOSED;
     }
 
     public static boolean isArbitrationState(MuSigDisputeState disputeState) {

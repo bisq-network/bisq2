@@ -264,27 +264,17 @@ class MuSigTradeServiceTest {
             fixture.enableConcurrentProcessing(2);
             fixture.service.acceptMediationResult(fixture.trade);
             StreamObserver<bisq.trade.protobuf.CustomPayoutPsbt> signing = fixture.rpc.signing.get(5, SECONDS);
-            CompletableFuture<Void> reopened = new CompletableFuture<>();
-            Pin pin = fixture.trade.getTradeDispute().disputeStateObservable().addObserver(state -> {
-                if (state == MuSigDisputeState.MEDIATION_RE_OPENED) {
-                    reopened.complete(null);
-                }
-            });
-            try {
-                fixture.caller.submit(() -> fixture.service.onMessage(
-                        createMediationMessage(fixture.trade, MediationCaseState.RE_OPENED))).get(5, SECONDS);
-                awaitProtocolWaiters(fixture, 1);
 
-                assertThat(reopened).isNotDone();
-                assertThat(fixture.trade.getTradeDispute().getDisputeState()).isEqualTo(MuSigDisputeState.MEDIATION_CLOSED);
+            // A repeated closing message changes nothing, but its handling has to wait for the trade's protocol.
+            fixture.caller.submit(() -> fixture.service.onMessage(
+                    createMediationMessage(fixture.trade, MediationCaseState.CLOSED))).get(5, SECONDS);
+            awaitProtocolWaiters(fixture, 1);
 
-                completeSigning(signing);
-                reopened.get(5, SECONDS);
-                fixture.finishProcessing();
-                assertThat(fixture.trade.getTradeState()).isEqualTo(MuSigTradeState.CUSTOM_PAYOUT_SIGNED);
-            } finally {
-                pin.unbind();
-            }
+            completeSigning(signing);
+            fixture.finishProcessing();
+            assertThat(fixture.trade.getTradeState()).isEqualTo(MuSigTradeState.CUSTOM_PAYOUT_SIGNED);
+            assertThat(fixture.trade.getTradeDispute().getDisputeState())
+                    .isEqualTo(MuSigDisputeState.MEDIATION_CLOSED);
         }
     }
 
@@ -434,7 +424,7 @@ class MuSigTradeServiceTest {
     @Test
     void earlyDisputeAndSettlementMessagesAreReplayedAfterProtocolRegistration() throws Exception {
         MuSigTrade trade = createMediatedTrade(true, MuSigTradeState.DEPOSIT_TX_CONFIRMED);
-        trade.getTradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_RE_OPENED);
+        trade.getTradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_OPEN);
         try (MediationFixture fixture = new MediationFixture(trade, false)) {
             fixture.addChannel();
             fixture.service.onMessage(createPsbtMessage(trade));
@@ -609,7 +599,7 @@ class MuSigTradeServiceTest {
                     () -> fixture.service.rejectMediationResultAndRequestArbitration(fixture.trade),
                     () -> fixture.service.paymentInitiated(fixture.trade),
                     () -> fixture.service.onMessage(createPsbtMessage(fixture.trade)),
-                    () -> fixture.service.onMessage(createMediationMessage(fixture.trade, MediationCaseState.RE_OPENED)))) {
+                    () -> fixture.service.onMessage(createMediationMessage(fixture.trade, MediationCaseState.CLOSED)))) {
                 assertThatThrownBy(action::run).isInstanceOf(RejectedExecutionException.class);
             }
         }
@@ -636,7 +626,7 @@ class MuSigTradeServiceTest {
     void acceptanceRequiresClosedMediation() throws Exception {
         try (MediationFixture fixture = new MediationFixture(true)) {
             synchronized (fixture.service.getTradeProtocolById().get(fixture.trade.getId())) {
-                fixture.trade.getTradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_RE_OPENED);
+                fixture.trade.getTradeDispute().setDisputeState(MuSigDisputeState.MEDIATION_OPEN);
             }
             fixture.service.acceptMediationResult(fixture.trade);
             fixture.service.getExecutor().submit(() -> {}).get(5, SECONDS);
