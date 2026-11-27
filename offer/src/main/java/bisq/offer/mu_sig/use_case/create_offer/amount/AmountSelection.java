@@ -444,6 +444,10 @@ public class AmountSelection extends LifecycleScope {
     // Delegates
     /* --------------------------------------------------------------------- */
 
+    public ReadOnlyObservable<MonetaryRange> potentialTradeAmountLimitsInUsdObservable() {
+        return getAmountLimits().potentialTradeAmountLimitsInUsdObservable();
+    }
+
     public ReadOnlyObservable<Optional<TradeAmount>> userSpecificTradeAmountLimitObservable() {
         return getAmountLimits().userSpecificAmountLimitObservable();
     }
