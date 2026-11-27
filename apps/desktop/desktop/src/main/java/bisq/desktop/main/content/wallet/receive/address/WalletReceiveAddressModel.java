@@ -23,8 +23,10 @@ import bisq.i18n.Res;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import bisq.wallet.receive_address.ReceiveAddressService;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -37,7 +39,9 @@ public class WalletReceiveAddressModel implements Model {
     private final ObjectProperty<ReceiveAddressEntry> receiveAddressEntry = new SimpleObjectProperty<>();
     private final StringProperty receiveAddress = new SimpleStringProperty();
     private final StringProperty receiveAddressNote = new SimpleStringProperty();
-    private final BooleanProperty isNewAddress = new SimpleBooleanProperty();
+    // Counts the shown addresses, so the view clears the note validation for each one, also when the daemon hands
+    // out the same address again
+    private final IntegerProperty shownAddressCount = new SimpleIntegerProperty();
     private final BooleanProperty isAddressNoteEditable = new SimpleBooleanProperty();
     private final BooleanProperty shouldShowAddressNote = new SimpleBooleanProperty();
     private final StringProperty addressTextFieldDescription =  new SimpleStringProperty();
@@ -57,7 +61,6 @@ public class WalletReceiveAddressModel implements Model {
         receiveAddressEntry.set(null);
         receiveAddress.set(null);
         receiveAddressNote.set(null);
-        isNewAddress.set(false);
         isAddressNoteEditable.set(false);
         shouldShowAddressNote.set(false);
         addressTextFieldDescription.set(null);
