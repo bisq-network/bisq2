@@ -28,6 +28,7 @@ import bisq.support.mediation.bisq_easy.BisqEasyMediatorService;
 import bisq.support.mediation.mu_sig.MuSigMediatorService;
 import bisq.support.moderator.ModerationRequestService;
 import bisq.support.moderator.ModeratorService;
+import bisq.support.notifications.SupportNotificationsService;
 import bisq.support.release_manager.ReleaseManagerService;
 import bisq.support.security_manager.SecurityManagerService;
 import bisq.user.UserService;
@@ -48,6 +49,7 @@ public class SupportService implements Service {
     private final ModeratorService moderatorService;
     private final ReleaseManagerService releaseManagerService;
     private final ModerationRequestService moderationRequestService;
+    private final SupportNotificationsService supportNotificationsService;
 
     @Getter
     @ToString
@@ -77,6 +79,10 @@ public class SupportService implements Service {
                           ChatService chatService,
                           UserService userService,
                           BondedRolesService bondedRolesService) {
+        supportNotificationsService = new SupportNotificationsService(
+                persistenceService,
+                chatService,
+                this);
         bisqEasyMediationRequestService = new BisqEasyMediationRequestService(networkService,
                 chatService,
                 userService,
@@ -130,7 +136,8 @@ public class SupportService implements Service {
                 .thenCompose(result -> moderationRequestService.initialize())
                 .thenCompose(result -> moderatorService.initialize())
                 .thenCompose(result -> releaseManagerService.initialize())
-                .thenCompose(result -> securityManagerService.initialize());
+                .thenCompose(result -> securityManagerService.initialize())
+                .thenCompose(result -> supportNotificationsService.initialize());
     }
 
     @Override
@@ -143,6 +150,7 @@ public class SupportService implements Service {
                 .thenCompose(result -> moderationRequestService.shutdown())
                 .thenCompose(result -> moderatorService.shutdown())
                 .thenCompose(result -> releaseManagerService.shutdown())
-                .thenCompose(result -> securityManagerService.shutdown());
+                .thenCompose(result -> securityManagerService.shutdown())
+                .thenCompose(result -> supportNotificationsService.shutdown());
     }
 }

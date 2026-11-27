@@ -252,3 +252,24 @@ message ModeratorStore {
   repeated ReportToModeratorMessage reportToModeratorMessages = 1;
   repeated BannedUserModeratorData bannedUserModeratorData = 2;
 }
+
+enum SupportNotificationType {
+  SUPPORTNOTIFICATIONTYPE_MODERATOR_NOTIFICATION = 0;
+  SUPPORTNOTIFICATIONTYPE_BISQ_EASY_MEDIATOR_NOTIFICATION = 1;
+  SUPPORTNOTIFICATIONTYPE_MU_SIG_MEDIATOR_NOTIFICATION = 2;
+}
+
+message SupportNotification {
+  SupportNotificationType supportNotificationType = 1;
+  string id = 2;
+  optional string channelId = 3;
+  optional string senderUserProfileId = 4;
+  string title = 5;
+  string message = 6;
+  bool isConsumed = 7;
+}
+
+message SupportNotificationsStore {
+  repeated SupportNotification supportNotifications = 1;
+}
+

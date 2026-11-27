@@ -14,6 +14,7 @@ dependencies {
     implementation(project(":offer"))
     implementation(project(":contract"))
     implementation(project(":bonded-roles"))
+    implementation(project(":notifications"))
 
     implementation("network:network:$version")
     implementation("network:network-identity:$version")
