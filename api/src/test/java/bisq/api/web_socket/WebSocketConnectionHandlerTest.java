@@ -22,6 +22,7 @@ import bisq.api.web_socket.rest_api_proxy.WebSocketRestApiService;
 import bisq.api.web_socket.subscription.SubscriptionService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.glassfish.grizzly.websockets.DefaultWebSocket;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -50,8 +51,9 @@ class WebSocketConnectionHandlerTest {
     private static class TestableHandler extends WebSocketConnectionHandler {
         TestableHandler(SubscriptionService subscriptionService,
                         WebSocketRestApiService restApiService,
-                        Predicate<String> clientAuthorizedCheck) {
-            super(subscriptionService, restApiService, clientAuthorizedCheck);
+                        Predicate<String> clientAuthorizedCheck,
+                        Predicate<String> sessionValidCheck) {
+            super(subscriptionService, restApiService, clientAuthorizedCheck, sessionValidCheck);
         }
 
         boolean isRegistered(DefaultWebSocket webSocket) {
@@ -60,6 +62,7 @@ class WebSocketConnectionHandlerTest {
     }
 
     private Set<String> authorizedClientIds;
+    private Set<String> validSessionIds;
     private SubscriptionService subscriptionService;
     private WebSocketRestApiService webSocketRestApiService;
     private TestableHandler handler;
@@ -72,7 +75,26 @@ class WebSocketConnectionHandlerTest {
         authorizedClientIds.add(REVOKED_CLIENT_ID);
         authorizedClientIds.add("other-client");
         authorizedClientIds.add("live-client");
-        handler = new TestableHandler(subscriptionService, webSocketRestApiService, authorizedClientIds::contains);
+        validSessionIds = ConcurrentHashMap.newKeySet();
+        handler = new TestableHandler(subscriptionService, webSocketRestApiService, authorizedClientIds::contains,
+                validSessionIds::contains);
+    }
+
+    @AfterEach
+    void tearDown() {
+        handler.shutdown();
+    }
+
+    /** A connection as the session filter leaves it: the session which authenticated the handshake is recorded. */
+    private DefaultWebSocket connectWithSession(String clientId, String sessionId) {
+        validSessionIds.add(sessionId);
+        DefaultWebSocket webSocket = mock(DefaultWebSocket.class, RETURNS_DEEP_STUBS);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getAttribute(Attributes.CLIENT_ID)).thenReturn(clientId);
+        when(request.getAttribute(Attributes.SESSION_ID)).thenReturn(sessionId);
+        when(webSocket.getUpgradeRequest()).thenReturn(request);
+        handler.onConnect(webSocket);
+        return webSocket;
     }
 
     /** Mirrors a real revocation: the grant goes first, then the live sockets are dropped. */
@@ -180,5 +202,71 @@ class WebSocketConnectionHandlerTest {
         DefaultWebSocket webSocket = connect("other-client");
 
         assertTrue(handler.isRegistered(webSocket));
+    }
+
+    @Test
+    void aSocketIsDisconnectedWhenItsSessionHasEnded() {
+        DefaultWebSocket ended = connectWithSession("live-client", "ended-session");
+        DefaultWebSocket valid = connectWithSession("other-client", "valid-session");
+        validSessionIds.remove("ended-session");
+
+        handler.disconnectEndedSessions();
+
+        verify(ended).close();
+        verify(subscriptionService).onConnectionClosed(ended);
+        assertFalse(handler.isRegistered(ended));
+        verify(valid, never()).close();
+        assertTrue(handler.isRegistered(valid));
+    }
+
+    @Test
+    void aSocketWithoutASessionIsNotDisconnected() {
+        // Without session handling the filters record no session, so there is none which could end.
+        DefaultWebSocket webSocket = connect("live-client");
+
+        handler.disconnectEndedSessions();
+
+        verify(webSocket, never()).close();
+        assertTrue(handler.isRegistered(webSocket));
+    }
+
+    @Test
+    void aSocketOfAnEndedSessionThatFailedToCloseIsUnsubscribedAndDeregistered() {
+        DefaultWebSocket failing = connectWithSession("live-client", "ended-session");
+        DefaultWebSocket closing = connectWithSession("other-client", "other-ended-session");
+        doThrow(new RuntimeException("close failed")).when(failing).close();
+        validSessionIds.clear();
+
+        handler.disconnectEndedSessions();
+
+        verify(subscriptionService).onConnectionClosed(failing);
+        assertFalse(handler.isRegistered(failing));
+        verify(closing).close();
+        assertFalse(handler.isRegistered(closing));
+    }
+
+    @Test
+    void aSocketOfAnEndedSessionCannotProcessMessages() {
+        DefaultWebSocket ended = connectWithSession("live-client", "ended-session");
+        validSessionIds.remove("ended-session");
+        handler.disconnectEndedSessions();
+
+        handler.onMessage(ended, "{\"anything\":true}");
+
+        verify(subscriptionService, after(500).never()).canHandle(anyString());
+        verify(subscriptionService, never()).onMessage(anyString(), any());
+        verify(webSocketRestApiService, never()).onMessage(anyString(), any());
+    }
+
+    @Test
+    void theInitializedHandlerDisconnectsASocketAfterItsSessionEnded() {
+        handler.initialize();
+        DefaultWebSocket webSocket = connectWithSession("live-client", "ended-session");
+        verify(webSocket, after(1500).never()).close();
+
+        validSessionIds.remove("ended-session");
+
+        verify(webSocket, timeout(5000)).close();
+        assertFalse(handler.isRegistered(webSocket));
     }
 }

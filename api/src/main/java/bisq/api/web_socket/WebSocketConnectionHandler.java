@@ -25,7 +25,9 @@ import bisq.api.web_socket.util.WebSocketIdentity;
 import bisq.common.application.Service;
 import bisq.common.observable.collection.ObservableSet;
 import bisq.common.threading.ExecutorFactory;
+import bisq.common.timer.Scheduler;
 import bisq.common.util.StringUtils;
+import com.google.common.annotations.VisibleForTesting;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.glassfish.grizzly.websockets.DataFrame;
@@ -38,11 +40,14 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class WebSocketConnectionHandler extends WebSocketApplication implements Service {
+    private static final long SESSION_CHECK_INTERVAL_SEC = 1;
+
     public final ExecutorService executor = ExecutorFactory.newCachedThreadPool("WebSocketConnectionHandler",
             1, 50, 30);
 
@@ -54,21 +59,35 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
     /** Whether a client still has access, read from the authoritative store at connection time. */
     private final Predicate<String> clientAuthorizedCheck;
 
+    /** Whether a session still holds: it exists and has not expired. */
+    private final Predicate<String> sessionValidCheck;
+    private Optional<Scheduler> sessionCheckScheduler = Optional.empty();
+
     public WebSocketConnectionHandler(SubscriptionService subscriptionService,
                                       WebSocketRestApiService webSocketRestApiService,
-                                      Predicate<String> clientAuthorizedCheck) {
+                                      Predicate<String> clientAuthorizedCheck,
+                                      Predicate<String> sessionValidCheck) {
         this.subscriptionService = subscriptionService;
         this.webSocketRestApiService = webSocketRestApiService;
         this.clientAuthorizedCheck = clientAuthorizedCheck;
+        this.sessionValidCheck = sessionValidCheck;
     }
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        // The handshake is the only point where the filters check the session of a WebSocket. A
+        // session which expires later is found here.
+        sessionCheckScheduler = Optional.of(Scheduler.run(this::disconnectEndedSessions)
+                .host(this)
+                .runnableName("disconnectEndedSessions")
+                .periodically(SESSION_CHECK_INTERVAL_SEC, TimeUnit.SECONDS));
         return CompletableFuture.completedFuture(true);
     }
 
     @Override
     public CompletableFuture<Boolean> shutdown() {
+        sessionCheckScheduler.ifPresent(Scheduler::stop);
+        sessionCheckScheduler = Optional.empty();
         getWebSockets().forEach(WebSocket::close);
         ExecutorFactory.shutdownAndAwaitTermination(executor);
         return CompletableFuture.completedFuture(true);
@@ -163,6 +182,39 @@ public class WebSocketConnectionHandler extends WebSocketApplication implements 
                 // socket stayed alive. Normally the close triggers onClose which does the same,
                 // which is exactly why a failing close would otherwise leave them streaming.
                 // Idempotent, so the onClose after a successful close is harmless.
+                subscriptionService.onConnectionClosed(webSocket);
+            }
+        });
+        updateWebsocketClients();
+    }
+
+    /**
+     * Closes all WebSocket connections whose session no longer holds.
+     * <p>
+     * The REST API checks the session with each request. A WebSocket is authenticated at the
+     * handshake only, so without this check a connection outlives the session which opened it, and
+     * its subscriptions keep delivering data after the session expired. A connection without a
+     * session is not affected: without session handling there is none to expire. The sockets are
+     * dropped by the same rules as in {@link #disconnectClient(String)}.
+     */
+    @VisibleForTesting
+    void disconnectEndedSessions() {
+        List<WebSocket> sockets = getWebSockets().stream()
+                .filter(webSocket -> WebSocketIdentity.findSessionId(webSocket)
+                        .filter(sessionId -> !sessionValidCheck.test(sessionId))
+                        .isPresent())
+                .toList();
+        if (sockets.isEmpty()) {
+            return;
+        }
+        sockets.forEach(this::remove);
+        sockets.forEach(webSocket -> {
+            log.info("Disconnecting a client whose session has ended");
+            try {
+                webSocket.close();
+            } catch (Exception e) {
+                log.warn("Could not close the WebSocket of an ended session", e);
+            } finally {
                 subscriptionService.onConnectionClosed(webSocket);
             }
         });

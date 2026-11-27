@@ -197,6 +197,9 @@ public class ApiService implements Service {
                     // is what answers that: a revocation withdraws it first and keeps the profile
                     // until its cleanup succeeds.
                     clientAuthorizedCheck,
+                    // The session is checked at the handshake only, so the open connections are
+                    // checked against the sessions again while they live.
+                    sessionId -> sessionService.findNotExpiredToken(sessionId).isPresent(),
                     recordedOfferItems));
         } else {
             webSocketService = Optional.empty();

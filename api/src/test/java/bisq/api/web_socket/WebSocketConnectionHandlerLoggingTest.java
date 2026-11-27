@@ -68,7 +68,8 @@ class WebSocketConnectionHandlerLoggingTest {
     @BeforeEach
     void setUp() {
         webSocketRestApiService = mock(WebSocketRestApiService.class);
-        handler = new WebSocketConnectionHandler(subscriptionService(), webSocketRestApiService, clientId -> true);
+        handler = new WebSocketConnectionHandler(subscriptionService(), webSocketRestApiService, clientId -> true,
+                sessionId -> true);
         webSocket = connect();
     }
 
