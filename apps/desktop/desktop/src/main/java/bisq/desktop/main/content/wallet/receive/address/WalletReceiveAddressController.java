@@ -158,10 +158,10 @@ public class WalletReceiveAddressController implements Controller {
         model.getReceiveAddressEntry().set(receiveAddressEntry);
         model.getReceiveAddress().set(receiveAddressEntry.getAddress());
         model.getReceiveAddressNote().set(receiveAddressEntry.getNote().orElse(null));
-        model.getIsNewAddress().set(true);
         model.getAddressTextFieldDescription().set(Res.get("wallet.receive.unusedAddress"));
         boolean hasNote = model.getReceiveAddressNote().get() != null;
         model.getIsAddressNoteEditable().set(!hasNote);
         model.getShouldShowAddressNote().set(hasNote);
+        model.getShownAddressCount().set(model.getShownAddressCount().get() + 1);
     }
 }

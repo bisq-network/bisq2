@@ -24,6 +24,7 @@ import bisq.desktop.testutil.JavaFxToolkitExtension;
 import bisq.i18n.Res;
 import bisq.settings.SettingsService;
 import bisq.wallet.WalletService;
+import bisq.wallet.receive_address.ReceiveAddressService;
 import bisq.wallet.receive_address.ReceiveAddressEntry;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -115,6 +116,46 @@ class WalletReceiveAddressControllerTest {
         assertThat(descriptionLabel().getText()).isEqualTo(Res.get("wallet.receive.unusedAddress"));
         assertThat(noteInput().getText()).isNullOrEmpty();
         assertThat(noteInput().isEditable()).isTrue();
+    }
+
+    @Test
+    void anInvalidNoteLeavesNoErrorOnTheNextAddress() {
+        when(walletService.createReceiveAddress()).thenReturn(CompletableFuture.completedFuture(
+                new ReceiveAddressEntry("bcrt1qcycled", 1L, Optional.of("rent"))));
+        show();
+        enterInvalidNote();
+
+        onFx(controller::onCreateNewReceiveAddress);
+
+        assertThat(noteInputBox().isValidProperty().get()).isTrue();
+    }
+
+    @Test
+    void anInvalidNoteLeavesNoErrorWhenTheSameAddressComesAgain() {
+        when(walletService.createReceiveAddress())
+                .thenReturn(CompletableFuture.completedFuture(new ReceiveAddressEntry("bcrt1qfirst")));
+        show();
+        enterInvalidNote();
+
+        onFx(controller::onCreateNewReceiveAddress);
+
+        assertThat(noteInputBox().isValidProperty().get()).isTrue();
+    }
+
+    private void enterInvalidNote() {
+        onFx(() -> {
+            noteInput().setText("x".repeat(ReceiveAddressService.RECEIVE_ADDRESS_ENTRY_NOTE_MAX_LENGTH + 1));
+            noteInputBox().validate();
+        });
+        assertThat(noteInputBox().isValidProperty().get()).isFalse();
+    }
+
+    private AddressNoteInputBox noteInputBox() {
+        return controller.getView().getRoot().lookupAll("*").stream()
+                .filter(AddressNoteInputBox.class::isInstance)
+                .map(AddressNoteInputBox.class::cast)
+                .findFirst()
+                .orElseThrow();
     }
 
     private void show() {
