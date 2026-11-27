@@ -157,8 +157,8 @@ public class NetworkSettingsController implements Controller {
                         if (mostRecentDifficultyAdjustmentFactorOrDefaultPin != null) {
                             mostRecentDifficultyAdjustmentFactorOrDefaultPin.unbind();
                         }
-                        difficultyAdjustmentFactorPin = FxBindings.bindBiDir(model.getDifficultyAdjustmentFactor())
-                                .to(settingsService.getDifficultyAdjustmentFactor(), settingsService::setDifficultyAdjustmentFactor);
+                        difficultyAdjustmentFactorPin = FxBindings.bind(model.getDifficultyAdjustmentFactor())
+                                .to(settingsService.getDifficultyAdjustmentFactor());
                     } else {
                         model.getDifficultyAdjustmentFactorDescriptionText().set(Res.get("settings.network.difficultyAdjustmentFactor.description.fromSecManager"));
                         if (difficultyAdjustmentFactorPin != null) {
@@ -189,6 +189,13 @@ public class NetworkSettingsController implements Controller {
     @VisibleForTesting
     NetworkSettingsModel getModel() {
         return model;
+    }
+
+    void onCommitDifficultyAdjustmentFactor(Number value) {
+        // Without the switch, the field shows the value of the security manager, which must not become the own value.
+        if (model.getIgnoreDiffAdjustmentFromSecManager().get()) {
+            settingsService.setDifficultyAdjustmentFactor(value.doubleValue());
+        }
     }
 
     void onResetToDefaults() {
