@@ -32,6 +32,7 @@ import bisq.trade.bisq_easy.protocol.messages.BisqEasyConfirmFiatReceiptMessage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -39,16 +40,20 @@ import static bisq.trade.bisq_easy.BisqEasyTradeTestData.QUOTE_AMOUNT;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.buyerAsTakerTrade;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.contract;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.identity;
+import static bisq.trade.bisq_easy.BisqEasyTradeTestData.inState;
 import static bisq.trade.bisq_easy.BisqEasyTradeTestData.offer;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.spy;
 
 /**
  * The state machine of a trade queues a trade message which arrives before the trade can process it. The node does not
- * receive such a message again, so the trade keeps its queued trade messages when it is persisted
- * (docs/specifications/trade/queued-trade-messages.md).
+ * receive such a message again, so the trade keeps its queued trade messages when it is persisted. The trade also keeps
+ * the types of the events which changed its state, so the protocol does not queue a copy of a processed message after
+ * a restart (docs/specifications/trade/queued-trade-messages.md).
  */
 class BisqEasyTradeQueuedTradeMessagesTest {
     private NetworkId makerNetworkId;
@@ -108,6 +113,40 @@ class BisqEasyTradeQueuedTradeMessagesTest {
 
         assertEquals(trade.getId(), restored.getId());
         assertEquals(Set.of(message), restored.getEventQueue());
+    }
+
+    // The mailbox can deliver a second copy of a message after a restart. The trade has processed the type, so the
+    // protocol does not queue the copy, also after the restart.
+    @Test
+    void copyOfAProcessedMessageIsNotQueuedAfterARestart() throws UnresolvableProtobufException {
+        BisqEasyTrade paidTrade = inState(trade, BisqEasyTradeState.BUYER_SENT_FIAT_SENT_CONFIRMATION);
+        ServiceProvider serviceProvider = mock(ServiceProvider.class, RETURNS_DEEP_STUBS);
+        new BisqEasyBuyerAsTakerProtocol(serviceProvider, paidTrade).handle(confirmFiatReceipt());
+        assertEquals(BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION, paidTrade.getState());
+
+        BisqEasyTrade restored = BisqEasyTrade.fromProto(paidTrade.toProto(false));
+        new BisqEasyBuyerAsTakerProtocol(serviceProvider, restored).handle(confirmFiatReceipt());
+
+        assertEquals(BisqEasyTradeState.BUYER_RECEIVED_SELLERS_FIAT_RECEIPT_CONFIRMATION, restored.getState());
+        assertTrue(restored.getEventQueue().isEmpty());
+    }
+
+    // The state machine sets the new state before it records the type of the event as processed. A write which reads
+    // the processed event types first therefore stores a type only together with the state which its event produced.
+    // In the other order, a write could store a type without its state, and after a restart the protocol could drop a
+    // copy of the message which the trade still needs.
+    @Test
+    void writeReadsTheProcessedEventTypesBeforeTheState() {
+        BisqEasyTrade spiedTrade = spy(trade);
+
+        spiedTrade.toProto(false);
+
+        List<String> reads = mockingDetails(spiedTrade).getInvocations().stream()
+                .map(invocation -> invocation.getMethod().getName())
+                .filter(name -> name.equals("getProcessedEventTypes") || name.equals("getState"))
+                .toList();
+        assertTrue(reads.contains("getState"));
+        assertEquals("getProcessedEventTypes", reads.get(0));
     }
 
     private BisqEasyConfirmFiatReceiptMessage confirmFiatReceipt() {
