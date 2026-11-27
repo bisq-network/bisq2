@@ -35,7 +35,6 @@ import bisq.contract.Role;
 import bisq.contract.mu_sig.MuSigContract;
 import bisq.i18n.Res;
 import bisq.network.NetworkService;
-import bisq.network.StartupReplay;
 import bisq.network.identity.NetworkId;
 import bisq.network.identity.NetworkIdWithKeyPair;
 import bisq.network.p2p.message.EnvelopePayloadMessage;
@@ -117,10 +116,9 @@ public class MuSigArbitratorService extends RateLimitedPersistenceClient<MuSigAr
         if (!DevMode.isDevMode()) {
             return CompletableFuture.completedFuture(true);
         }
-        StartupReplay.forEach(networkService.getConfidentialMessageServices().stream()
-                        .flatMap(service -> service.getProcessedEnvelopePayloadMessages().stream()),
-                this::onMessage);
-        networkService.addConfidentialMessageListener(this);
+        // Replays the messages which the node processed earlier in this run, and registers this service in one step
+        // (docs/specifications/network/startup-replay.md)
+        networkService.subscribeToConfidentialMessages(this);
         return CompletableFuture.completedFuture(true);
     }
 

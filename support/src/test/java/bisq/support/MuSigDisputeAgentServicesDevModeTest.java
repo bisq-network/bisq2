@@ -57,6 +57,7 @@ class MuSigDisputeAgentServicesDevModeTest {
             arbitratorService(networkService).initialize().join();
             mediatorService(networkService).initialize().join();
 
+            verify(networkService, never()).subscribeToConfidentialMessages(any());
             verify(networkService, never()).addConfidentialMessageListener(any());
             verify(networkService, never()).getConfidentialMessageServices();
         } finally {
@@ -74,7 +75,10 @@ class MuSigDisputeAgentServicesDevModeTest {
             arbitratorService(networkService).initialize().join();
             mediatorService(networkService).initialize().join();
 
-            verify(networkService, times(2)).addConfidentialMessageListener(any());
+            // The services register in one step with the replay of the processed messages
+            // (docs/specifications/network/startup-replay.md)
+            verify(networkService, times(2)).subscribeToConfidentialMessages(any());
+            verify(networkService, never()).addConfidentialMessageListener(any());
         } finally {
             DevMode.setDevMode(devMode);
         }
