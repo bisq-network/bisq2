@@ -229,6 +229,9 @@ public class SetupWalletWizardController extends NavigationController {
         }
         int prevIndex = model.getCurrentIndex().get() - 1;
         if (prevIndex >= 0) {
+            // The step left behind may have hidden the buttons (backup while loading, verify); a step which needs
+            // them hidden hides them again when it shows
+            setMainButtonsVisibleState(true);
             model.setAnimateRightOut(true);
             model.getCurrentIndex().set(prevIndex);
             NavigationTarget nextTarget = model.getChildTargets().get(prevIndex);

@@ -107,6 +107,20 @@ class SetupWalletWizardEnterKeyTest {
         assertThat(controller.getModel().getCurrentIndex().get()).isEqualTo(BACKUP_STEP + 1);
     }
 
+    // A failed seed request sends the wizard back while the backup step still hides the navigation.
+    @Test
+    void goingBackShowsTheNavigationAgain() {
+        JavaFxToolkitExtension.runOnFxThread(() -> {
+            controller.getModel().getNextButtonVisible().set(false);
+            controller.getModel().getBackButtonVisible().set(false);
+            controller.onBack();
+        });
+
+        assertThat(controller.getModel().getCurrentIndex().get()).isEqualTo(BACKUP_STEP - 1);
+        assertThat(controller.getModel().getNextButtonVisible().get()).isTrue();
+        assertThat(controller.getModel().getBackButtonVisible().get()).isTrue();
+    }
+
     private static KeyEvent enter() {
         return new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.ENTER, false, false, false, false);
     }
