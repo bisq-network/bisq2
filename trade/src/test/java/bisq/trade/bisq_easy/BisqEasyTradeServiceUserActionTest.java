@@ -17,6 +17,9 @@
 
 package bisq.trade.bisq_easy;
 
+import bisq.account.payment_method.BitcoinPaymentMethod;
+import bisq.account.payment_method.BitcoinPaymentMethodSpec;
+import bisq.account.payment_method.BitcoinPaymentRail;
 import bisq.bonded_roles.release.AppType;
 import bisq.common.network.Address;
 import bisq.common.network.AddressByTransportTypeMap;
@@ -62,6 +65,8 @@ class BisqEasyTradeServiceUserActionTest {
         // I am the taker and the buyer. The peer is the maker.
         BisqEasyContract contract = mock(BisqEasyContract.class);
         when(contract.getTakeOfferDate()).thenReturn(0L);
+        when(contract.getBaseSidePaymentMethodSpec())
+                .thenReturn(new BitcoinPaymentMethodSpec(BitcoinPaymentMethod.fromPaymentRail(BitcoinPaymentRail.MAIN_CHAIN)));
         BisqEasyOffer offer = mock(BisqEasyOffer.class);
         when(offer.getId()).thenReturn("offerId");
         trade = new BisqEasyTrade(contract, true, true, mock(Identity.class), offer, me, peer);

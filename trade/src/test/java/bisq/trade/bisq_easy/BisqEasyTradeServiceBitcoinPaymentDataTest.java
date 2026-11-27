@@ -36,9 +36,9 @@ import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 
 /**
- * The buyer does not send bitcoin payment data which requests another amount than the trade amount, as the seller's
- * node would fail the trade (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md). The trade amount is
- * 0.001 BTC.
+ * The buyer does not send bitcoin payment data which is too long or requests another amount than the trade amount, as
+ * the seller's node would fail the trade (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md). The trade
+ * amount is 0.001 BTC.
  */
 class BisqEasyTradeServiceBitcoinPaymentDataTest {
     private static final String ADDRESS = "bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4";
@@ -55,6 +55,14 @@ class BisqEasyTradeServiceBitcoinPaymentDataTest {
     void dataForAnotherAmountIsNotSent() {
         assertThrows(IllegalArgumentException.class,
                 () -> service.buyerSendBitcoinPaymentData(trade, "bitcoin:" + ADDRESS + "?amount=0.01"));
+
+        assertTrue(trade.getBitcoinPaymentData().isEmpty());
+    }
+
+    @Test
+    void tooLongAddressIsNotSent() {
+        // The seller's node would fail the trade (#5210). The address pasted twice.
+        assertThrows(IllegalArgumentException.class, () -> service.buyerSendBitcoinPaymentData(trade, ADDRESS + ADDRESS));
 
         assertTrue(trade.getBitcoinPaymentData().isEmpty());
     }

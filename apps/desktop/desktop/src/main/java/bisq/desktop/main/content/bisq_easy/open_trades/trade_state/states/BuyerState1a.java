@@ -45,6 +45,7 @@ import bisq.desktop.webcam.WebcamAppModel;
 import bisq.desktop.webcam.WebcamAppService;
 import bisq.i18n.Res;
 import bisq.trade.bisq_easy.BisqEasyTrade;
+import bisq.trade.bisq_easy.validation.BisqEasyBitcoinPaymentDataValidator;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
@@ -159,8 +160,15 @@ public class BuyerState1a extends BaseState {
         }
 
         private void onSend() {
-            // The seller's node rejects data which requests another amount than the trade amount
+            // The seller's node rejects data which is too long or requests another amount than the trade amount
             // (docs/specifications/trade/bisq-easy-bitcoin-payment-data.md)
+            BitcoinPaymentRail paymentRail = getPaymentRail();
+            int maxLength = BisqEasyBitcoinPaymentDataValidator.getMaxLength(paymentRail);
+            if (model.getBitcoinPaymentData().get().length() > maxLength) {
+                new Popup().warning(Res.get("bisqEasy.takeOffer.bitcoinPaymentData.tooLong." + paymentRail.name(),
+                        String.valueOf(maxLength))).show();
+                return;
+            }
             long tradeAmount = model.getTrade().getContract().getBaseSideAmount();
             if (!RequestedAmountValidation.requestsOnlyAmount(model.getBitcoinPaymentData().get(), tradeAmount)) {
                 new Popup().warning(Res.get("bisqEasy.takeOffer.bitcoinPaymentData.otherAmount")).show();
