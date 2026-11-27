@@ -124,6 +124,12 @@ public class BisqEasyMobileTradeNotificationService implements Service {
 
     @Override
     public CompletableFuture<Boolean> initialize() {
+        // The applications initialize this service before the trade service, so that it sees the state changes which
+        // the trade service applies at startup. BisqEasyService.initialize() calls it again for applications which do
+        // not. A second subscription would treat the current state of each trade as a new transition.
+        if (tradesPin != null) {
+            return CompletableFuture.completedFuture(true);
+        }
         log.info("initialize");
         tradesPin = bisqEasyTradeService.getTrades().addObserver(new CollectionObserver<BisqEasyTrade>() {
             @Override
@@ -195,6 +201,12 @@ public class BisqEasyMobileTradeNotificationService implements Service {
         String tradeId = trade.getId();
         boolean isFirstEmission = tradesWithInitializedState.add(tradeId);
         if (isFirstEmission) {
+            // A trade which is loaded in a state of the payment-info exchange counts as notified for it, as after a
+            // live transition to that state. So a later transition to another such state, for example by a message
+            // which the trade service applies at startup, does not push again.
+            if (isPaymentInfoExchangedState(state)) {
+                notifiedPaymentInfo.add(tradeId);
+            }
             log.debug("Skipping initial state observation for trade {} (state={})", tradeId, state);
             return;
         }
