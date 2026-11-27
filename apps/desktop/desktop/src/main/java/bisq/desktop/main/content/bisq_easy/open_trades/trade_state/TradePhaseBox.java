@@ -20,7 +20,6 @@ package bisq.desktop.main.content.bisq_easy.open_trades.trade_state;
 import bisq.desktop.main.content.bisq_easy.TradesUtils;
 import bisq.desktop.navigation.NavigationTarget;
 import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannel;
-import bisq.chat.bisq_easy.open_trades.BisqEasyOpenTradeChannelService;
 import bisq.common.data.Triple;
 import bisq.common.observable.Pin;
 import bisq.desktop.ServiceProvider;
@@ -88,13 +87,11 @@ class TradePhaseBox {
         @Getter
         private final View view;
         private final BisqEasyMediationRequestService bisqEasyMediationRequestService;
-        private final BisqEasyOpenTradeChannelService channelService;
         private final BannedUserService bannedUserService;
         private Pin bisqEasyTradeStatePin, isInMediationPin;
 
         private Controller(ServiceProvider serviceProvider) {
             bisqEasyMediationRequestService = serviceProvider.getSupportService().getBisqEasyMediationRequestService();
-            channelService = serviceProvider.getChatService().getBisqEasyOpenTradeChannelService();
             bannedUserService = serviceProvider.getUserService().getBannedUserService();
 
             model = new Model();
@@ -232,7 +229,7 @@ class TradePhaseBox {
         void onRequestMediation() {
             TradesUtils.requestMediation(model.getSelectedChannel(),
                     model.getBisqEasyTrade().getContract(),
-                    bisqEasyMediationRequestService, channelService, bannedUserService);
+                    bisqEasyMediationRequestService, bannedUserService);
         }
     }
 

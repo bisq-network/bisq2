@@ -43,6 +43,7 @@ import bisq.common.proto.UnresolvableProtobufException;
 import bisq.common.util.StringUtils;
 import bisq.contract.TradeId;
 import bisq.contract.bisq_easy.BisqEasyContract;
+import bisq.i18n.Res;
 import bisq.identity.Identity;
 import bisq.network.NetworkService;
 import bisq.network.identity.NetworkId;
@@ -72,6 +73,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -81,9 +83,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -99,6 +103,7 @@ class BisqEasyMediationRequestServiceTest {
     private NetworkService networkService;
     private AuthorizedBondedRolesService authorizedBondedRolesService;
     private UserProfileService userProfileService;
+    private BannedUserService bannedUserService;
     private BisqEasyOpenTradeChannelService openTradeChannelService;
     private BisqEasyMediationRequestService service;
     private UserIdentity makerIdentity;
@@ -115,7 +120,8 @@ class BisqEasyMediationRequestServiceTest {
         UserService userService = mock(UserService.class);
         userProfileService = mock(UserProfileService.class);
         when(userService.getUserProfileService()).thenReturn(userProfileService);
-        when(userService.getBannedUserService()).thenReturn(mock(BannedUserService.class));
+        bannedUserService = mock(BannedUserService.class);
+        when(userService.getBannedUserService()).thenReturn(bannedUserService);
         openTradeChannelService = mock(BisqEasyOpenTradeChannelService.class);
         ChatService chatService = mock(ChatService.class);
         when(chatService.getBisqEasyOpenTradeChannelService()).thenReturn(openTradeChannelService);
@@ -222,6 +228,62 @@ class BisqEasyMediationRequestServiceTest {
         assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
 
         verify(openTradeChannelService, never()).setIsInMediation(any(), anyBoolean());
+    }
+
+    // The API and the mobile node request mediation through the service as the desktop does, so the peer gets the
+    // trade log message of the request from every client. It is sent before the channel is in mediation, so it goes
+    // to the peer only, and the mediator gets it with the request.
+    @Test
+    void requestSendsTheTradeLogMessageBeforeTheChannelIsInMediation() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+
+        service.requestMediation(channel, contract);
+
+        String tradeLogMessage = Res.encode("bisqEasy.mediation.requester.tradeLogMessage", makerIdentity.getUserName());
+        InOrder order = inOrder(openTradeChannelService, networkService);
+        order.verify(openTradeChannelService).sendTradeLogMessage(tradeLogMessage, channel);
+        order.verify(openTradeChannelService).setIsInMediation(channel, true);
+        order.verify(networkService).confidentialSend(any(), eq(mediator.getNetworkId()), any());
+    }
+
+    @Test
+    void requestCarriesItsTradeLogMessage() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+        BisqEasyOpenTradeMessage tradeLogMessage = message(makerIdentity.getUserProfile(),
+                tradeId,
+                BisqEasyOpenTradeChannel.createId(tradeId));
+        // The channel service adds a sent message to the channel before it returns
+        when(openTradeChannelService.sendTradeLogMessage(anyString(), eq(channel))).thenAnswer(invocation -> {
+            channel.addChatMessage(tradeLogMessage);
+            return CompletableFuture.completedFuture(null);
+        });
+
+        service.requestMediation(channel, contract);
+
+        ArgumentCaptor<BisqEasyMediationRequest> request = ArgumentCaptor.forClass(BisqEasyMediationRequest.class);
+        verify(networkService).confidentialSend(request.capture(), eq(mediator.getNetworkId()), any());
+        assertEquals(List.of(tradeLogMessage), request.getValue().getChatMessages());
+    }
+
+    // A refused request leaves nothing in the chat
+    @Test
+    void refusedRequestSendsNoTradeLogMessage() {
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(createUserProfile("other-mediator")));
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(openTradeChannelService, never()).sendTradeLogMessage(anyString(), any());
+    }
+
+    @Test
+    void requestOfABannedUserSendsNoTradeLogMessage() {
+        when(bannedUserService.isUserProfileBanned(makerIdentity.getUserProfile())).thenReturn(true);
+        BisqEasyOpenTradeChannel channel = makersChannel(Optional.of(mediator));
+
+        assertThrows(IllegalArgumentException.class, () -> service.requestMediation(channel, contract));
+
+        verify(openTradeChannelService, never()).sendTradeLogMessage(anyString(), any());
+        verify(networkService, never()).confidentialSend(any(), any(), any());
     }
 
     @Test
@@ -396,7 +458,10 @@ class BisqEasyMediationRequestServiceTest {
         KeyPair keyPair = KeyGeneration.generateDefaultEcKeyPair();
         NetworkId networkId = createNetworkId(nickName, keyPair);
         KeyBundle keyBundle = new KeyBundle(nickName, keyPair, TorKeyGeneration.generateKeyPair(), I2PKeyGeneration.generateKeyPair());
-        return new UserIdentity(new Identity(nickName, networkId, keyBundle), createUserProfile(nickName, networkId));
+        UserIdentity userIdentity = spy(new UserIdentity(new Identity(nickName, networkId, keyBundle), createUserProfile(nickName, networkId)));
+        // The user name of a real profile needs the UserProfileService instance, which the test does not create
+        doReturn(nickName).when(userIdentity).getUserName();
+        return userIdentity;
     }
 
     private static UserProfile createUserProfile(String nickName) {

@@ -8,6 +8,8 @@ A Bisq Easy mediation request is signed by the trader who sends it. It carries t
 
 A trader's node puts its trade channel in mediation when it sends a request, so that its messages go to the mediator as well, whether or not a response of the mediator arrives. It does so before the request leaves: the response can arrive before the sending returns, and it must find the channel in mediation, else the requester's client shows the message for the trader who did not request. The desktop and the API send the request through the same service.
 
+The same service also sends the trade log message which tells the peer that the requester requested mediation, so the peer gets it from every client. The service sends it after its checks, so a refused request leaves nothing in the chat. It sends it before the channel is in mediation, so the message goes to the peer only. The service adds it before it collects the chat messages of the request, so the mediator gets it with the request.
+
 ## Accepted requests
 
 The mediator accepts a request only when:

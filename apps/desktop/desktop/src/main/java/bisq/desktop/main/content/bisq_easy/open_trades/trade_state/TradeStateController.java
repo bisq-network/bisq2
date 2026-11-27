@@ -320,7 +320,7 @@ public class TradeStateController implements Controller {
     void onRequestMediation() {
         TradesUtils.requestMediation(model.getChannel().get(),
                 model.getBisqEasyTrade().get().getContract(),
-                bisqEasyMediationRequestService, channelService, bannedUserService);
+                bisqEasyMediationRequestService, bannedUserService);
     }
 
     public void onResendMediationRequest() {
