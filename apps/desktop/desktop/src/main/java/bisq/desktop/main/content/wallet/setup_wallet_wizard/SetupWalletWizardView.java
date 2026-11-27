@@ -30,6 +30,7 @@ import bisq.desktop.components.controls.BisqIconButton;
 import bisq.desktop.overlay.OverlayModel;
 import bisq.i18n.Res;
 import javafx.beans.value.ChangeListener;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
@@ -40,6 +41,8 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Window;
+import javafx.stage.WindowEvent;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -63,6 +66,8 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
     private final VBox content;
     private final ChangeListener<Number> currentIndexListener;
     private final ChangeListener<View<? extends Parent, ? extends Model, ? extends Controller>> viewChangeListener;
+    private final EventHandler<WindowEvent> windowCloseRequestFilter;
+    private Window window;
 
     public SetupWalletWizardView(SetupWalletWizardModel model, SetupWalletWizardController controller) {
         super(new VBox(), model, controller);
@@ -128,10 +133,17 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         };
 
         currentIndexListener = (observable, oldValue, newValue) -> applyProgress(newValue.intValue(), true);
+        windowCloseRequestFilter = event -> {
+            event.consume();
+            controller.onClose();
+        };
     }
 
     @Override
     protected void onViewAttached() {
+        window = root.getScene().getWindow();
+        window.addEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, windowCloseRequestFilter);
+
         progressBarHeader.visibleProperty().bind(model.getShouldShowHeader());
         progressBarHeader.managedProperty().bind(model.getShouldShowHeader());
         closeButtonBox.visibleProperty().bind(model.getShouldShowHeader().not());
@@ -140,10 +152,12 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().bind(model.getNextButtonText());
         nextButton.visibleProperty().bind(model.getNextButtonVisible());
         nextButton.managedProperty().bind(model.getNextButtonVisible());
+        nextButton.disableProperty().bind(model.getNextButtonDisabled());
 
         backButton.textProperty().bind(model.getBackButtonText());
         backButton.visibleProperty().bind(model.getBackButtonVisible());
         backButton.managedProperty().bind(model.getBackButtonVisible());
+        backButton.disableProperty().bind(model.getBackButtonDisabled());
 
         skipThisStepHyperLink.visibleProperty().bind(model.getSkipThisStepHyperLinkVisible());
         skipThisStepHyperLink.managedProperty().bind(model.getSkipThisStepHyperLinkVisible());
@@ -163,6 +177,9 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
 
     @Override
     protected void onViewDetached() {
+        window.removeEventFilter(WindowEvent.WINDOW_CLOSE_REQUEST, windowCloseRequestFilter);
+        window = null;
+
         progressBarHeader.visibleProperty().unbind();
         progressBarHeader.managedProperty().unbind();
         closeButtonBox.visibleProperty().unbind();
@@ -171,10 +188,12 @@ public class SetupWalletWizardView extends NavigationView<VBox, SetupWalletWizar
         nextButton.textProperty().unbind();
         nextButton.visibleProperty().unbind();
         nextButton.managedProperty().unbind();
+        nextButton.disableProperty().unbind();
 
         backButton.textProperty().unbind();
         backButton.visibleProperty().unbind();
         backButton.managedProperty().unbind();
+        backButton.disableProperty().unbind();
 
         skipThisStepHyperLink.visibleProperty().unbind();
         skipThisStepHyperLink.managedProperty().unbind();
