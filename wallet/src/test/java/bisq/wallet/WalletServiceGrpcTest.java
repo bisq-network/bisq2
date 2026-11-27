@@ -968,8 +968,9 @@ class WalletServiceGrpcTest {
         @Override
         public void openOrCreateWallet(OpenOrCreateWalletRequest request, StreamObserver<OpenOrCreateWalletResponse> responseObserver) {
             requests.add(request);
-            if (failure != null) {
-                responseObserver.onError(failure.asRuntimeException());
+            Status configuredFailure = failure;
+            if (configuredFailure != null) {
+                responseObserver.onError(configuredFailure.asRuntimeException());
                 return;
             }
             if (!walletOpen) {
@@ -1075,8 +1076,10 @@ class WalletServiceGrpcTest {
         }
 
         private boolean canServe(StreamObserver<?> responseObserver) {
-            if (failure != null) {
-                responseObserver.onError(failure.asRuntimeException());
+            // A test can clear the failure while a poll runs, so it is read once
+            Status configuredFailure = failure;
+            if (configuredFailure != null) {
+                responseObserver.onError(configuredFailure.asRuntimeException());
                 return false;
             }
             if (!walletOpen) {
