@@ -132,10 +132,13 @@ public class BisqEasySellerAsTakerProtocol extends BisqEasyProtocol {
                 .run(BisqEasyRejectTradeEventHandler.class)
                 .to(REJECTED);
 
-        // Peer rejected trade
+        // Peer rejected trade. The buyer can no longer reject once it has sent its Bitcoin address, and its reject can
+        // cross with our account data (docs/specifications/trade/bisq-easy/peer-reject.md).
         fromStates(TAKER_SENT_TAKE_OFFER_REQUEST,
                 TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_DID_NOT_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
-                TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS)
+                TAKER_DID_NOT_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS,
+                TAKER_RECEIVED_TAKE_OFFER_RESPONSE__SELLER_SENT_ACCOUNT_DATA__SELLER_DID_NOT_RECEIVED_BTC_ADDRESS_)
                 .on(BisqEasyRejectTradeMessage.class)
                 .run(BisqEasyRejectTradeMessageHandler.class)
                 .to(PEER_REJECTED);
