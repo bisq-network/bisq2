@@ -35,6 +35,7 @@ import bisq.desktop.overlay.OverlayController;
 import bisq.i18n.Res;
 import bisq.wallet.WalletException;
 import bisq.wallet.WalletService;
+import com.google.common.annotations.VisibleForTesting;
 import javafx.event.EventHandler;
 import javafx.scene.Parent;
 import javafx.scene.input.KeyEvent;
@@ -157,7 +158,7 @@ public class SetupWalletWizardController extends NavigationController {
     }
 
     void onNext() {
-        if (walletOpenInProgress) {
+        if (!activated || walletOpenInProgress) {
             return;
         }
         int nextIndex = model.getCurrentIndex().get() + 1;
@@ -231,7 +232,7 @@ public class SetupWalletWizardController extends NavigationController {
     }
 
     void onBack() {
-        if (walletOpenInProgress) {
+        if (!activated || walletOpenInProgress) {
             return;
         }
         int prevIndex = model.getCurrentIndex().get() - 1;
@@ -250,9 +251,13 @@ public class SetupWalletWizardController extends NavigationController {
         }
     }
 
+    // The overlay hides with an animation and deactivates the wizard only at its end. The first dismissal decides
+    // where the user lands: a close, Escape, system close, Next, Back or open answer which arrives in between is
+    // ignored, as it would open a second wizard or drop the target of the finish.
     void onClose() {
-        // The overlay hides with an animation and deactivates the wizard only at its end. An open request answered
-        // in between must not navigate, as the overlay would then create a second wizard.
+        if (!activated) {
+            return;
+        }
         activated = false;
         Navigation.navigateTo(NavigationTarget.MAIN);
         OverlayController.hide();
@@ -263,7 +268,13 @@ public class SetupWalletWizardController extends NavigationController {
         KeyHandlerUtil.handleEnterKeyEventWithTextInputFocusCheck(keyEvent, getView().getRoot(), this::onNext);
     }
 
-    private void closeAndNavigateTo(NavigationTarget navigationTarget) {
+    @VisibleForTesting
+    void closeAndNavigateTo(NavigationTarget navigationTarget) {
+        if (!activated) {
+            return;
+        }
+        activated = false;
+        walletService.setWalletInitialized();
         reset();
         // walletService.purgeSeedWords();
         walletService.initialize();
