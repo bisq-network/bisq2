@@ -167,7 +167,9 @@ public class WalletService implements Service {
         if (refreshScheduler != null) {
             return;
         }
-        refreshState();
+        // The first probe counts as the poll in flight: the ticks wait for it, and a request left from a stopped
+        // poll no longer holds them up
+        pollInFlight = refreshState();
         refreshScheduler = Scheduler.run(this::refreshWhileOpen)
                 .host(this)
                 .runnableName("refreshWallet")

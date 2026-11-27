@@ -755,6 +755,50 @@ class WalletServiceGrpcTest {
     }
 
     @Test
+    void thePollWaitsForTheProbeWithWhichItStarts() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.holdBalanceReply = true;
+        requests.clear();
+
+        polling.startPolling();
+        Thread.sleep(300);
+
+        assertEquals(1, balanceRequestCount());
+        daemon.holdBalanceReply = false;
+        daemon.heldBalanceReply.onNext(GetBalanceResponse.newBuilder().setBalance(2000).build());
+        daemon.heldBalanceReply.onCompleted();
+    }
+
+    @Test
+    void aRestartedPollDoesNotWaitForARequestOfTheStoppedPoll() throws Exception {
+        WalletService polling = pollingService(Duration.ofMillis(50));
+        polling.initialize().get();
+        polling.startPolling();
+        polling.openOrCreateWallet("Wallet-Pa55!").get();
+        awaitBalance(polling, 2000);
+        daemon.holdBalanceReply = true;
+        awaitHeldBalanceReply();
+        StreamObserver<GetBalanceResponse> replyOfTheStoppedPoll = daemon.heldBalanceReply;
+        polling.stopPolling();
+        daemon.holdBalanceReply = false;
+        requests.clear();
+
+        polling.startPolling();
+
+        // The probe of the restart and at least one tick, while the request of the stopped poll is still open
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (balanceRequestCount() < 2 && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20);
+        }
+        assertTrue(balanceRequestCount() >= 2, "the restarted poll sent no tick");
+        replyOfTheStoppedPoll.onNext(GetBalanceResponse.newBuilder().setBalance(2000).build());
+        replyOfTheStoppedPoll.onCompleted();
+    }
+
+    @Test
     void shutdownEndsThePoll() throws Exception {
         WalletService polling = pollingService(Duration.ofMillis(50));
         polling.initialize().get();
@@ -884,6 +928,10 @@ class WalletServiceGrpcTest {
             Thread.sleep(20);
         }
         assertEquals(Coin.asBtcFromValue(expected), service.getBalance().get());
+    }
+
+    private long balanceRequestCount() {
+        return requests.stream().filter(GetBalanceRequest.class::isInstance).count();
     }
 
     private void awaitRequest(Class<?> requestType) throws InterruptedException {
