@@ -84,10 +84,6 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
     public void onMessage(EnvelopePayloadMessage envelopePayloadMessage) {
         if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessage) {
             processMessage((BisqEasyOpenTradeMessage) envelopePayloadMessage);
-            if (!pendingMessages.isEmpty()) {
-                log.info("Processing pendingMessages messages");
-                pendingMessages.getMessagesInArrivalOrder().forEach(this::processMessage);
-            }
         } else if (envelopePayloadMessage instanceof BisqEasyOpenTradeMessageReaction) {
             processMessageReaction((BisqEasyOpenTradeMessageReaction) envelopePayloadMessage);
         }
@@ -356,21 +352,37 @@ public class BisqEasyOpenTradeChannelService extends PrivateGroupChatChannelServ
                     StringUtils.sanitizeForLog(message.getId()));
             return Optional.empty();
         }
-        if (message.getBisqEasyOffer().isPresent() &&
-                isTradeWithPeer.test(message.getTradeId(),
-                        message.getSenderUserProfile().getId(),
-                        message.getReceiverUserProfileId())) {
-            return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
-                    message.getBisqEasyOffer().get(),
-                    myUserIdentity.get(),
-                    message.getSenderUserProfile(),
-                    message.getMediator()));
+        Optional<BisqEasyOpenTradeChannel> channel = createChannelOfTrade(message, myUserIdentity.get());
+        if (channel.isPresent()) {
+            return channel;
         }
         // A message without offer, or for a trade which we do not have. The taker's first chat message can arrive
         // before the take offer request which creates our trade; the trade service then processes the pending messages.
-        // If the trade is created after the check above, onMessage processes the pending messages again.
         pendingMessages.add(message);
-        return Optional.empty();
+        // The trade service can create the trade, or another thread the channel, after the lookups above, and process
+        // the pending messages before the add. So we look again after the add (rule 6 of
+        // docs/specifications/trade/pending-trade-messages.md).
+        channel = findChannel(message).or(() -> createChannelOfTrade(message, myUserIdentity.get()));
+        if (channel.isPresent() && !isReceivedMessageOfChannel(channel.get(), message)) {
+            pendingMessages.remove(message);
+            return Optional.empty();
+        }
+        return channel;
+    }
+
+    private Optional<BisqEasyOpenTradeChannel> createChannelOfTrade(BisqEasyOpenTradeMessage message,
+                                                                    UserIdentity myUserIdentity) {
+        if (message.getBisqEasyOffer().isEmpty() ||
+                !isTradeWithPeer.test(message.getTradeId(),
+                        message.getSenderUserProfile().getId(),
+                        message.getReceiverUserProfileId())) {
+            return Optional.empty();
+        }
+        return Optional.of(traderFindOrCreatesChannel(message.getTradeId(),
+                message.getBisqEasyOffer().get(),
+                myUserIdentity,
+                message.getSenderUserProfile(),
+                message.getMediator()));
     }
 
     public void setIsTradeWithPeer(TradeWithPeerPredicate isTradeWithPeer) {

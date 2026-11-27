@@ -24,6 +24,7 @@ import bisq.account.payment_method.fiat.FiatPaymentMethod;
 import bisq.account.payment_method.fiat.FiatPaymentMethodSpec;
 import bisq.account.payment_method.fiat.FiatPaymentRail;
 import bisq.account.protocol_type.TradeProtocolType;
+import bisq.chat.ChatMessage;
 import bisq.chat.ChatMessageType;
 import bisq.common.market.Market;
 import bisq.common.network.AddressByTransportTypeMap;
@@ -69,6 +70,7 @@ import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -80,8 +82,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -282,7 +286,7 @@ public class BisqEasyOpenTradeChannelServiceTest {
     }
 
     // The trade service creates the trade and processes the pending messages after the check, before the message is
-    // pending. onMessage processes the pending messages again after the message.
+    // pending. The service checks the trade again after it kept the message as pending.
     @Test
     void tradeCreatedWhileTheMessageBecomesPendingCreatesChannel() {
         AtomicInteger checks = new AtomicInteger();
@@ -292,6 +296,65 @@ public class BisqEasyOpenTradeChannelServiceTest {
         service.onMessage(message);
 
         assertTrue(service.findChannelByTradeId(TRADE_ID).orElseThrow().getChatMessages().contains(message));
+    }
+
+    // Another thread can create the channel after the lookup of a message found none, and process the pending
+    // messages before the message became pending. The message must still reach the channel (rule 6 of
+    // docs/specifications/trade/pending-trade-messages.md).
+    @Test
+    void messageWhoseChannelIsCreatedWhileItBecomesPendingIsAdded() {
+        BisqEasyOpenTradeChannel channel = service.traderFindOrCreatesChannel(TRADE_ID, mock(BisqEasyOffer.class),
+                makerIdentity, taker, Optional.empty());
+        BisqEasyOpenTradeChannelService spiedService = spy(service);
+        AtomicBoolean firstLookup = new AtomicBoolean(true);
+        doAnswer(invocation -> firstLookup.getAndSet(false) ? Optional.empty() : invocation.callRealMethod())
+                .when(spiedService).findChannel(any(ChatMessage.class));
+        BisqEasyOpenTradeMessage message = textMessage(MAKER_PROFILE_ID, System.currentTimeMillis());
+
+        spiedService.onMessage(message);
+
+        assertEquals(Set.of(message), channel.getChatMessages());
+        assertEquals(0, spiedService.getNumPendingMessages());
+    }
+
+    // A channel which another thread created while the message became pending can reject the message, for example
+    // because its sender is not a peer of the channel. Such a message does not stay pending, as the channel would
+    // reject it again.
+    @Test
+    void messageWhichTheChannelRejectsAfterItBecamePendingIsNotKept() {
+        BisqEasyOpenTradeChannel channel = service.traderFindOrCreatesChannel(TRADE_ID, mock(BisqEasyOffer.class),
+                makerIdentity, taker, Optional.empty());
+        BisqEasyOpenTradeChannelService spiedService = spy(service);
+        AtomicBoolean firstLookup = new AtomicBoolean(true);
+        doAnswer(invocation -> firstLookup.getAndSet(false) ? Optional.empty() : invocation.callRealMethod())
+                .when(spiedService).findChannel(any(ChatMessage.class));
+        UserProfile otherUser = mock(UserProfile.class);
+        when(otherUser.getId()).thenReturn(OTHER_PROFILE_ID);
+
+        spiedService.onMessage(textMessage(otherUser, TRADE_ID, "messageOfOtherUser", MAKER_PROFILE_ID,
+                System.currentTimeMillis()));
+
+        assertTrue(channel.getChatMessages().isEmpty());
+        assertEquals(0, spiedService.getNumPendingMessages());
+    }
+
+    // A received chat message is processed alone. A pending message waits until the node creates its trade or its
+    // channel, which processes the pending messages of that trade again (rule 6 of
+    // docs/specifications/trade/pending-trade-messages.md).
+    @Test
+    void receivedMessageDoesNotProcessOtherPendingMessagesAgain() {
+        List<String> checkedTradeIds = new ArrayList<>();
+        service.setIsTradeWithPeer((tradeId, senderUserProfileId, receiverUserProfileId) -> {
+            checkedTradeIds.add(tradeId);
+            return false;
+        });
+        service.onMessage(takeOfferMessage(mock(BisqEasyOffer.class), MAKER_PROFILE_ID, System.currentTimeMillis()));
+        checkedTradeIds.clear();
+
+        service.onMessage(textMessage("otherTradeId", "messageOfOtherTrade", MAKER_PROFILE_ID,
+                System.currentTimeMillis()));
+
+        assertFalse(checkedTradeIds.contains(TRADE_ID), checkedTradeIds.toString());
     }
 
     @Test
@@ -387,10 +450,18 @@ public class BisqEasyOpenTradeChannelServiceTest {
                                                  String messageId,
                                                  String receiverUserProfileId,
                                                  long date) {
+        return textMessage(taker, tradeId, messageId, receiverUserProfileId, date);
+    }
+
+    private BisqEasyOpenTradeMessage textMessage(UserProfile sender,
+                                                 String tradeId,
+                                                 String messageId,
+                                                 String receiverUserProfileId,
+                                                 long date) {
         return new BisqEasyOpenTradeMessage(tradeId,
                 messageId,
                 BisqEasyOpenTradeChannel.createId(TRADE_ID),
-                taker,
+                sender,
                 receiverUserProfileId,
                 networkIdOf(receiverUserProfileId),
                 "text",
