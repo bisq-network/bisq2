@@ -24,29 +24,27 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import lombok.Getter;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 @Getter
 public class SetupWalletWizardVerifyModel implements Model {
     public static final int QUESTIONS_COUNT = 6;
     static final int INVALID_INDEX = -1;
-    private static final int SEED_WORD_COUNT = 12;
 
     private final IntegerProperty currentQuestionIndex = new SimpleIntegerProperty(0);
     private final List<Integer> questionPositions = new ArrayList<>(); // 0-based positions
     private final List<List<String>> answerChoices = new ArrayList<>();
     private final List<Integer> correctAnswerIndices = new ArrayList<>();
-    private final StringProperty[] seedWords = new StringProperty[SEED_WORD_COUNT];
 
     private final IntegerProperty selectedAnswerIndex = new SimpleIntegerProperty(INVALID_INDEX);
     private final BooleanProperty shouldTransitionToNextQuestion = new SimpleBooleanProperty(false);
     private final BooleanProperty shouldShowWrongWordOverlay = new SimpleBooleanProperty(false);
+    private final BooleanProperty questionsReady = new SimpleBooleanProperty(false);
 
     public enum ScreenState {
         QUIZ,
@@ -55,20 +53,19 @@ public class SetupWalletWizardVerifyModel implements Model {
 
     private final ObjectProperty<ScreenState> currentScreenState = new SimpleObjectProperty<>(ScreenState.QUIZ);
 
-    public SetupWalletWizardVerifyModel() {
-        for (int i = 0; i < SEED_WORD_COUNT; i++) {
-            seedWords[i] = new SimpleStringProperty("");
-        }
+    public void setupQuestions(List<String> allSeedWords) {
+        setupQuestions(allSeedWords, new Random());
     }
 
-    public void setupQuestions(List<String> allSeedWords) {
+    void setupQuestions(List<String> allSeedWords, Random random) {
         questionPositions.clear();
         answerChoices.clear();
         correctAnswerIndices.clear();
-        // Generate QUESTIONS_COUNT unique random positions (0-11)
         List<Integer> positions = new ArrayList<>();
-        for (int i = 0; i < SEED_WORD_COUNT; i++) positions.add(i);
-        Collections.shuffle(positions);
+        for (int i = 0; i < allSeedWords.size(); i++) {
+            positions.add(i);
+        }
+        Collections.shuffle(positions, random);
         questionPositions.addAll(positions.subList(0, QUESTIONS_COUNT));
         for (int q = 0; q < QUESTIONS_COUNT; q++) {
             int correctPos = questionPositions.get(q);
@@ -77,22 +74,23 @@ public class SetupWalletWizardVerifyModel implements Model {
             List<String> choices = new ArrayList<>();
             choices.add(correctWord);
 
-            // Pick 2 random incorrect words            
-            List<String> incorrect = new ArrayList<>(allSeedWords);
-            incorrect.remove(correctWord);
-            Collections.shuffle(incorrect);
+            // A phrase may repeat a word, so the two wrong choices come from the distinct other words
+            List<String> incorrect = new ArrayList<>(allSeedWords.stream().distinct().filter(word -> !word.equals(correctWord)).toList());
+            Collections.shuffle(incorrect, random);
             choices.add(incorrect.get(0));
             choices.add(incorrect.get(1));
 
-            Collections.shuffle(choices);
+            Collections.shuffle(choices, random);
             answerChoices.add(choices);
             correctAnswerIndices.add(choices.indexOf(correctWord));
         }
         selectedAnswerIndex.set(INVALID_INDEX);
         currentQuestionIndex.set(0);
+        questionsReady.set(true);
     }
 
     public void reset() {
+        questionsReady.set(false);
         currentQuestionIndex.set(0);
         selectedAnswerIndex.set(INVALID_INDEX);
         shouldTransitionToNextQuestion.set(false);

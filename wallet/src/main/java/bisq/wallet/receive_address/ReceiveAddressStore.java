@@ -100,16 +100,18 @@ public final class ReceiveAddressStore implements PersistableStore<ReceiveAddres
         return didNotExist;
     }
 
-    synchronized boolean updateReceiveAddressEntry(ReceiveAddressEntry updated) {
+    // A note is set once. The check and the write share the lock, so a screen which shows an older copy of the entry
+    // cannot replace a note saved in the meantime.
+    synchronized boolean setNoteIfAbsent(String address, String note) {
         Optional<ReceiveAddressEntry> existing = receiveAddressEntries.stream()
-                .filter(e -> e.getAddress().equals(updated.getAddress()))
+                .filter(e -> e.getAddress().equals(address))
                 .findFirst();
-        boolean receiveAddressExists = existing.isPresent();
-        if (receiveAddressExists) {
-            receiveAddressEntries.remove(existing.get());
-            receiveAddressEntries.add(updated);
+        if (existing.isEmpty() || existing.get().getNote().isPresent()) {
+            return false;
         }
-        return receiveAddressExists;
+        receiveAddressEntries.remove(existing.get());
+        receiveAddressEntries.add(new ReceiveAddressEntry(address, existing.get().getCreatedAt(), Optional.of(note)));
+        return true;
     }
 
     ReadOnlyObservableSet<ReceiveAddressEntry> getReceiveAddressEntries() {
