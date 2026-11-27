@@ -40,8 +40,10 @@ public class TextMaxLengthValidator extends ValidatorBase {
 
     @Override
     protected void eval() {
-        if (srcControl.get() instanceof TextInputControl textInputControl && textInputControl.getText()!=null) {
-            hasErrors.set(textInputControl.getText().length() > maxLength);
+        // No text is not too long. Skipping it would keep the error of the text before.
+        if (srcControl.get() instanceof TextInputControl textInputControl) {
+            String text = textInputControl.getText();
+            hasErrors.set(text != null && text.length() > maxLength);
         }
     }
 }

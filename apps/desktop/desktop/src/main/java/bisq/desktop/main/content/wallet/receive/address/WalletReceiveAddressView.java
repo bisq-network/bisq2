@@ -49,7 +49,7 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
     private final VBox content;
     private final WizardOverlay overlay;
     private final Button closeOverlayButton, proceedOverlayButton;
-    private Subscription isNewAddressPin, isAddressNoteValidPin, isAddressNoteEditablePin,
+    private Subscription shownAddressPin, isAddressNoteValidPin, isAddressNoteEditablePin,
             shouldShowAddressNotePin, shouldShowOverlayPin;
 
     public WalletReceiveAddressView(WalletReceiveAddressModel model, WalletReceiveAddressController controller) {
@@ -139,7 +139,7 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
         addressNoteHBox.visibleProperty().bind(model.getShouldShowAddressNote());
         addressNoteInputBox.textProperty().bindBidirectional(model.getReceiveAddressNote());
 
-        isNewAddressPin = EasyBind.subscribe(model.getIsNewAddress(), this::resetValidation);
+        shownAddressPin = EasyBind.subscribe(model.getShownAddressCount(), count -> resetValidation());
         isAddressNoteValidPin = EasyBind.subscribe(addressNoteInputBox.isValidProperty(), isValid -> {
             updateAddressNoteButtonsVisibility();
         });
@@ -177,7 +177,7 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
         addressNoteHBox.visibleProperty().unbind();
         addressNoteInputBox.textProperty().unbindBidirectional(model.getReceiveAddressNote());
 
-        isNewAddressPin.unsubscribe();
+        shownAddressPin.unsubscribe();
         isAddressNoteValidPin.unsubscribe();
         isAddressNoteEditablePin.unsubscribe();
         shouldShowAddressNotePin.unsubscribe();
@@ -198,13 +198,13 @@ public class WalletReceiveAddressView extends View<StackPane, WalletReceiveAddre
         addressNoteInputBox.resetValidation();
     }
 
-    private void resetValidation(boolean isNewAddress) {
+    private void resetValidation() {
         addressNoteInputBox.resetValidation();
         updateAddressNoteButtonsVisibility();
     }
 
     private void updateAddressNoteButtonsVisibility() {
-        boolean shouldBeVisible = model.getIsNewAddress().get()
+        boolean shouldBeVisible = model.getReceiveAddressEntry().get() != null
                 && addressNoteInputBox.isValidProperty().get()
                 && model.getIsAddressNoteEditable().get();
         saveNoteButton.setVisible(shouldBeVisible);

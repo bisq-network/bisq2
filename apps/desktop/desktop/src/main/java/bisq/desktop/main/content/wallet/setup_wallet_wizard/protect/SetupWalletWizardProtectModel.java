@@ -18,27 +18,20 @@
 package bisq.desktop.main.content.wallet.setup_wallet_wizard.protect;
 
 import bisq.desktop.common.view.Model;
-import bisq.desktop.components.controls.validator.TextMinMaxLengthValidator;
+import bisq.desktop.components.controls.validator.RegexValidator;
+import bisq.wallet.WalletPasswordValidation;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Getter
 public class SetupWalletWizardProtectModel implements Model {
-    private static final int PASSWORD_MIN_LENGTH = 8;
-    private static final int PASSWORD_MAX_LENGTH = 100;
-
-    @Setter
-    private boolean skipProtectStep = false;
-
     private final StringProperty password = new SimpleStringProperty("");
-    private final TextMinMaxLengthValidator passwordValidator = new TextMinMaxLengthValidator(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH);
+    private final RegexValidator passwordRulesValidator = new RegexValidator(new WalletPasswordValidation());
     private final StringProperty confirmPassword = new SimpleStringProperty("");
-    private final TextMinMaxLengthValidator confirmPasswordValidator = new TextMinMaxLengthValidator(PASSWORD_MIN_LENGTH, PASSWORD_MAX_LENGTH);
-    private final BooleanProperty shouldShowSkipProtectStepOverlay = new SimpleBooleanProperty(false);
+    private final BooleanProperty inputLocked = new SimpleBooleanProperty(false);
 }

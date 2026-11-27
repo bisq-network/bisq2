@@ -41,9 +41,9 @@ public class SetupWalletWizardModel extends NavigationModel {
     private final StringProperty nextButtonText = new SimpleStringProperty();
     private final StringProperty backButtonText = new SimpleStringProperty();
     private final BooleanProperty nextButtonDisabled = new SimpleBooleanProperty();
+    private final BooleanProperty backButtonDisabled = new SimpleBooleanProperty();
     private final BooleanProperty nextButtonVisible = new SimpleBooleanProperty(true);
     private final BooleanProperty backButtonVisible = new SimpleBooleanProperty(true);
-    private final BooleanProperty skipThisStepHyperLinkVisible = new SimpleBooleanProperty(false);
     private final ObjectProperty<NavigationTarget> selectedChildTarget = new SimpleObjectProperty<>();
     private final List<NavigationTarget> childTargets = List.of(
         NavigationTarget.SETUP_OR_RESTORE_WALLET,

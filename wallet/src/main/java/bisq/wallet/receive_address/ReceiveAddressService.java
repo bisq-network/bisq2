@@ -52,17 +52,13 @@ public class ReceiveAddressService implements Service, PersistenceClient<Receive
         return wasAdded;
     }
 
+    // Sets the note only while the address has none; a stored note stays with the address.
     public boolean updateReceiveAddressEntry(ReceiveAddressEntry receiveAddressEntry,
                                              Optional<String> note) {
-        boolean wasUpdated = false;
-        Optional<ReceiveAddressEntry> receiveAddress = findReceiveAddressEntry(receiveAddressEntry);
-        if (receiveAddress.isPresent() && note.isPresent() && isNoteValid(note.get())) {
-            ReceiveAddressEntry existingEntry = receiveAddress.get();
-            ReceiveAddressEntry updatedEntry = new ReceiveAddressEntry(existingEntry.getAddress(), existingEntry.getCreatedAt(), note);
-            wasUpdated = persistableStore.updateReceiveAddressEntry(updatedEntry);
-            if (wasUpdated) {
-                persist();
-            }
+        boolean wasUpdated = note.isPresent() && isNoteValid(note.get())
+                && persistableStore.setNoteIfAbsent(receiveAddressEntry.getAddress(), note.get());
+        if (wasUpdated) {
+            persist();
         }
         return wasUpdated;
     }

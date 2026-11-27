@@ -33,6 +33,13 @@ public class BitcoinURISchemeTest {
         assertEquals("BC1Q6MX5CGJ3V2JSKGKPP3K4HMESGKK265WGGSLWXKWEM0ESDV2YF72QHAFCFB", BitcoinURIScheme.extractBitcoinAddress("BITCOIN:BC1Q6MX5CGJ3V2JSKGKPP3K4HMESGKK265WGGSLWXKWEM0ESDV2YF72QHAFCFB"));
     }
 
+    // The scheme of a URI is case-insensitive (RFC 3986)
+    @Test
+    void theSchemeIsFoundInAnyLetterCase() {
+        assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy", BitcoinURIScheme.extractBitcoinAddress("Bitcoin:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy?amount=1"));
+        assertEquals("3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy", BitcoinURIScheme.extractBitcoinAddress("bItCoIn:3J98t1WpEZ73CNmQviecrnyiWrnqRhWNEy"));
+    }
+
     @Test
     void shouldBuildUriWithOnlyAddress() {
         String uri = BitcoinURIScheme.buildBitcoinUri(

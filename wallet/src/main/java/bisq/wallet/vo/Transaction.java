@@ -27,6 +27,8 @@ import lombok.ToString;
 import java.time.Instant;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Getter
 @EqualsAndHashCode
@@ -43,12 +45,14 @@ public final class Transaction {
     private final long amount;
     private final boolean incoming;
 
-    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx) throws UnresolvableProtobufException {
+    public static Transaction fromProto(bisq.wallet.protobuf.Transaction tx, Set<String> ownAddresses)
+            throws UnresolvableProtobufException {
         try {
             return new Transaction(
                     tx.getTxId(),
                     ProtobufUtils.fromProtoStream(tx.getInputsList(), TransactionInput::fromProto).toList(),
-                    ProtobufUtils.fromProtoStream(tx.getOutputsList(), TransactionOutput::fromProto).toList(),
+                    ProtobufUtils.fromProtoStream(tx.getOutputsList(),
+                            output -> TransactionOutput.fromProto(output, ownAddresses)).toList(),
                     tx.getLockTime(),
                     tx.getBlockHeight(),
                     Date.from(Instant.ofEpochSecond(tx.getDate())),
@@ -59,5 +63,9 @@ public final class Transaction {
         } catch (RuntimeException e) {
             throw new UnresolvableProtobufException(e);
         }
+    }
+
+    public Optional<Date> findDate() {
+        return date.getTime() == 0 ? Optional.empty() : Optional.of(date);
     }
 }
