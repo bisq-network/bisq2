@@ -166,6 +166,11 @@ public class SetupWalletWizardController extends NavigationController {
             NavigationTarget currentTarget = model.getNavigationTarget();
             log.info("Navigating from {} to index {}", currentTarget, nextIndex);
             if (currentTarget == NavigationTarget.SETUP_WALLET_PROTECT) {
+                if (!acceptedPassword.isEmpty()) {
+                    // The wallet is open already, with the password which the locked fields still show
+                    navigateTo(nextIndex);
+                    return;
+                }
                 if (!setupWalletWizardProtectController.isValid()) {
                     log.warn("Protect step invalid input");
                     setupWalletWizardProtectController.handleInvalidInput();
@@ -191,7 +196,9 @@ public class SetupWalletWizardController extends NavigationController {
             walletOpenInProgress = false;
             model.getNextButtonDisabled().set(false);
             model.getBackButtonDisabled().set(false);
-            setupWalletWizardProtectController.setInputLocked(false);
+            // Once the daemon accepted the password, the wallet exists with it, and any other text would be refused.
+            // The fields therefore stay locked for the rest of this setup.
+            setupWalletWizardProtectController.setInputLocked(throwable == null);
             if (!activated) {
                 return;
             }
