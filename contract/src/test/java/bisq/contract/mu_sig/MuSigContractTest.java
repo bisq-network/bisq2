@@ -35,6 +35,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class MuSigContractTest {
@@ -188,6 +189,35 @@ class MuSigContractTest {
         // The price does not fit into a long
         assertThrows(IllegalArgumentException.class,
                 () -> createContract(market, 1L, Long.MAX_VALUE, baseSpec, quoteSpec));
+    }
+
+    // The taker's commitment to its payment account is a term of the contract which both traders sign
+    @Test
+    void contractWithAnotherTakerAccountPayloadCommitmentIsNotEqual() {
+        FiatPaymentMethod paymentMethod = FiatPaymentMethod.fromPaymentRail(FiatPaymentRail.ACH_TRANSFER);
+        MuSigOffer offer = createOffer(createBtcFiatMarket(), List.of(paymentMethod), List.of());
+        PaymentMethodSpec<?> paymentMethodSpec = PaymentMethodSpecUtil.createPaymentMethodSpec(paymentMethod, "USD");
+
+        MuSigContract contract = createContract(offer, paymentMethodSpec, hash((byte) 1));
+
+        assertEquals(contract, createContract(offer, paymentMethodSpec, hash((byte) 1)));
+        assertNotEquals(contract, createContract(offer, paymentMethodSpec, hash((byte) 2)));
+    }
+
+    private MuSigContract createContract(MuSigOffer offer,
+                                         PaymentMethodSpec<?> paymentMethodSpec,
+                                         byte[] takerSaltedAccountPayloadHash) {
+        return new MuSigContract(1_700_000_000_000L,
+                offer,
+                null,
+                111L,
+                222L,
+                paymentMethodSpec,
+                takerSaltedAccountPayloadHash,
+                Optional.empty(),
+                Optional.empty(),
+                null,
+                0);
     }
 
     private MuSigContract createContract(Market market,

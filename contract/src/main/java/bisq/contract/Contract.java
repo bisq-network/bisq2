@@ -42,6 +42,8 @@ public abstract class Contract<T extends Offer<?, ?>> implements NetworkProto {
     protected final T offer;
     protected final TradeProtocolType protocolType;
 
+    // Not serialized and not part of equality: each contract type derives the maker from its offer and other fields,
+    // which are part of both.
     protected transient final Party maker;
 
     public Contract(long takeOfferDate, T offer, TradeProtocolType protocolType, Party maker) {
