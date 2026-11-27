@@ -358,7 +358,12 @@ public class Transitions {
             node.setId(StringUtils.createUid());
         }
         Timeline timeline = new Timeline();
-        removeEffectTimeLineByNodeId.put(node.getId(), timeline);
+        // blur() can only stop the timeline in the map. A replaced timeline would keep running and remove a blur
+        // which was applied after it started.
+        Timeline previousTimeline = removeEffectTimeLineByNodeId.put(node.getId(), timeline);
+        if (previousTimeline != null) {
+            previousTimeline.stop();
+        }
         Duration effectiveDuration = ManagedDuration.millis(duration);
         KeyValue kv1 = new KeyValue(gaussianBlur.radiusProperty(), 0.0);
         KeyFrame kf1 = new KeyFrame(effectiveDuration, kv1);

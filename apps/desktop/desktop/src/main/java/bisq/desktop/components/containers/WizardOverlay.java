@@ -22,6 +22,7 @@ import bisq.desktop.common.Transitions;
 import bisq.desktop.common.utils.ImageUtil;
 import bisq.desktop.main.content.bisq_easy.trade_wizard.TradeWizardView;
 import bisq.i18n.Res;
+import javafx.animation.FadeTransition;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -46,6 +47,7 @@ public class WizardOverlay extends VBox {
     private Label headlineLabel = new Label("");
     private VBox textContentBox;
     private HBox buttonsBox;
+    private FadeTransition fadeOutTransition;
 
     public WizardOverlay(Node owner) {
         this.owner = owner;
@@ -147,6 +149,8 @@ public class WizardOverlay extends VBox {
                                         boolean shouldShow,
                                         EventHandler<? super KeyEvent> onKeyPressedHandler) {
         if (shouldShow) {
+            // A fade-out of a previous hide would hide the overlay again when it finishes
+            stopFadeOutTransition();
             setVisible(true);
             setOpacity(1);
             Transitions.blurStrong(content, 0);
@@ -156,7 +160,8 @@ public class WizardOverlay extends VBox {
         } else {
             Transitions.removeEffect(content);
             if (isVisible()) {
-                Transitions.fadeOut(this, ManagedDuration.getHalfOfDefaultDurationMillis(),
+                stopFadeOutTransition();
+                fadeOutTransition = Transitions.fadeOut(this, ManagedDuration.getHalfOfDefaultDurationMillis(),
                         () -> setVisible(false));
             }
             owner.setOnKeyPressed(null);
@@ -164,6 +169,13 @@ public class WizardOverlay extends VBox {
             if (owner.getParent() != null) {
                 owner.getParent().requestFocus();
             }
+        }
+    }
+
+    private void stopFadeOutTransition() {
+        if (fadeOutTransition != null) {
+            fadeOutTransition.stop();
+            fadeOutTransition = null;
         }
     }
 
