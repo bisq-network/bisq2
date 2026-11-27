@@ -18,6 +18,7 @@
 package bisq.trade.mu_sig;
 
 import bisq.common.fsm.Event;
+import bisq.common.fsm.State;
 import bisq.common.market.Market;
 import bisq.common.observable.Observable;
 import bisq.common.observable.ReadOnlyObservable;
@@ -59,6 +60,9 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     @Getter
     private Optional<Long> tradeCompletedDate = Optional.empty();
     private MuSigTradeDispute tradeDispute = new MuSigTradeDispute();
+    // The FSM writes the state under the protocol monitor; the maker's admission decision reads
+    // it under the trade creation lock on another thread, so it needs its own safe publication.
+    private volatile MuSigTradeState latestTradeState;
 
     public MuSigTrade(MuSigContract contract,
                       boolean isBuyer,
@@ -77,7 +81,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                 new MuSigTradeParty(makerNetworkId),
                 TradeLifecycleState.ACTIVE);
 
-        stateObservable().addObserver(state -> tradeState.set((MuSigTradeState) state));
+        stateObservable().addObserver(this::onStateChanged);
     }
 
     private MuSigTrade(MuSigContract contract,
@@ -91,7 +95,13 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
                        Set<Event> queuedEvents) {
         super(contract, state, id, tradeRole, myIdentity, taker, maker, lifecycleState, queuedEvents);
 
-        stateObservable().addObserver(s -> tradeState.set((MuSigTradeState) s));
+        stateObservable().addObserver(this::onStateChanged);
+    }
+
+    private void onStateChanged(State state) {
+        MuSigTradeState muSigTradeState = (MuSigTradeState) state;
+        latestTradeState = muSigTradeState;
+        tradeState.set(muSigTradeState);
     }
 
 
@@ -168,7 +178,7 @@ public final class MuSigTrade extends Trade<MuSigOffer, MuSigContract, MuSigTrad
     }
 
     public MuSigTradeState getTradeState() {
-        return tradeState.get();
+        return latestTradeState;
     }
 
     public ReadOnlyObservable<MuSigTradeState> tradeStateObservable() {
