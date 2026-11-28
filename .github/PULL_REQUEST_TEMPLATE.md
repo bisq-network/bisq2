@@ -7,6 +7,8 @@ Before starting work, check review capacity and funding with the maintainers. Pa
 https://bisq.network/blog/open-source-development-in-the-age-of-ai/
 -->
 
-<!-- Describe the change and how you tested it. Check the CI results before requesting review.
+<!-- Describe the change and how you tested it.
+Before requesting review, check CI and confirm every commit has a Signed-off-by trailer and a GPG
+signature (git commit -s -S).
 Developer guide: https://github.com/bisq-network/bisq2/blob/main/docs/dev/dev-guide.md
 -->
