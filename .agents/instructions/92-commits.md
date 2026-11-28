@@ -12,6 +12,7 @@
   * tests or verification performed.
 * Do not use vague one-line messages such as "Fix issue" or "Update validation" for substantive changes. The subject should summarize the outcome, while the body should explain the implementation and rationale.
 * Do not add AI-agent authorship, attribution, `Co-authored-by` entries, or similar AI metadata to commit messages.
+* Every contributed commit needs a DCO sign-off and a GPG signature, see `docs/dev/contributing.md`. Only the human author adds them: do not add a `Signed-off-by` trailer or sign a commit.
 * Before committing, inspect the working tree.
 * Include only changes belonging to the current task.
 * Never accidentally commit unrelated pre-existing user changes.
