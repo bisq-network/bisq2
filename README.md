@@ -97,7 +97,7 @@ git -C tor fetch origin
    git add tor
    ```
    ```bash
-   git commit
+   git commit -s -S
    ```
 
 **Change the Tor code.** `tor/` is a repository of its own. Commit the change in `tor/` on a branch and push it to the
@@ -124,6 +124,7 @@ Bisq is an open source project and a [Decentralized Autonomous Organization (DAO
 
 Before starting development work, read the [contribution and compensation guidelines](docs/dev/contributing.md)
 and discuss priorities and review capacity with the maintainers on [Matrix](https://matrix.to/#/#bisq.v2.dev:bitcoin.kyoto).
+Every contributed commit requires a [DCO sign-off and a GPG signature](docs/dev/contributing.md#sign-off-on-and-gpg-sign-every-commit).
 
 Report suspected security issues privately using **Report a vulnerability** on the
 [Bisq 2 Security Advisories page](https://github.com/bisq-network/bisq2/security/advisories). Keep security reports and proposed fixes out of public channels.
