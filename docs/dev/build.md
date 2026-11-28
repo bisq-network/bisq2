@@ -144,7 +144,7 @@ local repository are not included. Build and test, then record the new Tor commi
 
 ```sh
 git add tor
-git commit
+git commit -s -S
 ```
 
 Other developers need access to that Tor commit before they can use the update. Do not run `git submodule sync` for
